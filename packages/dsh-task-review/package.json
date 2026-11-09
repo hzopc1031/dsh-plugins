@@ -32,7 +32,8 @@
   "license": "MIT",
   "keywords": [
     "dsh-plugin",
-    "task-review"
+    "task-review",
+    "deepseek-harness"
   ],
   "scripts": {
     "build": "tsc",
@@ -88,11 +89,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/TODO-GITHUB-OWNER/dsh-task-review.git"
+    "url": "git+https://github.com/hzopc1031/dsh-plugins.git",
+    "directory": "packages/dsh-task-review"
   },
-  "homepage": "https://github.com/TODO-GITHUB-OWNER/dsh-task-review#readme",
+  "homepage": "https://github.com/hzopc1031/dsh-plugins/tree/main/packages/dsh-task-review#readme",
   "bugs": {
-    "url": "https://github.com/TODO-GITHUB-OWNER/dsh-task-review/issues"
+    "url": "https://github.com/hzopc1031/dsh-plugins/issues"
   },
-  "author": ""
+  "author": "hzopc1031"
 }

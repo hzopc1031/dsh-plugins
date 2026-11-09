@@ -1,0 +1,7 @@
+{
+  "name": "dsh-plugins",
+  "private": true,
+  "version": "0.0.0",
+  "description": "DSH plugins monorepo (hzopc1031)",
+  "license": "MIT"
+}

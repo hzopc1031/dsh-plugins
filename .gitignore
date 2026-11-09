@@ -1,0 +1,22 @@
+# Dependencies and local runtime artifacts (all packages)
+node_modules/
+.tmp/
+*.tgz
+.dsh/
+.pnpm-store/
+
+# Logs, test coverage and caches
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+coverage/
+.nyc_output/
+*.tsbuildinfo
+
+# Local secrets and OS files
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db

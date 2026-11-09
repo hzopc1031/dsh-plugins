@@ -7,6 +7,7 @@ import { initProfile, loadProfileDirectory, boot } from '@deepseek-ai/dsh-app-bo
 import { SessionId } from '@deepseek-ai/dsh-session'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
+import { prepareTools, executeTool } from './tool-fixture.mjs'
 const project=fileURLToPath(new URL('../',import.meta.url))
 const parent=path.join(project,'.tmp'); await mkdir(parent,{recursive:true})
 const root=await mkdtemp(path.join(parent,'profile-smoke-'))
@@ -24,12 +25,13 @@ try {
   const services=['dsh-session','dsh-system-prompt','dsh-tools','dsh-commands']
   await writeFile(config,services.map(name=>`- name: ${JSON.stringify(import.meta.resolve('@deepseek-ai/'+name).startsWith('file:') ? fileURLToPath(import.meta.resolve('@deepseek-ai/'+name)) : name)}`).join('\n'))
   ctx=await boot('task-review-smoke',config,loaded.layers.flatMap(layer=>layer.patches),undefined,pathToFileURL(path.join(profile,'package.json')).href)
+  await prepareTools(ctx)
   const session=ctx.sessions.create(SessionId('profile-review'),{meta:{cwd:root}})
   const agent={id:session.id,session,ctx,status:'idle'}
   assert.ok(ctx.commands.list(agent).some(c=>c.name==='review'))
   ctx.tools.register(defineTool({name:'smoke_read',description:'Read-only test fixture',parameters:{},output:{schema:{type:'string'},render:(_,value)=>[{type:'text',text:value}]},async execute(){return 'fixture result'}}))
   session.append('user/message',createUserMessage({source:{kind:'user'},content:[{type:'text',text:'验证独立 profile 复盘'}]}),{surfaceOp:'append'})
-  const result=await ctx.tools.execute({callId:'smoke',name:'smoke_read',arguments:{},agent,signal:new AbortController().signal})
+  const result=await executeTool(ctx,{callId:'smoke',name:'smoke_read',arguments:{},agent,signal:new AbortController().signal})
   assert.equal(result.isError,false)
   const command=await ctx.commands.execute(agent,'/review',[],new AbortController().signal)
   assert.equal(command.result.kind,'success')

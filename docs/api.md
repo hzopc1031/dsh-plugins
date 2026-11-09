@@ -24,4 +24,14 @@
 
 命令 `node --test` 的默认子进程隔离在本环境报 spawn EPERM，改用官方 Node test runner 的 `--test-isolation=none`，保持断言真实执行。npm 默认缓存目录不可写，统一把缓存指定到本工作区 `.tmp/npm-cache`。
 
-没有依赖未验证的宿主方法。未验证的范围：Web 可视交互、原生 CLI add/remove 的包管理器进程、模型驱动的完整一轮、PTC 嵌套实际模型调用、JSONL 持久化后的跨进程恢复（已测 Session seed 重放）、workspaceChanges 的真实 git/shell 捕获（已测其公开服务 seam）。不将这些标成通过。
+没有依赖未验证的宿主方法。未验证的范围：Web 可视交互、模型驱动的完整一轮、PTC 嵌套实际模型调用、JSONL 持久化后的跨进程恢复（已测 Session seed 重放）、workspaceChanges 的真实 git/shell 捕获（已测其公开服务 seam）。不将这些标成通过。
+
+## 第二阶段兼容与分发验证（0.1.1）
+
+已在本机 0.2.1-rc.5 与隔离 npm 0.2.2-rc.1 完成 typecheck、12 项测试和官方 Loader profile 冒烟；两个版本均完成真实 CLI tgz add / dump / remove，及安装产物的官方 readPluginMeta 标题、描述、图标读取。详细命令与依赖清单见 handoff.md。
+
+新版证据目录 `.tmp/dsh-0.2.2/node_modules/@deepseek-ai/`：dsh-tools/README.md 的 Select an executor、lib/types/executor.d.ts 的 ToolBatchInput，以及 dsh-tool-executor-native/lib/index.js。新版将工具执行移至 executor 插件，execute 接收 calls 批次；scripts/tool-fixture.mjs 按 setExecutor 能力选择官方 native executor 与批量接口，仅用于测试。生产插件的 tools/pre-execute/result 观察接口两版都实测通过，运行代码无需适配。
+
+DSH app-boot 的 satisfies 使用 includePrerelease:true，因此 engines.dsh 的 >=0.2.1-rc.5 <0.3.0 可接受两个实测 prerelease。Cordis 4.0.5/4.1.0、Schemastery 3.18.5/3.19.0 已随宿主分别验证。分发 peer 全部标 optional 防止包管理器下载副本；必需服务依然由 inject 声明，workspaceChanges 通过 ctx.inject 可选接入且 type import 在编译后移除。
+
+成品验收发现 locale JSON 的 BOM 会被 readPluginMeta 当作非法 JSON；已移除 BOM 并在 verify-pack 中直接 JSON.parse 验证。Web 目视仍待验收。

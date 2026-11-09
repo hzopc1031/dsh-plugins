@@ -11,6 +11,7 @@ import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import * as plugin from '../index.js'
 import { segment, boundary } from '../lib/state.js'
+import { prepareTools, executeTool } from '../scripts/tool-fixture.mjs'
 
 async function harness(config={},workspace) {
   const root=await mkdtemp(path.join(os.tmpdir(),'task-review-integration-'))
@@ -19,12 +20,13 @@ async function harness(config={},workspace) {
   await ctx.plugin(Commands)
   await ctx.plugin(SystemPrompt)
   await ctx.plugin(Tools)
+  await prepareTools(ctx)
   if (workspace) ctx.provide('workspaceChanges', workspace)
   const pluginFiber=await ctx.plugin(plugin,config)
   const session=ctx.sessions.create(SessionId('review-test'),{meta:{cwd:root}})
   const agent={id:session.id,session,status:'idle',ctx}
   const user=(value)=>session.append('user/message',createUserMessage({content:[{type:'text',text:value}],source:{kind:'user'}}),{surfaceOp:'append'})
-  const run=(name,args={},id=String(Math.random()))=>ctx.tools.execute({callId:id,name,arguments:args,agent,signal:new AbortController().signal})
+  const run=(name,args={},id=String(Math.random()))=>executeTool(ctx,{callId:id,name,arguments:args,agent,signal:new AbortController().signal})
   const review=()=>ctx.commands.execute(agent,'/review',[],new AbortController().signal)
   ctx.tools.register(defineTool({name:'fixture',description:'test only',parameters:{token:{type:'string'},file_path:{type:'string'}},output:{schema:{type:'string'},render:(_,v)=>[{type:'text',text:v}]},async execute(){return 'ok'}}))
   return {ctx,pluginFiber,root,session,agent,user,run,review,async close(){await ctx.fiber.dispose();await rm(root,{recursive:true,force:true})}}
@@ -107,6 +109,23 @@ test('file mutations require explicit domain evidence',async()=>{
   assert.deepEqual(fileChanges('write',{path:'a',before:null,after:'x'}),[{path:'a',kind:'新建'}])
   assert.deepEqual(fileChanges('edit',{path:'a',before:'x',after:'y'}),[{path:'a',kind:'修改'}])
   assert.deepEqual(fileChanges('bash',{path:'a'}),[])
+})
+
+test('missing optional workspaceChanges still permits tool telemetry, auto review and archive',async()=>{
+  const h=await harness({toolThreshold:1,fileThreshold:1})
+  try {
+    assert.equal(h.ctx.workspaceChanges,undefined)
+    h.user('没有可选工作区服务')
+    h.session.append('workspace/changes',{turn:1})
+    await h.run('fixture')
+    h.ctx.emit('agent/status',{agent:h.agent,status:'idle'})
+    await h.ctx.sessions.flush(h.session)
+    const names=await readdir(path.join(h.root,'.dsh/reports'))
+    assert.equal(names.length,1)
+    const report=await readFile(path.join(h.root,'.dsh/reports',names[0]),'utf8')
+    assert.ok(report.includes('fixture'))
+    assert.equal(segment(h.session),null)
+  }finally{await h.close()}
 })
 test('native historical results are recognized without telemetry; corrupt boundary ignored',async()=>{
   const {createToolResultMessage}=await import('@deepseek-ai/dsh-llm')

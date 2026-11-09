@@ -1,43 +1,56 @@
-﻿# dsh-task-review
+# dsh-task-review
 
-DSH 0.2.1-rc.5 的只读任务复盘 bundle。按会话观察工具调用，在工作停止时自动复盘，也可输入 `/review` 手动生成当前未复盘的一段。只写报告与宿主会话记录，不修改项目代码，不调用模型、不发送网络请求。
+在 DeepSeek Harness 工作停止时自动生成任务复盘卡片，并将 Markdown 报告保存在本机；也可随时输入 `/review` 手动复盘。
 
-报告包含首条人类消息摘要、执行状态、已确认文件变更、失败与疑似重试、真实用量、耗时及基于失败/未完成调用的下一步。缺失数据写「不可用」。
+## 安装
 
-## 安装与验证
+需要 Node.js >= 22、已安装的 DSH 及包管理器 pnpm。成品已编译，无需源码、TypeScript 或安装期构建。请使用独立 profile，以下统一使用 `task-review-demo`。
 
-要求 Node >= 22，DSH **0.2.1-rc.5**。已提交编译产物，无安装期构建、install/postinstall 脚本。
+收到团队分发的 tgz 后，在文件所在目录执行一条命令：
 
-```powershell
-# 在此 checkout 中；始终指定独立 profile，不安装到主 DSH
-npm ci --ignore-scripts --cache .tmp/npm-cache
-npm run typecheck
-npm test
-npm run test:profile
-
-# 由用户在普通本地终端运行；此项包管理器安装流程未在本沙箱实测
-# 使用独立 profile，安装目录链接
- dsh plugin --profile task-review-demo add "D:\Ai Infra Tools\DeepSeek Harness\插件开发\dsh-task-review"
- dsh --profile task-review-demo --dump-config
- dsh --profile task-review-demo
+```sh
+dsh plugin --profile task-review-demo add ./dsh-task-review-0.1.1.tgz
 ```
 
-如果现有 profile 是 headless 模式，需改用带命令 UI 的 web profile。首次创建自定义 Web profile 可运行 `dsh --profile task-review-demo --from-default-profile web --dump-config`，然后安装。`--from-default-profile` 会替换该独立 profile，请只在首次创建时使用。
+将来 npm 发布后（当前尚未发布）：
 
-在该独立 profile 的 Web 对话执行一些普通工具调用，再输入 `/review`：应出现 `review` 命令结果折叠行，展开可看完整 Markdown 源文本，项目 `.dsh/reports/` 中应有同一份报告。第二次立即 `/review` 应提示没有新内容。默认累计 10 次工具调用、3 个有证据的改动文件或 10 分钟，任一满足，在 agent 进入 idle 时自动显示同样的报告。
+```sh
+dsh plugin --profile task-review-demo add dsh-task-review@0.1.1
+```
 
-宿主默认命令卡片会折叠多行结果；此版本展开正文是 `<pre>`，不渲染富 Markdown。没有自定义前端，也不伪造模型消息。UI 尚未做浏览器目视验证，源码证据见 [API 说明](docs/api.md)。纯 headless 可存档，但无聊天卡片。
+首次创建的自定义 profile 如果是 headless，可先创建 Web profile 再安装：
+
+```sh
+dsh --profile task-review-demo --from-default-profile web --dump-config
+```
+
+`--from-default-profile` 会替换该独立 profile，仅首次使用，已有配置请勿重复执行。
+
+## 确认生效与使用
+
+```sh
+dsh --profile task-review-demo --dump-config
+dsh --profile task-review-demo
+```
+
+配置输出应包含 `id: task-review`、`name: dsh-task-review`。重启该 profile，在 Web「插件」页确认标题“任务复盘”、描述和图标；对话中执行工具后输入 `/review`（无参数），应出现摘要卡片，展开能查看完整 Markdown 源文本，项目 `.dsh/reports/` 下有同一份报告。立即再次输入 `/review` 应提示没有尚未复盘的新内容。
+
+截图占位：插件页（标题、描述、图标）；复盘卡片（折叠摘要与展开报告）。待补图。
+
+默认在 AI 停下等待输入（idle）时，累计满足任意一项便自动复盘：10 次工具调用、3 个有证据的改动文件、10 分钟。手动 `/review` 不受门槛限制。每次只覆盖上次成功存档之后的新内容，低于门槛继续累计。
+
+报告列出目标摘要、执行状态、已确认文件变更、失败与疑似重试、真实用量、耗时及基于失败/未完成调用的下一步。没有证据的数据标“不可用”，不估算费用或宣称任务完成。
 
 ## 配置
 
-修改**独立 profile** 的 `task-review` 插件配置（DSH Config schema）：
+在独立 profile 的插件配置界面修改 `task-review` 行，或修改其 `cordis.patch.yml`：
 
-| 字段 | 默认 | 含义 |
+| 配置项 | 默认值 | 含义 |
 | --- | --- | --- |
-| `auto` | `true` | idle 时自动判断；关闭后手动命令仍可用 |
-| `toolThreshold` | `10` | 正整数，工具调用次数门槛 |
-| `fileThreshold` | `3` | 正整数，唯一改动路径数门槛 |
-| `durationMinutes` | `10` | 正数，段首有效事件至复盘的墙钟分钟数 |
+| `auto` | `true` | idle 时自动判断；关闭后仍可手动复盘 |
+| `toolThreshold` | `10` | 工具调用次数，正整数 |
+| `fileThreshold` | `3` | 唯一改动路径数，正整数 |
+| `durationMinutes` | `10` | 段首有效事件至复盘的墙钟分钟数，最小 0.001 |
 | `reportDir` | `.dsh/reports` | 相对会话项目根目录，或绝对目录 |
 
 ```yaml
@@ -51,32 +64,43 @@ npm run test:profile
       reportDir: .dsh/reports
 ```
 
-要放在 DSH_HOME 下，配置绝对路径，例如 `D:/AIInfra/DSHarness/reports`。不隐式展开 `~` 或 `$DSH_HOME`。会话没有项目目录且配置为相对路径时，拒绝存档并保留复盘边界。文件名使用 UTC 时间、清理后的目标摘要和随机后缀，独占创建防止覆盖。
+文件名包含 UTC 时间、清理后的目标摘要及随机后缀，独占创建避免覆盖。可将 `reportDir` 改为 DSH_HOME 下的实际绝对路径；不会展开 `~` 或 `$DSH_HOME`。无项目目录且使用相对路径，或目录不可写时，存档失败并保留边界，修正后重试 `/review`。
 
-## 边界与限制
+## 隐私与权限
 
-- `tools/result` 记录本插件加载之后的所有最终调用，包括 PTC 子调用及其外层 transport，各执行分别计数。pre-execute 开始计时；未经过该钩子的拒绝/未知工具耗时不可用。
-- 参数字段中包含 token/key/password/secret 等名称时递归脱敏；脚本、命令、文件正文直接省略。自由文本只做常见凭据模式处理，无法识别所有无标记密钥。不会保存工具输出正文，也不复制原始代码。
-- 文件工具有 `before/after/path` 证据时分类新建/修改；可选 `workspaceChanges` 服务提供 shell 等引起的文件变更，文本比较有 before/after 存在性时分类新建/修改/删除。二进制、超限或比较缺失只标「变更（类型不可用）」。宿主无该服务时，不猜测 shell 写入。一个路径在本段多次变更只列最近类型；不是净 diff。
-- 原生 `tool/call` 暂无最终观察结果时列未完成；该调用在下一段才结束时，会报告新的完成证据。未观察的 PTC 在途调用暂不可枚举。
-- Token 汇总仅来自 `assistant/message.usage` 的最终权威样本，并标明覆盖消息数；失败/重试尝试的用量不计入该小计且标不可用。费用不可用；不使用 tokenMeter 的启发式估算。疑似重试只是同名、同脱敏摘要且前有失败，不表示已解决。
-- 复盘边界作为 ignorable plugin record 写入 Session，恢复时重放；分叉不复盘继承前缀。并发手动/自动按会话串行化。低于门槛保留累计，自动关闭不丢记录。
-- 边界在存档成功后推进；写入失败可重试。进程在文件写完而会话持久化前崩溃时，可能留下孤立报告，恢复后可能再次复盘。宿主未启用会话持久化时，边界也不跨进程保存。
-- 本插件不会证明任务完成、执行测试或解析用户代码；报告的结果仅描述宿主执行状态。耗时包含等待，与纯 CPU 时间不同。
-- 仅 Windows + Node 24.20.0 实测；Linux/macOS、真实付费模型、完整 Web UI、CLI 包管理器安装未测。
+- 对项目代码只读；仅写报告及宿主会话中的插件记录，不修改用户代码。
+- 插件运行时不联网、不上传、不调用模型，不需要 token 或额外账户。安装包管理器可能联网，属于宿主安装流程。
+- token/key/password/secret 等参数字段递归脱敏；脚本、命令、文件正文省略，不保存工具输出正文。自由文本仅处理常见凭据模式，无法保证识别任意无标记秘密；插件不会改写宿主已有的原始日志。
+- 文件变更只采用文件工具的域结果或可选 `workspaceChanges` 服务的证据。缺少该服务时自动降级，仍可按调用次数和耗时复盘，不猜测 shell 写入。
 
-卸载：在测试 profile 的插件管理界面移除本 bundle，或 `dsh plugin --profile task-review-demo remove dsh-task-review`。已有报告保留，由用户自行清理。
+## 卸载
 
-## 目录
-
-```text
-index.js + cordis.patch.yml   bundle 入口
-src/{core,state,plugin}.ts    脱敏/报告/存档、边界、宿主接线
-lib/*.js + *.d.ts            已构建运行代码与类型
-locale/{en,zh}.json + icon.svg + LICENSE
- test/*.test.mjs             单元及真实 Cordis 集成测试
-scripts/profile-smoke.mjs    独立 profile + 官方 Loader 冒烟
- docs/{00-task,api,handoff}.md
+```sh
+dsh plugin --profile task-review-demo remove dsh-task-review
 ```
 
-图标为本项目原创 SVG，MIT。开发时 `npm run build` 更新 `lib/`；tarball 可用 `npm pack --ignore-scripts --cache .tmp/npm-cache` 生成。本工作区不发布 npm、不创建远端、不 push。
+重启该 profile。已有 Markdown 报告保留，可自行删除。
+
+## 兼容与限制
+
+DSH 声明范围：`>=0.2.1-rc.5 <0.3.0`；实测版本：`0.2.1-rc.5`、`0.2.2-rc.1`。平台实测为 Windows、Node 24.20.0；macOS/Linux 尚未验证。范围内其他版本未逐一测试，升级后建议先在独立 profile 验证。
+
+卡片使用宿主原生命令结果展示，多行正文折叠，展开为 Markdown 源文本。纯 headless 没有聊天卡片。Web 界面尚未做目视验收。
+
+Token 仅汇总最终 assistant 消息的权威样本并标明覆盖消息数；失败尝试、缺失样本和费用金额不可用。文件清单不是净 diff。会话持久化未启用时边界不跨进程保存；文件写入与会话持久化之间崩溃可能造成孤立或重复报告。
+
+## 常见问题
+
+**装不上？** 确认 tgz 路径、Node 和 DSH 版本、`pnpm --version` 可用，并查看 CLI 给出的诊断日志。不要用 `allow-version` 绕过兼容检查；先确认安装的是团队提供的 0.1.1 成品包。此包无需允许构建脚本，也无需另装任何 `@deepseek-ai/*` 包。
+
+**看不到卡片？** 确认启动的是安装时使用的同一个 profile，安装或替换包后重启。先用 `--dump-config` 检查插件行，再在带命令 UI 的 Web profile 执行工具并输入 `/review`。自动卡片要等进入 idle 且达到任一门槛；没有新内容不会重复出报告。headless 请查看存档。
+
+**没有 shell 文件变更或费用？** 缺少宿主证据或权威费用字段时显示不可用，这是预期行为。
+
+## English quick start
+
+Read-only task reviews for DSH: an automatic command card when work becomes idle and a local Markdown archive. Install the prebuilt tarball with `dsh plugin --profile task-review-demo add ./dsh-task-review-0.1.1.tgz`, restart that profile, and enter `/review` after tool activity. Reports default to the project's `.dsh/reports/`. Automatic review triggers at 10 tool calls, 3 evidenced changed files, or 10 minutes; all thresholds are configurable above. Remove with `dsh plugin --profile task-review-demo remove dsh-task-review`.
+
+Tested on Windows with DSH 0.2.1-rc.5 and 0.2.2-rc.1; declared range `>=0.2.1-rc.5 <0.3.0`, Node >=22. No runtime network, uploads, model calls, or install builds. Sensitive argument fields are redacted; arbitrary unmarked secrets cannot always be detected. Only reports and plugin session records are written. macOS/Linux and visual Web UI verification are pending.
+
+MIT；图标为本项目原创 SVG。变更见 [CHANGELOG](CHANGELOG.md)。

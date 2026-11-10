@@ -1,9 +1,0 @@
-body[data-direnjie] { --dsw-font-family: "STSong", "SimSun", "Noto Serif CJK SC", serif; }
-body[data-direnjie] [class*="_mainPanel"] { background-color: var(--dsw-alias-bg-base); background-image: linear-gradient(90deg,#f5eedff5 0%,#f5eedfe6 42%,#f5eedfa6 68%,#f5eedf73 100%),url("__ART__"); background-position: center,right center; background-size: cover,cover; background-repeat: no-repeat; }
-body[data-direnjie][data-ds-dark-theme] [class*="_mainPanel"] { background-image: linear-gradient(90deg,#0f1a18f2 0%,#0f1a18d9 40%,#0f1a1880 66%,#0f1a1833 100%),url("__ART__"); }
-#direnjie-music { position:fixed; z-index:30; bottom:12px; right:18px; max-width:min(340px,calc(100vw - 36px)); border:1px solid var(--dsw-alias-border-l2); border-radius:12px; background:var(--dsw-alias-bg-layer-2); color:var(--dsw-alias-label-primary); padding:10px 14px; box-shadow:0 4px 18px #0002; font:14px/1.6 "SimSun",serif; }
-#direnjie-music summary { cursor:pointer; color:var(--dsw-alias-state-business-primary); }
-#direnjie-music audio { display:block; width:100%; margin:12px 0; }
-#direnjie-music input { max-width:100%; }
-#direnjie-music p { margin:8px 0 0; }
-#direnjie-music :focus-visible { outline:2px solid var(--dsw-alias-state-business-primary); outline-offset:3px; }

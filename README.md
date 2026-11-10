@@ -8,7 +8,6 @@
 | --- | --- | --- | --- |
 | 任务复盘 | [`dsh-task-review`](https://www.npmjs.com/package/dsh-task-review) | 自动或手动任务复盘，保存本地 Markdown 报告（`/review`）/ Task reviews with local Markdown reports | [README](packages/dsh-task-review/README.md) |
 | 任务心跳 | [`dsh-heartbeat-monitor`](https://www.npmjs.com/package/dsh-heartbeat-monitor) | 长任务定时进度卡、静默/重复警告（`/heartbeat`）/ Timed progress cards and stall/repeat warnings | [README](packages/dsh-heartbeat-monitor/README.md) |
-| 神探狄仁杰主题 | [`dsh-direnjie-theme`](https://www.npmjs.com/package/dsh-direnjie-theme) | 非官方同人主题：原创狄仁杰插画背景、配色与本机音乐播放器（音乐需本地配置） / Unofficial Detective Dee fan theme with an original illustrated background and a local music player | [README](packages/dsh-direnjie-theme/README.md) |
 
 > 心跳插件的 npm 包名是 `dsh-heartbeat-monitor`：`dsh-heartbeat` 已被一个无关的包占用。
 > The heartbeat plugin is published as `dsh-heartbeat-monitor` because `dsh-heartbeat` is an unrelated package.
@@ -28,7 +27,6 @@ Plugins → Add plugin, then enter an npm name (or a git address below):
 ```text
 dsh-task-review
 dsh-heartbeat-monitor
-dsh-direnjie-theme
 ```
 
 ### 2. 命令行（npm）/ CLI from npm
@@ -38,7 +36,6 @@ dsh-direnjie-theme
 ```powershell
 dsh plugin --profile desktop add dsh-task-review
 dsh plugin --profile desktop add dsh-heartbeat-monitor
-dsh plugin --profile desktop add dsh-direnjie-theme
 ```
 
 ### 3. 从 GitHub 安装 / From git
@@ -50,7 +47,6 @@ DSH forwards to pnpm, which accepts a git subdirectory as `#<ref>&path:/<dir>`:
 ```powershell
 dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-task-review"
 dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-heartbeat-monitor"
-dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-direnjie-theme"
 ```
 
 同样的 `github:...` 地址也可以填进界面的「添加插件」。把 `main` 换成某个提交哈希即可固定版本。
@@ -79,7 +75,7 @@ The root package is private. Run npm commands inside each `packages/<plugin>`:
 npm ci --ignore-scripts
 npm run typecheck
 npm test            # 含构建 / includes the build
-npm run verify-pack # 心跳与主题 / heartbeat and theme
+npm run verify-pack # 心跳 / heartbeat
 ```
 
 `lib/` 为预编译产物并提交到仓库，git 安装无需构建；改动源码后请 `npm test`（会重建 `lib/`）再提交。
@@ -94,7 +90,6 @@ dsh-task-review 的打包校验见其 README / For dsh-task-review pack verifica
 
 - `hzopc1031/dsh-plugins#dsh-task-review` → `https://github.com/hzopc1031/dsh-plugins/tree/main/packages/dsh-task-review`
 - `hzopc1031/dsh-plugins#dsh-heartbeat-monitor` → `https://github.com/hzopc1031/dsh-plugins/tree/main/packages/dsh-heartbeat-monitor`
-- `hzopc1031/dsh-plugins#dsh-direnjie-theme` → `https://github.com/hzopc1031/dsh-plugins/tree/main/packages/dsh-direnjie-theme`
 
 提交前需核对市场当时的仓库年龄、提交数量和 topic（`dsh-plugin`）要求。/ Check the market's repository age, commit count and topic requirements before submitting.
 

@@ -2,8 +2,9 @@
 
 ## 0.1.0
 
+- Unreleased; install prebuilt artifacts from the `feat/content-evidence` git branch. Local export requires Linux with procfs.
 - Add the installable DSH bundle and `/content-evidence` status command.
-- Persist topics, copied materials, experiments, source-linked claims, draft/review placeholders, export requests and manual published links outside the package.
+- Persist topics, copied materials, experiments, source-linked claims, structured drafts, reviews, export history and manual published links outside the package.
 - Add the Host Remote service and generated strict Host/client contracts, atomic writes and validation of stored paths and references.
 - Add persistence, uninstall/reinstall, inert-content, containment, review invalidation and Remote contract tests.
 - Add exactly four local tools and a topic-bound scoped workbench using restrict and a monotonic guard; test inert payloads, forbidden tool dispatch and lifecycle cleanup.
@@ -18,3 +19,4 @@
 - Add topic browsing/capture, inert text/raster previews, shared evidence, structured four-platform editing, review status/findings, local export history and manual published-link backfill.
 - Preserve unsaved editor text on conflicts, block topic/platform changes until save/discard, and direct model-assisted work to confined sessions.
 - Test compiled client exports, slot/service disposal, descriptor-checked UI actions, preview safety, draft forms/review invalidation, conflicting saves, export and backfill. Nothing is published automatically.
+- Verify the 43-test suite and prebuilt package, and exercise the web workbench in installed DSH 0.2.2-rc.1 with headless Chrome; document branch installation and Linux export limits.

@@ -129,7 +129,7 @@
     "url": "git+https://github.com/hzopc1031/dsh-plugins.git",
     "directory": "packages/dsh-content-evidence"
   },
-  "homepage": "https://github.com/hzopc1031/dsh-plugins/tree/main/packages/dsh-content-evidence#readme",
+  "homepage": "https://github.com/hzopc1031/dsh-plugins/tree/feat/content-evidence/packages/dsh-content-evidence#readme",
   "bugs": { "url": "https://github.com/hzopc1031/dsh-plugins/issues" },
   "author": "hzopc1031"
 }

@@ -10,6 +10,7 @@
 | 任务心跳 | [`dsh-heartbeat-monitor`](https://www.npmjs.com/package/dsh-heartbeat-monitor) | 长任务定时进度卡、静默/重复警告（`/heartbeat`）/ Timed progress cards and stall/repeat warnings | [README](packages/dsh-heartbeat-monitor/README.md) |
 | 桌面插件组合回归台 | `dsh-plugin-combo-lab`（未发布 npm / not published to npm） | 双插件组合回归计划、人工证据记录与升级对照（`/combo-lab`）/ Two-plugin regression plans, manual evidence and upgrade comparisons | [README](packages/dsh-plugin-combo-lab/README.md) |
 | 资料更新影响分析 | `dsh-source-impact`（未发布 npm / not published to npm） | 显式来源引用追踪与更新影响复查清单（`/impact`）/ Explicit source citation tracking and update impact checklists | [README](packages/dsh-source-impact/README.md) |
+| 内容证据工作台 | `dsh-content-evidence`（0.1.0 开发分支，未发布 npm / unreleased git branch） | 材料与证据追踪、四平台草稿、复核、本地导出；不自动发布 / Evidence tracing, four-platform drafts, review and local export; never auto-publishes | [README](packages/dsh-content-evidence/README.md) |
 
 > 心跳插件的 npm 包名是 `dsh-heartbeat-monitor`：`dsh-heartbeat` 已被一个无关的包占用。
 > The heartbeat plugin is published as `dsh-heartbeat-monitor` because `dsh-heartbeat` is an unrelated package.
@@ -52,6 +53,18 @@ dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packag
 dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-plugin-combo-lab"
 dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-source-impact"
 ```
+
+内容证据工作台尚未合并到 `main`，从开发分支安装到 web profile；本地导出目前需要 Linux 和 procfs：
+
+Content evidence is unreleased and lives on `feat/content-evidence`. Install into a web profile; local export currently requires Linux and procfs:
+
+```sh
+dsh plugin --profile web add "github:hzopc1031/dsh-plugins#feat/content-evidence&path:/packages/dsh-content-evidence"
+```
+
+重启 DSH 后打开侧栏「内容证据」。数据默认保存在 `$DSH_HOME/content-evidence` 或 `~/.dsh/content-evidence`，卸载保留数据；导出仅写本机目录，插件绝不自动发布。
+
+Restart DSH and open Content evidence in the sidebar. Data defaults to `$DSH_HOME/content-evidence` or `~/.dsh/content-evidence` and survives uninstall. Exports stay local; nothing is published automatically.
 
 同样的 `github:...` 地址也可以填进界面的「添加插件」。把 `main` 换成某个提交哈希即可固定版本。
 

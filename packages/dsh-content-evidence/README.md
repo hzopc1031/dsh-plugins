@@ -6,6 +6,19 @@ Evidence-based content workbench with a web sidebar and main panel. Materials, e
 
 Requires Node.js `>=22` and DSH `>=0.2.1-rc.5 <0.3.0`. APIs were verified against DSH `0.2.2-rc.1`, source `fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159`, and checked at the `0.2.1-rc.5` API baseline. Host libraries are optional peers supplied by DSH; development installs include them for building and testing.
 
+## Install from the branch / 从开发分支安装
+
+`0.1.0` is unreleased and **not published to npm**. Install the committed prebuilt package from `feat/content-evidence`, then restart the web Host. This release's local exporter requires Linux with `/proc/self/fd` (procfs).
+
+```sh
+dsh plugin --profile web add "github:hzopc1031/dsh-plugins#feat/content-evidence&path:/packages/dsh-content-evidence"
+dsh --profile web --no-open
+```
+
+也可在「插件 → 添加插件」输入完整的 `github:...` 地址。当前包尚未合并到 `main`；不要用 npm 包名或 `#main` 安装。安装产物包含 `lib/` 和 `dist/`，无安装时构建脚本。
+
+The same git address works in Plugins → Add plugin. Pin a commit instead of the branch for a fixed revision. The package ships `lib/` and `dist/` and has no install lifecycle hooks. Remove with `dsh plugin --profile web remove dsh-content-evidence`; this removes the package and its configuration layer while retaining your separate data directory and exported folders.
+
 ## Web workbench / 网页工作台
 
 Open **内容证据 / Content evidence** in DSH's web sidebar:
@@ -21,6 +34,8 @@ Conflicting saves preserve the Host draft and the current editor text. Copy your
 There is no standalone Generate button: the UI does not call the host model outside a session. Expand the session help for the selected topic, run `/content-evidence workbench <topicId>` in an idle session, then ask the host's configured model to use the four confined tools. Run `/content-evidence leave` when finished and refresh the panel. The UI does not start a session, select a model, visit platforms or offer publish/login actions.
 
 The client is prebuilt and committed as `dist/client.js`, exported at `./client`, and mounts `main` plus `sidebar.panellist` through `ctx.slots`. It mounts the generated Remote contribution before its namespace-dependent view activates. All Host reads/writes go through `ctx.remote.contentEvidence`; there are no direct HTTP, filesystem or model calls in the client.
+
+Live loading was verified on this Linux box with the installed DSH `0.2.2-rc.1` CLI and source `fcc0ad46`, using a disposable web profile and headless Chrome/Playwright. Browser acceptance covered capture, inert HTML preview, shared evidence, all four platform editors, review invalidation, local exports, manual-link backfill, reload and a fresh Host process, at ordinary and narrow widths. The run made no model request; model-assisted rewriting remains a manual confined-session workflow.
 
 ## Data flow / 数据流
 
@@ -141,6 +156,6 @@ DSH_TEST_HOST=/path/to/@deepseek-ai/dsh/package.json node --test --test-isolatio
 
 `build` compiles Host TypeScript, runs the official Typert generator, typechecks the client and bundles it with esbuild. React and Zod remain platform-provided peers; the browser-safe Remote descriptor implementation is bundled. A temporary workspace under `.tmp/` stages this package's source and the installed protocol's declarations because the generator requires workspace ownership to recognize decorators. It is removed afterward; the DSH source and installed libraries are not modified. Shipping artifacts require no install lifecycle hooks.
 
-Tests cover reload, byte copies, inert content, path/symlink rejection, corrupt-state preservation, concurrent updates, review invalidation, cancelled writes, generated Remote contracts, service disposal, and simulated package uninstall/reinstall with data retained outside the package. Tool tests also exercise the real registry/executor: exact registration, inert source/material payloads, scoped visibility, scope-local and descendant guard denials despite allow policies, topic binding, failed-save preservation, leave and disposal. Draft tests cover all platform shapes, unsourced facts, rejected invented numeric/citation tokens, structured compliance findings, changed copy/evidence/rules, stale and competing saves, and legacy data. Export tests also cover all formats, manual URL backfill, legacy requests, stale review labels, path traversal, symlinks and an ancestor-replacement race, staging cleanup, byte-for-byte material copies, and script-like material reads without execution or network calls. Client tests use the compiled module-loader artifact, real Cordis lifecycle and SlotCore, React rendering and a descriptor-checked local Remote transport to exercise capture, inert previews, all draft forms, reviews, conflicting saves, exports and backfill. Actual browser layout, profile loading and screenshots remain for task 7.
+Tests cover reload, byte copies, inert content, path/symlink rejection, corrupt-state preservation, concurrent updates, review invalidation, cancelled writes, generated Remote contracts, service disposal, and simulated package uninstall/reinstall with data retained outside the package. Tool tests also exercise the real registry/executor: exact registration, inert source/material payloads, scoped visibility, scope-local and descendant guard denials despite allow policies, topic binding, failed-save preservation, leave and disposal. Draft tests cover all platform shapes, unsourced facts, rejected invented numeric/citation tokens, structured compliance findings, changed copy/evidence/rules, stale and competing saves, and legacy data. Export tests also cover all formats, manual URL backfill, legacy requests, stale review labels, path traversal, symlinks and an ancestor-replacement race, staging cleanup, byte-for-byte material copies, and script-like material reads without execution or network calls. Client tests use the compiled module-loader artifact, real Cordis lifecycle and SlotCore, React rendering and a descriptor-checked local Remote transport to exercise capture, inert previews, all draft forms, reviews, conflicting saves, exports and backfill.
 
 MIT © 2026 hzopc1031.

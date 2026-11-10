@@ -8,6 +8,7 @@ const [pack] = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json', '-
 }))
 const expected = [
   'package.json', 'index.js', 'lib/plugin.js', 'lib/plugin.d.ts',
+  'lib/adapters.js', 'lib/adapters.d.ts',
   'lib/capture.js', 'lib/capture.d.ts',
   'lib/detect.js', 'lib/detect.d.ts', 'lib/html.js', 'lib/html.d.ts', 'lib/notes.js', 'lib/notes.d.ts',
   'cordis.patch.yml', 'locale/en.json', 'locale/zh.json', 'icon.svg',

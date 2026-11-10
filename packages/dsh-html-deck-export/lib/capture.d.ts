@@ -39,5 +39,5 @@ export declare function createCaptureEngine(directory: string, options?: Capture
     browserVersion: string;
     browserPid: number | undefined;
     close: () => Promise<void>;
-    capture(input: string, prepare?: (page: Page) => Promise<void>): Promise<CaptureResult>;
+    capture(input: string, prepare?: (page: Page) => Promise<void>, finalize?: (page: Page) => Promise<void>): Promise<CaptureResult>;
 }>;

@@ -209,3 +209,23 @@ test('invalid settings are rejected before Chrome launch', async () => {
     await assert.rejects(createCaptureEngine(fixtures, options))
   }
 })
+
+test('fonts activated during adapter finalization are awaited before screenshot', async () => {
+  let readyAtCapture = false
+  const result = await engine.capture('capture.html', async page => {
+    const screenshot = page.screenshot.bind(page)
+    page.screenshot = async options => {
+      readyAtCapture = await page.evaluate(() => window.finalFontReady)
+      assert.ok(readyAtCapture, 'finalization must not bypass the last fonts.ready wait')
+      return screenshot(options)
+    }
+  }, async page => {
+    await page.evaluate(() => {
+      window.finalFontReady = false
+      const pending = new Promise(resolve => setTimeout(() => { window.finalFontReady = true; resolve(document.fonts) }, 250))
+      Object.defineProperty(document.fonts, 'ready', { get: () => pending })
+    })
+  })
+  assert.equal(result.status, 'captured', result.error)
+  assert.ok(readyAtCapture)
+})

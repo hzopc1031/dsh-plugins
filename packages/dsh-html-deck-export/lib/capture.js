@@ -69,7 +69,7 @@ export async function createCaptureEngine(directory, options = {}) {
             root, viewport, scale, format, quality: options.quality,
             allowNetwork: options.allowNetwork ?? false, browserVersion, browserPid: browser.process()?.pid,
             close: dispose,
-            async capture(input, prepare) {
+            async capture(input, prepare, finalize) {
                 options.signal?.throwIfAborted();
                 if (closing)
                     throw new Error('Capture engine is closed');
@@ -108,7 +108,11 @@ export async function createCaptureEngine(directory, options = {}) {
                                         await request.continue();
                                 }
                                 catch (error) {
-                                    pathError = error;
+                                    if (error.code === 'ENOENT' && request.resourceType() !== 'document') {
+                                        warnings.add(`Missing local resource: ${target.href}`);
+                                    }
+                                    else
+                                        pathError = error;
                                     await request.abort('accessdenied');
                                 }
                             }
@@ -148,6 +152,7 @@ export async function createCaptureEngine(directory, options = {}) {
                             await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
                         });
                         await active.waitForNetworkIdle({ idleTime: stabilityMs });
+                        await finalize?.(active);
                         await active.evaluate(async () => {
                             await document.fonts.ready;
                             if (document.fonts.status !== 'loaded')
@@ -156,10 +161,17 @@ export async function createCaptureEngine(directory, options = {}) {
                                 throw new Error('Image not loaded after stability wait');
                         });
                         const fontInfo = await active.evaluate(() => {
-                            const visible = Array.from(document.querySelectorAll('*')).filter(element => Array.from(element.childNodes).some(node => node.nodeType === Node.TEXT_NODE && node.textContent?.trim()) &&
-                                element.getClientRects().length && getComputedStyle(element).visibility !== 'hidden');
+                            const visible = Array.from(document.querySelectorAll('*')).filter(element => {
+                                const rect = element.getBoundingClientRect();
+                                return Array.from(element.childNodes).some(node => node.nodeType === Node.TEXT_NODE && node.textContent?.trim()) &&
+                                    rect.width > 0 && rect.height > 0 && rect.right > 0 && rect.bottom > 0 && rect.left < innerWidth && rect.top < innerHeight &&
+                                    element.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true });
+                            });
+                            const selector = (element) => element.parentElement
+                                ? `${selector(element.parentElement)} > :nth-child(${Array.from(element.parentElement.children).indexOf(element) + 1})` : 'html';
                             return {
                                 families: [...new Set(visible.map(element => getComputedStyle(element).fontFamily))],
+                                selectors: visible.map(selector),
                                 errors: Array.from(document.fonts).filter(font => font.status === 'error').map(font => font.family),
                                 loaded: Array.from(document.fonts).filter(font => font.status === 'loaded').map(font => font.family.replace(/["']/g, '').toLowerCase()),
                                 overflow: document.documentElement.scrollWidth > innerWidth || document.documentElement.scrollHeight > innerHeight,
@@ -175,14 +187,9 @@ export async function createCaptureEngine(directory, options = {}) {
                             await session.send('DOM.enable');
                             await session.send('CSS.enable');
                             const { root: dom } = await session.send('DOM.getDocument', { depth: -1, pierce: true });
-                            const textParents = new Set();
-                            const visit = (node) => {
-                                if (node.children?.some(child => child.nodeType === 3 && child.nodeValue.trim()))
-                                    textParents.add(node.nodeId);
-                                node.children?.forEach(visit);
-                            };
-                            visit(dom);
-                            const fonts = await Promise.all([...textParents].map(nodeId => session.send('CSS.getPlatformFontsForNode', { nodeId })));
+                            const { nodeIds } = fontInfo.selectors.length
+                                ? await session.send('DOM.querySelectorAll', { nodeId: dom.nodeId, selector: fontInfo.selectors.join(',') }) : { nodeIds: [] };
+                            const fonts = await Promise.all(nodeIds.map(nodeId => session.send('CSS.getPlatformFontsForNode', { nodeId })));
                             result.actualFontFamilies = [...new Set(fonts.flatMap(item => item.fonts.filter(font => font.glyphCount > 0).map(font => font.familyName)))].sort();
                             for (const stack of fontInfo.families) {
                                 const primary = stack.split(',')[0].trim().replace(/["']/g, '');

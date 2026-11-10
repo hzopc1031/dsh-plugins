@@ -44,8 +44,7 @@ Static detection is available as `detectDeck(path)` from
 containing `index.html`. It returns the canonical input path, format,
 one-based slides in DOM order, selectors, navigation URLs, available notes,
 declared/fixed design size, and warnings. 歸藏 uses `?mode=preview&slide=N`;
-hash decks use `#/N`. Generic slides require DOM activation by the later
-capture implementation. Nested sections, marked clones, overview containers,
+hash decks use `#/N`. Generic slides use DOM activation during capture. Nested sections, marked clones, overview containers,
 and templates are excluded. HTML without a slide contract is rejected.
 
 Detection reads markup and directly linked local JavaScript/CSS; it never
@@ -60,7 +59,7 @@ Static notes come from literal `window.__SPEAKER_NOTES__` maps or arrays
 Array entries align by `id` to `data-slide-id`, never by array position.
 String fields and lists of strings in structured notes become separate lines.
 Absent notes remain absent. Computed JavaScript notes are flagged with
-`runtimeNotes` and a warning for task 4; imported code, dynamic slides, the full
+`runtimeNotes` and a warning; imported code, dynamic slides, the full
 CSS cascade, and browser HTML repair also require runtime verification.
 HTML notes decode numeric and common XML/HTML entities; capture must read
 the actual DOM for other named entities and any runtime note updates.
@@ -102,14 +101,14 @@ The viewport defaults to 1920×1080, deviceScaleFactor 2. A custom `viewport`
 must also be 16:9; use a known fixed design size when appropriate. Neither scale
 nor format changes the viewport or the deck's CSS design canvas. Only the full
 viewport is captured, never a tall page or a section crop. Document overflow
-produces a clipping warning. Format adapters still need to check slide geometry.
+produces a clipping warning. Deck adapters check slide geometry and report clipping.
 
 After adapter preparation, capture hides `#nav`, `#hint`, and
 `[data-export-chrome]` with `visibility:hidden`, preserving flex layout. It awaits
 `document.fonts.ready`, image decoding, two animation frames (one paint), and a
 150ms network-idle stability wait, then rechecks fonts/images. `timeoutMs` defaults to 15000;
 `stabilityMs` is configurable. This does not settle arbitrary animation timelines;
-format-specific final-state handling remains for task 4.
+the deck adapter finalizes the inspected format contracts after these waits.
 
 Outbound HTTP(S) is blocked by default, including loopback. A dead proxy also
 blocks sockets such as WebSocket; non-proxied WebRTC is disabled. Only explicit
@@ -122,14 +121,84 @@ page interception. Decks requiring those features are outside this engine's
 current contract. Missing images fail; blocked resources, script errors, font
 load errors and primary-font fallback are explicit warnings. Capture reports
 computed font stacks and actual rendered font families from Chrome's DevTools
-CSS API; these are diagnostics, not a guarantee of glyph coverage. The 王虹
-required-font check belongs to its later adapter.
+CSS API; these are diagnostics, not a guarantee of glyph coverage. The deck adapter fails 王虹 capture when its required handwritten font is unavailable.
 
 Results contain status, URL, successful image bytes, warnings, font families,
 elapsed time, and error text/best-effort screenshot evidence on failure. The
 engine also exposes viewport, scale, format/quality, network policy and browser
-version for the later export report. It writes no output files. PPTX assembly,
-atomic output, notes refresh, and complete deck adapters are still pending.
+version for the later export report. It writes no output files. PPTX assembly
+and atomic output are still pending.
 Image bytes and rendering can vary across Chrome versions and machines.
+
+Deck capture is available from `dsh-html-deck-export/adapters`:
+
+```js
+import { captureDeck } from 'dsh-html-deck-export/adapters'
+const run = await captureDeck('/absolute/deck/index.html', {
+  scale: 2, format: 'png', allowNetwork: false, signal: abortController.signal,
+  // resourceRoot: '/absolute/deck-project', // explicitly allow sibling assets
+})
+for (const page of run.pages) {
+  // status === 'captured': page.image is the full viewport PNG/JPEG.
+  // status === 'failed': bytes is zero; image/error are failure evidence.
+  console.log(page.index, page.id, page.status, page.notes, page.warnings)
+}
+```
+
+The adapter closes Chrome in `finally` and returns every page in DOM order,
+including failures. It writes no files. `run` contains the detected deck,
+viewport, scale, format/quality, network policy, browser version, total successful
+image bytes and elapsed time. Each page includes runtime notes, note source,
+fonts, warnings and `renderState` (navigation, bounds, animation final-state
+checks and chrome visibility), ready for the later JSON/PPTX writer.
+
+- 歸藏 opens each one-based `?mode=preview&slide=N` URL and verifies its runtime
+  page index. Capture includes the entire composited viewport and any canvas
+  outside the section. After fonts/images settle, it finishes finite Web
+  Animations, pauses infinite CSS animations and forces the inspected entrance,
+  pipeline and Swiss static-reveal targets visible. It does not call `go` or
+  reconstruct animation timelines. JavaScript/Canvas backgrounds follow the
+  source's preview mode. `renderState.preview` records low-power mode,
+  background canvas counts and differences from live playback. In the official
+  Swiss example, preview hides background canvases; the magazine example keeps
+  its static effect canvases. These are preview images, not a promise of visual
+  identity with live animation. Source preview rules that hide nav/hint with
+  `display:none` are changed in memory to `visibility:hidden`, preserving their
+  original display and flex space. Named `.chrome`, `.chrome-min`, `.gz-chrome`
+  and `.foot` containers and the Swiss embedded swipe hint are also hidden with
+  visibility rules and recorded as page chrome. The source files are never modified.
+- Hash and query contracts navigate via `#/N` and `?slide=N`. DOM decks can
+  expose `window.__goTo(i, { skipAnim: true })`, with **zero-based** `i`. Otherwise
+  the adapter activates the chosen detected section and removes peer pages from
+  layout. It preserves design dimensions and refuses invisible or overlapping
+  pages. Arbitrary custom navigation is outside this contract.
+- Runtime `window.__SPEAKER_NOTES__` entries match `data-slide-id`, including
+  shuffled arrays of records. They take precedence over runtime `data-notes`
+  and `aside.notes`; Chinese line breaks and browser-decoded entities survive.
+  Nested-page notes are excluded and note asides are hidden without reflow.
+- 王虹 requires 1920×1080 and a loaded/available `HanziPen SC` when requested
+  by its CSS. An explicit `data-wanghong-font-ready` marker must be `true` if
+  present. Missing HanziPen fails on this Linux box. The synthetic readiness
+  fixture tests the success path with Noto; it makes no handwritten-font
+  fidelity claim.
+- Fixed canvases retain their CSS size. Non-1920 canvases/viewports and detected
+  clipping produce warnings; no design canvas is stretched to fill the image.
+  Asset access defaults to the HTML directory. Decks using `../assets` need an
+  explicit `resourceRoot` containing both HTML and assets; lexical/realpath
+  containment checks still apply. The DSH tool must confine that root to its
+  authorized input boundary.
+
+Offline capture warns explicitly about blocked Google Fonts, fallback fonts,
+missing local scripts/styles and other failed resources. Missing non-document
+resources are warnings so a deck's own static fallback can run (both official
+歸藏 fixtures lack their optional local `motion.min.js` here). Missing images
+still fail decoding; document failures and path escapes fail. Fix/embed resources
+in the source for fidelity, or explicitly opt into `allowNetwork: true` for
+remote assets. The choice is recorded; the adapter never enables network itself.
+A warning-bearing image must be reviewed before it is treated as faithful.
+
+The capture engine also accepts a third `finalize(page)` callback after its
+readiness waits and before font diagnostics/screenshotting; deck adapters use
+this for final-state validation. It is for trusted adapter code only.
 
 MIT © 2026 hzopc1031. No fixture themes, scripts, or assets are bundled.

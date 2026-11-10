@@ -1,0 +1,4 @@
+- insert:
+    - id: file-holder
+      name: dsh-file-holder
+      config: {}

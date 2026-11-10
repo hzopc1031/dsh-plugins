@@ -10,6 +10,8 @@
 | 任务心跳 | [`dsh-heartbeat-monitor`](https://www.npmjs.com/package/dsh-heartbeat-monitor) | 长任务定时进度卡、静默/重复警告（`/heartbeat`）/ Timed progress cards and stall/repeat warnings | [README](packages/dsh-heartbeat-monitor/README.md) |
 | 桌面插件组合回归台 | `dsh-plugin-combo-lab`（未发布 npm / not published to npm） | 双插件组合回归计划、人工证据记录与升级对照（`/combo-lab`）/ Two-plugin regression plans, manual evidence and upgrade comparisons | [README](packages/dsh-plugin-combo-lab/README.md) |
 | 资料更新影响分析 | `dsh-source-impact`（未发布 npm / not published to npm） | 显式来源引用追踪与更新影响复查清单（`/impact`）/ Explicit source citation tracking and update impact checklists | [README](packages/dsh-source-impact/README.md) |
+| 权限拒绝诊断台 | `dsh-permission-doctor`（未发布 npm / not published to npm） | 只读诊断工具拒绝与未弹审批的证据（`/permission-doctor`）/ Read-only diagnostics for tool denials and missing approval prompts | [README](packages/dsh-permission-doctor/README.md) |
+| 指令冲突解释器 | `dsh-instruction-conflicts`（未发布 npm / not published to npm） | 规则正文疑似冲突、注入版本与当前上下文证据（`/instruction-conflicts`）/ Suspected instruction conflicts, injected versions and current context evidence | [README](packages/dsh-instruction-conflicts/README.md) |
 
 > 心跳插件的 npm 包名是 `dsh-heartbeat-monitor`：`dsh-heartbeat` 已被一个无关的包占用。
 > The heartbeat plugin is published as `dsh-heartbeat-monitor` because `dsh-heartbeat` is an unrelated package.
@@ -51,6 +53,8 @@ dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packag
 dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-heartbeat-monitor"
 dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-plugin-combo-lab"
 dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-source-impact"
+dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-permission-doctor"
+dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-instruction-conflicts"
 ```
 
 同样的 `github:...` 地址也可以填进界面的「添加插件」。把 `main` 换成某个提交哈希即可固定版本。

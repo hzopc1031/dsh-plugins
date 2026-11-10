@@ -1,0 +1,4 @@
+- insert:
+    - id: permission-doctor
+      name: dsh-permission-doctor
+      config: {}

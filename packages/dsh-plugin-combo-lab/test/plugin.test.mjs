@@ -10,6 +10,10 @@ import * as plugin from '../index.js'
 import { Store } from '../lib/store.js'
 import { planInput } from './fixtures.mjs'
 
+function parseJsonObject(text) {
+  const start = text.indexOf('{'), end = text.lastIndexOf('}')
+  return JSON.parse(text.slice(start, end + 1))
+}
 async function harness(fn) {
   const root = await mkdtemp(path.join(os.tmpdir(), 'combo-plugin-'))
   const ctx = new Context()
@@ -46,7 +50,7 @@ test('完整工作流：计划→模板→记录→升级前后快照→对照',
   const id = await h.plan()
   assert.match(await h.run('show ' + id), /待桌面验证/)
   const template = await h.run('template ' + id + ' ab:input.commands')
-  const observation = JSON.parse(template.slice(template.indexOf('{"stepId"')))
+  const observation = parseJsonObject(template)
   observation.outcome = 'pass'; observation.observer = 'fixture'; observation.evidence = '测试夹具：人工核对动作成功'
   await h.run('record ' + id + ' ' + JSON.stringify(observation))
   const beforeText = await h.run('snapshot ' + id + ' 升级前')
@@ -54,7 +58,7 @@ test('完整工作流：计划→模板→记录→升级前后快照→对照',
   const upgraded = structuredClone(planInput); upgraded.plugins[0].version = '1.1.0'
   const afterId = await h.plan(upgraded)
   const newer = await h.store.load(afterId)
-  const nextTemplate = JSON.parse((await h.run('template ' + afterId + ' ab:input.commands')).split('/combo-lab record ')[1].slice(afterId.length + 1))
+  const nextTemplate = parseJsonObject((await h.run('template ' + afterId + ' ab:input.commands')).split('/combo-lab record ')[1])
   await h.run('record ' + afterId + ' ' + JSON.stringify({ ...nextTemplate, outcome: 'fail', observer: 'fixture', evidence: '测试夹具：组合失败' }))
   const after = /快照：([0-9a-f-]{36})/.exec(await h.run('snapshot ' + afterId + ' 升级后'))[1]
   const output = await h.run('compare ' + before + ' ' + after)
@@ -71,10 +75,25 @@ test('完整工作流：计划→模板→记录→升级前后快照→对照',
 }))
 test('并发记录排队，防止丢失证据', () => harness(async h => {
   const id = await h.plan()
-  const parse = text => JSON.parse(text.slice(text.indexOf('{"stepId"')))
+  const parse = text => parseJsonObject(text)
   const a = parse(await h.run('template ' + id + ' a:input.commands')), b = parse(await h.run('template ' + id + ' b:input.commands'))
   await Promise.all([h.run('record ' + id + ' ' + JSON.stringify(a)), h.run('record ' + id + ' ' + JSON.stringify(b))])
   assert.equal((await h.store.load(id)).observations.length, 2)
+}))
+
+test('next is read-only and advances only after an explicit record; current cwd resolves archives',()=>harness(async h=>{
+  const id=await h.plan()
+  const first=JSON.parse(await h.run('next '+id))
+  assert.equal(first.remaining,50);assert.equal(first.step.id,'baseline:input.tools')
+  assert.equal((await h.store.load(id)).observations.length,0)
+  assert.equal(first.step.template.outcome,'blocked')
+  await h.run('record '+id+' '+JSON.stringify({...first.step.template,evidence:'No tool entry, manually checked',observer:'fixture',outcome:'unsupported'}))
+  assert.equal(JSON.parse(await h.run('next '+id)).remaining,49)
+  const moved=path.join(h.root,'moved')
+  h.ctx.provide('workingDirectory',{get:()=>moved})
+  const next=await h.plan()
+  const state=await new Store(path.join(moved,'.dsh/combo-lab')).load(next)
+  assert.equal(state.plan.id,next)
 }))
 test('畸形输入、路径穿越与缺失存档给出错误；现有计划不受影响', () => harness(async h => {
   const id = await h.plan()
@@ -96,4 +115,22 @@ test('命令不调用进程、桌面自动化或插件管理服务，只有计�
   assert.equal((await h.store.load(id)).observations.length, 0)
   assert.deepEqual(plugin.inject, ['commands'])
   assert.equal(h.ctx.commands.find(h.agent, 'combo-lab').input.attachments, undefined)
+}))
+
+test('template plan and next failures: subset is persisted and failed steps can be reopened', () => harness(async h => {
+  const id = await h.plan({ ...planInput, templateId: 'commands' })
+  const first = JSON.parse(await h.run('next ' + id))
+  assert.equal(first.template.id, 'commands')
+  assert.equal(first.remaining, 10)
+  assert.deepEqual(first.failures, [])
+  assert.equal(first.directory.source, 'fallback')
+  assert.match(await h.run('show ' + id), /检查模板：commands@/)
+  const observation = { ...first.step.template, outcome: 'fail', observer: 'fixture', evidence: '命令被另一插件覆盖' }
+  await h.run('record ' + id + ' ' + JSON.stringify(observation))
+  const next = JSON.parse(await h.run('next ' + id))
+  assert.equal(next.remaining, 9)
+  assert.equal(next.failures[0].id, first.step.id)
+  const jumped = JSON.parse(await h.run('next ' + id + ' ' + first.step.id))
+  assert.equal(jumped.step.id, first.step.id)
+  assert.match(await h.run('show ' + id), /使用的根目录（服务缺失，回退原始项目目录 header.cwd）：/)
 }))

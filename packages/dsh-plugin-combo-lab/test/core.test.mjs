@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { createPlan, parseStudy, record, status, reduce, compare, renderStudy, observationTemplate } from '../lib/core.js'
+import { createPlan, parseStudy, record, status, reduce, compare, renderStudy, observationTemplate, selectChecks, checkTemplates, TEMPLATE_VERSION } from '../lib/core.js'
 import { ID, now, planInput, study, observe, add, isolatedFailure } from './fixtures.mjs'
 
 test('固定两插件、三类交互、50 步及正反启用顺序；默认全待桌面验证', () => {
@@ -160,4 +160,22 @@ test('存档重建校验，拒绝改写派生计划或损坏证据', () => {
 test('报告包含动作、明确证据来源、版本与复现清单，不伪称自动验证', () => {
   const output = renderStudy(isolatedFailure())
   for (const phrase of ['50 步', '人工证据', '未自动检测', '最小清单', '完全退出', '待桌面验证', '精确版本']) assert.ok(output.includes(phrase), phrase)
+})
+
+test('检查模板子集与存档兼容：无 templateId 的计划与旧版 50 步 JSON 一致', () => {
+  const full = study()
+  assert.equal('template' in full.plan, false)
+  assert.deepEqual(parseStudy(JSON.parse(JSON.stringify(full))), full)
+  const inputOnly = study({ templateId: 'input' })
+  assert.equal(inputOnly.plan.template.id, 'input')
+  assert.equal(inputOnly.plan.template.version, TEMPLATE_VERSION)
+  assert.equal(inputOnly.plan.steps.length, 20)
+  assert.ok(inputOnly.plan.checks.every(c => c.surface === 'input'))
+  assert.deepEqual(parseStudy(JSON.parse(JSON.stringify(inputOnly))), inputOnly)
+  const comparison = compare(full, inputOnly)
+  assert.equal(comparison.comparable, false)
+  assert.ok(comparison.reasons.some(r => r.includes('检查模板')))
+  assert.equal(selectChecks('commands').checks.length, 2)
+  assert.equal(checkTemplates.some(t => t.id === 'tools-and-panels'), true)
+  assert.throws(() => study({ templateId: 'missing-template' }), /未知检查模板/)
 })

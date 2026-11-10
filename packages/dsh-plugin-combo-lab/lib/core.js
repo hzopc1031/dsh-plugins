@@ -46,7 +46,8 @@ function input(value) {
         throw new Error('两个插件的包名必须不同');
     // Canonical identity makes an upgrade comparable even if selection order changes.
     const plugins = [a, b].sort((x, y) => x.name.localeCompare(y.name, 'en'));
-    return { plugins, environment: environment(p.environment), workspace: string(p.workspace, '工作区标识', 500), configBaseline: string(p.configBaseline, '配置基线标识', 500) };
+    const templateId = p.templateId === undefined ? undefined : string(p.templateId, '检查模板', 80);
+    return { plugins, environment: environment(p.environment), workspace: string(p.workspace, '工作区标识', 500), configBaseline: string(p.configBaseline, '配置基线标识', 500), ...(templateId ? { templateId } : {}) };
 }
 export const checks = [
     { id: 'input.tools', surface: 'input', kind: 'tools', instructions: '在输入框触发两个插件公开的工具入口；核对名称、归属及实际结果，记录重复注册错误或被覆盖的工具。没有相关入口则记 unsupported。' },
@@ -61,6 +62,27 @@ export const checks = [
         instructions: '记录此交互面的非敏感配置键与实际值；完全退出 DSH（含托盘）后重开，再检查配置和界面效果。填写 restart.before/after 与 fullyExited:true；不要记录凭据。'
     })),
 ];
+export const TEMPLATE_VERSION = '1.0.0';
+export const checkTemplates = [
+    { id: 'all-surfaces', version: TEMPLATE_VERSION, label: '全部交互面（默认完整矩阵）' },
+    { id: 'input', version: TEMPLATE_VERSION, label: '仅输入框', surfaces: ['input'] },
+    { id: 'sidebar', version: TEMPLATE_VERSION, label: '仅侧栏', surfaces: ['sidebar'] },
+    { id: 'session-menu', version: TEMPLATE_VERSION, label: '仅会话菜单', surfaces: ['session-menu'] },
+    { id: 'commands', version: TEMPLATE_VERSION, label: '仅命令入口', kinds: ['commands'] },
+    { id: 'tools-and-panels', version: TEMPLATE_VERSION, label: '工具入口与界面面板', kinds: ['tools', 'panel'] },
+];
+export function selectChecks(templateId) {
+    if (!templateId)
+        return { checks: structuredClone([...checks]) };
+    const template = checkTemplates.find(t => t.id === templateId);
+    if (!template)
+        throw new Error('未知检查模板');
+    const selected = checks.filter(c => (!template.surfaces || template.surfaces.includes(c.surface)) &&
+        (!template.kinds || template.kinds.includes(c.kind)));
+    if (!selected.length)
+        throw new Error('模板没有可用检查项');
+    return { template: { id: template.id, version: template.version }, checks: structuredClone(selected) };
+}
 export function createPlan(value, id, createdAt) {
     const data = input(value), [a, b] = data.plugins;
     const enabled = [['baseline', []], ['a', [a]], ['b', [b]], ['ab', [a, b]], ['ba', [b, a]]];
@@ -70,7 +92,9 @@ export function createPlan(value, id, createdAt) {
             (id === 'baseline' ? '关闭两个目标插件，记录空白对照。' : '按 enabled 顺序启用目标插件，完全退出（含托盘）再重开；记录实际操作顺序。') +
             (id === 'ba' ? '此轮用于检查反向启用顺序；不能从安装顺序推断实际内部加载顺序。' : '')
     }));
-    const plan = { ...data, id: identifier(id), createdAt: timestamp(createdAt), checks: structuredClone([...checks]), runs, steps: runs.flatMap(run => checks.map(check => ({ id: run.id + ':' + check.id, run: run.id, check: check.id }))) };
+    const selected = selectChecks(data.templateId);
+    const { templateId: _templateId, ...base } = data;
+    const plan = { ...base, id: identifier(id), createdAt: timestamp(createdAt), ...(selected.template ? { template: selected.template } : {}), checks: selected.checks, runs, steps: runs.flatMap(run => selected.checks.map(check => ({ id: run.id + ':' + check.id, run: run.id, check: check.id }))) };
     return { schemaVersion: 1, plan, observations: [] };
 }
 function sameRefs(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
@@ -115,7 +139,8 @@ export function parseStudy(value) {
     const s = object(value), p = object(s.plan);
     if (s.schemaVersion !== 1 || !Array.isArray(s.observations) || s.observations.length > 20000)
         throw new Error('存档格式或大小无效');
-    let study = createPlan(p, identifier(p.id), timestamp(p.createdAt));
+    const storedTemplate = p.template && typeof p.template === 'object' && !Array.isArray(p.template) ? p.template.id : p.templateId;
+    let study = createPlan({ ...p, ...(typeof storedTemplate === 'string' ? { templateId: storedTemplate } : {}) }, identifier(p.id), timestamp(p.createdAt));
     if (JSON.stringify(p) !== JSON.stringify(study.plan))
         throw new Error('计划结构损坏或不是本版生成的计划');
     let previous = study.plan.createdAt;
@@ -190,6 +215,9 @@ export function compare(before, after) {
             reasons.push('桌面环境不同：' + field);
     if (a.workspace !== b.workspace || a.configBaseline !== b.configBaseline)
         reasons.push('工作区或配置基线不同');
+    const templateKey = (plan) => (plan.template?.id ?? 'all-surfaces') + '@' + (plan.template?.version ?? TEMPLATE_VERSION);
+    if (templateKey(a) !== templateKey(b))
+        reasons.push('检查模板或模板版本不同');
     if (a.steps.map(s => s.id).join() !== b.steps.map(s => s.id).join())
         reasons.push('检查矩阵不同');
     const comparable = reasons.length === 0;
@@ -218,6 +246,7 @@ export function renderStudy(study) {
     const lines = ['# 桌面组合回归台', '计划：' + p.id, p.plugins.map(x => x.name + '@' + x.version).join(' + '),
         '仅 Windows 官方桌面；所有通过均为人工证据声明，回归台未自动检测原生桌面。',
         '环境：' + JSON.stringify(p.environment), '工作区：' + p.workspace + '；配置基线：' + p.configBaseline,
+        '检查模板：' + (p.template ? p.template.id + '@' + p.template.version : 'all-surfaces（存档未记录模板，等同完整矩阵）'),
         '共 ' + p.steps.length + ' 步；待验证或不适用的项不会算通过。', '', '## 执行轮次'];
     for (const run of p.runs)
         lines.push(run.id + '：' + run.enabled.map(x => x.name + '@' + x.version).join(' → '), run.instructions);

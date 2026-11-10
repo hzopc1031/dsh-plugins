@@ -20,6 +20,11 @@ export interface PlanInput {
     environment: Environment;
     workspace: string;
     configBaseline: string;
+    templateId?: string;
+}
+export interface TemplateRef {
+    id: string;
+    version: string;
 }
 export interface Check {
     id: string;
@@ -37,12 +42,13 @@ export interface Step {
     run: RunId;
     check: string;
 }
-export interface Plan extends PlanInput {
+export interface Plan extends Omit<PlanInput, 'templateId'> {
     id: string;
     createdAt: string;
     checks: Check[];
     runs: Run[];
     steps: Step[];
+    template?: TemplateRef;
 }
 export interface Observation {
     stepId: string;
@@ -92,6 +98,19 @@ export declare function string(value: unknown, label: string, max?: number): str
 export declare function timestamp(value: unknown): string;
 export declare function identifier(value: unknown): string;
 export declare const checks: readonly Check[];
+export declare const TEMPLATE_VERSION = "1.0.0";
+export interface CheckTemplate {
+    id: string;
+    version: string;
+    label: string;
+    surfaces?: Surface[];
+    kinds?: CheckKind[];
+}
+export declare const checkTemplates: readonly CheckTemplate[];
+export declare function selectChecks(templateId?: string): {
+    template?: TemplateRef;
+    checks: Check[];
+};
 export declare function createPlan(value: unknown, id: string, createdAt: string): Study;
 export declare function validateObservation(plan: Plan, value: unknown): Observation;
 export declare function record(study: Study, value: unknown): Study;

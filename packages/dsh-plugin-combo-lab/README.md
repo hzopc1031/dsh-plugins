@@ -1,10 +1,14 @@
 # dsh-plugin-combo-lab · 插件组合冲突检查
 
-版本 0.1.0，MIT。仅面向 **Windows 官方桌面 DSH**，目标版本 0.2.1-rc.5。
+当前源码版本 **0.2.0**（尚未发布本次版本到 npm）。会话标题栏新增“插件组合检查”入口（conversation.session.header.actions list slot）。用表单输入两个包名/精确版本、桌面版本、机器、工作区、配置基线及可选检查模板，再逐项执行人工操作；结果默认受阻、证据为空，必须人工填写。默认仍是完整 50 步矩阵；也可只检查输入框、侧栏、会话菜单、命令入口或工具/面板。下一步只读取尚未记录的步骤，record 后继续；失败与受阻项可从面板跳回重录。受阻/不适用不算通过。无 template 字段的旧存档按完整矩阵重建。模板或模板版本不同时升级对照不可比。保留 JSON 命令、重录、snapshot/compare。/combo-lab next <ID> [步骤ID] 返回只读 JSON。成功的人工命令会写明当前执行目录或回退的 header.cwd。不会安装/启停插件、操作桌面或自动认定通过。存档使用 workingDirectory.get(session)，服务缺失回退 header.cwd；/cd 不迁移旧档案。
+
+本次只完成 Windows 上的 typecheck、单元/rc.5 headless 集成、browser factory 的 jsdom 检查及 verify-pack；未安装到真实 DSH、未做 Electron 目视验收。
+
+版本 0.2.0，MIT。仅面向 **Windows 官方桌面 DSH**，目标版本 0.2.1-rc.5。
 
 这个插件用来协助检查**多个 DSH 插件一起安装时会不会互相冲突**，例如抢同一个命令名、占用同一个界面位置，或在提示词、工具拦截上互相干扰。它根据你记录的实际操作结果，对比单独启用和一起启用的表现，帮助指出冲突发生在哪个插件组合、检查项和启用顺序。**新装或升级插件后可以再跑一次**，确认原来的组合是否仍然正常。
 
-当前版本每次选择**恰好两个插件及精确版本**，生成桌面检查步骤，由你操作并录入证据；多个插件可分成不同的两两组合检查。入口为输入框中的 /combo-lab，无需模型调用。
+当前版本每次选择**恰好两个插件及精确版本**，生成桌面检查步骤，由你操作并录入证据；多个插件可分成不同的两两组合检查。入口为会话标题栏“插件组合检查”或输入框中的 /combo-lab，无需模型调用。
 
 本版提供**检查计划与人工证据记录**，不会自动扫描提示词或工具拦截链；这些干扰需要你实际触发相关功能，并在对应命令或工具检查项中写明预期、实际结果和证据。它也不会自动点击、注入按键、读取桌面 DOM、探测注册表、启停插件、改 profile 或重启 DSH。没有自建侧栏或会话菜单 UI；侧栏和会话菜单是检查对象。尚未在真实桌面运行本插件验证交互效果。
 
@@ -35,7 +39,7 @@ PowerShell 使用桌面捆绑 CLI。先完全退出 DSH（包括托盘），不�
 
 ## 检查步骤与启用顺序
 
-每个计划固定 5 轮、每轮 10 项，共 **50 步**：
+默认模板（all-surfaces / 未记录模板）固定 5 轮、每轮 10 项，共 **50 步**。选择更窄的检查模板时，仍是这 5 轮，但每轮只包含该模板的检查项：
 
 | 轮次 ID | 目标启用集 | 目的 |
 | --- | --- | --- |
@@ -172,3 +176,17 @@ npm run verify-pack
 测试覆盖计划、三类交互、独立/组合对照、最小集合、持久化证据、升级快照、来源标记、真实 Cordis 生命周期、并发写入和存档恢复。集成测试只创建内存 Context 和临时文件，**不是原生桌面测试**。verify-pack 在 Windows 用 shell 调 npm，检查精确发布清单和缺少安装脚本。改源码后重建 lib/；最终交付不含 node_modules、tgz 或临时垃圾。
 
 MIT，见 LICENSE。
+## 本版本开发校验
+
+在本包目录独立执行，使用本包 lockfile（根目录无 workspaces）：
+
+```powershell
+npm ci --ignore-scripts
+npm run typecheck
+npm test
+npm run verify-pack
+```
+
+`npm test` 会重建需提交的 lib/。以上通过不等于 Electron 桌面通过；真实截图、剪贴板、焦点/布局及桌面安装仍需人工验收。
+
+本次接口依据（固定 rc.5）：[packages/client/ui-conversation/src/client/contract/slots.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-conversation/src/client/contract/slots.ts)、[packages/session/working-directory/src/index.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/session/working-directory/src/index.ts)。

@@ -1,7 +1,9 @@
 # 开发状态
 
+本次 0.2.0 优化、验证与推送状态见 [OPTIMIZE_REPORT.md](../../OPTIMIZE_REPORT.md)。下列首版执行记录为历史记录；不表示本次已做桌面验收。
+
 - 包名：dsh-plugin-combo-lab
-- 版本：0.1.0
+- 版本：`0.2.0`
 - 日期：2026-11-10
 - 最终目录：dsh-plugins/packages/dsh-plugin-combo-lab
 - 状态：已收录在 GitHub 仓库，尚未发布 npm；可从仓库子目录安装。

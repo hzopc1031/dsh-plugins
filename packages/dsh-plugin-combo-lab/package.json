@@ -1,23 +1,63 @@
 {
   "name": "dsh-plugin-combo-lab",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "协助检查多个 DSH 插件一起安装时的命令名、界面位置、提示词或工具拦截冲突，结合人工记录定位问题，并在新装或升级后复查组合是否正常（当前每次检查两个插件）",
   "type": "module",
   "main": "index.js",
   "types": "lib/plugin.d.ts",
   "exports": {
-    ".": { "types": "./lib/plugin.d.ts", "default": "./index.js" },
-    "./core": { "types": "./lib/core.d.ts", "default": "./lib/core.js" },
+    ".": {
+      "types": "./lib/plugin.d.ts",
+      "default": "./index.js"
+    },
+    "./core": {
+      "types": "./lib/core.d.ts",
+      "default": "./lib/core.js"
+    },
     "./locale/*.json": "./locale/*.json",
-    "./icon": "./icon.svg"
+    "./icon": "./icon.svg",
+    "./client": {
+      "types": "./lib/client.d.ts",
+      "default": "./lib/client.js"
+    }
   },
-  "files": ["index.js", "lib/*.js", "lib/*.d.ts", "cordis.patch.yml", "locale/*.json", "icon.svg", "README.md", "LICENSE", "CHANGELOG.md"],
-  "engines": { "node": ">=22", "dsh": ">=0.2.1-rc.5 <0.3.0" },
-  "dsh": { "bundle": { "patch": "./cordis.patch.yml" } },
+  "files": [
+    "index.js",
+    "lib/*.js",
+    "lib/*.d.ts",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=22",
+    "dsh": ">=0.2.1-rc.5 <0.3.0"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-ui-session",
+        "@deepseek-ai/dsh-api-remotes"
+      ]
+    }
+  },
   "license": "MIT",
-  "keywords": ["dsh-plugin", "deepseek-harness", "desktop", "regression"],
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "desktop",
+    "regression"
+  ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node scripts/build-client.mjs",
     "typecheck": "tsc --noEmit",
     "test": "npm run build && node --test --test-isolation=none test/*.test.mjs",
     "verify-pack": "node scripts/verify-pack.mjs"
@@ -28,9 +68,15 @@
     "@deepseek-ai/schemastery": ">=3.18.5 <3.20.0"
   },
   "peerDependenciesMeta": {
-    "@deepseek-ai/cordis": { "optional": true },
-    "@deepseek-ai/dsh-commands": { "optional": true },
-    "@deepseek-ai/schemastery": { "optional": true }
+    "@deepseek-ai/cordis": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-commands": {
+      "optional": true
+    },
+    "@deepseek-ai/schemastery": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "~4.0.5",
@@ -38,8 +84,29 @@
     "@deepseek-ai/dsh-session": "0.2.1-rc.5",
     "@deepseek-ai/schemastery": "~3.18.5",
     "@types/node": "^22.0.0",
-    "typescript": "~5.9.3"
+    "typescript": "~5.9.3",
+    "@deepseek-ai/dsh-agent": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-api-session-controller": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-brand": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-client-store": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-client-ui-conversation": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-client-ui-primitives": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-client-ui-renderer": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-client-ui-session": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-client-ui-slots": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-llm": "0.2.1-rc.5",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "esbuild": "^0.25.0",
+    "jsdom": "^26.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "@deepseek-ai/dsh-api-remotes": "0.2.1-rc.5"
   },
-  "repository": { "type": "git", "url": "git+https://github.com/hzopc1031/dsh-plugins.git", "directory": "packages/dsh-plugin-combo-lab" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hzopc1031/dsh-plugins.git",
+    "directory": "packages/dsh-plugin-combo-lab"
+  },
   "author": "hzopc1031"
 }

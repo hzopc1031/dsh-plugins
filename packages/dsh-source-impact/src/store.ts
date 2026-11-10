@@ -3,6 +3,7 @@ import { open, realpath, mkdir, rename, unlink, lstat } from 'node:fs/promises'
 import { randomUUID } from 'node:crypto'
 import {
   ImpactError, fail, localPath, parseRegistration, emptyRegistry, parseRegistry, register, analyze, validId,
+  acceptBaselines,
   type Registry, type Scan, type Observation,
 } from './core.js'
 
@@ -122,7 +123,9 @@ export class ImpactStore {
     }, signal)
   }
   async scan(signal?: AbortSignal): Promise<Scan> {
-    const registry = await this.load(signal)
+    return this.scanRegistry(await this.load(signal), signal)
+  }
+  private async scanRegistry(registry: Registry, signal?: AbortSignal): Promise<Scan> {
     const observations = new Map<string, Observation>()
     for (const source of new Set(registry.references.map(r => r.source))) {
       check(signal)
@@ -133,5 +136,8 @@ export class ImpactStore {
       }
     }
     return analyze(registry, observations)
+  }
+  async accept(expectedScanId: string, ids: readonly string[] | undefined, signal?: AbortSignal): Promise<Registry> {
+    return this.mutate(async registry => acceptBaselines(registry, await this.scanRegistry(registry, signal), expectedScanId, ids), signal)
   }
 }

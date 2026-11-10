@@ -12,4 +12,6 @@ export declare class ImpactStore {
     add(input: unknown, signal?: AbortSignal): Promise<Registry>;
     remove(id: string, signal?: AbortSignal): Promise<Registry>;
     scan(signal?: AbortSignal): Promise<Scan>;
+    private scanRegistry;
+    accept(expectedScanId: string, ids: readonly string[] | undefined, signal?: AbortSignal): Promise<Registry>;
 }

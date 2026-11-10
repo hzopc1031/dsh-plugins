@@ -1,6 +1,10 @@
 # dsh-source-impact · 资料更新影响分析
 
-版本：0.1.0。适配 DSH 桌面版 0.2.1-rc.5（Node 22+），MIT。
+当前源码版本 **0.2.0**（尚未发布本次版本到 npm）。每次 scan 内按来源复用文件 SHA-256、CSV/行解析与相同定位结果；缓存不跨 scan，plan 仍重新读取全部来源并核对 scanId。scanId 的输入与完整 JSON 明细语义保持一致。/impact check 默认最多显示 20 条状态摘要；/impact check json 查看完整引用、结论、产出和摘录。模型工具 source_impact_check 默认返回最多 20 条简要状态（含 total/affectedCount/truncated），details:true 才返回完整结构。操作使用 workingDirectory.get(session)，服务缺失时回退 header.cwd；成功输出会写明当前执行目录或回退目录。/cd 后读取新目录的独立 registry，不移动原登记。可用 `/impact accept <scanId> [id...]` 在重新核验后原子接受新基线（省略 id 时只接受已变化且可重新定位的引用）；失败不改写原登记，并保留上一版基线。会话标题栏“资料引用登记”提供登记和接受表单。模型工具仍只读。
+
+本次只完成 Windows 上的 typecheck、单元/rc.5 headless 集成、browser factory 的 jsdom 检查及 verify-pack；未安装到真实 DSH、未做 Electron 目视验收。
+
+版本：0.2.0。适配 DSH 桌面版 0.2.1-rc.5（Node 22+），MIT。
 
 把“来源文件变了”追到“哪些表格、结论、报告章节需要重查”。只处理用户或调用方明确登记的关系：
 
@@ -10,7 +14,7 @@
 
 ## 安装
 
-此任务只完成本地开发，未提交、推送或发布；以下 GitHub 安装方式在后续将本包推送到 main 后才可用。
+本包已有 main 安装版本；本次新版本须等对应提交推送后，使用包含该提交的 Git ref 安装。未发布 npm。
 
 Git 地址：
 
@@ -37,10 +41,11 @@ github:hzopc1031/dsh-plugins#main&path:/packages/dsh-source-impact
 先在 DSH 中选择本地项目。所有路径均相对**当前会话项目目录**，只允许项目内的 `.md`、`.csv`。首版按需检查，不常驻监听目录。
 
 1. 准备来源文件和产出文件。
-2. 用户或调用方登记每条明确引用，捕获基线。
+2. 用户或调用方通过 `/impact register` 或会话头部「资料引用登记」表单登记每条明确引用，捕获基线。
 3. 来源更新后运行 `/impact check`，查看受影响表格、结论和章节。
 4. 用户选择引用 id，运行 `/impact plan <scanId> <id1,id2>`。
 5. 将返回的 JSON 复制到普通对话，要求 DSH 执行所选重查任务。
+6. 人工复核后，用 `/impact accept <scanId> [id...]` 或表单接受新基线；不要依赖模型工具改写基线。
 
 **斜杠命令的结果不会自动作为模型消息提交。** 插件生成可执行步骤，用户把清单交给 DSH；本插件不会自行启动代理任务。清单要求重读来源、校验当前哈希、执行登记的重算方法、核对产出位置、记录复核依据，再提出修改建议。
 
@@ -132,14 +137,15 @@ CSV 使用逗号分隔，第一条记录是表头。支持带引号的逗号、�
 /impact list
 /impact check
 /impact plan <scanId> <id1,id2>
+/impact accept <scanId> [id1,id2]
 /impact remove <id>
 ```
 
 `check` 与 `plan` 都不更新基线。生成清单前会重新读取来源和登记文件，指纹与选择时不同就拒绝并要求重新检查。文件仍可能在清单生成后再次变化，任务步骤因此要求 DSH 执行前再次验证哈希；多文件检查为逐个读取，不提供文件系统事务快照。
 
-人工完成复核后，如需接受新基线，明确执行 `remove <id>` 再重新 `register`。重复登记 id 会报错，不会静默覆盖。
+人工完成复核后，使用 `/impact accept <scanId> [id...]` 原子接受新基线并保留上一版；命令会重新核验 scanId，失败时原登记不变。也可以 `remove <id>` 再重新 `register`。重复登记 id 会报错，不会静默覆盖。
 
-模型可调用 **`source_impact_check`**（无参数），返回带类型字段的检查结果 JSON 字符串，包括 `scanId`、`impacts`、`affected`、基线与当前引用摘录及 SHA-256。工具只读，不开放模型侧自动选择、登记或改写报告能力。
+模型可调用 **`source_impact_check`**，无参数时返回 `scanId`、总数和最多 20 条状态摘要；传入 `details: true` 才返回完整 `impacts`、`affected`、基线与当前引用摘录及 SHA-256。工具只读，不开放模型侧自动选择、登记或改写报告能力。
 
 调用方可导入 `dsh-source-impact/core`（纯函数）和 `dsh-source-impact/store`（受限本地 I/O）：
 
@@ -181,6 +187,21 @@ npm run verify-pack
 
 `verify-pack` 使用 `npm pack --dry-run --json --ignore-scripts` 精确检查发布文件白名单、导出入口和 bundle patch，并拒绝安装期脚本。Windows 上调用 npm 时启用 `shell`，避免 spawn ENOENT。发布文件不含源码、测试、脚本、STATUS、锁文件、node_modules 或临时数据；仓库保留源码、测试、lockfile、STATUS 及预构建 lib，Git 安装无需构建。
 
-本次测试环境 Node 24.20.0 / npm 11.19.0 / Windows。工作区存在 Node 写入 EPERM，故在允许的 npm 缓存目录内构建及测试，再复制相同源码和预构建产物到 monorepo。未做真实桌面 UI 安装及真实模型重查执行验证。
+本批次使用 Node 24.20.0 / npm 11.19.0 / Windows，直接在各独立包目录构建与测试，临时 npm 缓存放在 worktree 的 .tmp 内。未做真实桌面 UI 安装及真实模型重查执行验证。
 
 挂载参考：[官方工具教程](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/user/develop/basic/tool.zh.md)、[官方命令包](https://github.com/deepseek-ai/deepseek-harness/tree/master/packages/interaction/commands)。实现使用 `inject`、`ctx.tools.register(defineTool(...))`（含 output.schema/render）、`ctx.commands.register` 和 `ctx.effect`；接口以本机 rc.5 包的声明及真实注册表测试为准。
+
+## 本版本开发校验
+
+在本包目录独立执行，使用本包 lockfile（根目录无 workspaces）：
+
+```powershell
+npm ci --ignore-scripts
+npm run typecheck
+npm test
+npm run verify-pack
+```
+
+`npm test` 会重建需提交的 lib/。以上通过不等于 Electron 桌面通过；真实截图、剪贴板、焦点/布局及桌面安装仍需人工验收。
+
+本次接口依据（固定 rc.5）：[packages/session/working-directory/src/index.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/session/working-directory/src/index.ts)。

@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
   normalize, hash, parseCsv, extract, parseRegistration, parseRegistry, emptyRegistry,
-  register, analyze, createPlan, renderScan, localPath,
+  register, analyze, compare, createPlan, renderScan, localPath, acceptBaselines, isAcceptable,
 } from '../lib/core.js'
 
 export const csv = 'item,vendor,price\nA,甲,100\nB,乙,200\n'
@@ -17,6 +17,20 @@ export const input = (id = 'quote-a') => ({
   recheck: '按最新单价乘以采购数量 10，重算比较表总价，再检查建议是否仍有依据。',
 })
 const makeScan = (text, registry = register(emptyRegistry(), input(), csv)) => analyze(registry, new Map([['quotes.csv', { text }]]))
+
+test('scan-local reuse preserves canonical scanId and full per-reference evidence',()=>{
+  let registry=emptyRegistry()
+  for(let i=0;i<80;i++) registry=register(registry,input('ref-'+i),csv)
+  const observation={text:csv.replace('100','120')}, impacts=registry.references.map(r=>compare(r,observation))
+  const scan=analyze(registry,new Map([['quotes.csv',observation]]))
+  assert.deepEqual(scan.impacts,impacts)
+  assert.equal(scan.scanId,hash(JSON.stringify({registry,impacts})))
+  assert.equal(renderScan(scan).split('\n').filter(l=>l.startsWith('{')).length,20)
+  assert.match(renderScan(scan),/受影响 80 条/)
+  scan.impacts[0].statuses.length=0
+  assert.ok(scan.impacts[1].statuses.length>0,'each result owns its mutable status array')
+  assert.equal(analyze(registry,new Map([['quotes.csv',{text:csv}]] )).impacts[0].citationContentChanged,false)
+})
 
 test('register preserves explicit source → citation → conclusion → output chain without mutating input', () => {
   const before = emptyRegistry(), original = input()
@@ -166,4 +180,25 @@ test('scan fingerprint rejects stale selection after source or registry changes'
 })
 test('oversized reference excerpt is rejected', () => {
   assert.throws(() => extract('x'.repeat(65537), { kind: 'markdown-lines', start: 1, end: 1 }), /64 Ki/)
+})
+
+test('acceptBaselines binds to scanId, keeps previous baseline, and leaves the original registry untouched', () => {
+  const registry = register(emptyRegistry(), input(), csv)
+  const before = JSON.stringify(registry)
+  const scan = makeScan(csv.replace('100', '105'))
+  const unchanged = makeScan(csv)
+  assert.equal(isAcceptable(scan.impacts[0]), true)
+  assert.equal(isAcceptable(unchanged.impacts[0]), false)
+  assert.throws(() => acceptBaselines(registry, scan, unchanged.scanId), /已变化/)
+  assert.throws(() => acceptBaselines(registry, unchanged, unchanged.scanId), /没有可接受的新基线/)
+  const missing = makeScan('item,vendor,price\nB,乙,200\n')
+  assert.throws(() => acceptBaselines(registry, missing, missing.scanId, ['quote-a']), /无法重新定位/)
+  assert.equal(JSON.stringify(registry), before)
+  const next = acceptBaselines(registry, scan, scan.scanId)
+  assert.equal(JSON.stringify(registry), before)
+  assert.equal(next.references[0].baseline.citationHash, scan.impacts[0].current.citationHash)
+  assert.equal(next.references[0].previousBaseline.versionHash, registry.references[0].baseline.versionHash)
+  assert.equal(next.references[0].previousBaseline.acceptedFromScanId, scan.scanId)
+  assert.deepEqual(parseRegistry(JSON.parse(JSON.stringify(next))), next)
+  assert.match(renderScan(scan), /impact accept/)
 })

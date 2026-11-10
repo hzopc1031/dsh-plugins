@@ -1,6 +1,6 @@
 {
   "name": "dsh-source-impact",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Explicit source citation tracking and update impact checklists for DeepSeek Harness",
   "type": "module",
   "main": "index.js",
@@ -19,7 +19,11 @@
       "default": "./lib/store.js"
     },
     "./locale/*.json": "./locale/*.json",
-    "./icon": "./icon.svg"
+    "./icon": "./icon.svg",
+    "./client": {
+      "types": "./lib/client.d.ts",
+      "default": "./lib/client.js"
+    }
   },
   "files": [
     "index.js",
@@ -40,6 +44,14 @@
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-ui-session",
+        "@deepseek-ai/dsh-api-remotes"
+      ]
     }
   },
   "license": "MIT",
@@ -52,7 +64,7 @@
     "csv"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node scripts/build-client.mjs",
     "typecheck": "tsc --noEmit",
     "test": "npm run build && node --test --test-isolation=none test/*.test.mjs",
     "verify-pack": "node scripts/verify-pack.mjs"
@@ -93,7 +105,23 @@
     "@deepseek-ai/schemastery": "~3.18.5",
     "@types/node": "^22.0.0",
     "typescript": "~5.9.3",
-    "@deepseek-ai/dsh-tools": "0.2.1-rc.5"
+    "@deepseek-ai/dsh-tools": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-api-session-controller": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-brand": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-client-store": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-client-ui-conversation": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-client-ui-primitives": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-client-ui-renderer": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-client-ui-session": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-client-ui-slots": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-llm": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-api-remotes": "0.2.1-rc.5",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "esbuild": "^0.25.0",
+    "jsdom": "^26.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "repository": {
     "type": "git",

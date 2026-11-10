@@ -28,12 +28,17 @@ export interface Registration {
     outputs: Output[];
     recheck: string;
 }
+export interface Baseline {
+    versionHash: string;
+    citationHash: string;
+    excerpt: string;
+}
+export interface PreviousBaseline extends Baseline {
+    acceptedFromScanId: string;
+}
 export interface Reference extends Registration {
-    baseline: {
-        versionHash: string;
-        citationHash: string;
-        excerpt: string;
-    };
+    baseline: Baseline;
+    previousBaseline?: PreviousBaseline;
 }
 export interface Registry {
     schemaVersion: 1;
@@ -102,6 +107,9 @@ export declare function extract(raw: string, selector: Selector): string;
 export declare function emptyRegistry(): Registry;
 export declare function register(registry: Registry, input: unknown, raw: string): Registry;
 export declare function parseRegistry(value: unknown): Registry;
+/** Accept only when the citation can be relocated and the source or citation actually changed. */
+export declare function isAcceptable(impact: Impact): boolean;
+export declare function acceptBaselines(registry: Registry, scan: Scan, expectedScanId: string, selectedIds?: readonly string[]): Registry;
 export declare function compare(reference: Reference, observation: Observation): Impact;
 export declare function analyze(registry: Registry, observations: ReadonlyMap<string, Observation>): Scan;
 export declare function createPlan(scan: Scan, selectedIds: readonly string[], expectedScanId: string): RecheckPlan;

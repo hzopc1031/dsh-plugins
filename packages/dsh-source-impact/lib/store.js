@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { open, realpath, mkdir, rename, unlink, lstat } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
-import { ImpactError, fail, localPath, parseRegistration, emptyRegistry, parseRegistry, register, analyze, validId, } from './core.js';
+import { ImpactError, fail, localPath, parseRegistration, emptyRegistry, parseRegistry, register, analyze, validId, acceptBaselines, } from './core.js';
 export const MAX_BYTES = 5 * 1024 * 1024;
 const STATE_LIMIT = 16 * 1024 * 1024;
 function code(error) { return error?.code; }
@@ -172,7 +172,9 @@ export class ImpactStore {
         }, signal);
     }
     async scan(signal) {
-        const registry = await this.load(signal);
+        return this.scanRegistry(await this.load(signal), signal);
+    }
+    async scanRegistry(registry, signal) {
         const observations = new Map();
         for (const source of new Set(registry.references.map(r => r.source))) {
             check(signal);
@@ -185,5 +187,8 @@ export class ImpactStore {
             }
         }
         return analyze(registry, observations);
+    }
+    async accept(expectedScanId, ids, signal) {
+        return this.mutate(async (registry) => acceptBaselines(registry, await this.scanRegistry(registry, signal), expectedScanId, ids), signal);
     }
 }

@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Invoice Gate",
-    "description": "Local invoice verification gate; scaffold currently provides help only. No OCR or authenticity verification."
+    "description": "Local invoice verification gate: confined ingest, checks and evidence packs. No OCR or authenticity verification."
   }
 }

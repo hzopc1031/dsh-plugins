@@ -12,7 +12,7 @@ assert.deepEqual(files, [
   'icon.svg', 'index.d.ts', 'index.js', 'lib/plugin.d.ts', 'lib/plugin.js', 'lib/ingest.d.ts', 'lib/ingest.js',
   'locale/en.json', 'locale/zh.json', 'package.json',
   'lib/reconcile.d.ts', 'lib/reconcile.js',
-  'lib/export.d.ts', 'lib/export.js', 'docs/exports.md',
+  'lib/export.d.ts', 'lib/export.js', 'docs/exports.md', 'docs/tools.md',
 ].sort(), 'package allowlist mismatch')
 assert.equal(pkg.name, 'dsh-invoice-gate')
 assert.equal(pkg.version, '0.1.0')
@@ -34,7 +34,7 @@ for (const value of Object.values(pkg.exports)) {
 }
 const entry = await import('../index.js')
 assert.equal(entry.name, 'invoice-gate')
-assert.deepEqual(entry.inject, ['commands'])
+assert.deepEqual(entry.inject, ['commands', 'tools'])
 assert.deepEqual(entry.Config({}), {})
 assert.equal(typeof entry.apply, 'function')
 assert.equal(typeof entry.ingest, 'function')

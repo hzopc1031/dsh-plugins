@@ -11,7 +11,7 @@ function refuse(message) { throw new Refusal(message); }
 const object = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
 const inside = (root, path) => { const rel = relative(root, path); return rel !== '..' && !rel.startsWith('..' + sep) && !isAbsolute(rel); };
 // Validate the opened descriptor too: a parent symlink can change between realpath and open.
-async function readOriginal(root, path) {
+export async function readOriginal(root, path) {
     if (typeof path !== 'string' || !path || isAbsolute(path) || path.split(/[\\/]/).includes('..') || path.includes('\0'))
         refuse('path-outside-project');
     const target = resolve(root, path);

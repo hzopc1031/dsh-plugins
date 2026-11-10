@@ -72,7 +72,7 @@ const object = (value: unknown): value is Record<string, unknown> => value !== n
 const inside = (root: string, path: string) => { const rel = relative(root, path); return rel !== '..' && !rel.startsWith('..' + sep) && !isAbsolute(rel) }
 
 // Validate the opened descriptor too: a parent symlink can change between realpath and open.
-async function readOriginal(root: string, path: string): Promise<Buffer> {
+export async function readOriginal(root: string, path: string): Promise<Buffer> {
   if (typeof path !== 'string' || !path || isAbsolute(path) || path.split(/[\\/]/).includes('..') || path.includes('\0')) refuse('path-outside-project')
   const target = resolve(root, path)
   if (!inside(root, await realpath(target))) refuse('path-outside-project')

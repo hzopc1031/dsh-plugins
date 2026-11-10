@@ -2,7 +2,7 @@
 
 **Under development, version 0.1.0. Not published to npm.**
 
-A local verification gate + evidence pack for invoices and spreadsheets, under development. Local ingest, deterministic reconciliation and evidence export libraries are available; the DSH command still provides help only. 本地导入、确定性核对与证据包导出已提供；DSH 工具和界面尚未实现。
+A local verification gate + evidence pack for invoices and spreadsheets, under development. Local ingest, deterministic checks and evidence exports are available through confined DSH tools and `/invoice-gate` commands. 本地导入、确定性核对和证据包导出已接入 DSH 工具与命令。
 
 Requires Node.js >=22 and DSH `>=0.2.1-rc.5 <0.3.0`. API reference: DSH `0.2.2-rc.1`, source commit `fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159`.
 
@@ -12,11 +12,11 @@ The library accepts explicitly mapped CSV/XLSX, documented structured/OCR JSON, 
 
 `reconcile(ingestResult, options?, corrections?)` checks integer-fen arithmetic, line totals, duplicate numbers/hashes, optional buyer/period rules and number-based ledger matches. Raw, normalized and human-confirmed values remain separate; optional corrections JSON carries before/after provenance. Missing fields stay unchecked and block full confirmation. Read [docs/reconciliation.md](docs/reconciliation.md) for the result contract, rules and correction schema. The full library result must stay out of model context.
 
-`exportPack(projectDir, newRelativeDirectory, result, { includeOriginals: false })` atomically writes Markdown, XLSX text cells and JSON, with optional hash-checked original copies. Packs show textual red flags, source pointers, inventories, separate value layers and draft status for unresolved runs. Existing directories are refused. Its return value contains only paths, status and counts. Read [docs/exports.md](docs/exports.md) for the contract and limits. No DSH export tool exists yet.
+`exportPack(projectDir, newRelativeDirectory, result, { includeOriginals: false })` atomically writes Markdown, XLSX text cells and JSON, with optional hash-checked original copies. Packs show textual red flags, source pointers, inventories, separate value layers and draft status for unresolved runs. Existing directories are refused. Its return value contains only paths, status and counts. Read [docs/exports.md](docs/exports.md) for the contract and limits. The DSH export tool returns the same compact summary inside the run status.
 
 Arithmetic checks do not establish authenticity, payment or reimbursability. An evidence pack does not establish accounting-archive compliance. SHA-256 detects file changes; it does not prove a ticket is genuine.
 
-The complete binding scope and deferred behavior are in [docs/decisions.md](docs/decisions.md). Future tools must return counts, ids and file paths by default, without full reports, original text or amount tables in the model context.
+The complete binding scope and deferred behavior are in [docs/decisions.md](docs/decisions.md). Tools return counts, run ids, status and file paths only; full reports, original text and amount tables stay in local files. There is no verbose opt-in or correction-writing tool.
 
 To install this local checkout into a disposable profile from the repository root:
 
@@ -24,7 +24,9 @@ To install this local checkout into a disposable profile from the repository roo
 dsh plugin --profile invoice-gate-demo add ./packages/dsh-invoice-gate
 ```
 
-The bundle inserts Cordis id `invoice-gate`. Use `/invoice-gate` or `/invoice-gate help` in a command-capable DSH interface. Other actions return an explicit not-implemented error. No client bundle, tools or Remote API are registered yet.
+The bundle inserts Cordis id `invoice-gate`. Use `/invoice-gate` or `/invoice-gate help` in a command-capable DSH interface. Read [docs/tools.md](docs/tools.md) for the manifest, commands and three tools. The slash command is the thin UI; no client bundle or Remote API is registered.
+
+Create a local manifest selecting existing files, then use `/invoice-gate start SAMPLE-run.json`, `/invoice-gate ingest`, `/invoice-gate check`, `/invoice-gate export SAMPLE-pack`, `/invoice-gate status`, and `/invoice-gate stop`. Start pins the current project directory and masks other tools for this agent until stop; a guard also blocks scoped tools, descendant calls and PTC `run_code`. Use the native executor for model tool calls; slash commands need no model. The plugin does not change the host executor. A run is in memory; stop or plugin/session disposal clears it and leaves exported files intact.
 
 To build and check the independent package:
 

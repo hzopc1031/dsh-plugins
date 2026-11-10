@@ -58,6 +58,7 @@ export interface IngestResult {
     inventory: InventoryEntry[];
     records: ExtractedRecord[];
 }
+export declare function readOriginal(root: string, path: string): Promise<Buffer>;
 /** Local library result contains raw evidence; never return it directly to the host model. */
 export declare function ingest(projectDir: string, inputs: readonly InputFile[]): Promise<IngestResult>;
 export {};

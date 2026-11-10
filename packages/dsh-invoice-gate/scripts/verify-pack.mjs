@@ -1,0 +1,38 @@
+import assert from 'node:assert/strict'
+import { execFileSync } from 'node:child_process'
+import { existsSync, readFileSync } from 'node:fs'
+
+const pkg = JSON.parse(readFileSync('package.json', 'utf8'))
+const [pack] = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], {
+  encoding: 'utf8', shell: process.platform === 'win32',
+}))
+const files = pack.files.map(file => file.path).sort()
+assert.deepEqual(files, [
+  'CHANGELOG.md', 'LICENSE', 'README.md', 'cordis.patch.yml', 'docs/decisions.md',
+  'icon.svg', 'index.d.ts', 'index.js', 'lib/plugin.d.ts', 'lib/plugin.js',
+  'locale/en.json', 'locale/zh.json', 'package.json',
+].sort(), 'package allowlist mismatch')
+assert.equal(pkg.name, 'dsh-invoice-gate')
+assert.equal(pkg.version, '0.1.0')
+assert.equal(pkg.license, 'MIT')
+assert.equal(pkg.dsh.bundle.patch, './cordis.patch.yml')
+assert.match(readFileSync('cordis.patch.yml', 'utf8'), /id: invoice-gate\s+name: dsh-invoice-gate\s+config: \{\}/)
+for (const hook of ['preinstall', 'install', 'postinstall', 'prepare', 'prepack', 'postpack']) {
+  assert.equal(pkg.scripts[hook], undefined, 'unexpected lifecycle hook: ' + hook)
+}
+assert.equal(pkg.dependencies, undefined)
+for (const name of Object.keys(pkg.peerDependencies)) {
+  assert.equal(pkg.peerDependenciesMeta[name].optional, true)
+  assert.ok(pkg.devDependencies[name], 'missing development peer: ' + name)
+}
+for (const value of Object.values(pkg.exports)) {
+  const target = typeof value === 'string' ? value : value.default
+  if (!target.includes('*')) assert.ok(existsSync(target), 'missing export: ' + target)
+  if (typeof value !== 'string') assert.ok(existsSync(value.types), 'missing declarations: ' + value.types)
+}
+const entry = await import('../index.js')
+assert.equal(entry.name, 'invoice-gate')
+assert.deepEqual(entry.inject, ['commands'])
+assert.deepEqual(entry.Config({}), {})
+assert.equal(typeof entry.apply, 'function')
+console.log(`verify-pack PASS: ${files.length} files; bundle, exports, peers and lifecycle hooks checked; ${pack.size} bytes packed`)

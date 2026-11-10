@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { execFileSync } from 'node:child_process'
 import { test } from 'node:test'
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -6,6 +7,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { captureDeck } from '../lib/adapters.js'
 import { createCaptureEngine } from '../lib/capture.js'
+import { exportCapturedDeck } from '../lib/export.js'
 
 const fixtures = fileURLToPath(new URL('./fixtures/', import.meta.url))
 const vendor = '/workspace/dev/vendor'
@@ -53,6 +55,18 @@ for (const [name, ids] of [
       assert.ok(page.actualFontFamilies.length)
     }
     assert.equal(new Set(run.pages.map(page => Buffer.from(page.image).toString('base64'))).size, 8)
+    const output = await mkdtemp(join(tmpdir(), 'deck-official-pptx-'))
+    try {
+      const result = await exportCapturedDeck(run, output)
+      const report = JSON.parse(await readFile(result.reportPath, 'utf8'))
+      const pptx = JSON.parse(execFileSync('python3', [fileURLToPath(new URL('./inspect-pptx.py', import.meta.url)), result.pptxPath], { encoding: 'utf8' }))
+      assert.equal(pptx.slides.length, 8)
+      for (const [i, page] of run.pages.entries()) {
+        assert.equal(report.pages[i].id, ids[i])
+        assert.deepEqual(report.pages[i].renderState.preview, page.renderState.preview)
+        assert.equal(pptx.slides[i].notes, page.notes, 'official notes survive OOXML in page order')
+      }
+    } finally { await rm(output, { recursive: true, force: true }) }
     const probe = await createCaptureEngine(fixtures, { scale: 1 })
     try {
       let corner
@@ -115,6 +129,23 @@ test('synthetic 王虹 readiness gate succeeds at 1920×1080 and rejects false r
     const failed = await captureDeck(directory, { scale: 1 })
     assert.equal(failed.pages[0].status, 'failed')
     assert.match(failed.pages[0].error, /font is not ready/)
+  } finally { await rm(directory, { recursive: true, force: true }) }
+})
+
+test('required-font loaded branch accepts a synthetic local alias and retains 1080p notes', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'deck-loaded-font-'))
+  try {
+    const html = await readFile(join(fixtures, 'wanghong-ready.html'), 'utf8')
+    // Exercise availability with a test alias; this does not validate HanziPen handwriting fidelity.
+    await writeFile(join(directory, 'index.html'), html
+      .replace('<style>', '<style>@font-face { font-family:"HanziPen SC"; src:local("Noto Sans CJK SC") }')
+      .replace("font-family:'Noto Sans CJK SC'", "font-family:'HanziPen SC'"))
+    const run = await captureDeck(directory, { scale: 1 })
+    captured(run.pages[0])
+    assert.deepEqual(size(run.pages[0].image), [1920, 1080])
+    assert.match(run.pages[0].notes, /合成夹具/)
+    assert.ok(run.pages[0].computedFontFamilies.some(family => family.includes('HanziPen SC')))
+    assert.ok(run.pages[0].actualFontFamilies.some(family => family.includes('Noto Sans CJK')))
   } finally { await rm(directory, { recursive: true, force: true }) }
 })
 

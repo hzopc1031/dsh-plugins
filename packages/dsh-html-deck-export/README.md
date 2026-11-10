@@ -1,6 +1,6 @@
 # dsh-html-deck-export
 
-**Version 0.1.0: local image-PPTX export through a guarded DSH tool or JavaScript API.**
+**Unreleased 0.1.0 — feature branch only; not published to npm.**
 
 This DSH plugin registers `html_deck_export` and `/html-deck-export` help/workbench.
 It exports finished local HTML decks in supported formats to **image-based
@@ -8,6 +8,7 @@ It exports finished local HTML decks in supported formats to **image-based
 HTML remains the source of truth. Nothing is uploaded automatically.
 It does not generate decks, produce editable shapes, preserve animations,
 or accept every HTML file.
+Feishu already previews HTML; this exporter is for cases that specifically need PPTX.
 
 **0.1.0 已提供受限 DSH 导出工具和本地 API。** 使用
 `/html-deck-export start` 进入当前项目的导出工作台，将受支持格式的定稿 HTML 演示稿
@@ -17,7 +18,20 @@ HTML 始终是源文件，不会自动上传。不生成演示稿、不输出可
 
 Requires Node.js >=22 and DSH `>=0.2.1-rc.5 <0.3.0`. APIs are checked against
 DSH `0.2.2-rc.1`, source revision `fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159`.
+The installed CLI successfully loaded the plugin in a disposable Linux web profile.
 Command, tool restriction and guard APIs are also exercised with rc.5 host libraries.
+
+Install the prebuilt feature branch into your chosen profile (replace `web` as needed):
+
+```sh
+dsh plugin --profile web add "github:hzopc1031/dsh-plugins#feat/html-deck-export&path:/packages/dsh-html-deck-export"
+```
+
+This branch is not merged into `main`. Built `lib/` is committed; installation
+needs no build permission or lifecycle hook. Restart DSH after installation.
+To uninstall, run `dsh plugin --profile web remove dsh-html-deck-export`.
+Uninstalling removes the plugin; user PPTX files, reports and evidence remain in
+their selected project directories.
 
 Build and inspect the local tarball from this package directory:
 
@@ -309,7 +323,14 @@ Successful staging directories are removed; failed-page evidence is retained.
 
 Export tests use Python 3's standard-library ZIP and XML parsers to check OOXML,
 relationships, full-bleed images, byte identity/order and multiline Chinese notes.
-PowerPoint and WPS have not been opened on this box; OOXML validation does not
-claim those application checks.
+Both official 歸藏 examples also round-trip their ordered notes and preview
+differences through the PPTX and report. On this Linux box, the loaded DSH profile
+produced magazine (8 pages), Swiss (8), an owned MIT generic fixture (1), and the
+灵感 starter (3), all offline at scale 1 PNG. Each slide's embedded image was
+extracted and contact sheets reviewed. LibreOffice Impress 25.2.3.2 imported all
+four PPTX files and exported PDFs with matching page counts. PowerPoint and WPS
+are unavailable here and were not opened; their application compatibility remains
+unverified. The real 王虹 fixture fails because HanziPen SC is unavailable;
+the synthetic loaded-font alias test verifies the gate, not handwritten fidelity.
 
 MIT © 2026 hzopc1031. No fixture themes, scripts, or assets are bundled.

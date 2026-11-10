@@ -15,6 +15,7 @@
 | 未发送草稿找回 | `dsh-draft-rescue`（未发布 npm / not published to npm） | 独立面板找回、复制与追加本机文字草稿；精确锁定 rc.5 / Recover local unsent text without changing navigation | [README](packages/dsh-draft-rescue/README.md) |
 | 文件引用路径复制 | `dsh-file-ref-copy`（未发布 npm / not published to npm） | 从已完成回答的原始 Markdown 复制绝对、相对与带行号路径 / Copy local file paths from a loaded completed reply | [README](packages/dsh-file-ref-copy/README.md) |
 | 桌面截图附件 | `dsh-snip-attach`（尚未发布到 npm / not published to npm） | Windows 框选截图后加入待发送附件，针对桌面 rc.5（`/screenshot`）/ Windows snip to pending attachments | [README](packages/dsh-snip-attach/README.md) |
+| HTML 演示稿导出 | `dsh-html-deck-export`（0.1.0 未发布，仅功能分支 / unreleased, feature branch only） | 本地 HTML → 16:9 图片版 PPTX、讲稿备注与逐页报告；HTML 保留为源文件，不自动上传（`/html-deck-export`）/ Local image PPTX export with notes and per-page reports | [README](packages/dsh-html-deck-export/README.md) |
 
 > 心跳插件的 npm 包名是 `dsh-heartbeat-monitor`：`dsh-heartbeat` 已被一个无关的包占用。
 > The heartbeat plugin is published as `dsh-heartbeat-monitor` because `dsh-heartbeat` is an unrelated package.
@@ -72,6 +73,14 @@ dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packag
 同样的 `github:...` 地址也可以填进界面的「添加插件」。把 `main` 换成某个提交哈希即可固定版本。
 
 The same `github:...` address works in the Add plugin dialog. Replace `main` with a commit hash to pin a version.
+
+`dsh-html-deck-export` 0.1.0 尚未发布到 npm、尚未合并 main；请单独使用功能分支地址。兼容 DSH `>=0.2.1-rc.5 <0.3.0`，已在 Linux CLI `0.2.2-rc.1`（`fcc0ad46`）加载验证，需要本机 Chrome。/ Unreleased, not on npm or main; install its feature branch. Requires local Chrome; loaded on Linux DSH `0.2.2-rc.1`.
+
+```powershell
+dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#feat/html-deck-export&path:/packages/dsh-html-deck-export"
+```
+
+Linux 可将 `desktop` 换成 `web` 或自己的 profile。/ On Linux, replace `desktop` with `web` or your chosen profile.
 
 新增的草稿找回与文件引用路径复制针对 `0.2.1-rc.5`，不承诺其他版本兼容；草稿找回还会在读取本机存储前精确检查宿主版本，不匹配时拒绝读取。/ The draft and file-reference plugins target exactly `0.2.1-rc.5`; draft storage reads fail closed on other or unknown releases.
 

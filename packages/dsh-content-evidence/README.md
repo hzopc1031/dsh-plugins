@@ -1,10 +1,26 @@
 # dsh-content-evidence
 
-内容证据工作台（开发中）：持久化主题、材料、实验记录与证据引用，提供 Host Remote API、四个本地工具及受限工作台。不会自动发布内容。
+内容证据工作台：从网页侧栏管理主题、材料、实验记录、证据引用、四平台草稿、复核与本地导出，并提供四个本地工具及受限会话工作台。不会自动发布内容。
 
-Evidence-based content workbench, in development. Local storage, the Host Remote API, four local tools and scoped workbench confinement are implemented. Structured four-platform drafts, shared-fact checks, compliance reports and review invalidation are implemented. Local file exports and manual published-link backfill are implemented on Linux. The UI comes in a later task. **Nothing is published automatically.**
+Evidence-based content workbench with a web sidebar and main panel. Materials, experiments, shared facts, editable four-platform drafts, compliance reports, local Linux exports and manual published-link backfill use the same Host Remote API as the four local tools and restricted workbench. **Nothing is published automatically.**
 
 Requires Node.js `>=22` and DSH `>=0.2.1-rc.5 <0.3.0`. APIs were verified against DSH `0.2.2-rc.1`, source `fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159`, and checked at the `0.2.1-rc.5` API baseline. Host libraries are optional peers supplied by DSH; development installs include them for building and testing.
+
+## Web workbench / 网页工作台
+
+Open **内容证据 / Content evidence** in DSH's web sidebar:
+
+1. Create a topic from a one-line idea, or select an existing topic.
+2. In **材料与实验**, save source URLs, upload screenshots/materials, and record commands, output, versions and test conditions. Commands are recorded without execution. Recognized PNG/JPEG/GIF/WebP bytes preview as images; HTML, SVG, scripts and other bytes render as plain text. Binary originals are available through local export.
+3. In **证据表**, enter facts and select a stored source, material or experiment reference. Missing references remain `待核实`; adding evidence can invalidate an old review.
+4. In **四平台草稿**, select X single/thread, 小红书 title/body/cards, or separate 抖音/视频号 voiceover/shot lists. Select shared facts, edit and save, then check the saved revision. Review findings include locations and suggested fixes. Save or explicitly discard unsaved draft edits before switching topic/platform, refreshing or updating evidence. Save before leaving this panel; uncommitted edits are held in browser memory.
+5. In **本地导出**, enter an existing absolute directory on the Linux DSH Host, choose Markdown/text/citations/materials/all, and export the saved platform draft. The completed folder path and file list appear in history. After publishing manually outside this plugin, record the published URL here; the plugin only stores it.
+
+Conflicting saves preserve the Host draft and the current editor text. Copy your edits before choosing **放弃草稿编辑并刷新**, then reconcile against the current evidence/revision. A changed saved draft resets review; unsaved edits show a local reminder and disable review/export until saved or discarded. Automated review is an editorial aid and still needs human factual/platform checks.
+
+There is no standalone Generate button: the UI does not call the host model outside a session. Expand the session help for the selected topic, run `/content-evidence workbench <topicId>` in an idle session, then ask the host's configured model to use the four confined tools. Run `/content-evidence leave` when finished and refresh the panel. The UI does not start a session, select a model, visit platforms or offer publish/login actions.
+
+The client is prebuilt and committed as `dist/client.js`, exported at `./client`, and mounts `main` plus `sidebar.panellist` through `ctx.slots`. It mounts the generated Remote contribution before its namespace-dependent view activates. All Host reads/writes go through `ctx.remote.contentEvidence`; there are no direct HTTP, filesystem or model calls in the client.
 
 ## Data flow / 数据流
 
@@ -34,7 +50,7 @@ The plugin registers `ctx.contentEvidence` as a `TypertRemoteService`, with name
 
 Domain failures use `RemoteError` codes `content-evidence/invalid-input`, `content-evidence/not-found`, `content-evidence/corrupt-store` and `content-evidence/conflict`. Other failures use the gateway's standard handling. All Remote methods accept a final carrier `AbortSignal`.
 
-`./typert` ships the generated Host contribution for DSH's Typert Loader. `./remote` ships the strict client contribution and method types; `./types` exports the record vocabulary. A later client must mount the contribution via `ctx.remote.$mount()` and inject `remote` and `remote.contentEvidence`. No browser client is registered yet. `/content-evidence` returns development status without recording command arguments.
+`./typert` ships the generated Host contribution for DSH's Typert Loader. `./remote` ships the strict client contribution and method types; `./types` exports the record vocabulary. The browser client mounts the contribution via `ctx.remote.$mount()` and its view injects `remote` and `remote.contentEvidence`. `/content-evidence` returns status without recording command arguments.
 
 ## Tools and restricted workbench / 受限工具
 
@@ -47,9 +63,9 @@ Only these four tools are registered:
 | `content_evidence_save_draft` | Save a complete platform shape from the shared fact base with revision/evidence checks; changed copy invalidates review |
 | `content_evidence_export_draft` | Export Markdown, text, citations, copied materials, or `all`, inside a new folder in the user-chosen directory |
 
-Create a topic through the Host API, then use `/content-evidence workbench <topicId>` in its session before asking the host model to work on it. This command enables confinement without starting a model turn or changing model configuration. `/content-evidence leave` explicitly ends confinement. Entry and leave require an idle agent; a running task keeps its guard. These commands do not publish anything.
+Create a topic in the web UI or through the Host API, then use `/content-evidence workbench <topicId>` in its session before asking the host model to work on it. This command enables confinement without starting a model turn or changing model configuration. `/content-evidence leave` explicitly ends confinement. Entry and leave require an idle agent; a running task keeps its guard. These commands do not publish anything.
 
-The Host-local exported `await enterWorkbench(pluginCtx, agent, topicId, signal)` is the entry point for later session/UI orchestration. It validates the topic and idle agent state, then returns an idempotent disposer. Call it before the topic's first model turn, pass the plugin-owned context, and retain confinement until the task has settled. It is not a Remote method and does not accept an agent from material content.
+The Host-local exported `await enterWorkbench(pluginCtx, agent, topicId, signal)` is the Host-local entry point for session orchestration. It validates the topic and idle agent state, then returns an idempotent disposer. Call it before the topic's first model turn, pass the plugin-owned context, and retain confinement until the task has settled. It is not a Remote method and does not accept an agent from material content.
 
 `agent.ctx.tools.restrict({ allow: toolNames })` hides inherited capabilities. `agent.ctx.tools.guard(...)` also denies scope-local and descendant calls outside the four-tool allowlist, rejects names containing post/publish/login/upload-to-platform patterns, and binds calls to the selected topic. Other sessions keep their tools. Leave, agent disposal and plugin disposal remove confinement. No platform publishing, login, arbitrary shell, browser or network-write tool is registered. The guard also denies the `run_code` transport; use the host's native tool executor for workbench sessions.
 
@@ -104,7 +120,7 @@ Each call creates `<directory>/content-evidence-<export UUID>/`, without overwri
 - `citations.txt`: stored source URLs, source-linked claims (including `待核实`), material hashes, experiment commands/output/versions/conditions, and manual published URLs.
 - `materials/<material UUID>`: exact copied bytes, with original names, types, source IDs and hashes in `materials/index.json`. Display filenames never become destination paths.
 
-`all` includes every artifact above. Single-format calls include just that artifact; `materials` also includes `export.txt` carrying review metadata. Files are mode 0600 and new directories 0700; copied scripts are not executable. No material, recorded command or source URL is executed, imported or fetched. `readMaterial` and the read tool return bytes/text for preview; the later browser client must render them as inert text or safe image metadata, never active HTML.
+`all` includes every artifact above. Single-format calls include just that artifact; `materials` also includes `export.txt` carrying review metadata. Files are mode 0600 and new directories 0700; copied scripts are not executable. No material, recorded command or source URL is executed, imported or fetched. `readMaterial` and the read tool return bytes/text for preview; the browser client renders inert text or recognized raster image bytes, never active HTML.
 
 Export targets must already exist and be absolute, with no `.`/`..` segments, backslashes or symlinks in any component. The filesystem root, installed package and data-store directories are rejected. Linux `/proc/self/fd` directory handles anchor writes so replacing a destination ancestor with a symlink cannot redirect writes. Export is currently Linux-only and requires procfs. Material size/hash checks run before copying each file. A hidden staging folder is renamed after successful writes; failures clean staging and leave saved drafts unchanged. An interruption or snapshot-write failure after export rename can leave an unrecorded complete folder; user files are never removed automatically.
 
@@ -112,7 +128,7 @@ Review labels are recomputed for the selected draft's current content/evidence/r
 
 ## Local development / 本地开发
 
-Independent package with its own lockfile and committed `lib/` output:
+Independent package with its own lockfile and committed `lib/` and `dist/` output:
 
 ```sh
 npm ci --ignore-scripts
@@ -123,8 +139,8 @@ npm run verify-pack
 DSH_TEST_HOST=/path/to/@deepseek-ai/dsh/package.json node --test --test-isolation=none test/*.test.mjs
 ```
 
-`build` compiles TypeScript and runs the official Typert generator. A temporary workspace under `.tmp/` stages this package's source and the installed protocol's declarations because the generator requires workspace ownership to recognize decorators. It is removed afterward; the DSH source and installed libraries are not modified. Shipping artifacts require no install lifecycle hooks.
+`build` compiles Host TypeScript, runs the official Typert generator, typechecks the client and bundles it with esbuild. React and Zod remain platform-provided peers; the browser-safe Remote descriptor implementation is bundled. A temporary workspace under `.tmp/` stages this package's source and the installed protocol's declarations because the generator requires workspace ownership to recognize decorators. It is removed afterward; the DSH source and installed libraries are not modified. Shipping artifacts require no install lifecycle hooks.
 
-Tests cover reload, byte copies, inert content, path/symlink rejection, corrupt-state preservation, concurrent updates, review invalidation, cancelled writes, generated Remote contracts, service disposal, and simulated package uninstall/reinstall with data retained outside the package. Tool tests also exercise the real registry/executor: exact registration, inert source/material payloads, scoped visibility, scope-local and descendant guard denials despite allow policies, topic binding, failed-save preservation, leave and disposal. Draft tests cover all platform shapes, unsourced facts, rejected invented numeric/citation tokens, structured compliance findings, changed copy/evidence/rules, stale and competing saves, and legacy data. Export tests also cover all formats, manual URL backfill, legacy requests, stale review labels, path traversal, symlinks and an ancestor-replacement race, staging cleanup, byte-for-byte material copies, and script-like material reads without execution or network calls. Browser preview rendering and session/UI orchestration remain for later tasks.
+Tests cover reload, byte copies, inert content, path/symlink rejection, corrupt-state preservation, concurrent updates, review invalidation, cancelled writes, generated Remote contracts, service disposal, and simulated package uninstall/reinstall with data retained outside the package. Tool tests also exercise the real registry/executor: exact registration, inert source/material payloads, scoped visibility, scope-local and descendant guard denials despite allow policies, topic binding, failed-save preservation, leave and disposal. Draft tests cover all platform shapes, unsourced facts, rejected invented numeric/citation tokens, structured compliance findings, changed copy/evidence/rules, stale and competing saves, and legacy data. Export tests also cover all formats, manual URL backfill, legacy requests, stale review labels, path traversal, symlinks and an ancestor-replacement race, staging cleanup, byte-for-byte material copies, and script-like material reads without execution or network calls. Client tests use the compiled module-loader artifact, real Cordis lifecycle and SlotCore, React rendering and a descriptor-checked local Remote transport to exercise capture, inert previews, all draft forms, reviews, conflicting saves, exports and backfill. Actual browser layout, profile loading and screenshots remain for task 7.
 
 MIT © 2026 hzopc1031.

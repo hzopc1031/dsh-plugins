@@ -9,6 +9,7 @@ const out = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json', '--ig
 const files = out[0].files.map(f => f.path).sort()
 const expected = [
   'CHANGELOG.md', 'LICENSE', 'README.md', 'cordis.patch.yml', 'icon.svg', 'index.js',
+  'dist/client.js',
   ...['plugin', 'model', 'service', 'store', 'validation', 'drafts', 'exports', 'tools', 'typert.host', 'typert.remote-client']
     .flatMap(name => [`lib/${name}.js`, `lib/${name}.d.ts`]),
   'locale/en.json', 'locale/zh.json', 'package.json',
@@ -17,12 +18,15 @@ assert.deepEqual(files, expected, 'unexpected package contents')
 assert.equal(pkg.name, 'dsh-content-evidence')
 assert.equal(pkg.version, '0.1.0')
 assert.equal(pkg.dsh.bundle.patch, './cordis.patch.yml')
+assert.deepEqual(pkg.dsh.client, { platform: 'web', inject: ['@deepseek-ai/dsh-client-runtime'] })
+assert.equal(pkg.exports['./client'], './dist/client.js')
+assert.match(readFileSync('dist/client.js', 'utf8'), /window\.__ModuleLoader__\.load\(\{id:"dsh-content-evidence"/)
 assert.match(readFileSync('cordis.patch.yml', 'utf8'), /id: content-evidence\s+name: dsh-content-evidence/)
 for (const hook of ['preinstall', 'install', 'postinstall', 'prepare', 'prepack', 'postpack']) {
   assert.equal(pkg.scripts?.[hook], undefined, 'unexpected lifecycle script')
 }
 assert.equal(pkg.dependencies, undefined, 'host libraries must be peers')
-for (const name of ['@deepseek-ai/dsh-tools', '@deepseek-ai/dsh-agent', '@deepseek-ai/dsh-scope', '@deepseek-ai/dsh-system-prompt', '@deepseek-ai/dsh-typert-protocol', 'zod']) {
+for (const name of ['@deepseek-ai/dsh-tools', '@deepseek-ai/dsh-agent', '@deepseek-ai/dsh-scope', '@deepseek-ai/dsh-system-prompt', '@deepseek-ai/dsh-typert-protocol', '@deepseek-ai/dsh-api-gateway', '@deepseek-ai/dsh-client-ui-renderer', '@deepseek-ai/dsh-client-ui-slots', '@deepseek-ai/dsh-client-ui-layout', '@deepseek-ai/dsh-client-ui-sidebar', 'react', 'zod']) {
   assert.ok(pkg.peerDependencies[name] && pkg.devDependencies[name], 'missing build/runtime peer ' + name)
   assert.equal(pkg.peerDependenciesMeta[name].optional, true)
 }

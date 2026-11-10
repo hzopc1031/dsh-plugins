@@ -5,10 +5,12 @@
     "moduleResolution": "NodeNext",
     "strict": true,
     "declaration": true,
+    "rootDir": "src",
     "outDir": "lib",
     "skipLibCheck": true,
     "noUncheckedIndexedAccess": true,
     "types": ["node"]
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/client"]
 }

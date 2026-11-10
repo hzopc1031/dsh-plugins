@@ -14,4 +14,7 @@
 - Export Markdown, plain text, citations and inert material copies to a user-chosen local directory; add completed history while retaining legacy pending records.
 - Reject escaping paths, symlinks and package/data targets; anchor Linux writes with directory handles, stage files and include current hash-bound review status.
 - Test local artifacts, manual published-URL backfill, path/ancestor replacement, nonexecuting script previews and export failure preservation.
-- UI remains for a later task. Nothing is published automatically.
+- Add a prebuilt web client with matching sidebar/main slots and generated Remote mounting before view activation; package it without install-time build hooks.
+- Add topic browsing/capture, inert text/raster previews, shared evidence, structured four-platform editing, review status/findings, local export history and manual published-link backfill.
+- Preserve unsaved editor text on conflicts, block topic/platform changes until save/discard, and direct model-assisted work to confined sessions.
+- Test compiled client exports, slot/service disposal, descriptor-checked UI actions, preview safety, draft forms/review invalidation, conflicting saves, export and backfill. Nothing is published automatically.

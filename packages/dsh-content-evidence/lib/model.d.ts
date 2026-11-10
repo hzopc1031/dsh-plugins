@@ -101,15 +101,18 @@ export interface PublishedLink {
     url: string;
     recordedAt: string;
 }
-export type ExportFormat = 'markdown' | 'text' | 'citations' | 'materials';
+export declare const exportFormats: readonly ["markdown", "text", "citations", "materials", "all"];
+export type ExportFormat = typeof exportFormats[number];
 export interface ExportRecord {
     id: string;
     platform: Platform;
     format: ExportFormat;
-    status: 'pending';
+    status: 'pending' | 'complete';
     createdAt: string;
     contentHash?: string;
     reviewPassed?: boolean;
+    directory?: string;
+    files?: string[];
 }
 export interface Topic {
     id: string;

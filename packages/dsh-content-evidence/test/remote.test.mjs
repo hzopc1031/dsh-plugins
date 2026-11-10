@@ -12,6 +12,8 @@ import { TYPERT } from '../lib/typert.host.js'
 
 test('generated Host and client contracts agree with the registered service and validate records', async t => {
   const dataDir = await mkdtemp(join(tmpdir(), 'content-evidence-remote-'))
+  const exportRoot = await mkdtemp(join(tmpdir(), 'content-evidence-export-'))
+  t.after(() => rm(exportRoot, { recursive: true, force: true }))
   const ctx = new Context()
   t.after(async () => { await ctx.fiber.dispose(); await rm(dataDir, { recursive: true, force: true }) })
   await ctx.plugin(Commands)
@@ -53,7 +55,7 @@ test('generated Host and client contracts agree with the registered service and 
     const saved = await invoke('saveDraft', { topicId: topic.id, target, input })
     assert.deepEqual(saved.body, body)
     assert.equal((await invoke('reviewDraft', { topicId: topic.id, target, expectedRevision: saved.revision })).review.status, 'passed')
-    assert.equal((await invoke('requestExport', { topicId: topic.id, target, format: 'markdown' })).reviewPassed, true)
+    assert.equal((await invoke('requestExport', { topicId: topic.id, target, format: 'all', directory: exportRoot })).reviewPassed, true)
     await assert.rejects(invoke('saveDraft', { topicId: topic.id, target, input }), error => {
       const failure = remoteErrorOf(error)
       assert.equal(failure.code, 'content-evidence/conflict')
@@ -63,12 +65,16 @@ test('generated Host and client contracts agree with the registered service and 
     })
   }
   const latest = await invoke('readEvidence', { topicId: topic.id })
+  const publishedUrl = 'https://example.com/manual/remote-fixture'
+  await invoke('backfillPublishedLink', { topicId: topic.id, target: 'x', publishedUrl })
+  assert.equal((await invoke('readEvidence', { topicId: topic.id })).publishedLinks[0].url, publishedUrl)
   const pending = await invoke('saveDraft', { topicId: topic.id, target: 'x', input: draftInput(latest, 'x', { kind: 'x-single', post: 'Unlinked copy' }) })
   const failed = await invoke('reviewDraft', { topicId: topic.id, target: 'x', expectedRevision: pending.revision })
   assert.equal(failed.review.status, 'failed')
   assert.ok(failed.review.findings.some(finding => finding.code === 'citation' && finding.location && finding.fix))
 
   assert.throws(() => remote.methods['contentEvidence/createTopic'].input().create().parse({ idea: 'fixture', extra: true }))
+  assert.throws(() => remote.methods['contentEvidence/requestExport'].input().create().parse({ topicId: topic.id, target: 'x', format: 'all' }))
   assert.throws(() => remote.methods['contentEvidence/captureMaterial'].input({ strict: true }).create().parse({ topicId: topic.id, input: { name: 'fixture', base64: '', sourceId: null } }))
   await assert.rejects(invoke('readEvidence', { topicId: '00000000-0000-4000-8000-000000000000' }), error => {
     const failure = remoteErrorOf(error)

@@ -1,7 +1,8 @@
 import { createHash } from 'node:crypto';
+import { isAbsolute } from 'node:path';
 import { RemoteError } from '@deepseek-ai/dsh-typert-protocol';
 import { draftHash, parseBody, selectedClaims, stringList } from './drafts.js';
-import { platforms } from './model.js';
+import { exportFormats, platforms } from './model.js';
 export function invalid(field) {
     throw new RemoteError('content-evidence/invalid-input', `Invalid ${field}`, { field });
 }
@@ -183,8 +184,17 @@ export function parseWorkspace(value) {
                     digest(item.contentHash);
                 if (item.reviewPassed !== undefined && typeof item.reviewPassed !== 'boolean')
                     invalid('reviewPassed');
-                if (item.status !== 'pending' || !['markdown', 'text', 'citations', 'materials'].includes(item.format))
+                if (!['pending', 'complete'].includes(item.status) || !exportFormats.includes(item.format))
                     invalid('export');
+                if (item.status === 'complete') {
+                    digest(item.contentHash);
+                    if (typeof item.reviewPassed !== 'boolean' || !isAbsolute(text(item.directory, 'directory', 4096)))
+                        invalid('export metadata');
+                    const files = array(item.files);
+                    if (!files.length)
+                        invalid('export files');
+                    files.forEach(file => text(file, 'export file', 4096).split('/').forEach(fileName));
+                }
             }
         }
         return value;

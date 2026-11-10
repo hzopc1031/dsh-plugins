@@ -11,14 +11,15 @@ import { draftInput } from './draft-fixture.mjs'
 
 const failure = code => error => remoteErrorOf(error)?.code === `content-evidence/${code}`
 async function fixture(t, terms = []) {
-  const dataDir = await mkdtemp(join(tmpdir(), 'content-evidence-drafts-'))
-  t.after(() => rm(dataDir, { recursive: true, force: true }))
+  const exportRoot = await mkdtemp(join(tmpdir(), 'content-evidence-drafts-'))
+  const dataDir = join(exportRoot, 'data')
+  t.after(() => rm(exportRoot, { recursive: true, force: true }))
   const store = new EvidenceStore(dataDir, terms)
   const topic = await store.createTopic('Synthetic draft fixture, not a product result')
   const source = await store.addSource(topic.id, 'https://example.com/fixture', 'Synthetic source, not fetched')
   const claim = await store.saveClaim(topic.id, 'Synthetic run took 12 ms', source.id)
   const save = async (target, body, claimIds = [claim.id]) => store.saveDraft(topic.id, target, draftInput(await store.readEvidence(topic.id), target, body, claimIds))
-  return { store, topic, source, claim, dataDir, save }
+  return { store, topic, source, claim, dataDir, exportRoot, save }
 }
 
 test('four editable platform shapes and both X modes use one evidence sheet', async t => {
@@ -88,7 +89,7 @@ test('review returns locations and minimum fixes for built-in patterns and liter
 })
 
 test('copy, shape, shot and fact-selection edits invalidate passed reviews before export', async t => {
-  const { store, topic, claim, save } = await fixture(t)
+  const { store, topic, claim, exportRoot, save } = await fixture(t)
   const variants = [
     { kind: 'x-single', post: 'AI 生成：Run took 12 ms' },
     { kind: 'x-single', post: 'AI 生成：Edited run description: 12 ms' },
@@ -97,11 +98,11 @@ test('copy, shape, shot and fact-selection edits invalidate passed reviews befor
   for (const body of variants) {
     const draft = await save('x', body)
     assert.equal(draft.review.status, 'pending')
-    assert.equal((await store.requestExport(topic.id, 'x', 'markdown')).reviewPassed, false)
+    assert.equal((await store.requestExport(topic.id, 'x', 'markdown', exportRoot)).reviewPassed, false)
     const reviewed = await store.reviewDraft(topic.id, 'x', draft.revision)
     assert.equal(reviewed.review.status, 'passed')
     assert.equal(reviewed.review.contentHash, reviewed.contentHash)
-    const exported = await store.requestExport(topic.id, 'x', 'markdown')
+    const exported = await store.requestExport(topic.id, 'x', 'markdown', exportRoot)
     assert.equal(exported.reviewPassed, true)
     assert.equal(exported.contentHash, draft.contentHash)
     assert.equal((await save('x', body)).review.status, 'passed')
@@ -117,12 +118,12 @@ test('copy, shape, shot and fact-selection edits invalidate passed reviews befor
 })
 
 test('changed evidence and configured terms invalidate prior passes after restart', async t => {
-  const { store, topic, dataDir, save } = await fixture(t)
+  const { store, topic, dataDir, exportRoot, save } = await fixture(t)
   const draft = await save('x', { kind: 'x-single', post: 'AI 生成：Synthetic run took 12 ms' })
   await store.reviewDraft(topic.id, 'x', draft.revision)
   const changedRules = new EvidenceStore(dataDir, ['Synthetic'])
   assert.equal((await changedRules.readEvidence(topic.id)).drafts.x.review.status, 'pending')
-  assert.equal((await changedRules.requestExport(topic.id, 'x', 'text')).reviewPassed, false)
+  assert.equal((await changedRules.requestExport(topic.id, 'x', 'text', exportRoot)).reviewPassed, false)
   await store.reviewDraft(topic.id, 'x', draft.revision)
   const oldEvidence = await store.readEvidence(topic.id)
   await store.saveClaim(topic.id, 'New unverified synthetic fact', null)
@@ -131,7 +132,7 @@ test('changed evidence and configured terms invalidate prior passes after restar
   assert.equal(reviewed.review.status, 'failed')
   assert.ok(reviewed.review.findings.some(f => f.code === 'evidence-changed'))
   await assert.rejects(store.saveDraft(topic.id, 'x', draftInput(oldEvidence, 'x', draft.body, draft.claimIds)), failure('conflict'))
-  assert.equal((await store.requestExport(topic.id, 'x', 'markdown')).reviewPassed, false)
+  assert.equal((await store.requestExport(topic.id, 'x', 'markdown', exportRoot)).reviewPassed, false)
 })
 
 test('failed, cancelled, stale and competing retries preserve the completed winner', async t => {
@@ -180,7 +181,7 @@ test('invalid shapes and missing concurrency metadata cannot replace a draft', a
 })
 
 test('legacy version-1 bytes remain readable but require structured save and a new review', async t => {
-  const { store, topic, dataDir } = await fixture(t)
+  const { store, topic, dataDir, exportRoot } = await fixture(t)
   const file = join(dataDir, 'workspace.json'), workspace = JSON.parse(await readFile(file, 'utf8'))
   const content = 'Legacy artifact', contentHash = createHash('sha256').update(content).digest('hex')
   workspace.topics[0].drafts.x = { content, contentHash, revision: 1, updatedAt: new Date().toISOString(), status: 'complete', review: { status: 'passed', contentHash, findings: [], reviewedAt: new Date().toISOString() } }
@@ -191,7 +192,7 @@ test('legacy version-1 bytes remain readable but require structured save and a n
   const reviewed = await store.reviewDraft(topic.id, 'x', 1)
   assert.equal(reviewed.review.status, 'failed')
   assert.ok(reviewed.review.findings.some(f => f.code === 'legacy-shape'))
-  assert.equal((await store.requestExport(topic.id, 'x', 'text')).reviewPassed, false)
+  assert.equal((await store.requestExport(topic.id, 'x', 'text', exportRoot)).reviewPassed, false)
 })
 
 

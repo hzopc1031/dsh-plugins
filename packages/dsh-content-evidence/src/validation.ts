@@ -1,7 +1,8 @@
 import { createHash } from 'node:crypto'
+import { isAbsolute } from 'node:path'
 import { RemoteError } from '@deepseek-ai/dsh-typert-protocol'
 import { draftHash, parseBody, selectedClaims, stringList } from './drafts.js'
-import { platforms, type Platform, type Workspace, type Draft, type Topic } from './model.js'
+import { exportFormats, platforms, type Platform, type Workspace, type Draft, type Topic } from './model.js'
 
 
 export function invalid(field: string): never {
@@ -126,7 +127,14 @@ export function parseWorkspace(value: unknown): Workspace {
         id(item.id); platform(item.platform); date(item.createdAt)
         if (item.contentHash !== undefined) digest(item.contentHash)
         if (item.reviewPassed !== undefined && typeof item.reviewPassed !== 'boolean') invalid('reviewPassed')
-        if (item.status !== 'pending' || !['markdown', 'text', 'citations', 'materials'].includes(item.format as string)) invalid('export')
+        if (!['pending', 'complete'].includes(item.status as string) || !exportFormats.includes(item.format as typeof exportFormats[number])) invalid('export')
+        if (item.status === 'complete') {
+          digest(item.contentHash)
+          if (typeof item.reviewPassed !== 'boolean' || !isAbsolute(text(item.directory, 'directory', 4096))) invalid('export metadata')
+          const files = array(item.files)
+          if (!files.length) invalid('export files')
+          files.forEach(file => text(file, 'export file', 4096).split('/').forEach(fileName))
+        }
       }
     }
     return value as Workspace

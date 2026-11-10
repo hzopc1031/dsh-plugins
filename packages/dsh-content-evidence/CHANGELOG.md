@@ -11,4 +11,7 @@
 - Reject unknown references and new numeric/citation tokens, preserve unsourced facts as 待核实, and require revision/evidence compare-and-swap for saves.
 - Add structured editorial compliance reports, optional literal extra terms, hash-bound reviews and invalidation after edits, evidence or configured-rule changes; preserve legacy draft bytes.
 - Test stale/failed/cancelled/competing saves, all platform shapes, unsourced facts, review invalidation and strict Remote contracts.
-- Export files and UI remain for later tasks. Nothing is published automatically.
+- Export Markdown, plain text, citations and inert material copies to a user-chosen local directory; add completed history while retaining legacy pending records.
+- Reject escaping paths, symlinks and package/data targets; anchor Linux writes with directory handles, stage files and include current hash-bound review status.
+- Test local artifacts, manual published-URL backfill, path/ancestor replacement, nonexecuting script previews and export failure preservation.
+- UI remains for a later task. Nothing is published automatically.

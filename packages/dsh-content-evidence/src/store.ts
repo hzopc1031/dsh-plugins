@@ -6,12 +6,14 @@ import { fileURLToPath } from 'node:url'
 import { randomUUID } from 'node:crypto'
 import { RemoteError } from '@deepseek-ai/dsh-typert-protocol'
 import {
+  exportFormats,
   type Topic, type Workspace, type Source, type Material, type MaterialInput,
   type Experiment, type ExperimentInput, type Claim, type Draft, type Platform,
   type PublishedLink, type ExportRecord, type ExportFormat, type DraftInput, type EvidenceSheet,
 } from './model.js'
 import { fileName, hash, id, invalid, parseWorkspace, platform, record, text, url } from './validation.js'
 import { checkCompliance, draftHash, evidenceHash, parseDraftInput, renderDraft, revision, rulesHash, stringList, validateFacts } from './drafts.js'
+import { exportDocuments, writeExport } from './exports.js'
 
 const pendingReview = () => ({ status: 'pending' as const, contentHash: null, findings: [], reviewedAt: null })
 const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -182,12 +184,18 @@ export class EvidenceStore {
     const topic = await this.readEvidence(topicId, signal)
     const material = topic.materials.find(item => item.id === materialId)
     if (!material) invalid('materialId')
-    const root = await this.root()
-    const bytes = await readFile(join(await this.materials(root), materialId), MATERIAL_LIMIT)
+    const bytes = await this.materialBytes(await this.root(), material)
+    return { name: material.name, mediaType: material.mediaType, base64: bytes.toString('base64'), sourceId: material.sourceId }
+  }
+  private async materialBytes(root: string, material: Material): Promise<Buffer> {
+    const directory = await open(await this.materials(root), constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW)
+    let bytes: Buffer
+    try { bytes = await readFile(`/proc/self/fd/${directory.fd}/${material.id}`, MATERIAL_LIMIT) }
+    finally { await directory.close() }
     if (bytes.length !== material.bytes || hash(bytes) !== material.sha256) {
       throw new RemoteError('content-evidence/corrupt-store', 'Material integrity check failed', null)
     }
-    return { name: material.name, mediaType: material.mediaType, base64: bytes.toString('base64'), sourceId: material.sourceId }
+    return bytes
   }
   async logExperiment(topicId: string, input: ExperimentInput, signal?: AbortSignal): Promise<Experiment> {
     record(input)
@@ -261,15 +269,22 @@ export class EvidenceStore {
       return link
     }, signal)
   }
-  async requestExport(topicId: string, target: Platform, format: ExportFormat, signal?: AbortSignal): Promise<ExportRecord> {
+  async requestExport(topicId: string, target: Platform, format: ExportFormat, directory: string, signal?: AbortSignal): Promise<ExportRecord> {
     platform(target)
-    if (!['markdown', 'text', 'citations', 'materials'].includes(format)) invalid('format')
-    return this.update(topicId, topic => {
+    if (!exportFormats.includes(format)) invalid('format')
+    return this.update(topicId, async (topic, root) => {
       const draft = topic.drafts[target]
+      if (!draft) invalid('missing draft')
+      const reviewPassed = draft.review.status === 'passed' && draft.review.contentHash === draftHash(draft)
+        && draft.evidenceHash === evidenceHash(topic) && draft.review.rulesHash === rulesHash(this.extraSensitiveTerms)
+      const exportId = randomUUID()
+      const output = await writeExport(directory, [await realpath(PACKAGE_ROOT), root], exportId,
+        exportDocuments(topic, target, draft, format, reviewPassed),
+        format === 'all' || format === 'materials' ? topic.materials : null,
+        material => this.materialBytes(root, material), signal)
       const item: ExportRecord = {
-        id: randomUUID(), platform: target, format, status: 'pending', createdAt: new Date().toISOString(),
-        ...(draft ? { contentHash: draft.contentHash } : {}),
-        reviewPassed: draft?.review.status === 'passed' && draft.review.contentHash === draft.contentHash,
+        id: exportId, platform: target, format, status: 'complete', createdAt: new Date().toISOString(),
+        contentHash: draft.contentHash, reviewPassed, ...output,
       }
       topic.exports.push(item)
       return item

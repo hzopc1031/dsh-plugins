@@ -1,7 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { readFile, stat } from 'node:fs/promises'
+import { mkdtemp, rm, readFile, stat } from 'node:fs/promises'
 import { join } from 'node:path'
+import { tmpdir } from 'node:os'
 import { draftInput } from './draft-fixture.mjs'
 import { enterWorkbench, toolNames } from '../index.js'
 import { harness, agentScope, defineTool } from './harness.mjs'
@@ -96,7 +97,9 @@ test('guard blocks scope-local and descendant tools despite allow policy, includ
   assert.equal((await run(toolNames[1], { topicId: topic.id })).isError, false)
 })
 
-test('failed draft saves and export requests preserve a completed artifact byte for byte', async t => {
+test('failed draft saves and exports preserve a completed artifact byte for byte', async t => {
+  const directory = await mkdtemp(join(tmpdir(), 'content-evidence-export-'))
+  t.after(() => rm(directory, { recursive: true, force: true }))
   const { ctx, dataDir, topic, signal, command, run } = await harness(t)
   const source = await ctx.contentEvidence.addSource(topic.id, 'https://example.com/completed-fixture', '', signal)
   const claim = await ctx.contentEvidence.saveClaim(topic.id, 'Completed fixture draft', source.id, signal)
@@ -120,11 +123,14 @@ test('failed draft saves and export requests preserve a completed artifact byte 
   }
   assert.equal((await run(toolNames[2], { topicId: topic.id, platform: 'x', input: { ...input, expectedRevision: 1 } }, undefined, AbortSignal.abort())).isError, true)
   assert.equal(await readFile(file, 'utf8'), original)
-  assert.equal((await run(toolNames[3], { topicId: '../escape', platform: 'x', format: 'markdown' })).isError, true)
+  assert.equal((await run(toolNames[3], { topicId: '../escape', platform: 'x', format: 'all', directory })).isError, true)
   assert.equal(await readFile(file, 'utf8'), original)
-  const requested = await run(toolNames[3], { topicId: topic.id, platform: 'x', format: 'markdown' })
+  const requested = await run(toolNames[3], { topicId: topic.id, platform: 'x', format: 'all', directory })
   assert.equal(requested.isError, false)
-  assert.equal(JSON.parse(requested.value).status, 'pending')
+  const result = JSON.parse(requested.value)
+  assert.equal(result.status, 'complete')
+  assert.ok(result.files.includes('draft.md') && result.files.includes('draft.txt') && result.files.includes('citations.txt') && result.files.includes('materials/index.json'))
+  assert.ok((await readFile(join(result.directory, 'draft.md'), 'utf8')).includes(draft.content))
   assert.deepEqual((await ctx.contentEvidence.readEvidence(topic.id, signal)).drafts.x, draft)
 })
 

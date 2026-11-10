@@ -47,10 +47,12 @@ export interface Draft {
   body?: DraftBody; claimIds?: string[]; evidenceHash?: string
 }
 export interface PublishedLink { platform: Platform; url: string; recordedAt: string }
-export type ExportFormat = 'markdown' | 'text' | 'citations' | 'materials'
+export const exportFormats = ['markdown', 'text', 'citations', 'materials', 'all'] as const
+export type ExportFormat = typeof exportFormats[number]
 export interface ExportRecord {
-  id: string; platform: Platform; format: ExportFormat; status: 'pending'
+  id: string; platform: Platform; format: ExportFormat; status: 'pending' | 'complete'
   createdAt: string; contentHash?: string; reviewPassed?: boolean
+  directory?: string; files?: string[]
 }
 export interface Topic {
   id: string; idea: string; createdAt: string; updatedAt: string

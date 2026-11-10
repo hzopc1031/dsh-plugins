@@ -17,7 +17,7 @@ const failure = code => error => remoteErrorOf(error)?.code === `content-evidenc
 const input = (content, name = 'notes.txt') => ({ name, mediaType: 'text/plain', base64: Buffer.from(content).toString('base64'), sourceId: null })
 
 test('all topic records and material bytes survive a new store instance', async t => {
-  const { store, dataDir } = await fixture(t)
+  const { store, dataDir, root } = await fixture(t)
   const topic = await store.createTopic('Synthetic storage fixture')
   const source = await store.addSource(topic.id, 'https://example.com/source', 'Fixture source')
   const bytes = Buffer.from([0, 1, 255, 128])
@@ -29,7 +29,7 @@ test('all topic records and material bytes survive a new store instance', async 
   const unverified = await store.saveClaim(topic.id, 'No evidence supplied', null)
   assert.equal(unverified.status, '待核实')
   await store.saveDraft(topic.id, 'x', draftInput(await store.readEvidence(topic.id), 'x', { kind: 'x-single', post: 'Fixture draft' }))
-  await store.requestExport(topic.id, 'x', 'markdown')
+  await store.requestExport(topic.id, 'x', 'markdown', root)
   await store.backfillPublishedLink(topic.id, 'x', 'https://example.com/manual-publication')
   const loaded = await new EvidenceStore(dataDir).readEvidence(topic.id)
   assert.deepEqual(loaded, await store.readEvidence(topic.id))
@@ -39,7 +39,7 @@ test('all topic records and material bytes survive a new store instance', async 
   assert.equal(loaded.drafts.xiaohongshu, null)
   assert.equal(loaded.drafts.douyin, null)
   assert.equal(loaded.drafts['weixin-video'], null)
-  assert.equal(loaded.exports[0].status, 'pending')
+  assert.equal(loaded.exports[0].status, 'complete')
   const copy = await new EvidenceStore(dataDir).readMaterial(topic.id, material.id)
   assert.deepEqual(Buffer.from(copy.base64, 'base64'), bytes)
   assert.deepEqual(await readFile(join(dataDir, material.path)), bytes)

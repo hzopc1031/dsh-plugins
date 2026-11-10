@@ -116,8 +116,8 @@ let ContentEvidenceService = (() => {
         async backfillPublishedLink(topicId, target, publishedUrl, signal) {
             return this.store.backfillPublishedLink(topicId, target, publishedUrl, signal);
         }
-        async requestExport(topicId, target, format, signal) {
-            return this.store.requestExport(topicId, target, format, signal);
+        async requestExport(topicId, target, format, directory, signal) {
+            return this.store.requestExport(topicId, target, format, directory, signal);
         }
     };
 })();

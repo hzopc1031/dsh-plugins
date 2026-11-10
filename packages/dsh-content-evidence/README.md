@@ -2,7 +2,7 @@
 
 内容证据工作台（开发中）：持久化主题、材料、实验记录与证据引用，提供 Host Remote API、四个本地工具及受限工作台。不会自动发布内容。
 
-Evidence-based content workbench, in development. Local storage, the Host Remote API, four local tools and scoped workbench confinement are implemented. Structured four-platform drafts, shared-fact checks, compliance reports and review invalidation are implemented. Export files and the UI come in later tasks. **Nothing is published automatically.**
+Evidence-based content workbench, in development. Local storage, the Host Remote API, four local tools and scoped workbench confinement are implemented. Structured four-platform drafts, shared-fact checks, compliance reports and review invalidation are implemented. Local file exports and manual published-link backfill are implemented on Linux. The UI comes in a later task. **Nothing is published automatically.**
 
 Requires Node.js `>=22` and DSH `>=0.2.1-rc.5 <0.3.0`. APIs were verified against DSH `0.2.2-rc.1`, source `fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159`, and checked at the `0.2.1-rc.5` API baseline. Host libraries are optional peers supplied by DSH; development installs include them for building and testing.
 
@@ -10,7 +10,7 @@ Requires Node.js `>=22` and DSH `>=0.2.1-rc.5 <0.3.0`. APIs were verified agains
 
 UI callers send user-supplied records through DSH Remote; the four tools call the same Host service locally. The store writes `workspace.json` and copies material bytes into `materials/<UUID>` under `$DSH_HOME/content-evidence`, or `~/.dsh/content-evidence` when `DSH_HOME` is unset. Config `dataDir` overrides this root; an absolute path is recommended. Paths inside the installed plugin package are rejected, including resolved symlinks.
 
-Each topic stores its one-line idea, source URLs, material metadata and hashes, commands and terminal output, versions, test conditions, evidence claims, four draft slots (`x`, `xiaohongshu`, `douyin`, `weixin-video`), review state, export request records and manually entered published links. Claims without a reference are marked `待核实`; `有来源` means a reference exists, not that its contents were independently verified. Claims may reference a source, material or experiment in the same topic.
+Each topic stores its one-line idea, source URLs, material metadata and hashes, commands and terminal output, versions, test conditions, evidence claims, four draft slots (`x`, `xiaohongshu`, `douyin`, `weixin-video`), review state, export history and manually entered published links. Claims without a reference are marked `待核实`; `有来源` means a reference exists, not that its contents were independently verified. Claims may reference a source, material or experiment in the same topic.
 
 材料通过 base64 上传并复制到数据目录，文件名只作展示；不会执行材料、脚本或命令，也不会访问来源链接。内容中的指令仅作为数据保存。插件目前不会调用模型或访问社交平台。
 
@@ -29,8 +29,8 @@ The plugin registers `ctx.contentEvidence` as a `TypertRemoteService`, with name
 | `logExperiment`, `saveClaim` | Save experiment records and source-linked claims |
 | `saveDraft` | Save a complete platform shape with selected claims, expected revision and evidence hash; changed copy resets review to `pending` |
 | `reviewDraft` | Check the current revision and store a structured report bound to its content hash |
-| `backfillPublishedLink` | Save a manually supplied URL without contacting the platform |
-| `requestExport` | Persist a `pending` request only; does not create export files yet |
+| `backfillPublishedLink` | Append a manually supplied HTTP(S) URL per platform, with a timestamp, without contacting the platform |
+| `requestExport` | Export the saved platform draft and topic evidence to an existing user-chosen absolute directory; return a completed record and relative file list |
 
 Domain failures use `RemoteError` codes `content-evidence/invalid-input`, `content-evidence/not-found`, `content-evidence/corrupt-store` and `content-evidence/conflict`. Other failures use the gateway's standard handling. All Remote methods accept a final carrier `AbortSignal`.
 
@@ -45,7 +45,7 @@ Only these four tools are registered:
 | `content_evidence_capture_material` | Copy complete base64 material bytes; optional source UUID; no file-path reads or URL fetching |
 | `content_evidence_read_evidence` | Return the topic fact base and optional material bytes; `text/*` material content is also returned verbatim as data |
 | `content_evidence_save_draft` | Save a complete platform shape from the shared fact base with revision/evidence checks; changed copy invalidates review |
-| `content_evidence_export_draft` | Record a `pending` request for Markdown, text, citations or materials; no export files yet |
+| `content_evidence_export_draft` | Export Markdown, text, citations, copied materials, or `all`, inside a new folder in the user-chosen directory |
 
 Create a topic through the Host API, then use `/content-evidence workbench <topicId>` in its session before asking the host model to work on it. This command enables confinement without starting a model turn or changing model configuration. `/content-evidence leave` explicitly ends confinement. Entry and leave require an idle agent; a running task keeps its guard. These commands do not publish anything.
 
@@ -55,7 +55,7 @@ The Host-local exported `await enterWorkbench(pluginCtx, agent, topicId, signal)
 
 Source titles, URLs, commands, output and material text remain inert data. Read results identify evidence as untrusted; the plugin never turns XML/JSON instructions into tool dispatch, deferred instructions or model requests. This does not claim that a future model cannot be influenced by text: confinement must remain active throughout that model task.
 
-Draft saves accept a complete explicit artifact after successful generation or editing, not streaming chunks or failed model output. They use the host model in the already confined session; this plugin does not start a model request or configure a separate model. Export requests remain pending, so this tool does not claim a file was exported.
+Draft saves accept a complete explicit artifact after successful generation or editing, not streaming chunks or failed model output. They use the host model in the already confined session; this plugin does not start a model request or configure a separate model.
 
 ## Shared drafts and review / 共享事实与复核
 
@@ -89,7 +89,26 @@ Call `reviewDraft(topicId, target, expectedRevision)` through the Host/Remote AP
 
 There is no official sensitive-word corpus in this package. These small patterns are editorial reminders, can produce false positives, and do not certify regulatory compliance. Config `extraSensitiveTerms: string[]` adds up to 100 literal, case-insensitive terms of at most 100 characters each; terms are escaped and never treated as regex patterns. All findings require a fix before the automated report can pass. Even a passed report requires human judgment on factual support and platform requirements.
 
-A passed review binds to the complete body, selected facts, rendered copy and evidence snapshot through SHA-256, and to the current rule configuration. Any changed copy/shape/card/shot/fact selection resets review; identical saves retain it. Evidence changes or changed configured terms also invalidate prior passes, including after restart. Legacy version-1 text stays readable with its original content; save it in a platform shape and review again. A pending export request records the specific draft hash and whether its current review passed. Later exporters must bind output to that hash and recheck current review state; old request records are historical snapshots, not approval of later edits.
+A passed review binds to the complete body, selected facts, rendered copy and evidence snapshot through SHA-256, and to the current rule configuration. Any changed copy/shape/card/shot/fact selection resets review; identical saves retain it. Evidence changes or changed configured terms also invalidate prior passes, including after restart. Legacy version-1 text stays readable with its original content; save it in a platform shape and review again. Each completed export records the specific draft hash and whether its current review passed. Old export records remain historical snapshots, not approval of later edits. Legacy pending request records stay readable and are not silently resumed.
+
+## Local exports and published links / 本地导出与链接回填
+
+导出仅写本机文件；请先自行创建并明确选择一个目录。`all` 一次生成 Markdown、纯文本、引用列表与材料副本。用户在插件外手动发布后，可按平台回填链接；插件不会打开发布地址或调用社交 API。
+
+Host/Remote: `requestExport(topicId, target, format, directory, signal)`. The directory is now required; the previous pathless pending-request call is no longer accepted. Tool input: `{ topicId, platform, format, directory }`. `format` accepts `markdown`, `text`, `citations`, `materials`, or `all`. A saved draft for the selected platform is required. Repeat for other platform drafts when needed; each export includes the topic's shared evidence and manually recorded URLs.
+
+Each call creates `<directory>/content-evidence-<export UUID>/`, without overwriting previous exports:
+
+- `draft.md`: readable Markdown with user copy, source text and script-like text in code blocks.
+- `draft.txt`: plain text with current review status and findings.
+- `citations.txt`: stored source URLs, source-linked claims (including `待核实`), material hashes, experiment commands/output/versions/conditions, and manual published URLs.
+- `materials/<material UUID>`: exact copied bytes, with original names, types, source IDs and hashes in `materials/index.json`. Display filenames never become destination paths.
+
+`all` includes every artifact above. Single-format calls include just that artifact; `materials` also includes `export.txt` carrying review metadata. Files are mode 0600 and new directories 0700; copied scripts are not executable. No material, recorded command or source URL is executed, imported or fetched. `readMaterial` and the read tool return bytes/text for preview; the later browser client must render them as inert text or safe image metadata, never active HTML.
+
+Export targets must already exist and be absolute, with no `.`/`..` segments, backslashes or symlinks in any component. The filesystem root, installed package and data-store directories are rejected. Linux `/proc/self/fd` directory handles anchor writes so replacing a destination ancestor with a symlink cannot redirect writes. Export is currently Linux-only and requires procfs. Material size/hash checks run before copying each file. A hidden staging folder is renamed after successful writes; failures clean staging and leave saved drafts unchanged. An interruption or snapshot-write failure after export rename can leave an unrecorded complete folder; user files are never removed automatically.
+
+Review labels are recomputed for the selected draft's current content/evidence/rules hashes. Pending, failed or invalidated reviews are exported honestly, without a passed stamp. Even a passed automated report still requires human factual and platform checks. Backfill uses `backfillPublishedLink(topicId, target, publishedUrl, signal)` for one of the four platforms; it appends validated HTTP(S) URLs and timestamps, preserves previous entries, and never visits those URLs.
 
 ## Local development / 本地开发
 
@@ -106,6 +125,6 @@ DSH_TEST_HOST=/path/to/@deepseek-ai/dsh/package.json node --test --test-isolatio
 
 `build` compiles TypeScript and runs the official Typert generator. A temporary workspace under `.tmp/` stages this package's source and the installed protocol's declarations because the generator requires workspace ownership to recognize decorators. It is removed afterward; the DSH source and installed libraries are not modified. Shipping artifacts require no install lifecycle hooks.
 
-Tests cover reload, byte copies, inert content, path/symlink rejection, corrupt-state preservation, concurrent updates, review invalidation, cancelled writes, generated Remote contracts, service disposal, and simulated package uninstall/reinstall with data retained outside the package. Tool tests also exercise the real registry/executor: exact registration, inert source/material payloads, scoped visibility, scope-local and descendant guard denials despite allow policies, topic binding, failed-save preservation, leave and disposal. Draft tests cover all platform shapes, unsourced facts, rejected invented numeric/citation tokens, structured compliance findings, changed copy/evidence/rules, stale and competing saves, and legacy data. UI preview safety, session/UI orchestration and export rendering/containment remain for later tasks.
+Tests cover reload, byte copies, inert content, path/symlink rejection, corrupt-state preservation, concurrent updates, review invalidation, cancelled writes, generated Remote contracts, service disposal, and simulated package uninstall/reinstall with data retained outside the package. Tool tests also exercise the real registry/executor: exact registration, inert source/material payloads, scoped visibility, scope-local and descendant guard denials despite allow policies, topic binding, failed-save preservation, leave and disposal. Draft tests cover all platform shapes, unsourced facts, rejected invented numeric/citation tokens, structured compliance findings, changed copy/evidence/rules, stale and competing saves, and legacy data. Export tests also cover all formats, manual URL backfill, legacy requests, stale review labels, path traversal, symlinks and an ancestor-replacement race, staging cleanup, byte-for-byte material copies, and script-like material reads without execution or network calls. Browser preview rendering and session/UI orchestration remain for later tasks.
 
 MIT © 2026 hzopc1031.

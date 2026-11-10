@@ -9,7 +9,7 @@ const out = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json', '--ig
 const files = out[0].files.map(f => f.path).sort()
 const expected = [
   'CHANGELOG.md', 'LICENSE', 'README.md', 'cordis.patch.yml', 'icon.svg', 'index.js',
-  ...['plugin', 'model', 'service', 'store', 'validation', 'drafts', 'tools', 'typert.host', 'typert.remote-client']
+  ...['plugin', 'model', 'service', 'store', 'validation', 'drafts', 'exports', 'tools', 'typert.host', 'typert.remote-client']
     .flatMap(name => [`lib/${name}.js`, `lib/${name}.d.ts`]),
   'locale/en.json', 'locale/zh.json', 'package.json',
 ].sort()

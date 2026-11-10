@@ -20,5 +20,5 @@ export declare class ContentEvidenceService extends TypertRemoteService {
     saveDraft(topicId: string, target: Platform, input: DraftInput, signal: AbortSignal): Promise<Draft>;
     reviewDraft(topicId: string, target: Platform, expectedRevision: number, signal: AbortSignal): Promise<Draft>;
     backfillPublishedLink(topicId: string, target: Platform, publishedUrl: string, signal: AbortSignal): Promise<PublishedLink>;
-    requestExport(topicId: string, target: Platform, format: ExportFormat, signal: AbortSignal): Promise<ExportRecord>;
+    requestExport(topicId: string, target: Platform, format: ExportFormat, directory: string, signal: AbortSignal): Promise<ExportRecord>;
 }

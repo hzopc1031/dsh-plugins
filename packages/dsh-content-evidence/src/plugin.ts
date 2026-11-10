@@ -49,12 +49,12 @@ export function apply(ctx: Context, config: Partial<Config> = {}): void {
         kind: 'success',
         text: [
           '内容证据工作台：已实现本地存储与 Host Remote API。',
-          '材料与证据可持久化；四平台结构化草稿与合规复核已实现，导出文件和界面仍在开发。',
+          '材料、四平台草稿、合规复核、本地导出与发布链接手动回填已实现；界面仍在开发。',
           '插件不会自动发布内容。',
           '',
           'Content evidence provides local storage and a Host Remote API.',
           'Four local tools and a restricted workbench are available: /content-evidence workbench <topicId>.',
-          'Structured drafts and compliance review are available. Export files and UI are not implemented yet.',
+          'Structured drafts, compliance review, local export and manual published-link backfill are available. UI is not implemented yet.',
           'Nothing is published automatically.',
         ].join('\n'),
       }

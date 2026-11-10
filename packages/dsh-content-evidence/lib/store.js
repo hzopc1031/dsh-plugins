@@ -5,8 +5,10 @@ import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import { RemoteError } from '@deepseek-ai/dsh-typert-protocol';
+import { exportFormats, } from './model.js';
 import { fileName, hash, id, invalid, parseWorkspace, platform, record, text, url } from './validation.js';
 import { checkCompliance, draftHash, evidenceHash, parseDraftInput, renderDraft, revision, rulesHash, stringList, validateFacts } from './drafts.js';
+import { exportDocuments, writeExport } from './exports.js';
 const pendingReview = () => ({ status: 'pending', contentHash: null, findings: [], reviewedAt: null });
 const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const STATE_LIMIT = 16 * 1024 * 1024;
@@ -226,12 +228,22 @@ export class EvidenceStore {
         const material = topic.materials.find(item => item.id === materialId);
         if (!material)
             invalid('materialId');
-        const root = await this.root();
-        const bytes = await readFile(join(await this.materials(root), materialId), MATERIAL_LIMIT);
+        const bytes = await this.materialBytes(await this.root(), material);
+        return { name: material.name, mediaType: material.mediaType, base64: bytes.toString('base64'), sourceId: material.sourceId };
+    }
+    async materialBytes(root, material) {
+        const directory = await open(await this.materials(root), constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW);
+        let bytes;
+        try {
+            bytes = await readFile(`/proc/self/fd/${directory.fd}/${material.id}`, MATERIAL_LIMIT);
+        }
+        finally {
+            await directory.close();
+        }
         if (bytes.length !== material.bytes || hash(bytes) !== material.sha256) {
             throw new RemoteError('content-evidence/corrupt-store', 'Material integrity check failed', null);
         }
-        return { name: material.name, mediaType: material.mediaType, base64: bytes.toString('base64'), sourceId: material.sourceId };
+        return bytes;
     }
     async logExperiment(topicId, input, signal) {
         record(input);
@@ -313,16 +325,21 @@ export class EvidenceStore {
             return link;
         }, signal);
     }
-    async requestExport(topicId, target, format, signal) {
+    async requestExport(topicId, target, format, directory, signal) {
         platform(target);
-        if (!['markdown', 'text', 'citations', 'materials'].includes(format))
+        if (!exportFormats.includes(format))
             invalid('format');
-        return this.update(topicId, topic => {
+        return this.update(topicId, async (topic, root) => {
             const draft = topic.drafts[target];
+            if (!draft)
+                invalid('missing draft');
+            const reviewPassed = draft.review.status === 'passed' && draft.review.contentHash === draftHash(draft)
+                && draft.evidenceHash === evidenceHash(topic) && draft.review.rulesHash === rulesHash(this.extraSensitiveTerms);
+            const exportId = randomUUID();
+            const output = await writeExport(directory, [await realpath(PACKAGE_ROOT), root], exportId, exportDocuments(topic, target, draft, format, reviewPassed), format === 'all' || format === 'materials' ? topic.materials : null, material => this.materialBytes(root, material), signal);
             const item = {
-                id: randomUUID(), platform: target, format, status: 'pending', createdAt: new Date().toISOString(),
-                ...(draft ? { contentHash: draft.contentHash } : {}),
-                reviewPassed: draft?.review.status === 'passed' && draft.review.contentHash === draft.contentHash,
+                id: exportId, platform: target, format, status: 'complete', createdAt: new Date().toISOString(),
+                contentHash: draft.contentHash, reviewPassed, ...output,
             };
             topic.exports.push(item);
             return item;

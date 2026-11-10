@@ -61,7 +61,7 @@ export class ContentEvidenceService extends TypertRemoteService {
     return this.store.backfillPublishedLink(topicId, target, publishedUrl, signal)
   }
   @Remote
-  async requestExport(topicId: string, target: Platform, format: ExportFormat, signal: AbortSignal): Promise<ExportRecord> {
-    return this.store.requestExport(topicId, target, format, signal)
+  async requestExport(topicId: string, target: Platform, format: ExportFormat, directory: string, signal: AbortSignal): Promise<ExportRecord> {
+    return this.store.requestExport(topicId, target, format, directory, signal)
   }
 }

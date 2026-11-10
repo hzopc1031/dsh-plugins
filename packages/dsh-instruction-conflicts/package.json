@@ -1,0 +1,127 @@
+﻿{
+    "name":  "dsh-instruction-conflicts",
+    "version":  "0.1.0",
+    "description":  "指令冲突解释器：规则正文疑似冲突、注入版本及当前上下文证据",
+    "type":  "module",
+    "main":  "index.js",
+    "types":  "index.d.ts",
+    "exports":  {
+                    ".":  {
+                              "types":  "./index.d.ts",
+                              "default":  "./index.js"
+                          },
+                    "./core":  {
+                                   "types":  "./lib/core.d.ts",
+                                   "default":  "./lib/core.js"
+                               },
+                    "./locale/*.json":  "./locale/*.json",
+                    "./icon":  "./icon.svg"
+                },
+    "files":  [
+                  "index.js",
+                  "index.d.ts",
+                  "lib/*.js",
+                  "lib/*.d.ts",
+                  "cordis.patch.yml",
+                  "locale/*.json",
+                  "icon.svg",
+                  "README.md",
+                  "STATUS.md",
+                  "CHANGELOG.md",
+                  "LICENSE"
+              ],
+    "engines":  {
+                    "node":  "\u003e=22",
+                    "dsh":  "\u003e=0.2.1-rc.5 \u003c0.3.0"
+                },
+    "dsh":  {
+                "bundle":  {
+                               "patch":  "./cordis.patch.yml"
+                           }
+            },
+    "license":  "MIT",
+    "keywords":  [
+                     "dsh-plugin",
+                     "deepseek-harness",
+                     "instruction-conflicts"
+                 ],
+    "scripts":  {
+                    "build":  "tsc",
+                    "typecheck":  "tsc --noEmit",
+                    "test":  "npm run build \u0026\u0026 node --test --test-isolation=none test/*.test.mjs",
+                    "verify-pack":  "node scripts/verify-pack.mjs"
+                },
+    "peerDependencies":  {
+                             "@deepseek-ai/cordis":  "~4.0.5",
+                             "@deepseek-ai/schemastery":  "~3.18.5",
+                             "@deepseek-ai/dsh-agent":  "0.2.1-rc.5",
+                             "@deepseek-ai/dsh-commands":  "0.2.1-rc.5",
+                             "@deepseek-ai/dsh-session":  "0.2.1-rc.5",
+                             "@deepseek-ai/dsh-session-query":  "0.2.1-rc.5",
+                             "@deepseek-ai/dsh-system-prompt":  "0.2.1-rc.5",
+                             "@deepseek-ai/dsh-session-format-catalog":  "0.2.1-rc.5",
+                             "@deepseek-ai/dsh-fs":  "0.2.1-rc.5",
+                             "@deepseek-ai/dsh-home-paths":  "0.2.1-rc.5",
+                             "@deepseek-ai/dsh-llm":  "0.2.1-rc.5"
+                         },
+    "peerDependenciesMeta":  {
+                                 "@deepseek-ai/cordis":  {
+                                                             "optional":  true
+                                                         },
+                                 "@deepseek-ai/schemastery":  {
+                                                                  "optional":  true
+                                                              },
+                                 "@deepseek-ai/dsh-agent":  {
+                                                                "optional":  true
+                                                            },
+                                 "@deepseek-ai/dsh-commands":  {
+                                                                   "optional":  true
+                                                               },
+                                 "@deepseek-ai/dsh-session":  {
+                                                                  "optional":  true
+                                                              },
+                                 "@deepseek-ai/dsh-session-query":  {
+                                                                        "optional":  true
+                                                                    },
+                                 "@deepseek-ai/dsh-system-prompt":  {
+                                                                        "optional":  true
+                                                                    },
+                                 "@deepseek-ai/dsh-session-format-catalog":  {
+                                                                                 "optional":  true
+                                                                             },
+                                 "@deepseek-ai/dsh-fs":  {
+                                                             "optional":  true
+                                                         },
+                                 "@deepseek-ai/dsh-home-paths":  {
+                                                                     "optional":  true
+                                                                 },
+                                 "@deepseek-ai/dsh-llm":  {
+                                                              "optional":  true
+                                                          }
+                             },
+    "devDependencies":  {
+                            "@deepseek-ai/cordis":  "~4.0.5",
+                            "@deepseek-ai/schemastery":  "~3.18.5",
+                            "@deepseek-ai/dsh-agent":  "0.2.1-rc.5",
+                            "@deepseek-ai/dsh-commands":  "0.2.1-rc.5",
+                            "@deepseek-ai/dsh-session":  "0.2.1-rc.5",
+                            "@deepseek-ai/dsh-session-query":  "0.2.1-rc.5",
+                            "@deepseek-ai/dsh-system-prompt":  "0.2.1-rc.5",
+                            "@deepseek-ai/dsh-session-format-catalog":  "0.2.1-rc.5",
+                            "@deepseek-ai/dsh-fs":  "0.2.1-rc.5",
+                            "@deepseek-ai/dsh-home-paths":  "0.2.1-rc.5",
+                            "@types/node":  "^22.0.0",
+                            "typescript":  "~5.9.3",
+                            "@deepseek-ai/dsh-llm":  "0.2.1-rc.5"
+                        },
+    "repository":  {
+                       "type":  "git",
+                       "url":  "git+https://github.com/hzopc1031/dsh-plugins.git",
+                       "directory":  "packages/dsh-instruction-conflicts"
+                   },
+    "homepage":  "https://github.com/hzopc1031/dsh-plugins/tree/main/packages/dsh-instruction-conflicts#readme",
+    "bugs":  {
+                 "url":  "https://github.com/hzopc1031/dsh-plugins/issues"
+             },
+    "author":  "hzopc1031"
+}

@@ -29,6 +29,37 @@ async function workbook(path) {
   return book
 }
 const hash = data => createHash('sha256').update(data).digest('hex')
+
+test('clean Chinese CSV and XLSX ledgers reconcile with an XML ticket and export without changing sources', async t => {
+  const root = await project(t, ['clean.csv', 'invoice.xml'])
+  const book = new ExcelJS.Workbook()
+  const sheet = book.addWorksheet('SAMPLE 示例台账')
+  for (const row of (await readFile(`${root}/clean.csv`, 'utf8')).replace(/^\uFEFF/, '').trim().split(/\r?\n/)) sheet.addRow(row.split(','))
+  await book.xlsx.writeFile(`${root}/SAMPLE-clean.xlsx`)
+  for (const path of ['clean.csv', 'SAMPLE-clean.xlsx']) {
+    const paths = ['invoice.xml', path]
+    const before = await Promise.all(paths.map(name => readFile(`${root}/${name}`)))
+    const data = await ingest(root, [{ path: paths[0], kind: 'ticket' }, { path, kind: 'ledger', mapping }])
+    assert.ok(data.files.every(file => file.status === 'parsed'))
+    const run = reconcile(data)
+    assert.equal(run.results.filter(rule => rule.outcome === 'mismatch').length, 0)
+    for (const id of ['amount-tax-total', 'line-items-total', 'ledger-match']) assert.ok(run.results.some(rule => rule.ruleId === id && rule.outcome === 'pass'), id)
+    assert.equal(run.fullyConfirmed, false)
+    const pack = await exportPack(root, `SAMPLE-${path}-pack`, run, { includeOriginals: true })
+    const report = await json(`${root}/${pack.files.json}`)
+    assert.equal(report.status, 'draft')
+    assert.ok(report.records.every(record => record.fields.number.normalized.value === number))
+    const exported = await workbook(`${root}/${pack.files.xlsx}`)
+    const identifiers = exported.getWorksheet('Fields').getRows(2, exported.getWorksheet('Fields').rowCount - 1).filter(row => row.getCell(5).value === 'number' && row.getCell(4).value === '')
+    assert.equal(identifiers.length, 2)
+    for (const row of identifiers) assert.equal(row.getCell(6).value, number)
+    for (const [i, name] of paths.entries()) {
+      assert.deepEqual(await readFile(`${root}/${name}`), before[i])
+      assert.equal(data.files[i].sha256, hash(before[i]))
+    }
+  }
+})
+
 function confirmation(data, field, before, after = before) {
   return { recordId: data.records[0].id, field, before, after, confirmedBy: 'SAMPLE human reviewer', confirmedAt: '2026-11-11T01:00:00Z' }
 }

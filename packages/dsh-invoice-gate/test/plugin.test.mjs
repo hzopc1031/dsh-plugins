@@ -141,6 +141,26 @@ test('real scoped restriction and monotonic guard block other/scoped/descendant 
   assert.equal((await f.host.tools.execute({ name: 'SAMPLE_scoped', arguments: {}, agent: f.agent, signal, callId: 'SAMPLE' })).isError, false)
 })
 
+test('clean command run passes arithmetic and exports a draft until human field review', async t => {
+  const f = await fixture(t)
+  await copyFile(new URL('./fixtures/invoice.xml', import.meta.url), f.project + '/SAMPLE.xml')
+  await writeFile(f.project + '/SAMPLE-run.json', JSON.stringify({ schemaVersion: 1, inputs: [{ path: 'SAMPLE.xml', kind: 'ticket' }] }))
+  success(await f.call('start SAMPLE-run.json'))
+  success(await f.call('ingest'))
+  const checked = success(await f.call('check'))
+  assert.equal(checked.counts.mismatches, 0)
+  assert.equal(checked.counts.exceptions, 0)
+  assert.ok(checked.counts.pendingKeyFields > 0)
+  assert.equal(checked.status, 'draft')
+  value(await f.tool('export', { directory: 'SAMPLE-clean' }))
+  const report = JSON.parse(await readFile(f.project + '/SAMPLE-clean/export-report.json', 'utf8'))
+  assert.ok(report.results.some(rule => rule.ruleId === 'amount-tax-total' && rule.outcome === 'pass'))
+  assert.equal(report.externalVerification, 'not-checked')
+  assert.equal(report.status, 'draft')
+  assert.match(report.extracted.records[0].label, /SAMPLE.*非真实票据/)
+  assert.equal((await f.call('stop')).kind, 'success')
+})
+
 test('manifest/input/sidecar/corrections and output traversal or symlink escapes are rejected', async t => {
   const f = await fixture(t)
   await copyFile(f.project + '/SAMPLE.json', f.root + '/outside.json')

@@ -1,18 +1,13 @@
 # Changelog
 
-## 0.1.0 — in development
+## 0.1.0 — unreleased
 
-- Scaffold the DSH bundle and `/invoice-gate` help.
-- Preserve the binding MVP decisions in `docs/decisions.md`.
-- Add TypeScript build, smoke tests and package allowlist verification.
-- Add confined, read-only CSV/XLSX, structured/OCR JSON, labelled PDF text and fixture-backed XML ingest with SHA-256 and exception inventory.
-- Preserve string identifiers, blanks, cached formula values and source pointers; refuse OFD and scans without OCR JSON.
-- Add synthetic fixtures and ingest tests; document supported input schemas and limits.
-- Add deterministic BigInt integer-fen rules, explicit unchecked/unimplemented results, duplicate reporting, optional buyer/period checks and number-based ledger reconciliation.
-- Keep extracted, normalized and human-confirmed values separate, validate corrections JSON provenance, and gate full confirmation on key reviews, rule outcomes and ingest exceptions.
-- Add synthetic reconciliation tests and document the rules/result/corrections contract.
-- Add confined, atomic Markdown/XLSX/JSON packs, optional hash-checked original copies and explicit summary-only/draft status.
-- Preserve textual red flags, evidence pointers, string identifiers, separate value layers, corrections, inventories, unexecuted rules and verification disclaimers in exports; add export tests and API docs.
-- Wire three prefixed summary-only ingest/check/export tools and a thin slash-command UI for start/status/stop and model-free runs.
-- Pin human-selected local manifests and corrections, restrict the owning agent’s tools, guard alternate execution paths and reject model rewrite/verbose hooks; keep errors redacted.
-- Test native DSH execution, scope/disposal, path escapes, immutable originals, payload privacy, rewrite rejection and network-free operation. No Remote API or web panel.
+- Add a local CNY invoice/ledger verification gate and evidence packs, available from the `feat/invoice-gate` git branch; not published to npm.
+- Read explicitly mapped CSV/XLSX, documented structured/OCR JSON, labelled PDF text and the documented XML dialect. Inventory failures/skips and refuse OFD and scans without OCR JSON.
+- Keep originals read-only with SHA-256, identifiers as strings, blanks distinct from zero and formula-only fields unchecked; execute no macros, links or formulas.
+- Check exact integer-fen arithmetic, supplied line totals, duplicate numbers/hashes, optional buyers/dates and number-based ledger matches. List unexecuted and unimplemented rules; never delete, merge or repair invoices automatically.
+- Separate extracted, normalized and human-confirmed values with before/after correction history. Pending key fields, input exceptions and mismatches prevent full confirmation; external verification remains not-checked.
+- Atomically export draft-aware Markdown, XLSX text cells and JSON, with optional hash-checked original copies, real source pointers and textual expected/actual/difference/rule-id details. Preserve existing packs on failure.
+- Provide `/invoice-gate` and three prefixed summary-only tools with project confinement, agent-scoped restrictions and guards. Reject model rewrite hooks and arbitrary PTC code during a run. No model calls, outbound network, auto-upload, Remote API or extra web panel.
+- Include synthetic ingest/rule/export/native-tool integration tests, package checks, bilingual usage/schema docs and binding MVP decisions. Check a live isolated Linux DSH 0.2.2-rc.1 profile with synthetic samples.
+- State limits explicitly: no OCR, authenticity/payment/reimbursement verification or accounting-archive certification.

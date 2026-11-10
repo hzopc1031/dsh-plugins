@@ -17,6 +17,7 @@
 | 桌面截图附件 | `dsh-snip-attach`（尚未发布到 npm / not published to npm） | Windows 框选截图后加入待发送附件，针对桌面 rc.5（`/screenshot`）/ Windows snip to pending attachments | [README](packages/dsh-snip-attach/README.md) |
 | 文件占用程序查询 | `dsh-file-holder`（未发布 npm / not published to npm） | 查询 Windows 项目内文件的占用程序、PID 与观察时间（`/file-holder`）；仅支持 rc.5 / Windows project file holder lookup | [README](packages/dsh-file-holder/README.md) |
 | DLL 诊断 | `dsh-dll-doctor`（未发布 npm / not published to npm） | 只读检查 Windows EXE/DLL 的缺失依赖与架构不匹配（`/dll-check`）/ Static Windows DLL diagnostics | [README](packages/dsh-dll-doctor/README.md) |
+| 本地票据核对 | `dsh-invoice-gate`（0.1.0 未发布；仅 `feat/invoice-gate` 分支 / unreleased, branch install only） | 本地票据与台账核对、差异及证据包；不做 OCR／验真，模型不改金额（`/invoice-gate`）/ Local invoice reconciliation and evidence packs | [README](packages/dsh-invoice-gate/README.md) |
 
 > 心跳插件的 npm 包名是 `dsh-heartbeat-monitor`：`dsh-heartbeat` 已被一个无关的包占用。
 > The heartbeat plugin is published as `dsh-heartbeat-monitor` because `dsh-heartbeat` is an unrelated package.
@@ -69,7 +70,10 @@ dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packag
 dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-draft-rescue"
 dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-file-ref-copy"
 dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-snip-attach"
+dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#feat/invoice-gate&path:/packages/dsh-invoice-gate"
 ```
+
+`dsh-invoice-gate` 的 0.1.0 尚未发布到 npm、未合并到 main，须保留上面的 `feat/invoice-gate` ref；它声明 DSH `>=0.2.1-rc.5 <0.3.0`，本机加载检查使用 `0.2.2-rc.1`。/ Invoice Gate is unreleased and requires the branch ref above; live loading was checked with `0.2.2-rc.1`.
 
 同样的 `github:...` 地址也可以填进界面的「添加插件」。把 `main` 换成某个提交哈希即可固定版本。
 

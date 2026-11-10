@@ -1,0 +1,4 @@
+- insert:
+    - id: html-deck-export
+      name: dsh-html-deck-export
+      config: {}

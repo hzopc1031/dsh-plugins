@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "HTML Deck Export",
+    "description": "Scaffold for local HTML deck to image-based PPTX export; currently help only."
+  }
+}

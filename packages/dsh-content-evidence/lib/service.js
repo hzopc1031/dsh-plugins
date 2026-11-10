@@ -46,6 +46,7 @@ let ContentEvidenceService = (() => {
     let _logExperiment_decorators;
     let _saveClaim_decorators;
     let _saveDraft_decorators;
+    let _reviewDraft_decorators;
     let _backfillPublishedLink_decorators;
     let _requestExport_decorators;
     return class ContentEvidenceService extends _classSuper {
@@ -60,6 +61,7 @@ let ContentEvidenceService = (() => {
             _logExperiment_decorators = [Remote];
             _saveClaim_decorators = [Remote];
             _saveDraft_decorators = [Remote];
+            _reviewDraft_decorators = [Remote];
             _backfillPublishedLink_decorators = [Remote];
             _requestExport_decorators = [Remote];
             __esDecorate(this, null, _listTopics_decorators, { kind: "method", name: "listTopics", static: false, private: false, access: { has: obj => "listTopics" in obj, get: obj => obj.listTopics }, metadata: _metadata }, null, _instanceExtraInitializers);
@@ -71,14 +73,15 @@ let ContentEvidenceService = (() => {
             __esDecorate(this, null, _logExperiment_decorators, { kind: "method", name: "logExperiment", static: false, private: false, access: { has: obj => "logExperiment" in obj, get: obj => obj.logExperiment }, metadata: _metadata }, null, _instanceExtraInitializers);
             __esDecorate(this, null, _saveClaim_decorators, { kind: "method", name: "saveClaim", static: false, private: false, access: { has: obj => "saveClaim" in obj, get: obj => obj.saveClaim }, metadata: _metadata }, null, _instanceExtraInitializers);
             __esDecorate(this, null, _saveDraft_decorators, { kind: "method", name: "saveDraft", static: false, private: false, access: { has: obj => "saveDraft" in obj, get: obj => obj.saveDraft }, metadata: _metadata }, null, _instanceExtraInitializers);
+            __esDecorate(this, null, _reviewDraft_decorators, { kind: "method", name: "reviewDraft", static: false, private: false, access: { has: obj => "reviewDraft" in obj, get: obj => obj.reviewDraft }, metadata: _metadata }, null, _instanceExtraInitializers);
             __esDecorate(this, null, _backfillPublishedLink_decorators, { kind: "method", name: "backfillPublishedLink", static: false, private: false, access: { has: obj => "backfillPublishedLink" in obj, get: obj => obj.backfillPublishedLink }, metadata: _metadata }, null, _instanceExtraInitializers);
             __esDecorate(this, null, _requestExport_decorators, { kind: "method", name: "requestExport", static: false, private: false, access: { has: obj => "requestExport" in obj, get: obj => obj.requestExport }, metadata: _metadata }, null, _instanceExtraInitializers);
             if (_metadata) Object.defineProperty(this, Symbol.metadata, { enumerable: true, configurable: true, writable: true, value: _metadata });
         }
         store = __runInitializers(this, _instanceExtraInitializers);
-        constructor(ctx, dataDir) {
+        constructor(ctx, dataDir, extraSensitiveTerms) {
             super(ctx, 'contentEvidence');
-            this.store = new EvidenceStore(dataDir);
+            this.store = new EvidenceStore(dataDir, extraSensitiveTerms);
         }
         async listTopics(signal) {
             return this.store.listTopics(signal);
@@ -104,8 +107,11 @@ let ContentEvidenceService = (() => {
         async saveClaim(topicId, claimText, sourceId, signal) {
             return this.store.saveClaim(topicId, claimText, sourceId, signal);
         }
-        async saveDraft(topicId, target, content, signal) {
-            return this.store.saveDraft(topicId, target, content, signal);
+        async saveDraft(topicId, target, input, signal) {
+            return this.store.saveDraft(topicId, target, input, signal);
+        }
+        async reviewDraft(topicId, target, expectedRevision, signal) {
+            return this.store.reviewDraft(topicId, target, expectedRevision, signal);
         }
         async backfillPublishedLink(topicId, target, publishedUrl, signal) {
             return this.store.backfillPublishedLink(topicId, target, publishedUrl, signal);

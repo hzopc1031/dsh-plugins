@@ -7,7 +7,7 @@ import * as plugin from '../index.js'
 test('bundle loads with the command service and removes its help command on disposal', async () => {
   assert.equal(plugin.name, 'content-evidence')
   assert.deepEqual(plugin.inject, ['commands', 'tools'])
-  assert.deepEqual(plugin.Config({}), {})
+  assert.deepEqual(plugin.Config({}), { extraSensitiveTerms: [] })
   const ctx = new Context()
   try {
     await ctx.plugin(Commands)
@@ -17,7 +17,7 @@ test('bundle loads with the command service and removes its help command on disp
     assert.equal(ctx.contentEvidence.typertRemote.namespace, 'contentEvidence')
     assert.deepEqual(remoteMethods(ctx.contentEvidence).map(marker => marker.method), [
       'listTopics', 'createTopic', 'readEvidence', 'addSource', 'captureMaterial',
-      'readMaterial', 'logExperiment', 'saveClaim', 'saveDraft', 'backfillPublishedLink', 'requestExport',
+      'readMaterial', 'logExperiment', 'saveClaim', 'saveDraft', 'reviewDraft', 'backfillPublishedLink', 'requestExport',
     ])
     const signal = new AbortController().signal
     await assert.rejects(ctx.contentEvidence.readEvidence('../escape', signal), error => remoteErrorOf(error)?.code === 'content-evidence/invalid-input')

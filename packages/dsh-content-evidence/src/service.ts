@@ -3,7 +3,7 @@ import { Remote, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
 import { EvidenceStore } from './store.js'
 import type {
   Topic, Source, Material, MaterialInput, Experiment, ExperimentInput,
-  Claim, Draft, Platform, PublishedLink, ExportRecord, ExportFormat,
+  Claim, Draft, DraftInput, EvidenceSheet, Platform, PublishedLink, ExportRecord, ExportFormat,
 } from './model.js'
 
 declare module '@deepseek-ai/cordis' {
@@ -12,9 +12,9 @@ declare module '@deepseek-ai/cordis' {
 
 export class ContentEvidenceService extends TypertRemoteService {
   private readonly store: EvidenceStore
-  constructor(ctx: Context, dataDir?: string) {
+  constructor(ctx: Context, dataDir?: string, extraSensitiveTerms?: string[]) {
     super(ctx, 'contentEvidence')
-    this.store = new EvidenceStore(dataDir)
+    this.store = new EvidenceStore(dataDir, extraSensitiveTerms)
   }
   @Remote
   async listTopics(signal: AbortSignal): Promise<Topic[]> {
@@ -25,7 +25,7 @@ export class ContentEvidenceService extends TypertRemoteService {
     return this.store.createTopic(idea, signal)
   }
   @Remote
-  async readEvidence(topicId: string, signal: AbortSignal): Promise<Topic> {
+  async readEvidence(topicId: string, signal: AbortSignal): Promise<EvidenceSheet> {
     return this.store.readEvidence(topicId, signal)
   }
   @Remote
@@ -49,8 +49,12 @@ export class ContentEvidenceService extends TypertRemoteService {
     return this.store.saveClaim(topicId, claimText, sourceId, signal)
   }
   @Remote
-  async saveDraft(topicId: string, target: Platform, content: string, signal: AbortSignal): Promise<Draft> {
-    return this.store.saveDraft(topicId, target, content, signal)
+  async saveDraft(topicId: string, target: Platform, input: DraftInput, signal: AbortSignal): Promise<Draft> {
+    return this.store.saveDraft(topicId, target, input, signal)
+  }
+  @Remote
+  async reviewDraft(topicId: string, target: Platform, expectedRevision: number, signal: AbortSignal): Promise<Draft> {
+    return this.store.reviewDraft(topicId, target, expectedRevision, signal)
   }
   @Remote
   async backfillPublishedLink(topicId: string, target: Platform, publishedUrl: string, signal: AbortSignal): Promise<PublishedLink> {

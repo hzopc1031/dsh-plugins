@@ -4,7 +4,7 @@ import type {
   TypertRemoteInfo,
   TypertRemoteMethod,
 } from '@deepseek-ai/dsh-typert-protocol'
-import type { Claim, Draft, Experiment, ExperimentInput, ExportFormat, ExportRecord, Material, MaterialInput, Platform, PublishedLink, Source, Topic } from 'dsh-content-evidence/types'
+import type { Claim, Draft, DraftInput, EvidenceSheet, Experiment, ExperimentInput, ExportFormat, ExportRecord, Material, MaterialInput, Platform, PublishedLink, Source, Topic } from 'dsh-content-evidence/types'
 
 declare module '@deepseek-ai/dsh-typert-protocol' {
   interface TypertRemoteNamespace$636f6e74656e7445766964656e6365 {
@@ -14,11 +14,12 @@ declare module '@deepseek-ai/dsh-typert-protocol' {
     createTopic: (idea: string, signal?: AbortSignal) => Promise<RemoteResult<Topic>>
     listTopics: (signal?: AbortSignal) => Promise<RemoteResult<Topic[]>>
     logExperiment: (topicId: string, input: ExperimentInput, signal?: AbortSignal) => Promise<RemoteResult<Experiment>>
-    readEvidence: (topicId: string, signal?: AbortSignal) => Promise<RemoteResult<Topic>>
+    readEvidence: (topicId: string, signal?: AbortSignal) => Promise<RemoteResult<EvidenceSheet>>
     readMaterial: (topicId: string, materialId: string, signal?: AbortSignal) => Promise<RemoteResult<MaterialInput>>
     requestExport: (topicId: string, target: Platform, format: ExportFormat, signal?: AbortSignal) => Promise<RemoteResult<ExportRecord>>
+    reviewDraft: (topicId: string, target: Platform, expectedRevision: number, signal?: AbortSignal) => Promise<RemoteResult<Draft>>
     saveClaim: (topicId: string, claimText: string, sourceId: string | null, signal?: AbortSignal) => Promise<RemoteResult<Claim>>
-    saveDraft: (topicId: string, target: Platform, content: string, signal?: AbortSignal) => Promise<RemoteResult<Draft>>
+    saveDraft: (topicId: string, target: Platform, input: DraftInput, signal?: AbortSignal) => Promise<RemoteResult<Draft>>
   }
   interface TypertRemoteMap {
     'contentEvidence/addSource': (topicId: string, sourceUrl: string, title: string, signal?: AbortSignal) => Promise<RemoteResult<Source>>
@@ -27,11 +28,12 @@ declare module '@deepseek-ai/dsh-typert-protocol' {
     'contentEvidence/createTopic': (idea: string, signal?: AbortSignal) => Promise<RemoteResult<Topic>>
     'contentEvidence/listTopics': (signal?: AbortSignal) => Promise<RemoteResult<Topic[]>>
     'contentEvidence/logExperiment': (topicId: string, input: ExperimentInput, signal?: AbortSignal) => Promise<RemoteResult<Experiment>>
-    'contentEvidence/readEvidence': (topicId: string, signal?: AbortSignal) => Promise<RemoteResult<Topic>>
+    'contentEvidence/readEvidence': (topicId: string, signal?: AbortSignal) => Promise<RemoteResult<EvidenceSheet>>
     'contentEvidence/readMaterial': (topicId: string, materialId: string, signal?: AbortSignal) => Promise<RemoteResult<MaterialInput>>
     'contentEvidence/requestExport': (topicId: string, target: Platform, format: ExportFormat, signal?: AbortSignal) => Promise<RemoteResult<ExportRecord>>
+    'contentEvidence/reviewDraft': (topicId: string, target: Platform, expectedRevision: number, signal?: AbortSignal) => Promise<RemoteResult<Draft>>
     'contentEvidence/saveClaim': (topicId: string, claimText: string, sourceId: string | null, signal?: AbortSignal) => Promise<RemoteResult<Claim>>
-    'contentEvidence/saveDraft': (topicId: string, target: Platform, content: string, signal?: AbortSignal) => Promise<RemoteResult<Draft>>
+    'contentEvidence/saveDraft': (topicId: string, target: Platform, input: DraftInput, signal?: AbortSignal) => Promise<RemoteResult<Draft>>
   }
   interface TypertRemoteNamespaceMap {
     'contentEvidence': TypertRemoteNamespace$636f6e74656e7445766964656e6365
@@ -45,11 +47,12 @@ export declare const TYPERT_REMOTE: TypertRemoteInfo<{
   readonly 'contentEvidence/createTopic': TypertRemoteMethod<{ readonly 'idea': string }, Topic>
   readonly 'contentEvidence/listTopics': TypertRemoteMethod<{  }, Topic[]>
   readonly 'contentEvidence/logExperiment': TypertRemoteMethod<{ readonly 'topicId': string; readonly 'input': ExperimentInput }, Experiment>
-  readonly 'contentEvidence/readEvidence': TypertRemoteMethod<{ readonly 'topicId': string }, Topic>
+  readonly 'contentEvidence/readEvidence': TypertRemoteMethod<{ readonly 'topicId': string }, EvidenceSheet>
   readonly 'contentEvidence/readMaterial': TypertRemoteMethod<{ readonly 'topicId': string; readonly 'materialId': string }, MaterialInput>
   readonly 'contentEvidence/requestExport': TypertRemoteMethod<{ readonly 'topicId': string; readonly 'target': Platform; readonly 'format': ExportFormat }, ExportRecord>
+  readonly 'contentEvidence/reviewDraft': TypertRemoteMethod<{ readonly 'topicId': string; readonly 'target': Platform; readonly 'expectedRevision': number }, Draft>
   readonly 'contentEvidence/saveClaim': TypertRemoteMethod<{ readonly 'topicId': string; readonly 'claimText': string; readonly 'sourceId': string | null }, Claim>
-  readonly 'contentEvidence/saveDraft': TypertRemoteMethod<{ readonly 'topicId': string; readonly 'target': Platform; readonly 'content': string }, Draft>
+  readonly 'contentEvidence/saveDraft': TypertRemoteMethod<{ readonly 'topicId': string; readonly 'target': Platform; readonly 'input': DraftInput }, Draft>
 }>
 export default TYPERT_REMOTE
 //# sourceMappingURL=typert.remote-client.d.ts.map

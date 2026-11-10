@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { RemoteError } from '@deepseek-ai/dsh-typert-protocol';
+import { draftHash, parseBody, selectedClaims, stringList } from './drafts.js';
 import { platforms } from './model.js';
 export function invalid(field) {
     throw new RemoteError('content-evidence/invalid-input', `Invalid ${field}`, { field });
@@ -126,8 +127,19 @@ export function parseWorkspace(value) {
                 if (drafts[key] === null)
                     continue;
                 const draft = record(drafts[key]), review = record(draft.review);
-                const content = text(draft.content, 'content', 200_000, true);
-                if (draft.contentHash !== hash(content))
+                text(draft.content, 'content', 200_000, true);
+                if (draft.body !== undefined) {
+                    parseBody(draft.body, key);
+                    const claimIds = stringList(draft.claimIds, 'claimIds');
+                    claimIds.forEach(id);
+                    if (new Set(claimIds).size !== claimIds.length)
+                        invalid('claimIds');
+                    selectedClaims(topic, claimIds);
+                    digest(draft.evidenceHash);
+                }
+                else if (draft.claimIds !== undefined || draft.evidenceHash !== undefined)
+                    invalid('draft metadata');
+                if (draft.contentHash !== draftHash(draft))
                     invalid('contentHash');
                 integer(draft.revision, 1);
                 date(draft.updatedAt);
@@ -139,7 +151,20 @@ export function parseWorkspace(value) {
                     digest(review.contentHash);
                 if (review.status === 'passed' && review.contentHash !== draft.contentHash)
                     invalid('review.contentHash');
-                array(review.findings).forEach(item => text(item, 'finding'));
+                array(review.findings).forEach(item => {
+                    if (typeof item === 'string') {
+                        text(item, 'finding');
+                        return;
+                    }
+                    const finding = record(item);
+                    if (!['ai-label', 'sensitive', 'absolute', 'citation', 'evidence-changed', 'legacy-shape'].includes(finding.code))
+                        invalid('finding.code');
+                    text(finding.location, 'location');
+                    text(finding.excerpt, 'excerpt', 100_000, true);
+                    text(finding.fix, 'fix');
+                });
+                if (review.rulesHash !== undefined)
+                    digest(review.rulesHash);
                 if (review.reviewedAt !== null)
                     date(review.reviewedAt);
             }
@@ -154,6 +179,10 @@ export function parseWorkspace(value) {
                 id(item.id);
                 platform(item.platform);
                 date(item.createdAt);
+                if (item.contentHash !== undefined)
+                    digest(item.contentHash);
+                if (item.reviewPassed !== undefined && typeof item.reviewPassed !== 'boolean')
+                    invalid('reviewPassed');
                 if (item.status !== 'pending' || !['markdown', 'text', 'citations', 'materials'].includes(item.format))
                     invalid('export');
             }

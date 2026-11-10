@@ -7,6 +7,10 @@ declare module '@deepseek-ai/dsh-typert-protocol' {
             readonly topicId: string;
         };
         'content-evidence/corrupt-store': null;
+        'content-evidence/conflict': {
+            readonly revision: number;
+            readonly evidenceHash: string;
+        };
     }
 }
 export declare const platforms: readonly ["x", "xiaohongshu", "douyin", "weixin-video"];
@@ -42,11 +46,44 @@ export interface Claim {
     status: '有来源' | '待核实';
     createdAt: string;
 }
+export type DraftBody = {
+    kind: 'x-single';
+    post: string;
+} | {
+    kind: 'x-thread';
+    posts: string[];
+} | {
+    kind: 'xiaohongshu';
+    title: string;
+    body: string;
+    cards: string[];
+} | {
+    kind: 'douyin';
+    voiceover: string;
+    shots: string[];
+} | {
+    kind: 'weixin-video';
+    voiceover: string;
+    shots: string[];
+};
+export interface DraftInput {
+    body: DraftBody;
+    claimIds: string[];
+    expectedRevision: number;
+    evidenceHash: string;
+}
+export interface ComplianceFinding {
+    code: 'ai-label' | 'sensitive' | 'absolute' | 'citation' | 'evidence-changed' | 'legacy-shape';
+    location: string;
+    excerpt: string;
+    fix: string;
+}
 export interface Review {
     status: 'pending' | 'passed' | 'failed';
     contentHash: string | null;
-    findings: string[];
+    findings: (string | ComplianceFinding)[];
     reviewedAt: string | null;
+    rulesHash?: string;
 }
 export interface Draft {
     content: string;
@@ -55,6 +92,9 @@ export interface Draft {
     updatedAt: string;
     status: 'editing' | 'complete';
     review: Review;
+    body?: DraftBody;
+    claimIds?: string[];
+    evidenceHash?: string;
 }
 export interface PublishedLink {
     platform: Platform;
@@ -68,6 +108,8 @@ export interface ExportRecord {
     format: ExportFormat;
     status: 'pending';
     createdAt: string;
+    contentHash?: string;
+    reviewPassed?: boolean;
 }
 export interface Topic {
     id: string;
@@ -97,4 +139,7 @@ export interface ExperimentInput {
     output: string;
     versions: string;
     conditions: string;
+}
+export interface EvidenceSheet extends Topic {
+    evidenceHash: string;
 }

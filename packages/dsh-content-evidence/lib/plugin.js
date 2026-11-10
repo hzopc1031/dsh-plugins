@@ -7,10 +7,11 @@ export { enterWorkbench, toolNames } from './tools.js';
 export const name = 'content-evidence';
 export const inject = ['commands', 'tools'];
 export const Config = z.object({
+    extraSensitiveTerms: z.array(z.string()).description('附加的人工提示词，按字面扫描；不是官方敏感词库'),
     dataDir: z.string().description('本地数据目录；默认 $DSH_HOME/content-evidence 或 ~/.dsh/content-evidence，必须位于插件包之外'),
 });
 export function apply(ctx, config = {}) {
-    const service = new ContentEvidenceService(ctx, config.dataDir);
+    const service = new ContentEvidenceService(ctx, config.dataDir, config.extraSensitiveTerms);
     registerTools(ctx, service);
     const workbenches = new WeakMap();
     ctx.effect(() => ctx.commands.register({
@@ -43,12 +44,12 @@ export function apply(ctx, config = {}) {
                 kind: 'success',
                 text: [
                     '内容证据工作台：已实现本地存储与 Host Remote API。',
-                    '材料与证据可持久化；生成草稿、合规检查、导出文件和界面将在后续任务实现。',
+                    '材料与证据可持久化；四平台结构化草稿与合规复核已实现，导出文件和界面仍在开发。',
                     '插件不会自动发布内容。',
                     '',
                     'Content evidence provides local storage and a Host Remote API.',
                     'Four local tools and a restricted workbench are available: /content-evidence workbench <topicId>.',
-                    'Draft generation, compliance checks, export files and UI are not implemented yet.',
+                    'Structured drafts and compliance review are available. Export files and UI are not implemented yet.',
                     'Nothing is published automatically.',
                 ].join('\n'),
             };

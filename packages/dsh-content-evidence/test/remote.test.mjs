@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Context, Commands, mountTools } from './harness.mjs'
 import { remoteErrorOf, remoteMethods } from '@deepseek-ai/dsh-typert-protocol'
+import { draftInput } from './draft-fixture.mjs'
 import * as plugin from '../index.js'
 import remote from '../lib/typert.remote-client.js'
 import { TYPERT } from '../lib/typert.host.js'
@@ -39,6 +40,34 @@ test('generated Host and client contracts agree with the registered service and 
   assert.equal(loaded.claims[0].status, '待核实')
   assert.equal(loaded.materials.length, 1)
   assert.equal((await invoke('listTopics', {})).length, 1)
+  const claim = await invoke('saveClaim', { topicId: topic.id, claimText: 'Sourced Remote fixture', sourceId: source.id })
+  for (const [target, body] of [
+    ['x', { kind: 'x-single', post: 'AI 生成：Remote fixture' }],
+    ['x', { kind: 'x-thread', posts: ['AI 生成：Remote fixture', 'Other post'] }],
+    ['xiaohongshu', { kind: 'xiaohongshu', title: 'Fixture', body: 'AI 生成：Remote body', cards: ['Card'] }],
+    ['douyin', { kind: 'douyin', voiceover: 'AI 生成：Voiceover', shots: ['Shot'] }],
+    ['weixin-video', { kind: 'weixin-video', voiceover: 'AI 生成：Voiceover', shots: ['Shot'] }],
+  ]) {
+    const evidence = await invoke('readEvidence', { topicId: topic.id })
+    const input = draftInput(evidence, target, body, [claim.id])
+    const saved = await invoke('saveDraft', { topicId: topic.id, target, input })
+    assert.deepEqual(saved.body, body)
+    assert.equal((await invoke('reviewDraft', { topicId: topic.id, target, expectedRevision: saved.revision })).review.status, 'passed')
+    assert.equal((await invoke('requestExport', { topicId: topic.id, target, format: 'markdown' })).reviewPassed, true)
+    await assert.rejects(invoke('saveDraft', { topicId: topic.id, target, input }), error => {
+      const failure = remoteErrorOf(error)
+      assert.equal(failure.code, 'content-evidence/conflict')
+      assert.equal(failure.details.revision, saved.revision)
+      assert.equal(failure.details.evidenceHash, evidence.evidenceHash)
+      return true
+    })
+  }
+  const latest = await invoke('readEvidence', { topicId: topic.id })
+  const pending = await invoke('saveDraft', { topicId: topic.id, target: 'x', input: draftInput(latest, 'x', { kind: 'x-single', post: 'Unlinked copy' }) })
+  const failed = await invoke('reviewDraft', { topicId: topic.id, target: 'x', expectedRevision: pending.revision })
+  assert.equal(failed.review.status, 'failed')
+  assert.ok(failed.review.findings.some(finding => finding.code === 'citation' && finding.location && finding.fix))
+
   assert.throws(() => remote.methods['contentEvidence/createTopic'].input().create().parse({ idea: 'fixture', extra: true }))
   assert.throws(() => remote.methods['contentEvidence/captureMaterial'].input({ strict: true }).create().parse({ topicId: topic.id, input: { name: 'fixture', base64: '', sourceId: null } }))
   await assert.rejects(invoke('readEvidence', { topicId: '00000000-0000-4000-8000-000000000000' }), error => {

@@ -5,6 +5,7 @@ import { tmpdir, homedir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { remoteErrorOf } from '@deepseek-ai/dsh-typert-protocol'
+import { draftInput } from './draft-fixture.mjs'
 import { EvidenceStore } from '../lib/store.js'
 
 async function fixture(t) {
@@ -27,7 +28,7 @@ test('all topic records and material bytes survive a new store instance', async 
   await store.saveClaim(topic.id, 'Fixture assertion with material', material.id)
   const unverified = await store.saveClaim(topic.id, 'No evidence supplied', null)
   assert.equal(unverified.status, '待核实')
-  await store.saveDraft(topic.id, 'x', 'Fixture draft')
+  await store.saveDraft(topic.id, 'x', draftInput(await store.readEvidence(topic.id), 'x', { kind: 'x-single', post: 'Fixture draft' }))
   await store.requestExport(topic.id, 'x', 'markdown')
   await store.backfillPublishedLink(topic.id, 'x', 'https://example.com/manual-publication')
   const loaded = await new EvidenceStore(dataDir).readEvidence(topic.id)
@@ -124,18 +125,19 @@ test('simultaneous store instances serialize changes without losing records', as
 test('changing a reviewed draft invalidates review; cancelled writes preserve existing work', async t => {
   const { store, dataDir } = await fixture(t)
   const topic = await store.createTopic('Review fixture')
-  await store.saveDraft(topic.id, 'x', 'Original fixture draft')
-  const file = join(dataDir, 'workspace.json')
-  const workspace = JSON.parse(await readFile(file, 'utf8'))
-  const draft = workspace.topics[0].drafts.x
-  draft.status = 'complete'
-  draft.review = { status: 'passed', contentHash: draft.contentHash, findings: [], reviewedAt: new Date().toISOString() }
-  await writeFile(file, JSON.stringify(workspace))
-  assert.equal((await store.saveDraft(topic.id, 'x', draft.content)).review.status, 'passed')
+  const source = await store.addSource(topic.id, 'https://example.com/review-fixture', '')
+  const claim = await store.saveClaim(topic.id, 'Fixture assertion', source.id)
+  const body = { kind: 'x-single', post: 'AI 生成：Fixture assertion' }
+  await store.saveDraft(topic.id, 'x', draftInput(await store.readEvidence(topic.id), 'x', body, [claim.id]))
+  const draft = await store.reviewDraft(topic.id, 'x', 1)
+  assert.equal(draft.review.status, 'passed')
+  const current = await store.readEvidence(topic.id)
+  assert.equal((await store.saveDraft(topic.id, 'x', draftInput(current, 'x', body, [claim.id]))).review.status, 'passed')
   const signal = AbortSignal.abort(new Error('Fixture cancelled'))
-  await assert.rejects(store.saveDraft(topic.id, 'x', 'Cancelled retry', signal), /Fixture cancelled/)
+  const edited = draftInput(current, 'x', { ...body, post: 'AI 生成：Edited fixture draft' }, [claim.id])
+  await assert.rejects(store.saveDraft(topic.id, 'x', edited, signal), /Fixture cancelled/)
   assert.equal((await store.readEvidence(topic.id)).drafts.x.status, 'complete')
-  const changed = await store.saveDraft(topic.id, 'x', 'Edited fixture draft')
+  const changed = await store.saveDraft(topic.id, 'x', edited)
   assert.equal(changed.review.status, 'pending')
   assert.equal(changed.review.contentHash, null)
   assert.notEqual(changed.contentHash, draft.contentHash)
@@ -188,7 +190,7 @@ test('abandoned temporary snapshots do not affect reload or the next write', asy
   const topic = await store.createTopic('Interrupted write fixture')
   await writeFile(join(dataDir, 'abandoned.tmp'), '{incomplete replacement')
   const restarted = new EvidenceStore(dataDir)
-  assert.deepEqual(await restarted.readEvidence(topic.id), topic)
+  assert.deepEqual(await restarted.readEvidence(topic.id), await store.readEvidence(topic.id))
   await restarted.saveClaim(topic.id, 'Fixture after restart', null)
   assert.equal((await new EvidenceStore(dataDir).readEvidence(topic.id)).claims.length, 1)
 })

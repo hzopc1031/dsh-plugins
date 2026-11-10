@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import { RemoteError } from '@deepseek-ai/dsh-typert-protocol'
-import { platforms, type Platform, type Workspace } from './model.js'
+import { draftHash, parseBody, selectedClaims, stringList } from './drafts.js'
+import { platforms, type Platform, type Workspace, type Draft, type Topic } from './model.js'
 
 
 export function invalid(field: string): never {
@@ -92,14 +93,28 @@ export function parseWorkspace(value: unknown): Workspace {
       for (const key of platforms) {
         if (drafts[key] === null) continue
         const draft = record(drafts[key]), review = record(draft.review)
-        const content = text(draft.content, 'content', 200_000, true)
-        if (draft.contentHash !== hash(content)) invalid('contentHash')
+        text(draft.content, 'content', 200_000, true)
+        if (draft.body !== undefined) {
+          parseBody(draft.body, key)
+          const claimIds = stringList(draft.claimIds, 'claimIds')
+          claimIds.forEach(id)
+          if (new Set(claimIds).size !== claimIds.length) invalid('claimIds')
+          selectedClaims(topic as unknown as Topic, claimIds)
+          digest(draft.evidenceHash)
+        } else if (draft.claimIds !== undefined || draft.evidenceHash !== undefined) invalid('draft metadata')
+        if (draft.contentHash !== draftHash(draft as unknown as Draft)) invalid('contentHash')
         integer(draft.revision, 1); date(draft.updatedAt)
         if (!['editing', 'complete'].includes(draft.status as string)) invalid('draft.status')
         if (!['pending', 'passed', 'failed'].includes(review.status as string)) invalid('review.status')
         if (review.contentHash !== null) digest(review.contentHash)
         if (review.status === 'passed' && review.contentHash !== draft.contentHash) invalid('review.contentHash')
-        array(review.findings).forEach(item => text(item, 'finding'))
+        array(review.findings).forEach(item => {
+          if (typeof item === 'string') { text(item, 'finding'); return }
+          const finding = record(item)
+          if (!['ai-label', 'sensitive', 'absolute', 'citation', 'evidence-changed', 'legacy-shape'].includes(finding.code as string)) invalid('finding.code')
+          text(finding.location, 'location'); text(finding.excerpt, 'excerpt', 100_000, true); text(finding.fix, 'fix')
+        })
+        if (review.rulesHash !== undefined) digest(review.rulesHash)
         if (review.reviewedAt !== null) date(review.reviewedAt)
       }
       for (const rawLink of array(topic.publishedLinks)) {
@@ -109,6 +124,8 @@ export function parseWorkspace(value: unknown): Workspace {
       for (const rawExport of array(topic.exports)) {
         const item = record(rawExport)
         id(item.id); platform(item.platform); date(item.createdAt)
+        if (item.contentHash !== undefined) digest(item.contentHash)
+        if (item.reviewPassed !== undefined && typeof item.reviewPassed !== 'boolean') invalid('reviewPassed')
         if (item.status !== 'pending' || !['markdown', 'text', 'citations', 'materials'].includes(item.format as string)) invalid('export')
       }
     }

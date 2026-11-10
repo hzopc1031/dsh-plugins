@@ -1,7 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { readFile, writeFile, stat } from 'node:fs/promises'
+import { readFile, stat } from 'node:fs/promises'
 import { join } from 'node:path'
+import { draftInput } from './draft-fixture.mjs'
 import { enterWorkbench, toolNames } from '../index.js'
 import { harness, agentScope, defineTool } from './harness.mjs'
 
@@ -97,25 +98,27 @@ test('guard blocks scope-local and descendant tools despite allow policy, includ
 
 test('failed draft saves and export requests preserve a completed artifact byte for byte', async t => {
   const { ctx, dataDir, topic, signal, command, run } = await harness(t)
-  const saved = await run(toolNames[2], { topicId: topic.id, platform: 'x', content: 'Completed fixture draft' })
+  const source = await ctx.contentEvidence.addSource(topic.id, 'https://example.com/completed-fixture', '', signal)
+  const claim = await ctx.contentEvidence.saveClaim(topic.id, 'Completed fixture draft', source.id, signal)
+  const input = draftInput(await ctx.contentEvidence.readEvidence(topic.id, signal), 'x', { kind: 'x-single', post: 'AI 生成：Completed fixture draft' }, [claim.id])
+  const saved = await run(toolNames[2], { topicId: topic.id, platform: 'x', input })
   assert.equal(saved.isError, false)
+  const draft = await ctx.contentEvidence.reviewDraft(topic.id, 'x', 1, signal)
+  assert.equal(draft.review.status, 'passed')
   const file = join(dataDir, 'workspace.json')
-  const workspace = JSON.parse(await readFile(file, 'utf8'))
-  const draft = workspace.topics[0].drafts.x
-  draft.status = 'complete'
-  draft.review = { status: 'passed', contentHash: draft.contentHash, findings: [], reviewedAt: new Date().toISOString() }
-  await writeFile(file, JSON.stringify(workspace))
   const original = await readFile(file, 'utf8')
   await command(`workbench ${topic.id}`)
   for (const args of [
-    { topicId: topic.id, platform: 'unknown', content: 'Failed retry' },
-    { topicId: topic.id, platform: 'x', content: 'x'.repeat(200_001) },
+    { topicId: topic.id, platform: 'unknown', input },
+    { topicId: topic.id, platform: 'x', input: { ...input, expectedRevision: 1, body: { kind: 'x-single', post: 'x'.repeat(200_001) } } },
+    { topicId: topic.id, platform: 'x', input },
+    { topicId: topic.id, platform: 'x', input: { ...input, expectedRevision: 1, body: { kind: 'x-single', post: 'Invented number 999' } } },
     { topicId: topic.id, platform: 'x' },
   ]) {
     assert.equal((await run(toolNames[2], args)).isError, true)
     assert.equal(await readFile(file, 'utf8'), original)
   }
-  assert.equal((await run(toolNames[2], { topicId: topic.id, platform: 'x', content: 'Cancelled retry' }, undefined, AbortSignal.abort())).isError, true)
+  assert.equal((await run(toolNames[2], { topicId: topic.id, platform: 'x', input: { ...input, expectedRevision: 1 } }, undefined, AbortSignal.abort())).isError, true)
   assert.equal(await readFile(file, 'utf8'), original)
   assert.equal((await run(toolNames[3], { topicId: '../escape', platform: 'x', format: 'markdown' })).isError, true)
   assert.equal(await readFile(file, 'utf8'), original)

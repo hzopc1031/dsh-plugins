@@ -6,6 +6,8 @@ import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import { RemoteError } from '@deepseek-ai/dsh-typert-protocol';
 import { fileName, hash, id, invalid, parseWorkspace, platform, record, text, url } from './validation.js';
+import { checkCompliance, draftHash, evidenceHash, parseDraftInput, renderDraft, revision, rulesHash, stringList, validateFacts } from './drafts.js';
+const pendingReview = () => ({ status: 'pending', contentHash: null, findings: [], reviewedAt: null });
 const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const STATE_LIMIT = 16 * 1024 * 1024;
 const MATERIAL_LIMIT = 10 * 1024 * 1024;
@@ -64,7 +66,9 @@ async function atomicWrite(directory, name, data) {
 }
 export class EvidenceStore {
     dataDir;
-    constructor(dataDir = join(process.env.DSH_HOME || join(homedir(), '.dsh'), 'content-evidence')) {
+    extraSensitiveTerms;
+    constructor(dataDir = join(process.env.DSH_HOME || join(homedir(), '.dsh'), 'content-evidence'), extraSensitiveTerms = []) {
+        this.extraSensitiveTerms = stringList(extraSensitiveTerms, 'extraSensitiveTerms').map(term => text(term, 'extraSensitiveTerms', 100));
         text(dataDir, 'dataDir', 4096);
         this.dataDir = resolve(dataDir);
         if (within(PACKAGE_ROOT, this.dataDir))
@@ -104,7 +108,16 @@ export class EvidenceStore {
         catch (cause) {
             throw new RemoteError('content-evidence/corrupt-store', 'Cannot decode workspace; existing data was not overwritten', null, { cause });
         }
-        return parseWorkspace(parsed);
+        const workspace = parseWorkspace(parsed);
+        for (const topic of workspace.topics)
+            this.invalidateReviews(topic);
+        return workspace;
+    }
+    invalidateReviews(topic) {
+        for (const draft of Object.values(topic.drafts)) {
+            if (draft?.review.status === 'passed' && (draft.evidenceHash !== evidenceHash(topic) || draft.review.rulesHash !== rulesHash(this.extraSensitiveTerms)))
+                draft.review = pendingReview();
+        }
     }
     async mutate(update, signal) {
         const root = await this.root();
@@ -142,6 +155,7 @@ export class EvidenceStore {
         return this.mutate(async (workspace, root) => {
             const topic = this.topic(workspace, topicId);
             const result = await update(topic, root);
+            this.invalidateReviews(topic);
             topic.updatedAt = new Date().toISOString();
             return result;
         }, signal);
@@ -169,7 +183,8 @@ export class EvidenceStore {
     async readEvidence(topicId, signal) {
         id(topicId);
         signal?.throwIfAborted();
-        return this.topic(await this.load(await this.root()), topicId);
+        const topic = this.topic(await this.load(await this.root()), topicId);
+        return { ...topic, evidenceHash: evidenceHash(topic) };
     }
     async addSource(topicId, sourceUrl, title, signal) {
         url(sourceUrl);
@@ -247,18 +262,45 @@ export class EvidenceStore {
             return claim;
         }, signal);
     }
-    async saveDraft(topicId, target, content, signal) {
+    async saveDraft(topicId, target, value, signal) {
         platform(target);
-        text(content, 'content', 200_000, true);
+        const input = parseDraftInput(value, target);
         return this.update(topicId, topic => {
-            const previous = topic.drafts[target], contentHash = hash(content);
-            if (previous?.contentHash === contentHash)
-                return previous;
+            const previous = topic.drafts[target];
+            this.compare(topic, previous?.revision ?? 0, input.expectedRevision, input.evidenceHash);
+            validateFacts(input.body, topic, input.claimIds);
+            const content = renderDraft(input.body, topic, input.claimIds);
+            text(content, 'content', 200_000);
             const draft = {
-                content, contentHash, revision: (previous?.revision ?? 0) + 1, updatedAt: new Date().toISOString(), status: 'editing',
-                review: { status: 'pending', contentHash: null, findings: [], reviewedAt: null },
+                body: input.body, claimIds: input.claimIds, evidenceHash: input.evidenceHash,
+                content, contentHash: '', revision: (previous?.revision ?? 0) + 1,
+                updatedAt: new Date().toISOString(), status: 'complete', review: pendingReview(),
             };
+            draft.contentHash = draftHash(draft);
+            if (previous?.contentHash === draft.contentHash)
+                return previous;
             topic.drafts[target] = draft;
+            return draft;
+        }, signal);
+    }
+    compare(topic, current, expected, base) {
+        if (current !== expected || evidenceHash(topic) !== base) {
+            throw new RemoteError('content-evidence/conflict', 'Draft or evidence changed; read the latest evidence before retrying', { revision: current, evidenceHash: evidenceHash(topic) });
+        }
+    }
+    async reviewDraft(topicId, target, expectedRevision, signal) {
+        platform(target);
+        revision(expectedRevision);
+        return this.update(topicId, topic => {
+            const draft = topic.drafts[target];
+            if (!draft)
+                invalid('missing draft');
+            this.compare(topic, draft.revision, expectedRevision, evidenceHash(topic));
+            const findings = checkCompliance(topic, draft, this.extraSensitiveTerms);
+            draft.review = {
+                status: findings.length ? 'failed' : 'passed', contentHash: draft.contentHash,
+                findings, reviewedAt: new Date().toISOString(), rulesHash: rulesHash(this.extraSensitiveTerms),
+            };
             return draft;
         }, signal);
     }
@@ -276,7 +318,12 @@ export class EvidenceStore {
         if (!['markdown', 'text', 'citations', 'materials'].includes(format))
             invalid('format');
         return this.update(topicId, topic => {
-            const item = { id: randomUUID(), platform: target, format, status: 'pending', createdAt: new Date().toISOString() };
+            const draft = topic.drafts[target];
+            const item = {
+                id: randomUUID(), platform: target, format, status: 'pending', createdAt: new Date().toISOString(),
+                ...(draft ? { contentHash: draft.contentHash } : {}),
+                reviewPassed: draft?.review.status === 'passed' && draft.review.contentHash === draft.contentHash,
+            };
             topic.exports.push(item);
             return item;
         }, signal);

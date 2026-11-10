@@ -97,9 +97,37 @@ const dsh_content_evidence_contentEvidence_createTopic_result$schema = () => (ds
   'review': z.object({
   'status': z.union([z.literal("pending"), z.literal("passed"), z.literal("failed")]),
   'contentHash': z.union([z.literal(null), z.string()]),
-  'findings': z.array(z.string()),
+  'findings': z.array(z.union([z.string(), z.object({
+  'code': z.union([z.literal("ai-label"), z.literal("sensitive"), z.literal("absolute"), z.literal("citation"), z.literal("evidence-changed"), z.literal("legacy-shape")]),
+  'location': z.string(),
+  'excerpt': z.string(),
+  'fix': z.string(),
+})])),
   'reviewedAt': z.union([z.literal(null), z.string()]),
+  'rulesHash': z.union([z.undefined(), z.string()]).optional(),
 }),
+  'body': z.union([z.undefined(), z.object({
+  'kind': z.literal("x-single"),
+  'post': z.string(),
+}), z.object({
+  'kind': z.literal("x-thread"),
+  'posts': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("xiaohongshu"),
+  'title': z.string(),
+  'body': z.string(),
+  'cards': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("douyin"),
+  'voiceover': z.string(),
+  'shots': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("weixin-video"),
+  'voiceover': z.string(),
+  'shots': z.array(z.string()),
+})]).optional(),
+  'claimIds': z.union([z.undefined(), z.array(z.string())]).optional(),
+  'evidenceHash': z.union([z.undefined(), z.string()]).optional(),
 })]),
   'xiaohongshu': z.union([z.literal(null), z.object({
   'content': z.string(),
@@ -110,9 +138,37 @@ const dsh_content_evidence_contentEvidence_createTopic_result$schema = () => (ds
   'review': z.object({
   'status': z.union([z.literal("pending"), z.literal("passed"), z.literal("failed")]),
   'contentHash': z.union([z.literal(null), z.string()]),
-  'findings': z.array(z.string()),
+  'findings': z.array(z.union([z.string(), z.object({
+  'code': z.union([z.literal("ai-label"), z.literal("sensitive"), z.literal("absolute"), z.literal("citation"), z.literal("evidence-changed"), z.literal("legacy-shape")]),
+  'location': z.string(),
+  'excerpt': z.string(),
+  'fix': z.string(),
+})])),
   'reviewedAt': z.union([z.literal(null), z.string()]),
+  'rulesHash': z.union([z.undefined(), z.string()]).optional(),
 }),
+  'body': z.union([z.undefined(), z.object({
+  'kind': z.literal("x-single"),
+  'post': z.string(),
+}), z.object({
+  'kind': z.literal("x-thread"),
+  'posts': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("xiaohongshu"),
+  'title': z.string(),
+  'body': z.string(),
+  'cards': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("douyin"),
+  'voiceover': z.string(),
+  'shots': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("weixin-video"),
+  'voiceover': z.string(),
+  'shots': z.array(z.string()),
+})]).optional(),
+  'claimIds': z.union([z.undefined(), z.array(z.string())]).optional(),
+  'evidenceHash': z.union([z.undefined(), z.string()]).optional(),
 })]),
   'douyin': z.union([z.literal(null), z.object({
   'content': z.string(),
@@ -123,9 +179,37 @@ const dsh_content_evidence_contentEvidence_createTopic_result$schema = () => (ds
   'review': z.object({
   'status': z.union([z.literal("pending"), z.literal("passed"), z.literal("failed")]),
   'contentHash': z.union([z.literal(null), z.string()]),
-  'findings': z.array(z.string()),
+  'findings': z.array(z.union([z.string(), z.object({
+  'code': z.union([z.literal("ai-label"), z.literal("sensitive"), z.literal("absolute"), z.literal("citation"), z.literal("evidence-changed"), z.literal("legacy-shape")]),
+  'location': z.string(),
+  'excerpt': z.string(),
+  'fix': z.string(),
+})])),
   'reviewedAt': z.union([z.literal(null), z.string()]),
+  'rulesHash': z.union([z.undefined(), z.string()]).optional(),
 }),
+  'body': z.union([z.undefined(), z.object({
+  'kind': z.literal("x-single"),
+  'post': z.string(),
+}), z.object({
+  'kind': z.literal("x-thread"),
+  'posts': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("xiaohongshu"),
+  'title': z.string(),
+  'body': z.string(),
+  'cards': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("douyin"),
+  'voiceover': z.string(),
+  'shots': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("weixin-video"),
+  'voiceover': z.string(),
+  'shots': z.array(z.string()),
+})]).optional(),
+  'claimIds': z.union([z.undefined(), z.array(z.string())]).optional(),
+  'evidenceHash': z.union([z.undefined(), z.string()]).optional(),
 })]),
   'weixin-video': z.union([z.literal(null), z.object({
   'content': z.string(),
@@ -136,9 +220,37 @@ const dsh_content_evidence_contentEvidence_createTopic_result$schema = () => (ds
   'review': z.object({
   'status': z.union([z.literal("pending"), z.literal("passed"), z.literal("failed")]),
   'contentHash': z.union([z.literal(null), z.string()]),
-  'findings': z.array(z.string()),
+  'findings': z.array(z.union([z.string(), z.object({
+  'code': z.union([z.literal("ai-label"), z.literal("sensitive"), z.literal("absolute"), z.literal("citation"), z.literal("evidence-changed"), z.literal("legacy-shape")]),
+  'location': z.string(),
+  'excerpt': z.string(),
+  'fix': z.string(),
+})])),
   'reviewedAt': z.union([z.literal(null), z.string()]),
+  'rulesHash': z.union([z.undefined(), z.string()]).optional(),
 }),
+  'body': z.union([z.undefined(), z.object({
+  'kind': z.literal("x-single"),
+  'post': z.string(),
+}), z.object({
+  'kind': z.literal("x-thread"),
+  'posts': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("xiaohongshu"),
+  'title': z.string(),
+  'body': z.string(),
+  'cards': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("douyin"),
+  'voiceover': z.string(),
+  'shots': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("weixin-video"),
+  'voiceover': z.string(),
+  'shots': z.array(z.string()),
+})]).optional(),
+  'claimIds': z.union([z.undefined(), z.array(z.string())]).optional(),
+  'evidenceHash': z.union([z.undefined(), z.string()]).optional(),
 })]),
 }),
   'publishedLinks': z.array(z.object({
@@ -152,6 +264,8 @@ const dsh_content_evidence_contentEvidence_createTopic_result$schema = () => (ds
   'format': z.union([z.literal("markdown"), z.literal("text"), z.literal("citations"), z.literal("materials")]),
   'status': z.literal("pending"),
   'createdAt': z.string(),
+  'contentHash': z.union([z.undefined(), z.string()]).optional(),
+  'reviewPassed': z.union([z.undefined(), z.literal(false), z.literal(true)]).optional(),
 })),
 }))
 let dsh_content_evidence_contentEvidence_listTopics_result$schema$value
@@ -201,9 +315,37 @@ const dsh_content_evidence_contentEvidence_listTopics_result$schema = () => (dsh
   'review': z.object({
   'status': z.union([z.literal("pending"), z.literal("passed"), z.literal("failed")]),
   'contentHash': z.union([z.literal(null), z.string()]),
-  'findings': z.array(z.string()),
+  'findings': z.array(z.union([z.string(), z.object({
+  'code': z.union([z.literal("ai-label"), z.literal("sensitive"), z.literal("absolute"), z.literal("citation"), z.literal("evidence-changed"), z.literal("legacy-shape")]),
+  'location': z.string(),
+  'excerpt': z.string(),
+  'fix': z.string(),
+})])),
   'reviewedAt': z.union([z.literal(null), z.string()]),
+  'rulesHash': z.union([z.undefined(), z.string()]).optional(),
 }),
+  'body': z.union([z.undefined(), z.object({
+  'kind': z.literal("x-single"),
+  'post': z.string(),
+}), z.object({
+  'kind': z.literal("x-thread"),
+  'posts': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("xiaohongshu"),
+  'title': z.string(),
+  'body': z.string(),
+  'cards': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("douyin"),
+  'voiceover': z.string(),
+  'shots': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("weixin-video"),
+  'voiceover': z.string(),
+  'shots': z.array(z.string()),
+})]).optional(),
+  'claimIds': z.union([z.undefined(), z.array(z.string())]).optional(),
+  'evidenceHash': z.union([z.undefined(), z.string()]).optional(),
 })]),
   'xiaohongshu': z.union([z.literal(null), z.object({
   'content': z.string(),
@@ -214,9 +356,37 @@ const dsh_content_evidence_contentEvidence_listTopics_result$schema = () => (dsh
   'review': z.object({
   'status': z.union([z.literal("pending"), z.literal("passed"), z.literal("failed")]),
   'contentHash': z.union([z.literal(null), z.string()]),
-  'findings': z.array(z.string()),
+  'findings': z.array(z.union([z.string(), z.object({
+  'code': z.union([z.literal("ai-label"), z.literal("sensitive"), z.literal("absolute"), z.literal("citation"), z.literal("evidence-changed"), z.literal("legacy-shape")]),
+  'location': z.string(),
+  'excerpt': z.string(),
+  'fix': z.string(),
+})])),
   'reviewedAt': z.union([z.literal(null), z.string()]),
+  'rulesHash': z.union([z.undefined(), z.string()]).optional(),
 }),
+  'body': z.union([z.undefined(), z.object({
+  'kind': z.literal("x-single"),
+  'post': z.string(),
+}), z.object({
+  'kind': z.literal("x-thread"),
+  'posts': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("xiaohongshu"),
+  'title': z.string(),
+  'body': z.string(),
+  'cards': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("douyin"),
+  'voiceover': z.string(),
+  'shots': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("weixin-video"),
+  'voiceover': z.string(),
+  'shots': z.array(z.string()),
+})]).optional(),
+  'claimIds': z.union([z.undefined(), z.array(z.string())]).optional(),
+  'evidenceHash': z.union([z.undefined(), z.string()]).optional(),
 })]),
   'douyin': z.union([z.literal(null), z.object({
   'content': z.string(),
@@ -227,9 +397,37 @@ const dsh_content_evidence_contentEvidence_listTopics_result$schema = () => (dsh
   'review': z.object({
   'status': z.union([z.literal("pending"), z.literal("passed"), z.literal("failed")]),
   'contentHash': z.union([z.literal(null), z.string()]),
-  'findings': z.array(z.string()),
+  'findings': z.array(z.union([z.string(), z.object({
+  'code': z.union([z.literal("ai-label"), z.literal("sensitive"), z.literal("absolute"), z.literal("citation"), z.literal("evidence-changed"), z.literal("legacy-shape")]),
+  'location': z.string(),
+  'excerpt': z.string(),
+  'fix': z.string(),
+})])),
   'reviewedAt': z.union([z.literal(null), z.string()]),
+  'rulesHash': z.union([z.undefined(), z.string()]).optional(),
 }),
+  'body': z.union([z.undefined(), z.object({
+  'kind': z.literal("x-single"),
+  'post': z.string(),
+}), z.object({
+  'kind': z.literal("x-thread"),
+  'posts': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("xiaohongshu"),
+  'title': z.string(),
+  'body': z.string(),
+  'cards': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("douyin"),
+  'voiceover': z.string(),
+  'shots': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("weixin-video"),
+  'voiceover': z.string(),
+  'shots': z.array(z.string()),
+})]).optional(),
+  'claimIds': z.union([z.undefined(), z.array(z.string())]).optional(),
+  'evidenceHash': z.union([z.undefined(), z.string()]).optional(),
 })]),
   'weixin-video': z.union([z.literal(null), z.object({
   'content': z.string(),
@@ -240,9 +438,37 @@ const dsh_content_evidence_contentEvidence_listTopics_result$schema = () => (dsh
   'review': z.object({
   'status': z.union([z.literal("pending"), z.literal("passed"), z.literal("failed")]),
   'contentHash': z.union([z.literal(null), z.string()]),
-  'findings': z.array(z.string()),
+  'findings': z.array(z.union([z.string(), z.object({
+  'code': z.union([z.literal("ai-label"), z.literal("sensitive"), z.literal("absolute"), z.literal("citation"), z.literal("evidence-changed"), z.literal("legacy-shape")]),
+  'location': z.string(),
+  'excerpt': z.string(),
+  'fix': z.string(),
+})])),
   'reviewedAt': z.union([z.literal(null), z.string()]),
+  'rulesHash': z.union([z.undefined(), z.string()]).optional(),
 }),
+  'body': z.union([z.undefined(), z.object({
+  'kind': z.literal("x-single"),
+  'post': z.string(),
+}), z.object({
+  'kind': z.literal("x-thread"),
+  'posts': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("xiaohongshu"),
+  'title': z.string(),
+  'body': z.string(),
+  'cards': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("douyin"),
+  'voiceover': z.string(),
+  'shots': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("weixin-video"),
+  'voiceover': z.string(),
+  'shots': z.array(z.string()),
+})]).optional(),
+  'claimIds': z.union([z.undefined(), z.array(z.string())]).optional(),
+  'evidenceHash': z.union([z.undefined(), z.string()]).optional(),
 })]),
 }),
   'publishedLinks': z.array(z.object({
@@ -256,6 +482,8 @@ const dsh_content_evidence_contentEvidence_listTopics_result$schema = () => (dsh
   'format': z.union([z.literal("markdown"), z.literal("text"), z.literal("citations"), z.literal("materials")]),
   'status': z.literal("pending"),
   'createdAt': z.string(),
+  'contentHash': z.union([z.undefined(), z.string()]).optional(),
+  'reviewPassed': z.union([z.undefined(), z.literal(false), z.literal(true)]).optional(),
 })),
 })))
 let dsh_content_evidence_contentEvidence_logExperiment_parameter_0$schema$value
@@ -280,6 +508,7 @@ let dsh_content_evidence_contentEvidence_readEvidence_parameter_0$schema$value
 const dsh_content_evidence_contentEvidence_readEvidence_parameter_0$schema = () => (dsh_content_evidence_contentEvidence_readEvidence_parameter_0$schema$value ??= z.string())
 let dsh_content_evidence_contentEvidence_readEvidence_result$schema$value
 const dsh_content_evidence_contentEvidence_readEvidence_result$schema = () => (dsh_content_evidence_contentEvidence_readEvidence_result$schema$value ??= z.object({
+  'evidenceHash': z.string(),
   'id': z.string(),
   'idea': z.string(),
   'createdAt': z.string(),
@@ -325,9 +554,37 @@ const dsh_content_evidence_contentEvidence_readEvidence_result$schema = () => (d
   'review': z.object({
   'status': z.union([z.literal("pending"), z.literal("passed"), z.literal("failed")]),
   'contentHash': z.union([z.literal(null), z.string()]),
-  'findings': z.array(z.string()),
+  'findings': z.array(z.union([z.string(), z.object({
+  'code': z.union([z.literal("ai-label"), z.literal("sensitive"), z.literal("absolute"), z.literal("citation"), z.literal("evidence-changed"), z.literal("legacy-shape")]),
+  'location': z.string(),
+  'excerpt': z.string(),
+  'fix': z.string(),
+})])),
   'reviewedAt': z.union([z.literal(null), z.string()]),
+  'rulesHash': z.union([z.undefined(), z.string()]).optional(),
 }),
+  'body': z.union([z.undefined(), z.object({
+  'kind': z.literal("x-single"),
+  'post': z.string(),
+}), z.object({
+  'kind': z.literal("x-thread"),
+  'posts': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("xiaohongshu"),
+  'title': z.string(),
+  'body': z.string(),
+  'cards': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("douyin"),
+  'voiceover': z.string(),
+  'shots': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("weixin-video"),
+  'voiceover': z.string(),
+  'shots': z.array(z.string()),
+})]).optional(),
+  'claimIds': z.union([z.undefined(), z.array(z.string())]).optional(),
+  'evidenceHash': z.union([z.undefined(), z.string()]).optional(),
 })]),
   'xiaohongshu': z.union([z.literal(null), z.object({
   'content': z.string(),
@@ -338,9 +595,37 @@ const dsh_content_evidence_contentEvidence_readEvidence_result$schema = () => (d
   'review': z.object({
   'status': z.union([z.literal("pending"), z.literal("passed"), z.literal("failed")]),
   'contentHash': z.union([z.literal(null), z.string()]),
-  'findings': z.array(z.string()),
+  'findings': z.array(z.union([z.string(), z.object({
+  'code': z.union([z.literal("ai-label"), z.literal("sensitive"), z.literal("absolute"), z.literal("citation"), z.literal("evidence-changed"), z.literal("legacy-shape")]),
+  'location': z.string(),
+  'excerpt': z.string(),
+  'fix': z.string(),
+})])),
   'reviewedAt': z.union([z.literal(null), z.string()]),
+  'rulesHash': z.union([z.undefined(), z.string()]).optional(),
 }),
+  'body': z.union([z.undefined(), z.object({
+  'kind': z.literal("x-single"),
+  'post': z.string(),
+}), z.object({
+  'kind': z.literal("x-thread"),
+  'posts': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("xiaohongshu"),
+  'title': z.string(),
+  'body': z.string(),
+  'cards': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("douyin"),
+  'voiceover': z.string(),
+  'shots': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("weixin-video"),
+  'voiceover': z.string(),
+  'shots': z.array(z.string()),
+})]).optional(),
+  'claimIds': z.union([z.undefined(), z.array(z.string())]).optional(),
+  'evidenceHash': z.union([z.undefined(), z.string()]).optional(),
 })]),
   'douyin': z.union([z.literal(null), z.object({
   'content': z.string(),
@@ -351,9 +636,37 @@ const dsh_content_evidence_contentEvidence_readEvidence_result$schema = () => (d
   'review': z.object({
   'status': z.union([z.literal("pending"), z.literal("passed"), z.literal("failed")]),
   'contentHash': z.union([z.literal(null), z.string()]),
-  'findings': z.array(z.string()),
+  'findings': z.array(z.union([z.string(), z.object({
+  'code': z.union([z.literal("ai-label"), z.literal("sensitive"), z.literal("absolute"), z.literal("citation"), z.literal("evidence-changed"), z.literal("legacy-shape")]),
+  'location': z.string(),
+  'excerpt': z.string(),
+  'fix': z.string(),
+})])),
   'reviewedAt': z.union([z.literal(null), z.string()]),
+  'rulesHash': z.union([z.undefined(), z.string()]).optional(),
 }),
+  'body': z.union([z.undefined(), z.object({
+  'kind': z.literal("x-single"),
+  'post': z.string(),
+}), z.object({
+  'kind': z.literal("x-thread"),
+  'posts': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("xiaohongshu"),
+  'title': z.string(),
+  'body': z.string(),
+  'cards': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("douyin"),
+  'voiceover': z.string(),
+  'shots': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("weixin-video"),
+  'voiceover': z.string(),
+  'shots': z.array(z.string()),
+})]).optional(),
+  'claimIds': z.union([z.undefined(), z.array(z.string())]).optional(),
+  'evidenceHash': z.union([z.undefined(), z.string()]).optional(),
 })]),
   'weixin-video': z.union([z.literal(null), z.object({
   'content': z.string(),
@@ -364,9 +677,37 @@ const dsh_content_evidence_contentEvidence_readEvidence_result$schema = () => (d
   'review': z.object({
   'status': z.union([z.literal("pending"), z.literal("passed"), z.literal("failed")]),
   'contentHash': z.union([z.literal(null), z.string()]),
-  'findings': z.array(z.string()),
+  'findings': z.array(z.union([z.string(), z.object({
+  'code': z.union([z.literal("ai-label"), z.literal("sensitive"), z.literal("absolute"), z.literal("citation"), z.literal("evidence-changed"), z.literal("legacy-shape")]),
+  'location': z.string(),
+  'excerpt': z.string(),
+  'fix': z.string(),
+})])),
   'reviewedAt': z.union([z.literal(null), z.string()]),
+  'rulesHash': z.union([z.undefined(), z.string()]).optional(),
 }),
+  'body': z.union([z.undefined(), z.object({
+  'kind': z.literal("x-single"),
+  'post': z.string(),
+}), z.object({
+  'kind': z.literal("x-thread"),
+  'posts': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("xiaohongshu"),
+  'title': z.string(),
+  'body': z.string(),
+  'cards': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("douyin"),
+  'voiceover': z.string(),
+  'shots': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("weixin-video"),
+  'voiceover': z.string(),
+  'shots': z.array(z.string()),
+})]).optional(),
+  'claimIds': z.union([z.undefined(), z.array(z.string())]).optional(),
+  'evidenceHash': z.union([z.undefined(), z.string()]).optional(),
 })]),
 }),
   'publishedLinks': z.array(z.object({
@@ -380,6 +721,8 @@ const dsh_content_evidence_contentEvidence_readEvidence_result$schema = () => (d
   'format': z.union([z.literal("markdown"), z.literal("text"), z.literal("citations"), z.literal("materials")]),
   'status': z.literal("pending"),
   'createdAt': z.string(),
+  'contentHash': z.union([z.undefined(), z.string()]).optional(),
+  'reviewPassed': z.union([z.undefined(), z.literal(false), z.literal(true)]).optional(),
 })),
 }))
 let dsh_content_evidence_contentEvidence_readMaterial_parameter_0$schema$value
@@ -406,6 +749,56 @@ const dsh_content_evidence_contentEvidence_requestExport_result$schema = () => (
   'format': z.union([z.literal("markdown"), z.literal("text"), z.literal("citations"), z.literal("materials")]),
   'status': z.literal("pending"),
   'createdAt': z.string(),
+  'contentHash': z.union([z.undefined(), z.string()]).optional(),
+  'reviewPassed': z.union([z.undefined(), z.literal(false), z.literal(true)]).optional(),
+}))
+let dsh_content_evidence_contentEvidence_reviewDraft_parameter_0$schema$value
+const dsh_content_evidence_contentEvidence_reviewDraft_parameter_0$schema = () => (dsh_content_evidence_contentEvidence_reviewDraft_parameter_0$schema$value ??= z.string())
+let dsh_content_evidence_contentEvidence_reviewDraft_parameter_1$schema$value
+const dsh_content_evidence_contentEvidence_reviewDraft_parameter_1$schema = () => (dsh_content_evidence_contentEvidence_reviewDraft_parameter_1$schema$value ??= z.union([z.literal("x"), z.literal("xiaohongshu"), z.literal("douyin"), z.literal("weixin-video")]))
+let dsh_content_evidence_contentEvidence_reviewDraft_parameter_2$schema$value
+const dsh_content_evidence_contentEvidence_reviewDraft_parameter_2$schema = () => (dsh_content_evidence_contentEvidence_reviewDraft_parameter_2$schema$value ??= z.number())
+let dsh_content_evidence_contentEvidence_reviewDraft_result$schema$value
+const dsh_content_evidence_contentEvidence_reviewDraft_result$schema = () => (dsh_content_evidence_contentEvidence_reviewDraft_result$schema$value ??= z.object({
+  'content': z.string(),
+  'contentHash': z.string(),
+  'revision': z.number(),
+  'updatedAt': z.string(),
+  'status': z.union([z.literal("editing"), z.literal("complete")]),
+  'review': z.object({
+  'status': z.union([z.literal("pending"), z.literal("passed"), z.literal("failed")]),
+  'contentHash': z.union([z.literal(null), z.string()]),
+  'findings': z.array(z.union([z.string(), z.object({
+  'code': z.union([z.literal("ai-label"), z.literal("sensitive"), z.literal("absolute"), z.literal("citation"), z.literal("evidence-changed"), z.literal("legacy-shape")]),
+  'location': z.string(),
+  'excerpt': z.string(),
+  'fix': z.string(),
+})])),
+  'reviewedAt': z.union([z.literal(null), z.string()]),
+  'rulesHash': z.union([z.undefined(), z.string()]).optional(),
+}),
+  'body': z.union([z.undefined(), z.object({
+  'kind': z.literal("x-single"),
+  'post': z.string(),
+}), z.object({
+  'kind': z.literal("x-thread"),
+  'posts': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("xiaohongshu"),
+  'title': z.string(),
+  'body': z.string(),
+  'cards': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("douyin"),
+  'voiceover': z.string(),
+  'shots': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("weixin-video"),
+  'voiceover': z.string(),
+  'shots': z.array(z.string()),
+})]).optional(),
+  'claimIds': z.union([z.undefined(), z.array(z.string())]).optional(),
+  'evidenceHash': z.union([z.undefined(), z.string()]).optional(),
 }))
 let dsh_content_evidence_contentEvidence_saveClaim_parameter_0$schema$value
 const dsh_content_evidence_contentEvidence_saveClaim_parameter_0$schema = () => (dsh_content_evidence_contentEvidence_saveClaim_parameter_0$schema$value ??= z.string())
@@ -426,7 +819,31 @@ const dsh_content_evidence_contentEvidence_saveDraft_parameter_0$schema = () => 
 let dsh_content_evidence_contentEvidence_saveDraft_parameter_1$schema$value
 const dsh_content_evidence_contentEvidence_saveDraft_parameter_1$schema = () => (dsh_content_evidence_contentEvidence_saveDraft_parameter_1$schema$value ??= z.union([z.literal("x"), z.literal("xiaohongshu"), z.literal("douyin"), z.literal("weixin-video")]))
 let dsh_content_evidence_contentEvidence_saveDraft_parameter_2$schema$value
-const dsh_content_evidence_contentEvidence_saveDraft_parameter_2$schema = () => (dsh_content_evidence_contentEvidence_saveDraft_parameter_2$schema$value ??= z.string())
+const dsh_content_evidence_contentEvidence_saveDraft_parameter_2$schema = () => (dsh_content_evidence_contentEvidence_saveDraft_parameter_2$schema$value ??= z.object({
+  'body': z.union([z.object({
+  'kind': z.literal("x-single"),
+  'post': z.string(),
+}), z.object({
+  'kind': z.literal("x-thread"),
+  'posts': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("xiaohongshu"),
+  'title': z.string(),
+  'body': z.string(),
+  'cards': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("douyin"),
+  'voiceover': z.string(),
+  'shots': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("weixin-video"),
+  'voiceover': z.string(),
+  'shots': z.array(z.string()),
+})]),
+  'claimIds': z.array(z.string()),
+  'expectedRevision': z.number(),
+  'evidenceHash': z.string(),
+}))
 let dsh_content_evidence_contentEvidence_saveDraft_result$schema$value
 const dsh_content_evidence_contentEvidence_saveDraft_result$schema = () => (dsh_content_evidence_contentEvidence_saveDraft_result$schema$value ??= z.object({
   'content': z.string(),
@@ -437,9 +854,37 @@ const dsh_content_evidence_contentEvidence_saveDraft_result$schema = () => (dsh_
   'review': z.object({
   'status': z.union([z.literal("pending"), z.literal("passed"), z.literal("failed")]),
   'contentHash': z.union([z.literal(null), z.string()]),
-  'findings': z.array(z.string()),
+  'findings': z.array(z.union([z.string(), z.object({
+  'code': z.union([z.literal("ai-label"), z.literal("sensitive"), z.literal("absolute"), z.literal("citation"), z.literal("evidence-changed"), z.literal("legacy-shape")]),
+  'location': z.string(),
+  'excerpt': z.string(),
+  'fix': z.string(),
+})])),
   'reviewedAt': z.union([z.literal(null), z.string()]),
+  'rulesHash': z.union([z.undefined(), z.string()]).optional(),
 }),
+  'body': z.union([z.undefined(), z.object({
+  'kind': z.literal("x-single"),
+  'post': z.string(),
+}), z.object({
+  'kind': z.literal("x-thread"),
+  'posts': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("xiaohongshu"),
+  'title': z.string(),
+  'body': z.string(),
+  'cards': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("douyin"),
+  'voiceover': z.string(),
+  'shots': z.array(z.string()),
+}), z.object({
+  'kind': z.literal("weixin-video"),
+  'voiceover': z.string(),
+  'shots': z.array(z.string()),
+})]).optional(),
+  'claimIds': z.union([z.undefined(), z.array(z.string())]).optional(),
+  'evidenceHash': z.union([z.undefined(), z.string()]).optional(),
 }))
 let dsh_content_evidence_contentEvidence_addSource_parameter_0_strict$schema$value
 const dsh_content_evidence_contentEvidence_addSource_parameter_0_strict$schema = () => (dsh_content_evidence_contentEvidence_addSource_parameter_0_strict$schema$value ??= z.string())
@@ -485,6 +930,12 @@ let dsh_content_evidence_contentEvidence_requestExport_parameter_1_strict$schema
 const dsh_content_evidence_contentEvidence_requestExport_parameter_1_strict$schema = () => (dsh_content_evidence_contentEvidence_requestExport_parameter_1_strict$schema$value ??= z.union([z.literal("x"), z.literal("xiaohongshu"), z.literal("douyin"), z.literal("weixin-video")]))
 let dsh_content_evidence_contentEvidence_requestExport_parameter_2_strict$schema$value
 const dsh_content_evidence_contentEvidence_requestExport_parameter_2_strict$schema = () => (dsh_content_evidence_contentEvidence_requestExport_parameter_2_strict$schema$value ??= z.union([z.literal("markdown"), z.literal("text"), z.literal("citations"), z.literal("materials")]))
+let dsh_content_evidence_contentEvidence_reviewDraft_parameter_0_strict$schema$value
+const dsh_content_evidence_contentEvidence_reviewDraft_parameter_0_strict$schema = () => (dsh_content_evidence_contentEvidence_reviewDraft_parameter_0_strict$schema$value ??= z.string())
+let dsh_content_evidence_contentEvidence_reviewDraft_parameter_1_strict$schema$value
+const dsh_content_evidence_contentEvidence_reviewDraft_parameter_1_strict$schema = () => (dsh_content_evidence_contentEvidence_reviewDraft_parameter_1_strict$schema$value ??= z.union([z.literal("x"), z.literal("xiaohongshu"), z.literal("douyin"), z.literal("weixin-video")]))
+let dsh_content_evidence_contentEvidence_reviewDraft_parameter_2_strict$schema$value
+const dsh_content_evidence_contentEvidence_reviewDraft_parameter_2_strict$schema = () => (dsh_content_evidence_contentEvidence_reviewDraft_parameter_2_strict$schema$value ??= z.number())
 let dsh_content_evidence_contentEvidence_saveClaim_parameter_0_strict$schema$value
 const dsh_content_evidence_contentEvidence_saveClaim_parameter_0_strict$schema = () => (dsh_content_evidence_contentEvidence_saveClaim_parameter_0_strict$schema$value ??= z.string())
 let dsh_content_evidence_contentEvidence_saveClaim_parameter_1_strict$schema$value
@@ -496,7 +947,31 @@ const dsh_content_evidence_contentEvidence_saveDraft_parameter_0_strict$schema =
 let dsh_content_evidence_contentEvidence_saveDraft_parameter_1_strict$schema$value
 const dsh_content_evidence_contentEvidence_saveDraft_parameter_1_strict$schema = () => (dsh_content_evidence_contentEvidence_saveDraft_parameter_1_strict$schema$value ??= z.union([z.literal("x"), z.literal("xiaohongshu"), z.literal("douyin"), z.literal("weixin-video")]))
 let dsh_content_evidence_contentEvidence_saveDraft_parameter_2_strict$schema$value
-const dsh_content_evidence_contentEvidence_saveDraft_parameter_2_strict$schema = () => (dsh_content_evidence_contentEvidence_saveDraft_parameter_2_strict$schema$value ??= z.string())
+const dsh_content_evidence_contentEvidence_saveDraft_parameter_2_strict$schema = () => (dsh_content_evidence_contentEvidence_saveDraft_parameter_2_strict$schema$value ??= z.strictObject({
+  'body': z.union([z.strictObject({
+  'kind': z.literal("x-single"),
+  'post': z.string(),
+}), z.strictObject({
+  'kind': z.literal("x-thread"),
+  'posts': z.array(z.string()),
+}), z.strictObject({
+  'kind': z.literal("xiaohongshu"),
+  'title': z.string(),
+  'body': z.string(),
+  'cards': z.array(z.string()),
+}), z.strictObject({
+  'kind': z.literal("douyin"),
+  'voiceover': z.string(),
+  'shots': z.array(z.string()),
+}), z.strictObject({
+  'kind': z.literal("weixin-video"),
+  'voiceover': z.string(),
+  'shots': z.array(z.string()),
+})]),
+  'claimIds': z.array(z.string()),
+  'expectedRevision': z.number(),
+  'evidenceHash': z.string(),
+}))
 
 export const TYPERT_REMOTE = createTypertRemoteInfo({
   package: 'dsh-content-evidence',
@@ -623,7 +1098,7 @@ export const TYPERT_REMOTE = createTypertRemoteInfo({
         create: dsh_content_evidence_contentEvidence_backfillPublishedLink_result$schema,
         jsonSchema: {"type":"object","properties":{"platform":{"type":"string","enum":["x","xiaohongshu","douyin","weixin-video"]},"url":{"type":"string"},"recordedAt":{"type":"string"}},"required":["platform","url","recordedAt"],"additionalProperties":true},
       },
-      sourceLocation: {"file":"packages/dsh-content-evidence/src/service.ts","line":56,"column":9},
+      sourceLocation: {"file":"packages/dsh-content-evidence/src/service.ts","line":60,"column":9},
     },
     'contentEvidence/captureMaterial': {
       service: 'contentEvidence',
@@ -697,7 +1172,7 @@ export const TYPERT_REMOTE = createTypertRemoteInfo({
         mode: 'strict',
         typeSymbol: 'dsh-content-evidence/types#Topic',
         create: dsh_content_evidence_contentEvidence_createTopic_result$schema,
-        jsonSchema: {"type":"object","properties":{"id":{"type":"string"},"idea":{"type":"string"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"sources":{"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"url":{"type":"string"},"title":{"type":"string"},"createdAt":{"type":"string"}},"required":["id","url","title","createdAt"],"additionalProperties":true}},"materials":{"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"name":{"type":"string"},"mediaType":{"type":"string"},"path":{"type":"string"},"bytes":{"type":"number"},"sha256":{"type":"string"},"sourceId":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"createdAt":{"type":"string"}},"required":["id","name","mediaType","path","bytes","sha256","sourceId","createdAt"],"additionalProperties":true}},"experiments":{"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"command":{"type":"string"},"output":{"type":"string"},"versions":{"type":"string"},"conditions":{"type":"string"},"createdAt":{"type":"string"}},"required":["id","command","output","versions","conditions","createdAt"],"additionalProperties":true}},"claims":{"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"text":{"type":"string"},"sourceId":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"status":{"type":"string","enum":["有来源","待核实"]},"createdAt":{"type":"string"}},"required":["id","text","sourceId","status","createdAt"],"additionalProperties":true}},"drafts":{"type":"object","properties":{"x":{"oneOf":[{"type":"null","const":null},{"type":"object","properties":{"content":{"type":"string"},"contentHash":{"type":"string"},"revision":{"type":"number"},"updatedAt":{"type":"string"},"status":{"type":"string","enum":["editing","complete"]},"review":{"type":"object","properties":{"status":{"type":"string","enum":["pending","passed","failed"]},"contentHash":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"findings":{"type":"array","items":{"type":"string"}},"reviewedAt":{"oneOf":[{"type":"null","const":null},{"type":"string"}]}},"required":["status","contentHash","findings","reviewedAt"],"additionalProperties":true}},"required":["content","contentHash","revision","updatedAt","status","review"],"additionalProperties":true}]},"xiaohongshu":{"oneOf":[{"type":"null","const":null},{"type":"object","properties":{"content":{"type":"string"},"contentHash":{"type":"string"},"revision":{"type":"number"},"updatedAt":{"type":"string"},"status":{"type":"string","enum":["editing","complete"]},"review":{"type":"object","properties":{"status":{"type":"string","enum":["pending","passed","failed"]},"contentHash":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"findings":{"type":"array","items":{"type":"string"}},"reviewedAt":{"oneOf":[{"type":"null","const":null},{"type":"string"}]}},"required":["status","contentHash","findings","reviewedAt"],"additionalProperties":true}},"required":["content","contentHash","revision","updatedAt","status","review"],"additionalProperties":true}]},"douyin":{"oneOf":[{"type":"null","const":null},{"type":"object","properties":{"content":{"type":"string"},"contentHash":{"type":"string"},"revision":{"type":"number"},"updatedAt":{"type":"string"},"status":{"type":"string","enum":["editing","complete"]},"review":{"type":"object","properties":{"status":{"type":"string","enum":["pending","passed","failed"]},"contentHash":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"findings":{"type":"array","items":{"type":"string"}},"reviewedAt":{"oneOf":[{"type":"null","const":null},{"type":"string"}]}},"required":["status","contentHash","findings","reviewedAt"],"additionalProperties":true}},"required":["content","contentHash","revision","updatedAt","status","review"],"additionalProperties":true}]},"weixin-video":{"oneOf":[{"type":"null","const":null},{"type":"object","properties":{"content":{"type":"string"},"contentHash":{"type":"string"},"revision":{"type":"number"},"updatedAt":{"type":"string"},"status":{"type":"string","enum":["editing","complete"]},"review":{"type":"object","properties":{"status":{"type":"string","enum":["pending","passed","failed"]},"contentHash":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"findings":{"type":"array","items":{"type":"string"}},"reviewedAt":{"oneOf":[{"type":"null","const":null},{"type":"string"}]}},"required":["status","contentHash","findings","reviewedAt"],"additionalProperties":true}},"required":["content","contentHash","revision","updatedAt","status","review"],"additionalProperties":true}]}},"required":["x","xiaohongshu","douyin","weixin-video"],"additionalProperties":true},"publishedLinks":{"type":"array","items":{"type":"object","properties":{"platform":{"type":"string","enum":["x","xiaohongshu","douyin","weixin-video"]},"url":{"type":"string"},"recordedAt":{"type":"string"}},"required":["platform","url","recordedAt"],"additionalProperties":true}},"exports":{"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"platform":{"type":"string","enum":["x","xiaohongshu","douyin","weixin-video"]},"format":{"type":"string","enum":["markdown","text","citations","materials"]},"status":{"type":"string","const":"pending"},"createdAt":{"type":"string"}},"required":["id","platform","format","status","createdAt"],"additionalProperties":true}}},"required":["id","idea","createdAt","updatedAt","sources","materials","experiments","claims","drafts","publishedLinks","exports"],"additionalProperties":true},
+        jsonSchema: {"type":"object","properties":{"id":{"type":"string"},"idea":{"type":"string"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"sources":{"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"url":{"type":"string"},"title":{"type":"string"},"createdAt":{"type":"string"}},"required":["id","url","title","createdAt"],"additionalProperties":true}},"materials":{"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"name":{"type":"string"},"mediaType":{"type":"string"},"path":{"type":"string"},"bytes":{"type":"number"},"sha256":{"type":"string"},"sourceId":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"createdAt":{"type":"string"}},"required":["id","name","mediaType","path","bytes","sha256","sourceId","createdAt"],"additionalProperties":true}},"experiments":{"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"command":{"type":"string"},"output":{"type":"string"},"versions":{"type":"string"},"conditions":{"type":"string"},"createdAt":{"type":"string"}},"required":["id","command","output","versions","conditions","createdAt"],"additionalProperties":true}},"claims":{"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"text":{"type":"string"},"sourceId":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"status":{"type":"string","enum":["有来源","待核实"]},"createdAt":{"type":"string"}},"required":["id","text","sourceId","status","createdAt"],"additionalProperties":true}},"drafts":{"type":"object","properties":{"x":{"oneOf":[{"type":"null","const":null},{"type":"object","properties":{"content":{"type":"string"},"contentHash":{"type":"string"},"revision":{"type":"number"},"updatedAt":{"type":"string"},"status":{"type":"string","enum":["editing","complete"]},"review":{"type":"object","properties":{"status":{"type":"string","enum":["pending","passed","failed"]},"contentHash":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"findings":{"type":"array","items":{"oneOf":[{"type":"string"},{"type":"object","properties":{"code":{"type":"string","enum":["ai-label","sensitive","absolute","citation","evidence-changed","legacy-shape"]},"location":{"type":"string"},"excerpt":{"type":"string"},"fix":{"type":"string"}},"required":["code","location","excerpt","fix"],"additionalProperties":true}]}},"reviewedAt":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"rulesHash":{"type":"string"}},"required":["status","contentHash","findings","reviewedAt"],"additionalProperties":true},"body":{"oneOf":[{"type":"object","properties":{"kind":{"type":"string","const":"x-single"},"post":{"type":"string"}},"required":["kind","post"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"x-thread"},"posts":{"type":"array","items":{"type":"string"}}},"required":["kind","posts"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"xiaohongshu"},"title":{"type":"string"},"body":{"type":"string"},"cards":{"type":"array","items":{"type":"string"}}},"required":["kind","title","body","cards"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"douyin"},"voiceover":{"type":"string"},"shots":{"type":"array","items":{"type":"string"}}},"required":["kind","voiceover","shots"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"weixin-video"},"voiceover":{"type":"string"},"shots":{"type":"array","items":{"type":"string"}}},"required":["kind","voiceover","shots"],"additionalProperties":true}]},"claimIds":{"type":"array","items":{"type":"string"}},"evidenceHash":{"type":"string"}},"required":["content","contentHash","revision","updatedAt","status","review"],"additionalProperties":true}]},"xiaohongshu":{"oneOf":[{"type":"null","const":null},{"type":"object","properties":{"content":{"type":"string"},"contentHash":{"type":"string"},"revision":{"type":"number"},"updatedAt":{"type":"string"},"status":{"type":"string","enum":["editing","complete"]},"review":{"type":"object","properties":{"status":{"type":"string","enum":["pending","passed","failed"]},"contentHash":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"findings":{"type":"array","items":{"oneOf":[{"type":"string"},{"type":"object","properties":{"code":{"type":"string","enum":["ai-label","sensitive","absolute","citation","evidence-changed","legacy-shape"]},"location":{"type":"string"},"excerpt":{"type":"string"},"fix":{"type":"string"}},"required":["code","location","excerpt","fix"],"additionalProperties":true}]}},"reviewedAt":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"rulesHash":{"type":"string"}},"required":["status","contentHash","findings","reviewedAt"],"additionalProperties":true},"body":{"oneOf":[{"type":"object","properties":{"kind":{"type":"string","const":"x-single"},"post":{"type":"string"}},"required":["kind","post"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"x-thread"},"posts":{"type":"array","items":{"type":"string"}}},"required":["kind","posts"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"xiaohongshu"},"title":{"type":"string"},"body":{"type":"string"},"cards":{"type":"array","items":{"type":"string"}}},"required":["kind","title","body","cards"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"douyin"},"voiceover":{"type":"string"},"shots":{"type":"array","items":{"type":"string"}}},"required":["kind","voiceover","shots"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"weixin-video"},"voiceover":{"type":"string"},"shots":{"type":"array","items":{"type":"string"}}},"required":["kind","voiceover","shots"],"additionalProperties":true}]},"claimIds":{"type":"array","items":{"type":"string"}},"evidenceHash":{"type":"string"}},"required":["content","contentHash","revision","updatedAt","status","review"],"additionalProperties":true}]},"douyin":{"oneOf":[{"type":"null","const":null},{"type":"object","properties":{"content":{"type":"string"},"contentHash":{"type":"string"},"revision":{"type":"number"},"updatedAt":{"type":"string"},"status":{"type":"string","enum":["editing","complete"]},"review":{"type":"object","properties":{"status":{"type":"string","enum":["pending","passed","failed"]},"contentHash":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"findings":{"type":"array","items":{"oneOf":[{"type":"string"},{"type":"object","properties":{"code":{"type":"string","enum":["ai-label","sensitive","absolute","citation","evidence-changed","legacy-shape"]},"location":{"type":"string"},"excerpt":{"type":"string"},"fix":{"type":"string"}},"required":["code","location","excerpt","fix"],"additionalProperties":true}]}},"reviewedAt":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"rulesHash":{"type":"string"}},"required":["status","contentHash","findings","reviewedAt"],"additionalProperties":true},"body":{"oneOf":[{"type":"object","properties":{"kind":{"type":"string","const":"x-single"},"post":{"type":"string"}},"required":["kind","post"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"x-thread"},"posts":{"type":"array","items":{"type":"string"}}},"required":["kind","posts"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"xiaohongshu"},"title":{"type":"string"},"body":{"type":"string"},"cards":{"type":"array","items":{"type":"string"}}},"required":["kind","title","body","cards"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"douyin"},"voiceover":{"type":"string"},"shots":{"type":"array","items":{"type":"string"}}},"required":["kind","voiceover","shots"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"weixin-video"},"voiceover":{"type":"string"},"shots":{"type":"array","items":{"type":"string"}}},"required":["kind","voiceover","shots"],"additionalProperties":true}]},"claimIds":{"type":"array","items":{"type":"string"}},"evidenceHash":{"type":"string"}},"required":["content","contentHash","revision","updatedAt","status","review"],"additionalProperties":true}]},"weixin-video":{"oneOf":[{"type":"null","const":null},{"type":"object","properties":{"content":{"type":"string"},"contentHash":{"type":"string"},"revision":{"type":"number"},"updatedAt":{"type":"string"},"status":{"type":"string","enum":["editing","complete"]},"review":{"type":"object","properties":{"status":{"type":"string","enum":["pending","passed","failed"]},"contentHash":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"findings":{"type":"array","items":{"oneOf":[{"type":"string"},{"type":"object","properties":{"code":{"type":"string","enum":["ai-label","sensitive","absolute","citation","evidence-changed","legacy-shape"]},"location":{"type":"string"},"excerpt":{"type":"string"},"fix":{"type":"string"}},"required":["code","location","excerpt","fix"],"additionalProperties":true}]}},"reviewedAt":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"rulesHash":{"type":"string"}},"required":["status","contentHash","findings","reviewedAt"],"additionalProperties":true},"body":{"oneOf":[{"type":"object","properties":{"kind":{"type":"string","const":"x-single"},"post":{"type":"string"}},"required":["kind","post"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"x-thread"},"posts":{"type":"array","items":{"type":"string"}}},"required":["kind","posts"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"xiaohongshu"},"title":{"type":"string"},"body":{"type":"string"},"cards":{"type":"array","items":{"type":"string"}}},"required":["kind","title","body","cards"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"douyin"},"voiceover":{"type":"string"},"shots":{"type":"array","items":{"type":"string"}}},"required":["kind","voiceover","shots"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"weixin-video"},"voiceover":{"type":"string"},"shots":{"type":"array","items":{"type":"string"}}},"required":["kind","voiceover","shots"],"additionalProperties":true}]},"claimIds":{"type":"array","items":{"type":"string"}},"evidenceHash":{"type":"string"}},"required":["content","contentHash","revision","updatedAt","status","review"],"additionalProperties":true}]}},"required":["x","xiaohongshu","douyin","weixin-video"],"additionalProperties":true},"publishedLinks":{"type":"array","items":{"type":"object","properties":{"platform":{"type":"string","enum":["x","xiaohongshu","douyin","weixin-video"]},"url":{"type":"string"},"recordedAt":{"type":"string"}},"required":["platform","url","recordedAt"],"additionalProperties":true}},"exports":{"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"platform":{"type":"string","enum":["x","xiaohongshu","douyin","weixin-video"]},"format":{"type":"string","enum":["markdown","text","citations","materials"]},"status":{"type":"string","const":"pending"},"createdAt":{"type":"string"},"contentHash":{"type":"string"},"reviewPassed":{"type":"boolean","enum":[false,true]}},"required":["id","platform","format","status","createdAt"],"additionalProperties":true}}},"required":["id","idea","createdAt","updatedAt","sources","materials","experiments","claims","drafts","publishedLinks","exports"],"additionalProperties":true},
       },
       sourceLocation: {"file":"packages/dsh-content-evidence/src/service.ts","line":24,"column":9},
     },
@@ -711,7 +1186,7 @@ export const TYPERT_REMOTE = createTypertRemoteInfo({
         mode: 'strict',
         typeSymbol: 'dsh-content-evidence#contentEvidence/listTopics:result',
         create: dsh_content_evidence_contentEvidence_listTopics_result$schema,
-        jsonSchema: {"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"idea":{"type":"string"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"sources":{"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"url":{"type":"string"},"title":{"type":"string"},"createdAt":{"type":"string"}},"required":["id","url","title","createdAt"],"additionalProperties":true}},"materials":{"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"name":{"type":"string"},"mediaType":{"type":"string"},"path":{"type":"string"},"bytes":{"type":"number"},"sha256":{"type":"string"},"sourceId":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"createdAt":{"type":"string"}},"required":["id","name","mediaType","path","bytes","sha256","sourceId","createdAt"],"additionalProperties":true}},"experiments":{"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"command":{"type":"string"},"output":{"type":"string"},"versions":{"type":"string"},"conditions":{"type":"string"},"createdAt":{"type":"string"}},"required":["id","command","output","versions","conditions","createdAt"],"additionalProperties":true}},"claims":{"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"text":{"type":"string"},"sourceId":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"status":{"type":"string","enum":["有来源","待核实"]},"createdAt":{"type":"string"}},"required":["id","text","sourceId","status","createdAt"],"additionalProperties":true}},"drafts":{"type":"object","properties":{"x":{"oneOf":[{"type":"null","const":null},{"type":"object","properties":{"content":{"type":"string"},"contentHash":{"type":"string"},"revision":{"type":"number"},"updatedAt":{"type":"string"},"status":{"type":"string","enum":["editing","complete"]},"review":{"type":"object","properties":{"status":{"type":"string","enum":["pending","passed","failed"]},"contentHash":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"findings":{"type":"array","items":{"type":"string"}},"reviewedAt":{"oneOf":[{"type":"null","const":null},{"type":"string"}]}},"required":["status","contentHash","findings","reviewedAt"],"additionalProperties":true}},"required":["content","contentHash","revision","updatedAt","status","review"],"additionalProperties":true}]},"xiaohongshu":{"oneOf":[{"type":"null","const":null},{"type":"object","properties":{"content":{"type":"string"},"contentHash":{"type":"string"},"revision":{"type":"number"},"updatedAt":{"type":"string"},"status":{"type":"string","enum":["editing","complete"]},"review":{"type":"object","properties":{"status":{"type":"string","enum":["pending","passed","failed"]},"contentHash":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"findings":{"type":"array","items":{"type":"string"}},"reviewedAt":{"oneOf":[{"type":"null","const":null},{"type":"string"}]}},"required":["status","contentHash","findings","reviewedAt"],"additionalProperties":true}},"required":["content","contentHash","revision","updatedAt","status","review"],"additionalProperties":true}]},"douyin":{"oneOf":[{"type":"null","const":null},{"type":"object","properties":{"content":{"type":"string"},"contentHash":{"type":"string"},"revision":{"type":"number"},"updatedAt":{"type":"string"},"status":{"type":"string","enum":["editing","complete"]},"review":{"type":"object","properties":{"status":{"type":"string","enum":["pending","passed","failed"]},"contentHash":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"findings":{"type":"array","items":{"type":"string"}},"reviewedAt":{"oneOf":[{"type":"null","const":null},{"type":"string"}]}},"required":["status","contentHash","findings","reviewedAt"],"additionalProperties":true}},"required":["content","contentHash","revision","updatedAt","status","review"],"additionalProperties":true}]},"weixin-video":{"oneOf":[{"type":"null","const":null},{"type":"object","properties":{"content":{"type":"string"},"contentHash":{"type":"string"},"revision":{"type":"number"},"updatedAt":{"type":"string"},"status":{"type":"string","enum":["editing","complete"]},"review":{"type":"object","properties":{"status":{"type":"string","enum":["pending","passed","failed"]},"contentHash":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"findings":{"type":"array","items":{"type":"string"}},"reviewedAt":{"oneOf":[{"type":"null","const":null},{"type":"string"}]}},"required":["status","contentHash","findings","reviewedAt"],"additionalProperties":true}},"required":["content","contentHash","revision","updatedAt","status","review"],"additionalProperties":true}]}},"required":["x","xiaohongshu","douyin","weixin-video"],"additionalProperties":true},"publishedLinks":{"type":"array","items":{"type":"object","properties":{"platform":{"type":"string","enum":["x","xiaohongshu","douyin","weixin-video"]},"url":{"type":"string"},"recordedAt":{"type":"string"}},"required":["platform","url","recordedAt"],"additionalProperties":true}},"exports":{"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"platform":{"type":"string","enum":["x","xiaohongshu","douyin","weixin-video"]},"format":{"type":"string","enum":["markdown","text","citations","materials"]},"status":{"type":"string","const":"pending"},"createdAt":{"type":"string"}},"required":["id","platform","format","status","createdAt"],"additionalProperties":true}}},"required":["id","idea","createdAt","updatedAt","sources","materials","experiments","claims","drafts","publishedLinks","exports"],"additionalProperties":true}},
+        jsonSchema: {"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"idea":{"type":"string"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"sources":{"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"url":{"type":"string"},"title":{"type":"string"},"createdAt":{"type":"string"}},"required":["id","url","title","createdAt"],"additionalProperties":true}},"materials":{"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"name":{"type":"string"},"mediaType":{"type":"string"},"path":{"type":"string"},"bytes":{"type":"number"},"sha256":{"type":"string"},"sourceId":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"createdAt":{"type":"string"}},"required":["id","name","mediaType","path","bytes","sha256","sourceId","createdAt"],"additionalProperties":true}},"experiments":{"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"command":{"type":"string"},"output":{"type":"string"},"versions":{"type":"string"},"conditions":{"type":"string"},"createdAt":{"type":"string"}},"required":["id","command","output","versions","conditions","createdAt"],"additionalProperties":true}},"claims":{"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"text":{"type":"string"},"sourceId":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"status":{"type":"string","enum":["有来源","待核实"]},"createdAt":{"type":"string"}},"required":["id","text","sourceId","status","createdAt"],"additionalProperties":true}},"drafts":{"type":"object","properties":{"x":{"oneOf":[{"type":"null","const":null},{"type":"object","properties":{"content":{"type":"string"},"contentHash":{"type":"string"},"revision":{"type":"number"},"updatedAt":{"type":"string"},"status":{"type":"string","enum":["editing","complete"]},"review":{"type":"object","properties":{"status":{"type":"string","enum":["pending","passed","failed"]},"contentHash":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"findings":{"type":"array","items":{"oneOf":[{"type":"string"},{"type":"object","properties":{"code":{"type":"string","enum":["ai-label","sensitive","absolute","citation","evidence-changed","legacy-shape"]},"location":{"type":"string"},"excerpt":{"type":"string"},"fix":{"type":"string"}},"required":["code","location","excerpt","fix"],"additionalProperties":true}]}},"reviewedAt":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"rulesHash":{"type":"string"}},"required":["status","contentHash","findings","reviewedAt"],"additionalProperties":true},"body":{"oneOf":[{"type":"object","properties":{"kind":{"type":"string","const":"x-single"},"post":{"type":"string"}},"required":["kind","post"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"x-thread"},"posts":{"type":"array","items":{"type":"string"}}},"required":["kind","posts"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"xiaohongshu"},"title":{"type":"string"},"body":{"type":"string"},"cards":{"type":"array","items":{"type":"string"}}},"required":["kind","title","body","cards"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"douyin"},"voiceover":{"type":"string"},"shots":{"type":"array","items":{"type":"string"}}},"required":["kind","voiceover","shots"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"weixin-video"},"voiceover":{"type":"string"},"shots":{"type":"array","items":{"type":"string"}}},"required":["kind","voiceover","shots"],"additionalProperties":true}]},"claimIds":{"type":"array","items":{"type":"string"}},"evidenceHash":{"type":"string"}},"required":["content","contentHash","revision","updatedAt","status","review"],"additionalProperties":true}]},"xiaohongshu":{"oneOf":[{"type":"null","const":null},{"type":"object","properties":{"content":{"type":"string"},"contentHash":{"type":"string"},"revision":{"type":"number"},"updatedAt":{"type":"string"},"status":{"type":"string","enum":["editing","complete"]},"review":{"type":"object","properties":{"status":{"type":"string","enum":["pending","passed","failed"]},"contentHash":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"findings":{"type":"array","items":{"oneOf":[{"type":"string"},{"type":"object","properties":{"code":{"type":"string","enum":["ai-label","sensitive","absolute","citation","evidence-changed","legacy-shape"]},"location":{"type":"string"},"excerpt":{"type":"string"},"fix":{"type":"string"}},"required":["code","location","excerpt","fix"],"additionalProperties":true}]}},"reviewedAt":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"rulesHash":{"type":"string"}},"required":["status","contentHash","findings","reviewedAt"],"additionalProperties":true},"body":{"oneOf":[{"type":"object","properties":{"kind":{"type":"string","const":"x-single"},"post":{"type":"string"}},"required":["kind","post"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"x-thread"},"posts":{"type":"array","items":{"type":"string"}}},"required":["kind","posts"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"xiaohongshu"},"title":{"type":"string"},"body":{"type":"string"},"cards":{"type":"array","items":{"type":"string"}}},"required":["kind","title","body","cards"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"douyin"},"voiceover":{"type":"string"},"shots":{"type":"array","items":{"type":"string"}}},"required":["kind","voiceover","shots"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"weixin-video"},"voiceover":{"type":"string"},"shots":{"type":"array","items":{"type":"string"}}},"required":["kind","voiceover","shots"],"additionalProperties":true}]},"claimIds":{"type":"array","items":{"type":"string"}},"evidenceHash":{"type":"string"}},"required":["content","contentHash","revision","updatedAt","status","review"],"additionalProperties":true}]},"douyin":{"oneOf":[{"type":"null","const":null},{"type":"object","properties":{"content":{"type":"string"},"contentHash":{"type":"string"},"revision":{"type":"number"},"updatedAt":{"type":"string"},"status":{"type":"string","enum":["editing","complete"]},"review":{"type":"object","properties":{"status":{"type":"string","enum":["pending","passed","failed"]},"contentHash":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"findings":{"type":"array","items":{"oneOf":[{"type":"string"},{"type":"object","properties":{"code":{"type":"string","enum":["ai-label","sensitive","absolute","citation","evidence-changed","legacy-shape"]},"location":{"type":"string"},"excerpt":{"type":"string"},"fix":{"type":"string"}},"required":["code","location","excerpt","fix"],"additionalProperties":true}]}},"reviewedAt":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"rulesHash":{"type":"string"}},"required":["status","contentHash","findings","reviewedAt"],"additionalProperties":true},"body":{"oneOf":[{"type":"object","properties":{"kind":{"type":"string","const":"x-single"},"post":{"type":"string"}},"required":["kind","post"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"x-thread"},"posts":{"type":"array","items":{"type":"string"}}},"required":["kind","posts"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"xiaohongshu"},"title":{"type":"string"},"body":{"type":"string"},"cards":{"type":"array","items":{"type":"string"}}},"required":["kind","title","body","cards"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"douyin"},"voiceover":{"type":"string"},"shots":{"type":"array","items":{"type":"string"}}},"required":["kind","voiceover","shots"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"weixin-video"},"voiceover":{"type":"string"},"shots":{"type":"array","items":{"type":"string"}}},"required":["kind","voiceover","shots"],"additionalProperties":true}]},"claimIds":{"type":"array","items":{"type":"string"}},"evidenceHash":{"type":"string"}},"required":["content","contentHash","revision","updatedAt","status","review"],"additionalProperties":true}]},"weixin-video":{"oneOf":[{"type":"null","const":null},{"type":"object","properties":{"content":{"type":"string"},"contentHash":{"type":"string"},"revision":{"type":"number"},"updatedAt":{"type":"string"},"status":{"type":"string","enum":["editing","complete"]},"review":{"type":"object","properties":{"status":{"type":"string","enum":["pending","passed","failed"]},"contentHash":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"findings":{"type":"array","items":{"oneOf":[{"type":"string"},{"type":"object","properties":{"code":{"type":"string","enum":["ai-label","sensitive","absolute","citation","evidence-changed","legacy-shape"]},"location":{"type":"string"},"excerpt":{"type":"string"},"fix":{"type":"string"}},"required":["code","location","excerpt","fix"],"additionalProperties":true}]}},"reviewedAt":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"rulesHash":{"type":"string"}},"required":["status","contentHash","findings","reviewedAt"],"additionalProperties":true},"body":{"oneOf":[{"type":"object","properties":{"kind":{"type":"string","const":"x-single"},"post":{"type":"string"}},"required":["kind","post"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"x-thread"},"posts":{"type":"array","items":{"type":"string"}}},"required":["kind","posts"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"xiaohongshu"},"title":{"type":"string"},"body":{"type":"string"},"cards":{"type":"array","items":{"type":"string"}}},"required":["kind","title","body","cards"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"douyin"},"voiceover":{"type":"string"},"shots":{"type":"array","items":{"type":"string"}}},"required":["kind","voiceover","shots"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"weixin-video"},"voiceover":{"type":"string"},"shots":{"type":"array","items":{"type":"string"}}},"required":["kind","voiceover","shots"],"additionalProperties":true}]},"claimIds":{"type":"array","items":{"type":"string"}},"evidenceHash":{"type":"string"}},"required":["content","contentHash","revision","updatedAt","status","review"],"additionalProperties":true}]}},"required":["x","xiaohongshu","douyin","weixin-video"],"additionalProperties":true},"publishedLinks":{"type":"array","items":{"type":"object","properties":{"platform":{"type":"string","enum":["x","xiaohongshu","douyin","weixin-video"]},"url":{"type":"string"},"recordedAt":{"type":"string"}},"required":["platform","url","recordedAt"],"additionalProperties":true}},"exports":{"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"platform":{"type":"string","enum":["x","xiaohongshu","douyin","weixin-video"]},"format":{"type":"string","enum":["markdown","text","citations","materials"]},"status":{"type":"string","const":"pending"},"createdAt":{"type":"string"},"contentHash":{"type":"string"},"reviewPassed":{"type":"boolean","enum":[false,true]}},"required":["id","platform","format","status","createdAt"],"additionalProperties":true}}},"required":["id","idea","createdAt","updatedAt","sources","materials","experiments","claims","drafts","publishedLinks","exports"],"additionalProperties":true}},
       },
       sourceLocation: {"file":"packages/dsh-content-evidence/src/service.ts","line":20,"column":9},
     },
@@ -785,9 +1260,9 @@ export const TYPERT_REMOTE = createTypertRemoteInfo({
       cancellation: { parameter: 'signal' },
       result: {
         mode: 'strict',
-        typeSymbol: 'dsh-content-evidence/types#Topic',
+        typeSymbol: 'dsh-content-evidence/types#EvidenceSheet',
         create: dsh_content_evidence_contentEvidence_readEvidence_result$schema,
-        jsonSchema: {"type":"object","properties":{"id":{"type":"string"},"idea":{"type":"string"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"sources":{"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"url":{"type":"string"},"title":{"type":"string"},"createdAt":{"type":"string"}},"required":["id","url","title","createdAt"],"additionalProperties":true}},"materials":{"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"name":{"type":"string"},"mediaType":{"type":"string"},"path":{"type":"string"},"bytes":{"type":"number"},"sha256":{"type":"string"},"sourceId":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"createdAt":{"type":"string"}},"required":["id","name","mediaType","path","bytes","sha256","sourceId","createdAt"],"additionalProperties":true}},"experiments":{"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"command":{"type":"string"},"output":{"type":"string"},"versions":{"type":"string"},"conditions":{"type":"string"},"createdAt":{"type":"string"}},"required":["id","command","output","versions","conditions","createdAt"],"additionalProperties":true}},"claims":{"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"text":{"type":"string"},"sourceId":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"status":{"type":"string","enum":["有来源","待核实"]},"createdAt":{"type":"string"}},"required":["id","text","sourceId","status","createdAt"],"additionalProperties":true}},"drafts":{"type":"object","properties":{"x":{"oneOf":[{"type":"null","const":null},{"type":"object","properties":{"content":{"type":"string"},"contentHash":{"type":"string"},"revision":{"type":"number"},"updatedAt":{"type":"string"},"status":{"type":"string","enum":["editing","complete"]},"review":{"type":"object","properties":{"status":{"type":"string","enum":["pending","passed","failed"]},"contentHash":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"findings":{"type":"array","items":{"type":"string"}},"reviewedAt":{"oneOf":[{"type":"null","const":null},{"type":"string"}]}},"required":["status","contentHash","findings","reviewedAt"],"additionalProperties":true}},"required":["content","contentHash","revision","updatedAt","status","review"],"additionalProperties":true}]},"xiaohongshu":{"oneOf":[{"type":"null","const":null},{"type":"object","properties":{"content":{"type":"string"},"contentHash":{"type":"string"},"revision":{"type":"number"},"updatedAt":{"type":"string"},"status":{"type":"string","enum":["editing","complete"]},"review":{"type":"object","properties":{"status":{"type":"string","enum":["pending","passed","failed"]},"contentHash":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"findings":{"type":"array","items":{"type":"string"}},"reviewedAt":{"oneOf":[{"type":"null","const":null},{"type":"string"}]}},"required":["status","contentHash","findings","reviewedAt"],"additionalProperties":true}},"required":["content","contentHash","revision","updatedAt","status","review"],"additionalProperties":true}]},"douyin":{"oneOf":[{"type":"null","const":null},{"type":"object","properties":{"content":{"type":"string"},"contentHash":{"type":"string"},"revision":{"type":"number"},"updatedAt":{"type":"string"},"status":{"type":"string","enum":["editing","complete"]},"review":{"type":"object","properties":{"status":{"type":"string","enum":["pending","passed","failed"]},"contentHash":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"findings":{"type":"array","items":{"type":"string"}},"reviewedAt":{"oneOf":[{"type":"null","const":null},{"type":"string"}]}},"required":["status","contentHash","findings","reviewedAt"],"additionalProperties":true}},"required":["content","contentHash","revision","updatedAt","status","review"],"additionalProperties":true}]},"weixin-video":{"oneOf":[{"type":"null","const":null},{"type":"object","properties":{"content":{"type":"string"},"contentHash":{"type":"string"},"revision":{"type":"number"},"updatedAt":{"type":"string"},"status":{"type":"string","enum":["editing","complete"]},"review":{"type":"object","properties":{"status":{"type":"string","enum":["pending","passed","failed"]},"contentHash":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"findings":{"type":"array","items":{"type":"string"}},"reviewedAt":{"oneOf":[{"type":"null","const":null},{"type":"string"}]}},"required":["status","contentHash","findings","reviewedAt"],"additionalProperties":true}},"required":["content","contentHash","revision","updatedAt","status","review"],"additionalProperties":true}]}},"required":["x","xiaohongshu","douyin","weixin-video"],"additionalProperties":true},"publishedLinks":{"type":"array","items":{"type":"object","properties":{"platform":{"type":"string","enum":["x","xiaohongshu","douyin","weixin-video"]},"url":{"type":"string"},"recordedAt":{"type":"string"}},"required":["platform","url","recordedAt"],"additionalProperties":true}},"exports":{"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"platform":{"type":"string","enum":["x","xiaohongshu","douyin","weixin-video"]},"format":{"type":"string","enum":["markdown","text","citations","materials"]},"status":{"type":"string","const":"pending"},"createdAt":{"type":"string"}},"required":["id","platform","format","status","createdAt"],"additionalProperties":true}}},"required":["id","idea","createdAt","updatedAt","sources","materials","experiments","claims","drafts","publishedLinks","exports"],"additionalProperties":true},
+        jsonSchema: {"type":"object","properties":{"evidenceHash":{"type":"string"},"id":{"type":"string"},"idea":{"type":"string"},"createdAt":{"type":"string"},"updatedAt":{"type":"string"},"sources":{"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"url":{"type":"string"},"title":{"type":"string"},"createdAt":{"type":"string"}},"required":["id","url","title","createdAt"],"additionalProperties":true}},"materials":{"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"name":{"type":"string"},"mediaType":{"type":"string"},"path":{"type":"string"},"bytes":{"type":"number"},"sha256":{"type":"string"},"sourceId":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"createdAt":{"type":"string"}},"required":["id","name","mediaType","path","bytes","sha256","sourceId","createdAt"],"additionalProperties":true}},"experiments":{"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"command":{"type":"string"},"output":{"type":"string"},"versions":{"type":"string"},"conditions":{"type":"string"},"createdAt":{"type":"string"}},"required":["id","command","output","versions","conditions","createdAt"],"additionalProperties":true}},"claims":{"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"text":{"type":"string"},"sourceId":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"status":{"type":"string","enum":["有来源","待核实"]},"createdAt":{"type":"string"}},"required":["id","text","sourceId","status","createdAt"],"additionalProperties":true}},"drafts":{"type":"object","properties":{"x":{"oneOf":[{"type":"null","const":null},{"type":"object","properties":{"content":{"type":"string"},"contentHash":{"type":"string"},"revision":{"type":"number"},"updatedAt":{"type":"string"},"status":{"type":"string","enum":["editing","complete"]},"review":{"type":"object","properties":{"status":{"type":"string","enum":["pending","passed","failed"]},"contentHash":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"findings":{"type":"array","items":{"oneOf":[{"type":"string"},{"type":"object","properties":{"code":{"type":"string","enum":["ai-label","sensitive","absolute","citation","evidence-changed","legacy-shape"]},"location":{"type":"string"},"excerpt":{"type":"string"},"fix":{"type":"string"}},"required":["code","location","excerpt","fix"],"additionalProperties":true}]}},"reviewedAt":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"rulesHash":{"type":"string"}},"required":["status","contentHash","findings","reviewedAt"],"additionalProperties":true},"body":{"oneOf":[{"type":"object","properties":{"kind":{"type":"string","const":"x-single"},"post":{"type":"string"}},"required":["kind","post"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"x-thread"},"posts":{"type":"array","items":{"type":"string"}}},"required":["kind","posts"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"xiaohongshu"},"title":{"type":"string"},"body":{"type":"string"},"cards":{"type":"array","items":{"type":"string"}}},"required":["kind","title","body","cards"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"douyin"},"voiceover":{"type":"string"},"shots":{"type":"array","items":{"type":"string"}}},"required":["kind","voiceover","shots"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"weixin-video"},"voiceover":{"type":"string"},"shots":{"type":"array","items":{"type":"string"}}},"required":["kind","voiceover","shots"],"additionalProperties":true}]},"claimIds":{"type":"array","items":{"type":"string"}},"evidenceHash":{"type":"string"}},"required":["content","contentHash","revision","updatedAt","status","review"],"additionalProperties":true}]},"xiaohongshu":{"oneOf":[{"type":"null","const":null},{"type":"object","properties":{"content":{"type":"string"},"contentHash":{"type":"string"},"revision":{"type":"number"},"updatedAt":{"type":"string"},"status":{"type":"string","enum":["editing","complete"]},"review":{"type":"object","properties":{"status":{"type":"string","enum":["pending","passed","failed"]},"contentHash":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"findings":{"type":"array","items":{"oneOf":[{"type":"string"},{"type":"object","properties":{"code":{"type":"string","enum":["ai-label","sensitive","absolute","citation","evidence-changed","legacy-shape"]},"location":{"type":"string"},"excerpt":{"type":"string"},"fix":{"type":"string"}},"required":["code","location","excerpt","fix"],"additionalProperties":true}]}},"reviewedAt":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"rulesHash":{"type":"string"}},"required":["status","contentHash","findings","reviewedAt"],"additionalProperties":true},"body":{"oneOf":[{"type":"object","properties":{"kind":{"type":"string","const":"x-single"},"post":{"type":"string"}},"required":["kind","post"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"x-thread"},"posts":{"type":"array","items":{"type":"string"}}},"required":["kind","posts"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"xiaohongshu"},"title":{"type":"string"},"body":{"type":"string"},"cards":{"type":"array","items":{"type":"string"}}},"required":["kind","title","body","cards"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"douyin"},"voiceover":{"type":"string"},"shots":{"type":"array","items":{"type":"string"}}},"required":["kind","voiceover","shots"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"weixin-video"},"voiceover":{"type":"string"},"shots":{"type":"array","items":{"type":"string"}}},"required":["kind","voiceover","shots"],"additionalProperties":true}]},"claimIds":{"type":"array","items":{"type":"string"}},"evidenceHash":{"type":"string"}},"required":["content","contentHash","revision","updatedAt","status","review"],"additionalProperties":true}]},"douyin":{"oneOf":[{"type":"null","const":null},{"type":"object","properties":{"content":{"type":"string"},"contentHash":{"type":"string"},"revision":{"type":"number"},"updatedAt":{"type":"string"},"status":{"type":"string","enum":["editing","complete"]},"review":{"type":"object","properties":{"status":{"type":"string","enum":["pending","passed","failed"]},"contentHash":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"findings":{"type":"array","items":{"oneOf":[{"type":"string"},{"type":"object","properties":{"code":{"type":"string","enum":["ai-label","sensitive","absolute","citation","evidence-changed","legacy-shape"]},"location":{"type":"string"},"excerpt":{"type":"string"},"fix":{"type":"string"}},"required":["code","location","excerpt","fix"],"additionalProperties":true}]}},"reviewedAt":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"rulesHash":{"type":"string"}},"required":["status","contentHash","findings","reviewedAt"],"additionalProperties":true},"body":{"oneOf":[{"type":"object","properties":{"kind":{"type":"string","const":"x-single"},"post":{"type":"string"}},"required":["kind","post"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"x-thread"},"posts":{"type":"array","items":{"type":"string"}}},"required":["kind","posts"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"xiaohongshu"},"title":{"type":"string"},"body":{"type":"string"},"cards":{"type":"array","items":{"type":"string"}}},"required":["kind","title","body","cards"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"douyin"},"voiceover":{"type":"string"},"shots":{"type":"array","items":{"type":"string"}}},"required":["kind","voiceover","shots"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"weixin-video"},"voiceover":{"type":"string"},"shots":{"type":"array","items":{"type":"string"}}},"required":["kind","voiceover","shots"],"additionalProperties":true}]},"claimIds":{"type":"array","items":{"type":"string"}},"evidenceHash":{"type":"string"}},"required":["content","contentHash","revision","updatedAt","status","review"],"additionalProperties":true}]},"weixin-video":{"oneOf":[{"type":"null","const":null},{"type":"object","properties":{"content":{"type":"string"},"contentHash":{"type":"string"},"revision":{"type":"number"},"updatedAt":{"type":"string"},"status":{"type":"string","enum":["editing","complete"]},"review":{"type":"object","properties":{"status":{"type":"string","enum":["pending","passed","failed"]},"contentHash":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"findings":{"type":"array","items":{"oneOf":[{"type":"string"},{"type":"object","properties":{"code":{"type":"string","enum":["ai-label","sensitive","absolute","citation","evidence-changed","legacy-shape"]},"location":{"type":"string"},"excerpt":{"type":"string"},"fix":{"type":"string"}},"required":["code","location","excerpt","fix"],"additionalProperties":true}]}},"reviewedAt":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"rulesHash":{"type":"string"}},"required":["status","contentHash","findings","reviewedAt"],"additionalProperties":true},"body":{"oneOf":[{"type":"object","properties":{"kind":{"type":"string","const":"x-single"},"post":{"type":"string"}},"required":["kind","post"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"x-thread"},"posts":{"type":"array","items":{"type":"string"}}},"required":["kind","posts"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"xiaohongshu"},"title":{"type":"string"},"body":{"type":"string"},"cards":{"type":"array","items":{"type":"string"}}},"required":["kind","title","body","cards"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"douyin"},"voiceover":{"type":"string"},"shots":{"type":"array","items":{"type":"string"}}},"required":["kind","voiceover","shots"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"weixin-video"},"voiceover":{"type":"string"},"shots":{"type":"array","items":{"type":"string"}}},"required":["kind","voiceover","shots"],"additionalProperties":true}]},"claimIds":{"type":"array","items":{"type":"string"}},"evidenceHash":{"type":"string"}},"required":["content","contentHash","revision","updatedAt","status","review"],"additionalProperties":true}]}},"required":["x","xiaohongshu","douyin","weixin-video"],"additionalProperties":true},"publishedLinks":{"type":"array","items":{"type":"object","properties":{"platform":{"type":"string","enum":["x","xiaohongshu","douyin","weixin-video"]},"url":{"type":"string"},"recordedAt":{"type":"string"}},"required":["platform","url","recordedAt"],"additionalProperties":true}},"exports":{"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"platform":{"type":"string","enum":["x","xiaohongshu","douyin","weixin-video"]},"format":{"type":"string","enum":["markdown","text","citations","materials"]},"status":{"type":"string","const":"pending"},"createdAt":{"type":"string"},"contentHash":{"type":"string"},"reviewPassed":{"type":"boolean","enum":[false,true]}},"required":["id","platform","format","status","createdAt"],"additionalProperties":true}}},"required":["evidenceHash","id","idea","createdAt","updatedAt","sources","materials","experiments","claims","drafts","publishedLinks","exports"],"additionalProperties":true},
       },
       sourceLocation: {"file":"packages/dsh-content-evidence/src/service.ts","line":28,"column":9},
     },
@@ -895,9 +1370,71 @@ export const TYPERT_REMOTE = createTypertRemoteInfo({
         mode: 'strict',
         typeSymbol: 'dsh-content-evidence/types#ExportRecord',
         create: dsh_content_evidence_contentEvidence_requestExport_result$schema,
-        jsonSchema: {"type":"object","properties":{"id":{"type":"string"},"platform":{"type":"string","enum":["x","xiaohongshu","douyin","weixin-video"]},"format":{"type":"string","enum":["markdown","text","citations","materials"]},"status":{"type":"string","const":"pending"},"createdAt":{"type":"string"}},"required":["id","platform","format","status","createdAt"],"additionalProperties":true},
+        jsonSchema: {"type":"object","properties":{"id":{"type":"string"},"platform":{"type":"string","enum":["x","xiaohongshu","douyin","weixin-video"]},"format":{"type":"string","enum":["markdown","text","citations","materials"]},"status":{"type":"string","const":"pending"},"createdAt":{"type":"string"},"contentHash":{"type":"string"},"reviewPassed":{"type":"boolean","enum":[false,true]}},"required":["id","platform","format","status","createdAt"],"additionalProperties":true},
       },
-      sourceLocation: {"file":"packages/dsh-content-evidence/src/service.ts","line":60,"column":9},
+      sourceLocation: {"file":"packages/dsh-content-evidence/src/service.ts","line":64,"column":9},
+    },
+    'contentEvidence/reviewDraft': {
+      service: 'contentEvidence',
+      invocation: { kind: 'direct' },
+      parameters: [
+        {
+          name: 'topicId',
+          source: 'json',
+          codec: {
+            mode: 'strict',
+            typeSymbol: 'dsh-content-evidence#contentEvidence/reviewDraft:topicId',
+            create: dsh_content_evidence_contentEvidence_reviewDraft_parameter_0$schema,
+            jsonSchema: {"type":"string"},
+          },
+          strictCodec: {
+            mode: 'strict',
+            typeSymbol: 'dsh-content-evidence#contentEvidence/reviewDraft:topicId',
+            create: dsh_content_evidence_contentEvidence_reviewDraft_parameter_0_strict$schema,
+            jsonSchema: {"type":"string"},
+          },
+        },
+        {
+          name: 'target',
+          source: 'json',
+          codec: {
+            mode: 'strict',
+            typeSymbol: 'dsh-content-evidence/types#Platform',
+            create: dsh_content_evidence_contentEvidence_reviewDraft_parameter_1$schema,
+            jsonSchema: {"type":"string","enum":["x","xiaohongshu","douyin","weixin-video"]},
+          },
+          strictCodec: {
+            mode: 'strict',
+            typeSymbol: 'dsh-content-evidence/types#Platform',
+            create: dsh_content_evidence_contentEvidence_reviewDraft_parameter_1_strict$schema,
+            jsonSchema: {"type":"string","enum":["x","xiaohongshu","douyin","weixin-video"]},
+          },
+        },
+        {
+          name: 'expectedRevision',
+          source: 'json',
+          codec: {
+            mode: 'strict',
+            typeSymbol: 'dsh-content-evidence#contentEvidence/reviewDraft:expectedRevision',
+            create: dsh_content_evidence_contentEvidence_reviewDraft_parameter_2$schema,
+            jsonSchema: {"type":"number"},
+          },
+          strictCodec: {
+            mode: 'strict',
+            typeSymbol: 'dsh-content-evidence#contentEvidence/reviewDraft:expectedRevision',
+            create: dsh_content_evidence_contentEvidence_reviewDraft_parameter_2_strict$schema,
+            jsonSchema: {"type":"number"},
+          },
+        },
+      ],
+      cancellation: { parameter: 'signal' },
+      result: {
+        mode: 'strict',
+        typeSymbol: 'dsh-content-evidence/types#Draft',
+        create: dsh_content_evidence_contentEvidence_reviewDraft_result$schema,
+        jsonSchema: {"type":"object","properties":{"content":{"type":"string"},"contentHash":{"type":"string"},"revision":{"type":"number"},"updatedAt":{"type":"string"},"status":{"type":"string","enum":["editing","complete"]},"review":{"type":"object","properties":{"status":{"type":"string","enum":["pending","passed","failed"]},"contentHash":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"findings":{"type":"array","items":{"oneOf":[{"type":"string"},{"type":"object","properties":{"code":{"type":"string","enum":["ai-label","sensitive","absolute","citation","evidence-changed","legacy-shape"]},"location":{"type":"string"},"excerpt":{"type":"string"},"fix":{"type":"string"}},"required":["code","location","excerpt","fix"],"additionalProperties":true}]}},"reviewedAt":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"rulesHash":{"type":"string"}},"required":["status","contentHash","findings","reviewedAt"],"additionalProperties":true},"body":{"oneOf":[{"type":"object","properties":{"kind":{"type":"string","const":"x-single"},"post":{"type":"string"}},"required":["kind","post"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"x-thread"},"posts":{"type":"array","items":{"type":"string"}}},"required":["kind","posts"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"xiaohongshu"},"title":{"type":"string"},"body":{"type":"string"},"cards":{"type":"array","items":{"type":"string"}}},"required":["kind","title","body","cards"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"douyin"},"voiceover":{"type":"string"},"shots":{"type":"array","items":{"type":"string"}}},"required":["kind","voiceover","shots"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"weixin-video"},"voiceover":{"type":"string"},"shots":{"type":"array","items":{"type":"string"}}},"required":["kind","voiceover","shots"],"additionalProperties":true}]},"claimIds":{"type":"array","items":{"type":"string"}},"evidenceHash":{"type":"string"}},"required":["content","contentHash","revision","updatedAt","status","review"],"additionalProperties":true},
+      },
+      sourceLocation: {"file":"packages/dsh-content-evidence/src/service.ts","line":56,"column":9},
     },
     'contentEvidence/saveClaim': {
       service: 'contentEvidence',
@@ -998,19 +1535,19 @@ export const TYPERT_REMOTE = createTypertRemoteInfo({
           },
         },
         {
-          name: 'content',
+          name: 'input',
           source: 'json',
           codec: {
             mode: 'strict',
-            typeSymbol: 'dsh-content-evidence#contentEvidence/saveDraft:content',
+            typeSymbol: 'dsh-content-evidence/types#DraftInput',
             create: dsh_content_evidence_contentEvidence_saveDraft_parameter_2$schema,
-            jsonSchema: {"type":"string"},
+            jsonSchema: {"type":"object","properties":{"body":{"oneOf":[{"type":"object","properties":{"kind":{"type":"string","const":"x-single"},"post":{"type":"string"}},"required":["kind","post"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"x-thread"},"posts":{"type":"array","items":{"type":"string"}}},"required":["kind","posts"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"xiaohongshu"},"title":{"type":"string"},"body":{"type":"string"},"cards":{"type":"array","items":{"type":"string"}}},"required":["kind","title","body","cards"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"douyin"},"voiceover":{"type":"string"},"shots":{"type":"array","items":{"type":"string"}}},"required":["kind","voiceover","shots"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"weixin-video"},"voiceover":{"type":"string"},"shots":{"type":"array","items":{"type":"string"}}},"required":["kind","voiceover","shots"],"additionalProperties":true}]},"claimIds":{"type":"array","items":{"type":"string"}},"expectedRevision":{"type":"number"},"evidenceHash":{"type":"string"}},"required":["body","claimIds","expectedRevision","evidenceHash"],"additionalProperties":true},
           },
           strictCodec: {
             mode: 'strict',
-            typeSymbol: 'dsh-content-evidence#contentEvidence/saveDraft:content',
+            typeSymbol: 'dsh-content-evidence/types#DraftInput',
             create: dsh_content_evidence_contentEvidence_saveDraft_parameter_2_strict$schema,
-            jsonSchema: {"type":"string"},
+            jsonSchema: {"type":"object","properties":{"body":{"oneOf":[{"type":"object","properties":{"kind":{"type":"string","const":"x-single"},"post":{"type":"string"}},"required":["kind","post"],"additionalProperties":false},{"type":"object","properties":{"kind":{"type":"string","const":"x-thread"},"posts":{"type":"array","items":{"type":"string"}}},"required":["kind","posts"],"additionalProperties":false},{"type":"object","properties":{"kind":{"type":"string","const":"xiaohongshu"},"title":{"type":"string"},"body":{"type":"string"},"cards":{"type":"array","items":{"type":"string"}}},"required":["kind","title","body","cards"],"additionalProperties":false},{"type":"object","properties":{"kind":{"type":"string","const":"douyin"},"voiceover":{"type":"string"},"shots":{"type":"array","items":{"type":"string"}}},"required":["kind","voiceover","shots"],"additionalProperties":false},{"type":"object","properties":{"kind":{"type":"string","const":"weixin-video"},"voiceover":{"type":"string"},"shots":{"type":"array","items":{"type":"string"}}},"required":["kind","voiceover","shots"],"additionalProperties":false}]},"claimIds":{"type":"array","items":{"type":"string"}},"expectedRevision":{"type":"number"},"evidenceHash":{"type":"string"}},"required":["body","claimIds","expectedRevision","evidenceHash"],"additionalProperties":false},
           },
         },
       ],
@@ -1019,7 +1556,7 @@ export const TYPERT_REMOTE = createTypertRemoteInfo({
         mode: 'strict',
         typeSymbol: 'dsh-content-evidence/types#Draft',
         create: dsh_content_evidence_contentEvidence_saveDraft_result$schema,
-        jsonSchema: {"type":"object","properties":{"content":{"type":"string"},"contentHash":{"type":"string"},"revision":{"type":"number"},"updatedAt":{"type":"string"},"status":{"type":"string","enum":["editing","complete"]},"review":{"type":"object","properties":{"status":{"type":"string","enum":["pending","passed","failed"]},"contentHash":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"findings":{"type":"array","items":{"type":"string"}},"reviewedAt":{"oneOf":[{"type":"null","const":null},{"type":"string"}]}},"required":["status","contentHash","findings","reviewedAt"],"additionalProperties":true}},"required":["content","contentHash","revision","updatedAt","status","review"],"additionalProperties":true},
+        jsonSchema: {"type":"object","properties":{"content":{"type":"string"},"contentHash":{"type":"string"},"revision":{"type":"number"},"updatedAt":{"type":"string"},"status":{"type":"string","enum":["editing","complete"]},"review":{"type":"object","properties":{"status":{"type":"string","enum":["pending","passed","failed"]},"contentHash":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"findings":{"type":"array","items":{"oneOf":[{"type":"string"},{"type":"object","properties":{"code":{"type":"string","enum":["ai-label","sensitive","absolute","citation","evidence-changed","legacy-shape"]},"location":{"type":"string"},"excerpt":{"type":"string"},"fix":{"type":"string"}},"required":["code","location","excerpt","fix"],"additionalProperties":true}]}},"reviewedAt":{"oneOf":[{"type":"null","const":null},{"type":"string"}]},"rulesHash":{"type":"string"}},"required":["status","contentHash","findings","reviewedAt"],"additionalProperties":true},"body":{"oneOf":[{"type":"object","properties":{"kind":{"type":"string","const":"x-single"},"post":{"type":"string"}},"required":["kind","post"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"x-thread"},"posts":{"type":"array","items":{"type":"string"}}},"required":["kind","posts"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"xiaohongshu"},"title":{"type":"string"},"body":{"type":"string"},"cards":{"type":"array","items":{"type":"string"}}},"required":["kind","title","body","cards"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"douyin"},"voiceover":{"type":"string"},"shots":{"type":"array","items":{"type":"string"}}},"required":["kind","voiceover","shots"],"additionalProperties":true},{"type":"object","properties":{"kind":{"type":"string","const":"weixin-video"},"voiceover":{"type":"string"},"shots":{"type":"array","items":{"type":"string"}}},"required":["kind","voiceover","shots"],"additionalProperties":true}]},"claimIds":{"type":"array","items":{"type":"string"}},"evidenceHash":{"type":"string"}},"required":["content","contentHash","revision","updatedAt","status","review"],"additionalProperties":true},
       },
       sourceLocation: {"file":"packages/dsh-content-evidence/src/service.ts","line":52,"column":9},
     },

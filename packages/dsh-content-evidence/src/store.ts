@@ -8,10 +8,12 @@ import { RemoteError } from '@deepseek-ai/dsh-typert-protocol'
 import {
   type Topic, type Workspace, type Source, type Material, type MaterialInput,
   type Experiment, type ExperimentInput, type Claim, type Draft, type Platform,
-  type PublishedLink, type ExportRecord, type ExportFormat,
+  type PublishedLink, type ExportRecord, type ExportFormat, type DraftInput, type EvidenceSheet,
 } from './model.js'
 import { fileName, hash, id, invalid, parseWorkspace, platform, record, text, url } from './validation.js'
+import { checkCompliance, draftHash, evidenceHash, parseDraftInput, renderDraft, revision, rulesHash, stringList, validateFacts } from './drafts.js'
 
+const pendingReview = () => ({ status: 'pending' as const, contentHash: null, findings: [], reviewedAt: null })
 const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const STATE_LIMIT = 16 * 1024 * 1024
 const MATERIAL_LIMIT = 10 * 1024 * 1024
@@ -51,7 +53,9 @@ async function atomicWrite(directory: string, name: string, data: string | Buffe
 
 export class EvidenceStore {
   readonly dataDir: string
-  constructor(dataDir: string = join(process.env.DSH_HOME || join(homedir(), '.dsh'), 'content-evidence')) {
+  private readonly extraSensitiveTerms: string[]
+  constructor(dataDir: string = join(process.env.DSH_HOME || join(homedir(), '.dsh'), 'content-evidence'), extraSensitiveTerms: string[] = []) {
+    this.extraSensitiveTerms = stringList(extraSensitiveTerms, 'extraSensitiveTerms').map(term => text(term, 'extraSensitiveTerms', 100))
     text(dataDir, 'dataDir', 4096)
     this.dataDir = resolve(dataDir)
     if (within(PACKAGE_ROOT, this.dataDir)) invalid('dataDir inside package')
@@ -79,7 +83,14 @@ export class EvidenceStore {
     catch (cause) {
       throw new RemoteError('content-evidence/corrupt-store', 'Cannot decode workspace; existing data was not overwritten', null, { cause })
     }
-    return parseWorkspace(parsed)
+    const workspace = parseWorkspace(parsed)
+    for (const topic of workspace.topics) this.invalidateReviews(topic)
+    return workspace
+  }
+  private invalidateReviews(topic: Topic): void {
+    for (const draft of Object.values(topic.drafts)) {
+      if (draft?.review.status === 'passed' && (draft.evidenceHash !== evidenceHash(topic) || draft.review.rulesHash !== rulesHash(this.extraSensitiveTerms))) draft.review = pendingReview()
+    }
   }
   private async mutate<T>(update: (workspace: Workspace, root: string) => Promise<T> | T, signal?: AbortSignal): Promise<T> {
     const root = await this.root()
@@ -110,6 +121,7 @@ export class EvidenceStore {
     return this.mutate(async (workspace, root) => {
       const topic = this.topic(workspace, topicId)
       const result = await update(topic, root)
+      this.invalidateReviews(topic)
       topic.updatedAt = new Date().toISOString()
       return result
     }, signal)
@@ -133,9 +145,10 @@ export class EvidenceStore {
       return topic
     }, signal)
   }
-  async readEvidence(topicId: string, signal?: AbortSignal): Promise<Topic> {
+  async readEvidence(topicId: string, signal?: AbortSignal): Promise<EvidenceSheet> {
     id(topicId); signal?.throwIfAborted()
-    return this.topic(await this.load(await this.root()), topicId)
+    const topic = this.topic(await this.load(await this.root()), topicId)
+    return { ...topic, evidenceHash: evidenceHash(topic) }
   }
   async addSource(topicId: string, sourceUrl: string, title: string, signal?: AbortSignal): Promise<Source> {
     url(sourceUrl); text(title, 'title', 2000, true)
@@ -201,16 +214,42 @@ export class EvidenceStore {
       return claim
     }, signal)
   }
-  async saveDraft(topicId: string, target: Platform, content: string, signal?: AbortSignal): Promise<Draft> {
-    platform(target); text(content, 'content', 200_000, true)
+  async saveDraft(topicId: string, target: Platform, value: DraftInput, signal?: AbortSignal): Promise<Draft> {
+    platform(target)
+    const input = parseDraftInput(value, target)
     return this.update(topicId, topic => {
-      const previous = topic.drafts[target], contentHash = hash(content)
-      if (previous?.contentHash === contentHash) return previous
+      const previous = topic.drafts[target]
+      this.compare(topic, previous?.revision ?? 0, input.expectedRevision, input.evidenceHash)
+      validateFacts(input.body, topic, input.claimIds)
+      const content = renderDraft(input.body, topic, input.claimIds)
+      text(content, 'content', 200_000)
       const draft: Draft = {
-        content, contentHash, revision: (previous?.revision ?? 0) + 1, updatedAt: new Date().toISOString(), status: 'editing',
-        review: { status: 'pending', contentHash: null, findings: [], reviewedAt: null },
+        body: input.body, claimIds: input.claimIds, evidenceHash: input.evidenceHash,
+        content, contentHash: '', revision: (previous?.revision ?? 0) + 1,
+        updatedAt: new Date().toISOString(), status: 'complete', review: pendingReview(),
       }
+      draft.contentHash = draftHash(draft)
+      if (previous?.contentHash === draft.contentHash) return previous
       topic.drafts[target] = draft
+      return draft
+    }, signal)
+  }
+  private compare(topic: Topic, current: number, expected: number, base: string): void {
+    if (current !== expected || evidenceHash(topic) !== base) {
+      throw new RemoteError('content-evidence/conflict', 'Draft or evidence changed; read the latest evidence before retrying', { revision: current, evidenceHash: evidenceHash(topic) })
+    }
+  }
+  async reviewDraft(topicId: string, target: Platform, expectedRevision: number, signal?: AbortSignal): Promise<Draft> {
+    platform(target); revision(expectedRevision)
+    return this.update(topicId, topic => {
+      const draft = topic.drafts[target]
+      if (!draft) invalid('missing draft')
+      this.compare(topic, draft.revision, expectedRevision, evidenceHash(topic))
+      const findings = checkCompliance(topic, draft, this.extraSensitiveTerms)
+      draft.review = {
+        status: findings.length ? 'failed' : 'passed', contentHash: draft.contentHash,
+        findings, reviewedAt: new Date().toISOString(), rulesHash: rulesHash(this.extraSensitiveTerms),
+      }
       return draft
     }, signal)
   }
@@ -226,7 +265,12 @@ export class EvidenceStore {
     platform(target)
     if (!['markdown', 'text', 'citations', 'materials'].includes(format)) invalid('format')
     return this.update(topicId, topic => {
-      const item: ExportRecord = { id: randomUUID(), platform: target, format, status: 'pending', createdAt: new Date().toISOString() }
+      const draft = topic.drafts[target]
+      const item: ExportRecord = {
+        id: randomUUID(), platform: target, format, status: 'pending', createdAt: new Date().toISOString(),
+        ...(draft ? { contentHash: draft.contentHash } : {}),
+        reviewPassed: draft?.review.status === 'passed' && draft.review.contentHash === draft.contentHash,
+      }
       topic.exports.push(item)
       return item
     }, signal)

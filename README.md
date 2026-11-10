@@ -8,7 +8,7 @@
 | --- | --- | --- | --- |
 | 任务复盘 | [`dsh-task-review`](https://www.npmjs.com/package/dsh-task-review) | 自动或手动任务复盘，保存本地 Markdown 报告（`/review`）/ Task reviews with local Markdown reports | [README](packages/dsh-task-review/README.md) |
 | 任务心跳 | [`dsh-heartbeat-monitor`](https://www.npmjs.com/package/dsh-heartbeat-monitor) | 长任务定时进度卡、静默/重复警告（`/heartbeat`）/ Timed progress cards and stall/repeat warnings | [README](packages/dsh-heartbeat-monitor/README.md) |
-| 桌面插件组合回归台 | `dsh-plugin-combo-lab`（未发布 npm / not published to npm） | 双插件组合回归计划、人工证据记录与升级对照（`/combo-lab`）/ Two-plugin regression plans, manual evidence and upgrade comparisons | [README](packages/dsh-plugin-combo-lab/README.md) |
+| 插件组合冲突检查 | `dsh-plugin-combo-lab`（未发布 npm / not published to npm） | 协助检查多个 DSH 插件一起安装时是否抢同一个命令名、界面位置，或在提示词、工具拦截上互相干扰；结合人工记录指出冲突在哪，新装或升级后可再检查组合是否正常（当前每次两个插件，`/combo-lab`）/ Pairwise conflict checks with manual evidence and rechecks after installs or upgrades | [README](packages/dsh-plugin-combo-lab/README.md) |
 | 资料更新影响分析 | `dsh-source-impact`（未发布 npm / not published to npm） | 显式来源引用追踪与更新影响复查清单（`/impact`）/ Explicit source citation tracking and update impact checklists | [README](packages/dsh-source-impact/README.md) |
 | 权限拒绝诊断台 | `dsh-permission-doctor`（未发布 npm / not published to npm） | 只读诊断工具拒绝与未弹审批的证据（`/permission-doctor`）/ Read-only diagnostics for tool denials and missing approval prompts | [README](packages/dsh-permission-doctor/README.md) |
 | 指令冲突解释器 | `dsh-instruction-conflicts`（未发布 npm / not published to npm） | 规则正文疑似冲突、注入版本与当前上下文证据（`/instruction-conflicts`）/ Suspected instruction conflicts, injected versions and current context evidence | [README](packages/dsh-instruction-conflicts/README.md) |

@@ -1,5 +1,6 @@
 declare module '@deepseek-ai/dsh-typert-protocol' {
     interface RemoteErrorDetailsMap {
+        'content-evidence/export-unsupported': null;
         'content-evidence/invalid-input': {
             readonly field: string;
         };

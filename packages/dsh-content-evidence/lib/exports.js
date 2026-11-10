@@ -1,17 +1,48 @@
 import { constants } from 'node:fs';
 import { mkdir, open, realpath, rename, rm } from 'node:fs/promises';
-import { isAbsolute, join, relative, sep } from 'node:path';
+import { dirname, isAbsolute, join, relative, sep } from 'node:path';
+import { RemoteError } from '@deepseek-ai/dsh-typert-protocol';
 import { fileName, id, invalid, text } from './validation.js';
 const directoryFlags = constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW;
-const fdPath = (directory) => `/proc/self/fd/${directory.fd}`;
+function unsupported() {
+    throw new RemoteError('content-evidence/export-unsupported', '此主机不支持安全的目录句柄导出；未写入导出文件。请在支持 /proc/self/fd 或可遍历 /dev/fd 目录句柄的主机导出。Safe export/material reading is unavailable on this host (including standard macOS and Windows): traversable directory handles are required; no export files were written.', null);
+}
+export async function directoryPath(directory) {
+    const pinned = await directory.stat();
+    for (const prefix of ['/proc/self/fd', '/dev/fd']) {
+        const path = `${prefix}/${directory.fd}`;
+        let probe;
+        try {
+            probe = await open(`${path}/.`, directoryFlags);
+            const stat = await probe.stat();
+            if (stat.dev === pinned.dev && stat.ino === pinned.ino) {
+                await realpath(path);
+                return path;
+            }
+        }
+        catch (error) {
+            if (!['ENOENT', 'ENOTDIR', 'ELOOP', 'EACCES', 'ENOSYS', 'ENOTSUP'].includes(error.code ?? ''))
+                throw error;
+        }
+        finally {
+            await probe?.close();
+        }
+    }
+    unsupported();
+}
 async function openTarget(directory, blockedRoots) {
+    // shortcut: Node lacks openat; add native directory-relative I/O before enabling macOS/Windows export.
+    if (process.platform === 'win32' || !constants.O_DIRECTORY || !constants.O_NOFOLLOW)
+        unsupported();
     text(directory, 'directory', 4096);
     const parts = directory.split('/').filter(Boolean);
     if (!isAbsolute(directory) || !parts.length || parts.some(part => part === '.' || part === '..') || directory.includes('\\'))
         invalid('directory');
     let handle = await open('/', directoryFlags);
     try {
-        // Pin each Linux directory fd so ancestor replacement cannot redirect later writes.
+        const prefix = dirname(await directoryPath(handle));
+        const fdPath = (directory) => `${prefix}/${directory.fd}`;
+        // Pin each directory fd so ancestor replacement cannot redirect later writes.
         for (const part of parts) {
             const next = await open(join(fdPath(handle), part), directoryFlags);
             await handle.close();
@@ -23,7 +54,7 @@ async function openTarget(directory, blockedRoots) {
             if (rel !== '..' && !rel.startsWith('..' + sep) && !isAbsolute(rel))
                 invalid('directory inside package or data store');
         }
-        return handle;
+        return { root: handle, fdPath };
     }
     catch (error) {
         await handle.close();
@@ -69,7 +100,7 @@ export function exportDocuments(topic, target, draft, format, reviewPassed) {
 export async function writeExport(directory, blockedRoots, exportId, documents, materials, readMaterial, signal) {
     signal?.throwIfAborted();
     id(exportId);
-    const root = await openTarget(directory, blockedRoots);
+    const { root, fdPath } = await openTarget(directory, blockedRoots);
     const name = `content-evidence-${exportId}`;
     const temporary = join(fdPath(root), `.${name}.tmp`);
     let staging;

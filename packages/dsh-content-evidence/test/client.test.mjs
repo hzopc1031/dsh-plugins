@@ -129,6 +129,8 @@ async function mount(t) {
 
 test('compiled client exports the plugin contract, registers both slots and unmounts its Remote contribution', async t => {
   const ui = await mount(t)
+  const help = JSON.stringify(ui.view.toJSON())
+  for (const required of ['设置 → 模型', '空闲会话', '/content-evidence workbench', '待核实', '原生工具执行器']) assert.ok(help.includes(required), required)
   assert.equal(ui.client.name, 'content-evidence-client')
   assert.equal(typeof ui.client.apply, 'function')
   assert.deepEqual(Array.from(ui.client.inject), ['slots', 'remote'])

@@ -9,7 +9,18 @@ import { EvidenceStore } from '../lib/store.js'
 import { draftInput } from './draft-fixture.mjs'
 import { harness } from './harness.mjs'
 
-async function fixture(t) {
+function disableProcfs(t) {
+  const original = promises.open
+  const mocked = t.mock.method(promises, 'open', async (path, ...args) => {
+    if (String(path).startsWith('/proc/self/fd/')) throw Object.assign(new Error('procfs unavailable (test)'), { code: 'ENOENT' })
+    return original(path, ...args)
+  })
+  syncBuiltinESMExports()
+  t.after(() => { mocked.mock.restore(); syncBuiltinESMExports() })
+}
+
+async function fixture(t, nonProcfs = false) {
+  if (nonProcfs) disableProcfs(t)
   const root = await mkdtemp(join(tmpdir(), 'content-evidence-export-'))
   t.after(() => rm(root, { recursive: true, force: true }))
   const directory = join(root, 'exports'), dataDir = join(root, 'data')
@@ -23,8 +34,8 @@ async function fixture(t) {
   return { root, directory, dataDir, store, topic, save, source, claim }
 }
 
-test('exports all four artifacts with citations, experiments and manual URLs; repeated exports preserve existing work', async t => {
-  const { store, topic, directory, dataDir, save, source, claim } = await fixture(t)
+for (const nonProcfs of [false, true]) test(`exports all four artifacts with citations, experiments and manual URLs; repeated exports preserve existing work (${nonProcfs ? '/dev/fd fallback' : 'procfs'})`, async t => {
+  const { store, topic, directory, dataDir, save, source, claim } = await fixture(t, nonProcfs)
   const bytes = Buffer.from([0, 128, 255, 10])
   const material = await store.captureMaterial(topic.id, { name: '截图.png', mediaType: 'image/png', base64: bytes.toString('base64'), sourceId: source.id })
   await store.logExperiment(topic.id, { command: 'synthetic command', output: 'synthetic output', versions: 'synthetic version', conditions: 'synthetic conditions' })
@@ -118,8 +129,8 @@ test('corrupt completed export metadata and a mismatched passed-review hash are 
   }
 })
 
-test('rejects relative paths, dot traversal, symlink targets/ancestors, package and data roots without writes', async t => {
-  const { store, topic, directory, root, dataDir } = await fixture(t)
+for (const nonProcfs of [false, true]) test(`rejects relative paths, dot traversal, symlink targets/ancestors, package and data roots without writes (${nonProcfs ? '/dev/fd fallback' : 'procfs'})`, async t => {
+  const { store, topic, directory, root, dataDir } = await fixture(t, nonProcfs)
   const outside = join(root, 'outside')
   await mkdir(outside)
   const alias = join(root, 'alias')
@@ -140,14 +151,14 @@ test('rejects relative paths, dot traversal, symlink targets/ancestors, package 
   assert.equal(await readFile(file, 'utf8'), original)
 })
 
-test('a destination ancestor swapped to a symlink cannot redirect export writes', async t => {
-  const { store, topic, directory, root } = await fixture(t)
+for (const nonProcfs of [false, true]) test(`a destination ancestor swapped to a symlink cannot redirect export writes (${nonProcfs ? '/dev/fd fallback' : 'procfs'})`, async t => {
+  const { store, topic, directory, root } = await fixture(t, nonProcfs)
   const outside = join(root, 'outside'), moved = join(root, 'chosen-moved')
   await mkdir(outside)
   const originalMkdir = promises.mkdir
   let swapped = false
   const mocked = t.mock.method(promises, 'mkdir', async (path, options) => {
-    if (!swapped && String(path).startsWith('/proc/self/fd/') && String(path).endsWith('.tmp')) {
+    if (!swapped && String(path).startsWith(nonProcfs ? '/dev/fd/' : '/proc/self/fd/') && String(path).endsWith('.tmp')) {
       swapped = true
       await rename(directory, moved)
       await symlink(outside, directory)
@@ -164,8 +175,8 @@ test('a destination ancestor swapped to a symlink cannot redirect export writes'
   assert.match(await readFile(join(exported.directory, 'draft.txt'), 'utf8'), /Synthetic fixture/)
 })
 
-test('corrupt or symlinked source material fails export, cleans staging, and preserves the completed draft', async t => {
-  const { store, topic, directory, dataDir, root } = await fixture(t)
+for (const nonProcfs of [false, true]) test(`corrupt or symlinked source material fails export, cleans staging, and preserves the completed draft (${nonProcfs ? '/dev/fd fallback' : 'procfs'})`, async t => {
+  const { store, topic, directory, dataDir, root } = await fixture(t, nonProcfs)
   const material = await store.captureMaterial(topic.id, { name: 'fixture.txt', mediaType: 'text/plain', base64: Buffer.from('Original fixture').toString('base64'), sourceId: null })
   const file = join(dataDir, 'workspace.json'), original = await readFile(file, 'utf8')
   await writeFile(join(dataDir, material.path), 'Changed fixture')
@@ -223,4 +234,39 @@ test('manual URL backfill validates input and never visits platform endpoints', 
   assert.equal(await readFile(file, 'utf8'), original)
   assert.equal((await new EvidenceStore(dataDir).readEvidence(topic.id)).publishedLinks.length, 4)
   assert.equal(mockedFetch.mock.callCount(), 0)
+})
+
+test('hosts without traversable handles refuse clearly before export writes and preserve draft/history', async t => {
+  const { store, topic, directory, dataDir } = await fixture(t)
+  const original = await readFile(join(dataDir, 'workspace.json'), 'utf8')
+  const originalOpen = promises.open
+  const mocked = t.mock.method(promises, 'open', async (path, ...args) => {
+    if (/^\/(proc\/self|dev)\/fd\//.test(String(path))) throw Object.assign(new Error('non-traversable fd (macOS fixture)'), { code: 'ENOTDIR' })
+    return originalOpen(path, ...args)
+  })
+  syncBuiltinESMExports()
+  try {
+    await assert.rejects(store.requestExport(topic.id, 'x', 'all', directory), error => {
+      assert.equal(remoteErrorOf(error)?.code, 'content-evidence/export-unsupported')
+      assert.match(error.message, /no export files were written/)
+      return true
+    })
+  } finally { mocked.mock.restore(); syncBuiltinESMExports() }
+  assert.deepEqual(await readdir(directory), [])
+  assert.equal(await readFile(join(dataDir, 'workspace.json'), 'utf8'), original)
+})
+
+test('Windows refuses before trying POSIX flags or touching the export path', async t => {
+  const { writeExport } = await import('../lib/exports.js')
+  const descriptor = Object.getOwnPropertyDescriptor(process, 'platform')
+  const mocked = t.mock.method(promises, 'open', () => { assert.fail('unsupported host must not open any path') })
+  syncBuiltinESMExports()
+  Object.defineProperty(process, 'platform', { value: 'win32' })
+  try {
+    await assert.rejects(writeExport('C:\\Exports', [], '00000000-0000-4000-8000-000000000000', {}, null, async () => Buffer.alloc(0)), error => remoteErrorOf(error)?.code === 'content-evidence/export-unsupported')
+    assert.equal(mocked.mock.callCount(), 0)
+  } finally {
+    Object.defineProperty(process, 'platform', descriptor)
+    mocked.mock.restore(); syncBuiltinESMExports()
+  }
 })

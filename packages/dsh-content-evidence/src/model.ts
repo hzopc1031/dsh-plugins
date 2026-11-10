@@ -2,6 +2,7 @@ import type {} from '@deepseek-ai/dsh-typert-protocol'
 
 declare module '@deepseek-ai/dsh-typert-protocol' {
   interface RemoteErrorDetailsMap {
+    'content-evidence/export-unsupported': null
     'content-evidence/invalid-input': { readonly field: string }
     'content-evidence/not-found': { readonly topicId: string }
     'content-evidence/corrupt-store': null

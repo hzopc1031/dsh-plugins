@@ -8,7 +8,7 @@ import { RemoteError } from '@deepseek-ai/dsh-typert-protocol';
 import { exportFormats, } from './model.js';
 import { fileName, hash, id, invalid, parseWorkspace, platform, record, text, url } from './validation.js';
 import { checkCompliance, draftHash, evidenceHash, parseDraftInput, renderDraft, revision, rulesHash, stringList, validateFacts } from './drafts.js';
-import { exportDocuments, writeExport } from './exports.js';
+import { directoryPath, exportDocuments, writeExport } from './exports.js';
 const pendingReview = () => ({ status: 'pending', contentHash: null, findings: [], reviewedAt: null });
 const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const STATE_LIMIT = 16 * 1024 * 1024;
@@ -235,7 +235,7 @@ export class EvidenceStore {
         const directory = await open(await this.materials(root), constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW);
         let bytes;
         try {
-            bytes = await readFile(`/proc/self/fd/${directory.fd}/${material.id}`, MATERIAL_LIMIT);
+            bytes = await readFile(join(await directoryPath(directory), material.id), MATERIAL_LIMIT);
         }
         finally {
             await directory.close();

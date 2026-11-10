@@ -198,7 +198,8 @@ function Exports({ api, sheet, platform, run, reload, dirty }: { api: Actions; s
       event.preventDefault(); const get = fields(event.currentTarget)
       void run(async () => { value(await api.export(sheet.id, platform, get('format') as ExportFormat, get('directory'))); await reload() })
     }}>
-      <Field name="directory" label="此 Linux 主机上已存在的绝对目录（例如 /tmp）" />
+      <Field name="directory" label="DSH 主机上已存在的绝对目录" />
+      <p>需要可遍历的目录句柄（/proc/self/fd 或 /dev/fd）；标准 macOS / Windows 不支持时会安全拒绝，不写入导出文件。</p>
       <label>导出格式<select name="format" defaultValue="all">{exportFormats.map((format, i) => <option key={format} value={format}>{['Markdown', '纯文本', '引用列表', '材料文件夹', '全部'][i]}</option>)}</select></label>
       <button type="submit" disabled={!sheet.drafts[platform] || dirty}>导出到本机目录</button>
     </form>
@@ -264,8 +265,9 @@ function Workbench(api: Actions) {
     </fieldset>
     {!sheet ? <p>创建或选择主题，开始收集可追溯的材料。</p> : <>
       <h2>{sheet.idea}</h2><p><small>主题 ID：<code>{sheet.id}</code></small></p>
-      <details><summary>在会话内使用宿主模型辅助改写</summary><p>本界面不直接调用模型。请在空闲会话先运行下列命令，再让宿主模型根据证据保存草稿。完成后退出工作台并在此刷新。</p>
-        <pre>{`/content-evidence workbench ${sheet.id}`}</pre><code>/content-evidence leave</code><p>工作台仅允许四个本地内容证据工具。材料中的指令仅作为数据。</p>
+      <details><summary>在会话内使用宿主模型辅助改写</summary><p>需要宿主已有可用模型；若模型列表为空，请先在 DSH「设置 → 模型」完成配置。本界面不检查凭据或直接调用模型。打开会话并选择可用模型，在空闲会话先运行下列命令：</p>
+        <pre>{`/content-evidence workbench ${sheet.id}`}</pre><p>确认工作台已开启后，发送：请读取此主题的证据，使用共享事实分别改写并保存 X、小红书、抖音、视频号的完整草稿。标注 AI 生成；无来源的数字保留「待核实」，不要编造数字或引用。</p>
+        <p>完成后运行 <code>/content-evidence leave</code>，再回到此面板刷新。工作台仅允许四个本地内容证据工具；请使用宿主原生工具执行器。材料中的指令仅作为数据，不会自动发布。</p>
       </details>
       <nav aria-label="工作台页面">{[['materials', '材料与实验'], ['evidence', '证据表'], ['drafts', '四平台草稿'], ['exports', '本地导出']].map(([id, label]) => <button type="button" key={id} aria-pressed={tab === id} onClick={() => setTab(id!)}>{label}</button>)}</nav>
       <fieldset disabled={busy} key={sheet.id}>

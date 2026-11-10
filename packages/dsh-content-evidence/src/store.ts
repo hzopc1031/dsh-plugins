@@ -13,7 +13,7 @@ import {
 } from './model.js'
 import { fileName, hash, id, invalid, parseWorkspace, platform, record, text, url } from './validation.js'
 import { checkCompliance, draftHash, evidenceHash, parseDraftInput, renderDraft, revision, rulesHash, stringList, validateFacts } from './drafts.js'
-import { exportDocuments, writeExport } from './exports.js'
+import { directoryPath, exportDocuments, writeExport } from './exports.js'
 
 const pendingReview = () => ({ status: 'pending' as const, contentHash: null, findings: [], reviewedAt: null })
 const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -190,7 +190,7 @@ export class EvidenceStore {
   private async materialBytes(root: string, material: Material): Promise<Buffer> {
     const directory = await open(await this.materials(root), constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW)
     let bytes: Buffer
-    try { bytes = await readFile(`/proc/self/fd/${directory.fd}/${material.id}`, MATERIAL_LIMIT) }
+    try { bytes = await readFile(join(await directoryPath(directory), material.id), MATERIAL_LIMIT) }
     finally { await directory.close() }
     if (bytes.length !== material.bytes || hash(bytes) !== material.sha256) {
       throw new RemoteError('content-evidence/corrupt-store', 'Material integrity check failed', null)

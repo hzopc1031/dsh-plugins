@@ -1,0 +1,4 @@
+- insert:
+    - id: heartbeat
+      name: dsh-heartbeat-monitor
+      config: {}

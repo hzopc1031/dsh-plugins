@@ -8,6 +8,7 @@ const [pack] = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json', '-
 }))
 const expected = [
   'package.json', 'index.js', 'lib/plugin.js', 'lib/plugin.d.ts',
+  'lib/capture.js', 'lib/capture.d.ts',
   'lib/detect.js', 'lib/detect.d.ts', 'lib/html.js', 'lib/html.d.ts', 'lib/notes.js', 'lib/notes.d.ts',
   'cordis.patch.yml', 'locale/en.json', 'locale/zh.json', 'icon.svg',
   'README.md', 'LICENSE', 'CHANGELOG.md',
@@ -21,7 +22,7 @@ assert.match(readFileSync('cordis.patch.yml', 'utf8'), /id: html-deck-export\s+n
 for (const hook of ['preinstall', 'install', 'postinstall', 'prepare', 'prepack', 'postpack']) {
   assert.equal(pkg.scripts?.[hook], undefined, `unexpected lifecycle hook: ${hook}`)
 }
-assert.equal(pkg.dependencies, undefined, 'scaffold needs no runtime dependencies')
+assert.deepEqual(pkg.dependencies, { 'puppeteer-core': '24.31.0' }, 'only the pinned core browser driver is needed')
 for (const peer of Object.keys(pkg.peerDependencies)) {
   assert.equal(pkg.peerDependenciesMeta[peer].optional, true)
   assert.ok(pkg.devDependencies[peer], `missing development peer: ${peer}`)

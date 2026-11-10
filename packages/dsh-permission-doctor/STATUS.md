@@ -1,7 +1,9 @@
 # STATUS
 
+本次 0.2.0 优化、验证与推送状态见 [OPTIMIZE_REPORT.md](../../OPTIMIZE_REPORT.md)。下列首版执行记录为历史记录；不表示本次已做桌面验收。
+
 - 包名：`dsh-permission-doctor`
-- 版本：`0.1.0`
+- 版本：`0.2.0`
 - 中文名称：权限拒绝诊断台
 - 命令：`/permission-doctor list [beforeSeq]`、`/permission-doctor show <结果序号>`、`help`
 - 模型工具：无。仅通过命令选择展示，避免自动把审批审计送给模型。

@@ -1,6 +1,6 @@
 {
   "name": "dsh-permission-doctor",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "只读诊断 DeepSeek Harness 工具拒绝与未弹审批的证据",
   "type": "module",
   "main": "index.js",

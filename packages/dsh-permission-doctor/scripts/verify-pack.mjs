@@ -12,7 +12,7 @@ assert.deepEqual(files, [
   'locale/en.json', 'locale/zh.json', 'package.json',
 ].sort(), 'package allowlist mismatch')
 assert.equal(pkg.name, 'dsh-permission-doctor')
-assert.equal(pkg.version, '0.1.0')
+assert.equal(pkg.version, '0.2.0')
 assert.equal(pkg.license, 'MIT')
 assert.equal(pkg.dsh.bundle.patch, './cordis.patch.yml')
 assert.match(readFileSync('cordis.patch.yml', 'utf8'), /id: permission-doctor\s+name: dsh-permission-doctor/)

@@ -22,6 +22,24 @@ function agent(id = 's1') {
   return { session }
 }
 const signal = new AbortController().signal
+
+test('incremental call-time permission snapshots preserve previous policy and see new overrides',async()=>{
+  const f=fake(), a=agent(), pre=f.listeners.get('tools/pre-execute'), result=f.listeners.get('tools/result')
+  let last
+  for(let i=0;i<3;i++) {
+    if(i===2) a.session.append('approval/policy',{policy:'never'})
+    const callId='cached-'+i,token=Symbol(callId),exec={callId,token,name:'fixture',agent:a,arguments:{}}
+    a.session.append('tool/call',{callId,name:'fixture',arguments:'{}'})
+    await pre(exec,async()=>({kind:'allow'}))
+    result(exec,{isError:true,error:new Error('fixture')})
+    last=a.session.append('tool/result',{message:{toolCallId:callId,isError:true,content:[]}})
+    const shown=await f.command.handler({agent:a,rawInput:'show '+last,signal})
+    assert.equal(shown.kind,'success')
+    assert.ok(shown.text.includes('调用时审批策略：'+(i===2?'never':'ask')))
+  }
+  const again=await f.command.handler({agent:a,rawInput:'show '+last,signal})
+  assert.match(again.text,/调用时审批策略：never/)
+})
 test('cancelled direct command does not query or read evidence', async () => {
   const f = fake()
   const controller = new AbortController(); controller.abort()

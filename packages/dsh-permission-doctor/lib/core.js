@@ -74,6 +74,14 @@ export function collectCalls(events, live = [], cwd) {
     let state = emptyPermissions(cwd);
     const pending = new Map();
     const asks = [];
+    const asksById = new Map();
+    const asksByCall = new Map();
+    const liveByCall = new Map();
+    for (const observation of live) {
+        const entries = liveByCall.get(observation.callId) ?? [];
+        entries.push(observation);
+        liveByCall.set(observation.callId, entries);
+    }
     const calls = [];
     const globalIssues = [];
     let previous = -1;
@@ -91,13 +99,16 @@ export function collectCalls(events, live = [], cwd) {
         }
         else if (e.type === 'approval/asked') {
             const id = str(d.id);
-            if (asks.some(a => a.id === id))
+            if (asksById.has(id))
                 globalIssues.push('审批请求 ID 重复');
-            asks.push({ id, callId: str(d.callId), toolName: str(d.toolName), reason: str(d.reason),
-                askedSeq: e.seq, decidedSeq: null, outcome: null, policy: state.approval });
+            const ask = { id, callId: str(d.callId), toolName: str(d.toolName), reason: str(d.reason),
+                askedSeq: e.seq, decidedSeq: null, outcome: null, policy: state.approval };
+            asks.push(ask);
+            asksById.set(id, [...(asksById.get(id) ?? []), ask]);
+            asksByCall.set(ask.callId, [...(asksByCall.get(ask.callId) ?? []), ask]);
         }
         else if (e.type === 'approval/decided') {
-            const matches = asks.filter(a => a.id && a.id === d.id);
+            const matches = str(d.id) ? asksById.get(str(d.id)) ?? [] : [];
             if (matches.length !== 1 || matches[0].decidedSeq !== null)
                 globalIssues.push('审批决定缺少唯一的 asked 或重复决定');
             else {
@@ -112,9 +123,9 @@ export function collectCalls(events, live = [], cwd) {
                 continue;
             const start = pending.get(id), name = start?.name || str(d.name) || '未知工具';
             const lo = start?.event.seq ?? -1;
-            const observations = live.filter(o => o.callId === id && o.name === name && o.anchor > lo && o.anchor <= e.seq);
+            const observations = (liveByCall.get(id) ?? []).filter(o => o.name === name && o.anchor > lo && o.anchor <= e.seq);
             const observed = observations.length === 1 ? observations[0] : undefined;
-            const approvalRecords = asks.filter(a => a.callId === id && a.toolName === name && a.askedSeq > lo && a.askedSeq < e.seq).map(({ callId: _c, toolName: _t, ...a }) => ({ ...a }));
+            const approvalRecords = (asksByCall.get(id) ?? []).filter(a => a.toolName === name && a.askedSeq > lo && a.askedSeq < e.seq).map(({ callId: _c, toolName: _t, ...a }) => ({ ...a }));
             const error = obj(d.error);
             const content = textContent(m.content);
             const isError = m.isError === true;

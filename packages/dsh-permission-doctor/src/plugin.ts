@@ -24,13 +24,23 @@ export const HELP = [
 export function apply(ctx: Context): void {
   let disposed = false
   let observations = new WeakMap<Session, LiveObservation[]>()
+  const permissionCache = new WeakMap<Session, { length: number; tail: unknown; value: Permissions }>()
+  const callCache = new WeakMap<Session, { events: readonly unknown[]; lastLive: unknown; calls: ReturnType<typeof collectCalls> }>()
   const starts = new WeakMap<ToolExecutionToken, { permissions: Permissions; time: number }>()
   ctx.on('tools/pre-execute', async (exec, next) => {
     const session = exec.agent?.session
     if (session && !disposed) {
       try {
         // Read getters only; a diagnostic snapshot failure must never affect tool policy.
-        const permissions = permissionsAt(session.snapshotEvents(), session.header.cwd)
+        const events = session.snapshotEvents(), cached = permissionCache.get(session)
+        const appendOnly = cached && events.length >= cached.length && events[cached.length - 1] === cached.tail
+        const historical = appendOnly ? { ...cached.value } : permissionsAt([], session.header.cwd)
+        const suffix = appendOnly ? events.slice(cached.length) : events
+        // permissionsAt uses only supplied events; retain prior facts for keys absent in the suffix.
+        const delta = permissionsAt(suffix)
+        for (const key of ['preset', 'sandbox', 'approval'] as const) if (suffix.some(e => e.type === ({ preset: 'permission/preset', sandbox: 'sandbox/mode', approval: 'approval/policy' } as const)[key])) historical[key] = delta[key]
+        permissionCache.set(session, { length: events.length, tail: events.at(-1), value: historical })
+        const permissions = { ...historical }
         try {
           const service = ctx.get('approval')
           if (service) permissions.approval = { value: service.overrideOf(session) ?? service.config.policy ?? 'ask', source: 'tools/pre-execute：approval.overrideOf/config.policy' }
@@ -84,7 +94,11 @@ export function apply(ctx: Context): void {
         const query = ctx.get('sessionQuery')
         const events = query ? (await query.readSession(session.id)).events : session.snapshotEvents()
         if (signal.aborted || disposed) return { kind: 'error', text: '诊断已取消或插件已停止。' }
-        const calls = collectCalls(events, observations.get(session), session.header.cwd)
+        const live = observations.get(session) ?? [], cached = callCache.get(session)
+        const relevant = events.filter(e => e.type !== 'command/run' && e.type !== 'command/done')
+        const same = cached && cached.lastLive === live.at(-1) && cached.events.length === relevant.length && cached.events.every((e, i) => e === relevant[i])
+        const calls = same ? cached.calls : collectCalls(events, live, session.header.cwd)
+        if (!same) callCache.set(session, { events: relevant, lastLive: live.at(-1), calls })
         if (match[1] === 'show') {
           const call = calls.find(c => c.resultSeq === Number(match[2]))
           if (!call || !call.candidate) return { kind: 'error', text: '该结果序号没有失败/疑似失败调用，请先 /permission-doctor list。' }

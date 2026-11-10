@@ -21,7 +21,7 @@ export class HeartbeatController {
             return;
         if (status === 'running') {
             if (!this.runs.has(sessionId))
-                this.runs.set(sessionId, { state: startRun(now(), settings), names: new Map(), progressSent: 0 });
+                this.runs.set(sessionId, { state: startRun(now(), settings), names: new Map(), outcomes: new Map(), progressSent: 0 });
             return;
         }
         const run = this.runs.get(sessionId);
@@ -38,11 +38,20 @@ export class HeartbeatController {
         const run = this.runs.get(sessionId);
         if (!run)
             return;
-        const activity = activityOf(event, run.names);
+        const activity = activityOf(event, run.names, run.outcomes);
         if (!activity)
             return;
         for (const alert of recordActivity(run.state, activity, this.deps.now(), this.deps.settings))
             this.deps.deliver(sessionId, alert);
+    }
+    /** Join live canonical facts once, when the matching native/PTC log result commits. */
+    result(sessionId, callId, outcome) {
+        const run = this.runs.get(sessionId);
+        if (!run)
+            return;
+        run.outcomes.set(callId, outcome);
+        if (run.outcomes.size > 1000)
+            run.outcomes.delete(run.outcomes.keys().next().value);
     }
     /** Advance every active run to the current clock. */
     tick() {

@@ -4,7 +4,7 @@
  * ticks, and receives alerts through `deliver`.
  */
 import { endRun, recordActivity, renderProgress, startRun, tick, type Alert, type RunState, type Settings } from './core.js'
-import { activityOf, type LogEvent } from './events.js'
+import { activityOf, type LogEvent, type Outcome } from './events.js'
 
 export interface ControllerDeps {
   readonly settings: Settings
@@ -16,6 +16,7 @@ export interface ControllerDeps {
 interface Tracked {
   state: RunState
   names: Map<string, string>
+  outcomes: Map<string, Outcome>
   progressSent: number
 }
 
@@ -33,7 +34,7 @@ export class HeartbeatController {
     const { settings, now } = this.deps
     if (!settings.enabled) return
     if (status === 'running') {
-      if (!this.runs.has(sessionId)) this.runs.set(sessionId, { state: startRun(now(), settings), names: new Map(), progressSent: 0 })
+      if (!this.runs.has(sessionId)) this.runs.set(sessionId, { state: startRun(now(), settings), names: new Map(), outcomes: new Map(), progressSent: 0 })
       return
     }
     const run = this.runs.get(sessionId)
@@ -48,9 +49,17 @@ export class HeartbeatController {
   event(sessionId: string, event: LogEvent): void {
     const run = this.runs.get(sessionId)
     if (!run) return
-    const activity = activityOf(event, run.names)
+    const activity = activityOf(event, run.names, run.outcomes)
     if (!activity) return
     for (const alert of recordActivity(run.state, activity, this.deps.now(), this.deps.settings)) this.deps.deliver(sessionId, alert)
+  }
+
+  /** Join live canonical facts once, when the matching native/PTC log result commits. */
+  result(sessionId: string, callId: string, outcome: Outcome): void {
+    const run = this.runs.get(sessionId)
+    if (!run) return
+    run.outcomes.set(callId, outcome)
+    if (run.outcomes.size > 1000) run.outcomes.delete(run.outcomes.keys().next().value!)
   }
 
   /** Advance every active run to the current clock. */

@@ -1,5 +1,6 @@
 /** Pure mapping from DSH session-log events to heartbeat activities. */
 import { argumentsKey, clip, type Activity } from './core.js'
+export interface Outcome { name: string; failure?: string }
 
 /** Minimal structural view of a `SessionEvent` (see dsh-session `SessionEventMap`). */
 export interface LogEvent {
@@ -20,27 +21,32 @@ function contentText(content: unknown): string {
  * updated on `tool/call` so the matching `tool/result` can be attributed.
  * Returns undefined for events that are not heartbeat-relevant.
  */
-export function activityOf(event: LogEvent, names: Map<string, string>): Activity | undefined {
+export function activityOf(event: LogEvent, names: Map<string, string>, outcomes = new Map<string, Outcome>()): Activity | undefined {
   const d = obj(event.data)
   switch (event.type) {
     case 'step/start':
       return { kind: 'step' }
     case 'assistant/message':
       return { kind: 'model' }
-    case 'tool/call': {
-      const callId = str(d.callId), name = str(d.name) || '未知工具'
+    case 'tool/call':
+    case 'tool/ptc-dispatch-start': {
+      const callId = str(d.subCallId) || str(d.callId), name = str(d.name) || '未知工具'
       names.set(callId, name)
-      return { kind: 'tool-call', callId, name, argsKey: argumentsKey(str(d.arguments)) }
+      return { kind: 'tool-call', callId, name, argsKey: argumentsKey(typeof d.arguments === 'string' ? d.arguments : JSON.stringify(d.arguments) ?? '') }
     }
-    case 'tool/result': {
-      const message = obj(d.message)
-      const callId = str(message.toolCallId)
-      const name = names.get(callId) ?? '未知工具'
+    case 'tool/result':
+    case 'tool/ptc-dispatch': {
+      const message = event.type === 'tool/result' ? obj(d.message) : d
+      const callId = str(message.toolCallId) || str(d.subCallId)
+      const observed = outcomes.get(callId)
+      outcomes.delete(callId)
+      const name = names.get(callId) ?? observed?.name ?? (str(d.name) || '未知工具')
       names.delete(callId)
-      const isError = message.isError === true
+      const canonical = observed?.name === name ? observed.failure : undefined
+      const isError = message.isError === true || canonical !== undefined
       if (!isError) return { kind: 'tool-result', callId, name, isError: false }
       const error = obj(d.error)
-      const reason = str(error.reason) || contentText(message.content)
+      const reason = canonical || str(error.reason) || contentText(message.content)
       const code = str(error.code) || str(error.name)
       // Key on code + the start of the message so "same error" survives varying timestamps at the end.
       return { kind: 'tool-result', callId, name, isError: true, errorKey: `${code}:${clip(reason, 80)}`, errorText: `${name}：${clip(reason || code || '失败')}` }

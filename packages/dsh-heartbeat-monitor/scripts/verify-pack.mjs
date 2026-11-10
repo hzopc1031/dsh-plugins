@@ -3,7 +3,7 @@ import { execFileSync } from 'node:child_process'
 const out = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], { encoding: 'utf8', shell: process.platform === 'win32' }))
 const files = out[0].files.map(f => f.path).sort()
 const expected = ['CHANGELOG.md', 'LICENSE', 'README.md', 'cordis.patch.yml', 'icon.svg', 'index.d.ts', 'index.js',
-  'lib/controller.d.ts', 'lib/controller.js', 'lib/core.d.ts', 'lib/core.js', 'lib/events.d.ts', 'lib/events.js',
+  'lib/controller.d.ts', 'lib/controller.js', 'lib/core.d.ts', 'lib/bash.js', 'lib/bash.d.ts', 'lib/core.js', 'lib/events.d.ts', 'lib/events.js',
   'lib/notify.d.ts', 'lib/notify.js', 'lib/plugin.d.ts', 'lib/plugin.js', 'locale/en.json', 'locale/zh.json', 'package.json'].sort()
 const bad = files.filter(f => /(^|\/)(test|src|scripts|node_modules)\/|\.env|\.npmrc|\.tgz$|\.map$|token|secret/i.test(f))
 if (JSON.stringify(files) !== JSON.stringify(expected) || bad.length) {

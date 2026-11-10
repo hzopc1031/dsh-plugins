@@ -3,6 +3,7 @@ import { CommandDefinitionId } from '@deepseek-ai/dsh-commands';
 import { defaults, resolveSettings } from './core.js';
 import { HeartbeatController } from './controller.js';
 import { systemNotify } from './notify.js';
+import { bashFailure } from './bash.js';
 export const name = 'heartbeat';
 export const inject = ['commands'];
 export const Config = z.object({
@@ -67,6 +68,14 @@ export function apply(ctx, input = {}) {
         queues.set(sessionId, job);
     };
     const controller = new HeartbeatController({ settings, now: Date.now, deliver });
+    ctx.inject(['tools'], child => {
+        child.on('tools/result', (exec, result) => {
+            const failure = !result.isError ? bashFailure(exec.name, result.value) : undefined;
+            if (!disposed && exec.agent && failure)
+                controller.result(exec.agent.session.id, exec.callId, { name: exec.name, failure });
+            return undefined;
+        });
+    });
     const syncTimer = () => {
         if (controller.active && !timer && !disposed) {
             timer = setInterval(() => { try {

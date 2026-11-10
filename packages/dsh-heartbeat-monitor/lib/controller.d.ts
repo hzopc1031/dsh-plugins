@@ -4,7 +4,7 @@
  * ticks, and receives alerts through `deliver`.
  */
 import { type Alert, type Settings } from './core.js';
-import { type LogEvent } from './events.js';
+import { type LogEvent, type Outcome } from './events.js';
 export interface ControllerDeps {
     readonly settings: Settings;
     readonly now: () => number;
@@ -22,6 +22,8 @@ export declare class HeartbeatController {
     status(sessionId: string, status: 'running' | 'idle'): void;
     /** Feed one appended session-log event. */
     event(sessionId: string, event: LogEvent): void;
+    /** Join live canonical facts once, when the matching native/PTC log result commits. */
+    result(sessionId: string, callId: string, outcome: Outcome): void;
     /** Advance every active run to the current clock. */
     tick(): void;
     /** On-demand card for `/heartbeat`; undefined when the session is not running. */

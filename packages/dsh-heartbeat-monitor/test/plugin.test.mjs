@@ -6,6 +6,7 @@ function fakeCtx() {
   const listeners = new Map(), disposers = [], executed = [], warnings = []
   let command
   const ctx = {
+    inject: (_dependencies, callback) => callback(ctx),
     logger: { warn: m => warnings.push(m) },
     on: (event, fn) => { listeners.set(event, fn); return () => {} },
     effect: fn => { const d = fn(); disposers.push(d); return d },
@@ -23,6 +24,19 @@ function fakeCtx() {
 }
 const agent = (id, origin) => ({ id, session: { id, header: { origin } } })
 const flush = () => new Promise(r => setTimeout(r, 5))
+
+test('live canonical failure is counted at native/PTC log commitment, without persisting output text', async()=>{
+  const f=fakeCtx(), a=agent('s1');apply(f.ctx,{})
+  f.listeners.get('agent/status')({agent:a,status:'running'})
+  const append=e=>f.listeners.get('session/event')(a.session,e)
+  append({type:'tool/ptc-dispatch-start',data:{subCallId:'root:ptc:1',name:'bash',arguments:{command:'x'}}})
+  f.listeners.get('tools/result')({agent:a,callId:'root:ptc:1',name:'bash'},{isError:false,value:{kind:'foreground',cwd:'C:/project',exitCode:2,timedOut:false,aborted:false,stdout:{text:'SECRET'}}})
+  assert.match((await f.command.handler({agent:a,rawInput:''})).text,/失败 0 次/)
+  append({type:'tool/ptc-dispatch',data:{subCallId:'root:ptc:1',name:'bash',isError:false,content:[]}})
+  const text=(await f.command.handler({agent:a,rawInput:''})).text
+  assert.match(text,/失败 1 次/);assert.equal(text.includes('SECRET'),false)
+  for(const dispose of f.disposers) await dispose?.()
+})
 
 test('plugin metadata and schema defaults', () => {
   assert.equal(name, 'heartbeat')

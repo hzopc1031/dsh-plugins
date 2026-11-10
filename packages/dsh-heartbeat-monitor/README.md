@@ -1,5 +1,9 @@
 # dsh-heartbeat-monitor · 任务心跳
 
+当前源码版本 **0.2.0**（尚未发布本次版本到 npm）。心跳观察 tools/result 中经过校验的 bash foreground canonical value，非零退出、signal、超时、取消、sandbox 拒绝可计为失败，即使 isError=false。只缓存简短失败分类，不保存 canonical 输出正文；在匹配的 native/PTC 日志结果入账时计数一次。后台启动/提升并非进程失败，输出中的伪造退出码不参与判断。PTC 通过 subCallId 配对，run_code 外层与子调用分别计数。历史日志缺少 canonical value 时不从输出猜测进程状态。
+
+本次只完成 Windows 上的 typecheck、单元/rc.5 headless 集成、browser factory 的 jsdom 检查及 verify-pack；未安装到真实 DSH、未做 Electron 目视验收。最新批次记录见仓库 [OPTIMIZE_REPORT.md](../../OPTIMIZE_REPORT.md)。
+
 桌面 DSH 跑长任务（几十分钟）时不吭声，你分不清它是在干活、卡住了，还是在失败重试。这个插件只做一件事：**一轮任务运行期间定时报个平安，发现异常就提醒你**。
 
 - **定时进度卡**：每 N 分钟（默认 5）在对话里出一张卡，写明已运行多久、调用了多少次工具（失败几次、模型重试几次）、最近一次活动是什么、当前哪个工具还在执行、执行了多久。
@@ -118,7 +122,7 @@ dsh plugin --profile desktop remove dsh-heartbeat-monitor
 
 ## 测试情况
 
-- `npm run typecheck`、`npm test`（25 项全部通过）、`npm run verify-pack`。
+- `npm run typecheck`、`npm test`（首版历史记录为 25 项；本批次见 OPTIMIZE_REPORT.md）、`npm run verify-pack`。
 - 纯函数规则用假时钟测试，覆盖：定时进度、跳过错过的周期、静默超时及重新计时、正在执行的工具、重复工具（含 K/2K 节流和只比较工具名）、重复错误（含成功后重置）、模型重试、轮次结束后停止、配置校验、脱敏。
 - 集成测试使用 npm 上真实的 rc.5 运行时包（`@deepseek-ai/cordis`、`dsh-session` 的 SessionStore、`dsh-commands` 的 CommandRuntime）：确认真实会话日志里写入了 `command/run`、`command/done`；用 `node:test` 的假计时器模拟 12 分钟，确认进度卡、静默警告、结束卡都会出现，并且结束后不再出卡。
 - **尚未验证：** 在真实桌面 DSH 里加载、卡片的实际显示效果、Windows 系统通知是否弹出、macOS 和 Linux。
@@ -126,3 +130,18 @@ dsh plugin --profile desktop remove dsh-heartbeat-monitor
 ## English
 
 Heartbeat for long DSH turns: a progress card every N minutes (elapsed time, tool calls, last activity), a warning after M minutes of silence, and a warning when the same tool call or the same error repeats K times. Optional OS notifications; `/heartbeat` shows the current status on demand. Cards are rendered as `/heartbeat` command results because DSH has no plugin API for injecting chat messages. Install from npm with `dsh plugin --profile desktop add dsh-heartbeat-monitor` (or type `dsh-heartbeat-monitor` in Plugins → Add plugin), or from git with `github:hzopc1031/dsh-plugins#main&path:/packages/dsh-heartbeat-monitor`, then fully restart the desktop app. The npm name `dsh-heartbeat` belongs to an unrelated package. MIT; the icon is original.
+
+## 本版本开发校验
+
+在本包目录独立执行，使用本包 lockfile（根目录无 workspaces）：
+
+```powershell
+npm ci --ignore-scripts
+npm run typecheck
+npm test
+npm run verify-pack
+```
+
+`npm test` 会重建需提交的 lib/。以上通过不等于 Electron 桌面通过；真实截图、剪贴板、焦点/布局及桌面安装仍需人工验收。
+
+本次接口依据（固定 rc.5）：[packages/shell/tool-bash/src/index.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/shell/tool-bash/src/index.ts)、[docs/subsystems/tools.md](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/docs/subsystems/tools.md)。

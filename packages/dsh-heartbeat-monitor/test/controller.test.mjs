@@ -15,6 +15,22 @@ function setup(overrides = {}) {
 const call = (id, name, args = '{}') => ({ type: 'tool/call', data: { turn: 1, step: 1, callId: id, name, arguments: args } })
 const result = (id, isError = false, extra = {}) => ({ type: 'tool/result', data: { turn: 1, step: 1, message: { role: 'tool', toolCallId: id, isError, content: [{ type: 'text', text: 'ERR: disk full' }] }, ...extra } })
 
+test('native and PTC canonical failures join by exact call ID once; transport text stays non-authoritative', () => {
+  const { c, out } = setup({repeatThreshold:2})
+  c.status('s','running')
+  c.event('s',call('a','bash'))
+  c.result('s','a',{name:'bash',failure:'bash exitCode=2'})
+  c.event('s',result('a',false))
+  c.event('s',{type:'tool/ptc-dispatch-start',data:{callId:'outer',subCallId:'outer:ptc:1',name:'bash',arguments:{command:'x'}}})
+  c.result('s','outer:ptc:1',{name:'bash',failure:'bash exitCode=2'})
+  c.event('s',{type:'tool/ptc-dispatch',data:{callId:'outer',subCallId:'outer:ptc:1',name:'bash',isError:false,content:[]}})
+  assert.match(c.snapshot('s').text,/失败 2 次/)
+  assert.equal(out.filter(([,kind])=>kind==='repeat-error').length,1)
+  c.event('s',call('good','bash'))
+  c.event('s',result('good',false))
+  assert.match(c.snapshot('s').text,/失败 2 次/)
+})
+
 test('a 42-minute run gets progress cards, a silence warning and a closing card', () => {
   const { c, out, at } = setup()
   c.status('s1', 'running')

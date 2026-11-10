@@ -40,7 +40,7 @@ async function setup(t) {
   set('window', dom.window); set('document', dom.window.document); set('navigator', dom.window.navigator)
   set('File', dom.window.File); set('IS_REACT_ACT_ENVIRONMENT', true)
   let response = { status: 200, headers: { get: () => 'image/png' }, blob: async () => new dom.window.Blob(['png'], { type: 'image/png' }) }
-  let fetches = 0, calls = [], refused = false, command
+  let fetches = 0, calls = [], refused = false, command, delay=0, intakeTimer
   set('fetch', async (address, opts) => {
     fetches++; assert.equal(address, url); assert.equal(opts.credentials, 'omit'); assert.equal(opts.redirect, 'error')
     return response
@@ -75,9 +75,11 @@ async function setup(t) {
   const renderAsync = async () => { await act(async () => render()) }
   input.addEventListener('change', () => {
     if (refused) return
-    state = { ...state, attachmentIds: [...state.attachmentIds, 'new-image'] }; render()
+    const accept=()=>{state = { ...state, attachmentIds: [...state.attachmentIds, 'new-image'] }; render()}
+    if(delay) intakeTimer=setTimeout(accept,delay); else accept()
   })
   t.after(async () => {
+    clearTimeout(intakeTimer)
     await act(async () => root.unmount()); dom.window.close()
     for (const [key, d] of saved) { if (d) Object.defineProperty(globalThis, key, d); else delete globalThis[key] }
   })
@@ -86,12 +88,19 @@ async function setup(t) {
     exports, input, props, calls,
     transferred: () => transferred, fetches: () => fetches,
     response: value => { response = value }, command: value => { command = value }, refuse: () => { refused = true },
+    delay: value => {delay=value},
     state: async value => { state = { ...state, ...value }; await renderAsync() },
     session: async value => { session = { ...session, ...value }; await renderAsync() },
     render: renderAsync,
     click: async (ms = 140) => {
       await act(async () => { document.querySelector('button').click() })
-      await act(async () => { await wait(ms) })
+      for(let elapsed=0;elapsed<ms;elapsed+=50) await act(async () => { await wait(Math.min(50,ms-elapsed)) })
+    },
+    press: async (label, ms = 140) => {
+      const button = [...document.querySelectorAll('button')].find(e => e.textContent === label)
+      assert.ok(button, 'missing button ' + label)
+      await act(async () => { button.click() })
+      for(let elapsed=0;elapsed<ms;elapsed+=50) await act(async () => { await wait(Math.min(50,ms-elapsed)) })
     },
   }
 }
@@ -104,13 +113,38 @@ test('factory registers only left input slot and retains RPC context', async t =
   }, remote: { commands: { execute() {} } } })
   assert.equal(options.id, 'dsh-snip-attach'); assert.equal(typeof component, 'function')
 })
+
+test('slow file intake gets a bounded wait and an honest verification notice',async t=>{
+  const f=await setup(t); f.delay(400)
+  await f.click()
+  assert.equal(f.transferred(), undefined)
+  assert.match(document.body.textContent,/请确认后再加入待发送附件/)
+  await f.press('确认加入', 650)
+  assert.match(document.body.textContent,/请核对待发送图片/)
+  assert.doesNotMatch(document.body.textContent,/截图已加入/)
+})
+
+test('unrelated attachment growth is never reported as confirmed screenshot success',async t=>{
+  const f=await setup(t);f.refuse()
+  await f.click()
+  assert.equal(f.transferred(), undefined)
+  await f.press('确认加入', 2200)
+  await f.state({attachmentIds:['unrelated-image']})
+  await act(async()=>{await wait(100)})
+  assert.doesNotMatch(document.body.textContent,/截图已加入/)
+  assert.match(document.body.textContent,/图片已在剪贴板，可按 Ctrl\+V/)
+})
 test('camera executes scoped command, blob becomes PNG File, correct composer receives change and success toast', async t => {
   const f = await setup(t)
   await f.click()
   assert.deepEqual(JSON.parse(JSON.stringify(f.calls)), [['session-A', '/screenshot', []]])
   assert.equal(f.fetches(), 1)
+  assert.equal(f.transferred(), undefined, 'preview must not inject yet')
+  assert.match(document.body.textContent, /请确认后再加入待发送附件/)
+  await f.press('确认加入')
   assert.equal(f.transferred()[0].type, 'image/png'); assert.match(f.transferred()[0].name, /^screenshot-\d+\.png$/)
-  assert.match(document.body.textContent, /截图已加入待发送消息/)
+  assert.match(document.body.textContent, /已提交截图，请核对待发送图片/)
+  assert.doesNotMatch(document.body.textContent, /截图已加入待发送消息/)
   assert.equal(document.getElementById('unrelated').files.length, 0)
 })
 test('busy, claimed, removed and subagent inputs disable capture', async t => {
@@ -149,8 +183,11 @@ test('DataTransfer failure and intake rejection both show Ctrl+V fallback withou
   const f = await setup(t)
   const transfer = window.DataTransfer
   window.DataTransfer = undefined
-  await f.click(); assert.match(document.body.textContent, /图片已在剪贴板，可按 Ctrl\+V/)
-  window.DataTransfer = transfer; f.refuse(); await f.click()
+  await f.click()
+  assert.equal(f.transferred(), undefined)
+  await f.press('确认加入')
+  assert.match(document.body.textContent, /图片已在剪贴板，可按 Ctrl\+V/)
+  window.DataTransfer = transfer; f.refuse(); await f.click(); await f.press('确认加入', 2200)
   assert.match(document.body.textContent, /图片已在剪贴板，可按 Ctrl\+V/)
   assert.doesNotMatch(document.body.textContent, /截图已加入/)
 })
@@ -172,4 +209,23 @@ test('session changes while fetching never inject into the new composer', async 
   await act(async () => { pending.resolve(new window.Blob(['png'])); await wait(120) })
   assert.equal(f.transferred(), undefined)
   assert.equal(document.querySelector('button').disabled, false)
+})
+
+test('cancelling preview does not inject the screenshot', async t => {
+  const f = await setup(t)
+  await f.click()
+  assert.match(document.body.textContent, /请确认后再加入待发送附件/)
+  await f.press('取消')
+  assert.equal(f.transferred(), undefined)
+  assert.match(document.body.textContent, /已取消加入附件/)
+  assert.equal([...document.querySelectorAll('button')].some(b => b.textContent === '确认加入'), false)
+})
+
+test('session change after preview clears the confirmation UI and never injects', async t => {
+  const f = await setup(t)
+  await f.click()
+  assert.ok([...document.querySelectorAll('button')].some(b => b.textContent === '确认加入'))
+  f.props.sessionId = 'session-B'; await f.render()
+  assert.equal(f.transferred(), undefined)
+  assert.equal([...document.querySelectorAll('button')].some(b => b.textContent === '确认加入'), false)
 })

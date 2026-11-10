@@ -1,6 +1,6 @@
 {
   "name": "dsh-snip-attach",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Windows 框选截图后自动加入 DSH rc.5 待发送附件",
   "type": "module",
   "main": "index.js",

@@ -12,18 +12,46 @@ type Props = PropsRuntime<'conversation.input.left'>
 export type Execute = Context['remote']['commands']['execute']
 const boot = (): unknown => (window as unknown as { __DSH_BOOT__?: unknown }).__DSH_BOOT__
 
+function previewUrl(blob: Blob): string {
+  try {
+    if (typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function') return URL.createObjectURL(blob)
+  } catch { /* thumbnail is optional; confirm can still proceed */ }
+  return ''
+}
+function releaseUrl(url: string): void {
+  try {
+    if (url && typeof URL !== 'undefined' && typeof URL.revokeObjectURL === 'function') URL.revokeObjectURL(url)
+  } catch { /* ignore */ }
+}
+
+interface Preview {
+  url: string
+  file: File
+  fileInput: HTMLInputElement
+}
+
 export function SnipButton({ sessionId, useInput, useSession, execute }: Props & { execute: Execute }) {
   const input = useInput(value => value)
   const unavailable = useSession(value => value.removed || value.subagent !== null)
   const live = useRef(input)
   live.current = input
+  const available = useRef(!unavailable)
+  available.current = !unavailable
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState('')
+  const [preview, setPreview] = useState<Preview | null>(null)
   const pending = useRef<AbortController | null>(null)
+  const previewRef = useRef<Preview | null>(null)
+  const clearPreview = (): void => {
+    if (previewRef.current) releaseUrl(previewRef.current.url)
+    previewRef.current = null
+    setPreview(null)
+  }
   useEffect(() => {
     setBusy(false)
     setNotice('')
-    return () => { pending.current?.abort(); pending.current = null }
+    clearPreview()
+    return () => { pending.current?.abort(); pending.current = null; clearPreview() }
   }, [sessionId])
   useEffect(() => {
     if (!notice) return
@@ -32,13 +60,13 @@ export function SnipButton({ sessionId, useInput, useSession, execute }: Props &
   }, [notice])
   const allowed = (): boolean => {
     const state = live.current
-    return !unavailable && state.phase === 'plain'
+    return available.current && state.phase === 'plain'
   }
   let supported = true
   try { requireDesktop(boot(), window.location) } catch { supported = false }
 
   async function take(button: HTMLButtonElement): Promise<void> {
-    if (pending.current || !allowed()) return
+    if (pending.current || previewRef.current || !allowed()) return
     const controller = new AbortController()
     pending.current = controller
     setBusy(true)
@@ -62,14 +90,11 @@ export function SnipButton({ sessionId, useInput, useSession, execute }: Props &
       requireDesktop(boot(), window.location)
       if (controller.signal.aborted) return
       if (!allowed() || fileInputFor(button) !== fileInput) throw new Error(FALLBACK)
-      const before = new Set(live.current.attachmentIds)
       const file = new File([blob], `screenshot-${Date.now()}.png`, { type: 'image/png' })
-      injectFile(fileInput, file)
-      // onChange may reject silently (phase/image limits). Confirm the live input grew.
-      await new Promise<void>(resolve => { setTimeout(resolve, 100) })
-      if (controller.signal.aborted) return
-      if (!live.current.attachmentIds.some(id => !before.has(id))) throw new Error(FALLBACK)
-      setNotice('截图已加入待发送消息')
+      const next = { url: previewUrl(blob), file, fileInput }
+      previewRef.current = next
+      setPreview(next)
+      setNotice('请预览截图，确认后再加入待发送附件。')
     } catch (error: unknown) {
       if (!controller.signal.aborted) setNotice(captured ? FALLBACK : error instanceof Error ? error.message : '截图失败，请重试。')
       else if (pending.current === controller) setNotice('截图等待超时，请重试。')
@@ -79,16 +104,59 @@ export function SnipButton({ sessionId, useInput, useSession, execute }: Props &
     }
   }
 
+  async function confirm(): Promise<void> {
+    const current = previewRef.current
+    if (!current || pending.current) return
+    const controller = new AbortController()
+    pending.current = controller
+    setBusy(true)
+    try {
+      requireDesktop(boot(), window.location)
+      if (!allowed() || !current.fileInput.isConnected) throw new Error(FALLBACK)
+      const before = new Set(live.current.attachmentIds)
+      injectFile(current.fileInput, current.file)
+      const deadline = Date.now() + 2000
+      while (!controller.signal.aborted && allowed() && Date.now() < deadline
+        && !live.current.attachmentIds.some(id => !before.has(id))) {
+        await abortable(new Promise<void>(resolve => { setTimeout(resolve, 50) }), controller.signal)
+      }
+      if (controller.signal.aborted) return
+      if (!allowed() || !current.fileInput.isConnected || !live.current.attachmentIds.some(id => !before.has(id))) throw new Error(FALLBACK)
+      setNotice('已提交截图，请核对待发送图片；若未加入，可按 Ctrl+V。')
+      clearPreview()
+    } catch (error: unknown) {
+      // Injection already happens after a captured preview; raw DataTransfer/DOM errors must not hide the Ctrl+V fallback.
+      if (!controller.signal.aborted) setNotice(FALLBACK)
+    } finally {
+      if (pending.current === controller) { pending.current = null; setBusy(false) }
+    }
+  }
+
+  function cancel(): void {
+    if (pending.current) pending.current.abort()
+    clearPreview()
+    setBusy(false)
+    setNotice('已取消加入附件。')
+  }
+
   return <span style={{ position: 'relative', display: 'inline-flex' }}>
     <button type="button" aria-label="截图并添加附件" title="截图并添加附件（Windows）"
-      disabled={!supported || busy || !allowed()} onMouseDown={event => event.preventDefault()}
+      disabled={!supported || busy || !!preview || !allowed()} onMouseDown={event => event.preventDefault()}
       onClick={event => { void take(event.currentTarget) }}
       style={{ display: 'inline-flex', padding: 6, border: 0, borderRadius: 6, color: 'inherit', background: 'transparent', cursor: 'pointer' }}>
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
         <path d="M8 6l1.5-3h5L16 6h4a2 2 0 012 2v11a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2z" /><circle cx="12" cy="13" r="4" />
       </svg>
     </button>
-    {notice && <span role="status" aria-live="polite" style={{ position: 'absolute', bottom: '100%', left: 0, zIndex: 30, width: 260, padding: 10, borderRadius: 8, background: 'var(--dsw-static-neutral-100, #eee)', color: 'var(--dsw-static-neutral-900, #222)', boxShadow: '0 2px 12px #0003' }}>{notice}</span>}
+    {(notice || preview) && <span role="status" aria-live="polite" style={{ position: 'absolute', bottom: '100%', left: 0, zIndex: 30, width: 260, padding: 10, borderRadius: 8, background: 'var(--dsw-static-neutral-100, #eee)', color: 'var(--dsw-static-neutral-900, #222)', boxShadow: '0 2px 12px #0003' }}>
+      {preview && <>
+        {preview.url && <img src={preview.url} alt="截图预览" style={{ display: 'block', width: '100%', maxHeight: 160, objectFit: 'contain', marginBottom: 8 }} />}
+        <p style={{ margin: '0 0 8px' }}>请确认后再加入待发送附件。</p>
+        <button type="button" disabled={busy} onClick={() => { void confirm() }}>确认加入</button>{' '}
+        <button type="button" disabled={busy} onClick={cancel}>取消</button>
+      </>}
+      {notice && <p style={{ margin: preview ? '8px 0 0' : 0 }}>{notice}</p>}
+    </span>}
   </span>
 }
 

@@ -84,20 +84,44 @@ function injectFile(input, file) {
 var import_jsx_runtime = require("react/jsx-runtime");
 var inject = ["slots", "remote", "remote.commands"];
 var boot = () => window.__DSH_BOOT__;
+function previewUrl(blob) {
+  try {
+    if (typeof URL !== "undefined" && typeof URL.createObjectURL === "function") return URL.createObjectURL(blob);
+  } catch {
+  }
+  return "";
+}
+function releaseUrl(url) {
+  try {
+    if (url && typeof URL !== "undefined" && typeof URL.revokeObjectURL === "function") URL.revokeObjectURL(url);
+  } catch {
+  }
+}
 function SnipButton({ sessionId, useInput, useSession, execute }) {
   const input = useInput((value) => value);
   const unavailable = useSession((value) => value.removed || value.subagent !== null);
   const live = (0, import_react.useRef)(input);
   live.current = input;
+  const available = (0, import_react.useRef)(!unavailable);
+  available.current = !unavailable;
   const [busy, setBusy] = (0, import_react.useState)(false);
   const [notice, setNotice] = (0, import_react.useState)("");
+  const [preview, setPreview] = (0, import_react.useState)(null);
   const pending = (0, import_react.useRef)(null);
+  const previewRef = (0, import_react.useRef)(null);
+  const clearPreview = () => {
+    if (previewRef.current) releaseUrl(previewRef.current.url);
+    previewRef.current = null;
+    setPreview(null);
+  };
   (0, import_react.useEffect)(() => {
     setBusy(false);
     setNotice("");
+    clearPreview();
     return () => {
       pending.current?.abort();
       pending.current = null;
+      clearPreview();
     };
   }, [sessionId]);
   (0, import_react.useEffect)(() => {
@@ -111,7 +135,7 @@ function SnipButton({ sessionId, useInput, useSession, execute }) {
   }, [notice]);
   const allowed = () => {
     const state = live.current;
-    return !unavailable && state.phase === "plain";
+    return available.current && state.phase === "plain";
   };
   let supported = true;
   try {
@@ -120,7 +144,7 @@ function SnipButton({ sessionId, useInput, useSession, execute }) {
     supported = false;
   }
   async function take(button) {
-    if (pending.current || !allowed()) return;
+    if (pending.current || previewRef.current || !allowed()) return;
     const controller = new AbortController();
     pending.current = controller;
     setBusy(true);
@@ -149,15 +173,11 @@ function SnipButton({ sessionId, useInput, useSession, execute }) {
       requireDesktop(boot(), window.location);
       if (controller.signal.aborted) return;
       if (!allowed() || fileInputFor(button) !== fileInput) throw new Error(FALLBACK);
-      const before = new Set(live.current.attachmentIds);
       const file = new File([blob], `screenshot-${Date.now()}.png`, { type: "image/png" });
-      injectFile(fileInput, file);
-      await new Promise((resolve) => {
-        setTimeout(resolve, 100);
-      });
-      if (controller.signal.aborted) return;
-      if (!live.current.attachmentIds.some((id) => !before.has(id))) throw new Error(FALLBACK);
-      setNotice("\u622A\u56FE\u5DF2\u52A0\u5165\u5F85\u53D1\u9001\u6D88\u606F");
+      const next = { url: previewUrl(blob), file, fileInput };
+      previewRef.current = next;
+      setPreview(next);
+      setNotice("\u8BF7\u9884\u89C8\u622A\u56FE\uFF0C\u786E\u8BA4\u540E\u518D\u52A0\u5165\u5F85\u53D1\u9001\u9644\u4EF6\u3002");
     } catch (error) {
       if (!controller.signal.aborted) setNotice(captured ? FALLBACK : error instanceof Error ? error.message : "\u622A\u56FE\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5\u3002");
       else if (pending.current === controller) setNotice("\u622A\u56FE\u7B49\u5F85\u8D85\u65F6\uFF0C\u8BF7\u91CD\u8BD5\u3002");
@@ -169,6 +189,42 @@ function SnipButton({ sessionId, useInput, useSession, execute }) {
       }
     }
   }
+  async function confirm() {
+    const current = previewRef.current;
+    if (!current || pending.current) return;
+    const controller = new AbortController();
+    pending.current = controller;
+    setBusy(true);
+    try {
+      requireDesktop(boot(), window.location);
+      if (!allowed() || !current.fileInput.isConnected) throw new Error(FALLBACK);
+      const before = new Set(live.current.attachmentIds);
+      injectFile(current.fileInput, current.file);
+      const deadline = Date.now() + 2e3;
+      while (!controller.signal.aborted && allowed() && Date.now() < deadline && !live.current.attachmentIds.some((id) => !before.has(id))) {
+        await abortable(new Promise((resolve) => {
+          setTimeout(resolve, 50);
+        }), controller.signal);
+      }
+      if (controller.signal.aborted) return;
+      if (!allowed() || !current.fileInput.isConnected || !live.current.attachmentIds.some((id) => !before.has(id))) throw new Error(FALLBACK);
+      setNotice("\u5DF2\u63D0\u4EA4\u622A\u56FE\uFF0C\u8BF7\u6838\u5BF9\u5F85\u53D1\u9001\u56FE\u7247\uFF1B\u82E5\u672A\u52A0\u5165\uFF0C\u53EF\u6309 Ctrl+V\u3002");
+      clearPreview();
+    } catch (error) {
+      if (!controller.signal.aborted) setNotice(FALLBACK);
+    } finally {
+      if (pending.current === controller) {
+        pending.current = null;
+        setBusy(false);
+      }
+    }
+  }
+  function cancel() {
+    if (pending.current) pending.current.abort();
+    clearPreview();
+    setBusy(false);
+    setNotice("\u5DF2\u53D6\u6D88\u52A0\u5165\u9644\u4EF6\u3002");
+  }
   return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { style: { position: "relative", display: "inline-flex" }, children: [
     /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
       "button",
@@ -176,7 +232,7 @@ function SnipButton({ sessionId, useInput, useSession, execute }) {
         type: "button",
         "aria-label": "\u622A\u56FE\u5E76\u6DFB\u52A0\u9644\u4EF6",
         title: "\u622A\u56FE\u5E76\u6DFB\u52A0\u9644\u4EF6\uFF08Windows\uFF09",
-        disabled: !supported || busy || !allowed(),
+        disabled: !supported || busy || !!preview || !allowed(),
         onMouseDown: (event) => event.preventDefault(),
         onClick: (event) => {
           void take(event.currentTarget);
@@ -188,7 +244,18 @@ function SnipButton({ sessionId, useInput, useSession, execute }) {
         ] })
       }
     ),
-    notice && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { role: "status", "aria-live": "polite", style: { position: "absolute", bottom: "100%", left: 0, zIndex: 30, width: 260, padding: 10, borderRadius: 8, background: "var(--dsw-static-neutral-100, #eee)", color: "var(--dsw-static-neutral-900, #222)", boxShadow: "0 2px 12px #0003" }, children: notice })
+    (notice || preview) && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { role: "status", "aria-live": "polite", style: { position: "absolute", bottom: "100%", left: 0, zIndex: 30, width: 260, padding: 10, borderRadius: 8, background: "var(--dsw-static-neutral-100, #eee)", color: "var(--dsw-static-neutral-900, #222)", boxShadow: "0 2px 12px #0003" }, children: [
+      preview && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+        preview.url && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", { src: preview.url, alt: "\u622A\u56FE\u9884\u89C8", style: { display: "block", width: "100%", maxHeight: 160, objectFit: "contain", marginBottom: 8 } }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { style: { margin: "0 0 8px" }, children: "\u8BF7\u786E\u8BA4\u540E\u518D\u52A0\u5165\u5F85\u53D1\u9001\u9644\u4EF6\u3002" }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", disabled: busy, onClick: () => {
+          void confirm();
+        }, children: "\u786E\u8BA4\u52A0\u5165" }),
+        " ",
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", disabled: busy, onClick: cancel, children: "\u53D6\u6D88" })
+      ] }),
+      notice && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { style: { margin: preview ? "8px 0 0" : 0 }, children: notice })
+    ] })
   ] });
 }
 function apply(ctx) {

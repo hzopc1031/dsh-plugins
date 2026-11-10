@@ -5,6 +5,21 @@ import { mkdtemp, writeFile, access, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { capture, exitResult } from '../lib/capture.js'
+import { execFileSync } from 'node:child_process'
+import { readFile } from 'node:fs/promises'
+
+test('capture PS1 parses and DryRun returns before native clipboard/launch/output operations', {skip:process.platform!=='win32'}, async t => {
+  const dir=await mkdtemp(join(tmpdir(),'snip-dryrun-')), file=join(dir,'unused.png')
+  t.after(()=>rm(dir,{recursive:true,force:true}))
+  const script=new URL('../capture.ps1',import.meta.url)
+  const {fileURLToPath}=await import('node:url')
+  const result=execFileSync('powershell.exe',['-NoProfile','-STA','-ExecutionPolicy','Bypass','-File',fileURLToPath(script),'-OutFile',file,'-DryRun'],{encoding:'utf8',windowsHide:true})
+  assert.match(result,/DryRun OK/)
+  await assert.rejects(access(file),{code:'ENOENT'})
+  const text=await readFile(script,'utf8')
+  assert.ok(text.indexOf('if ($DryRun)')<text.indexOf('[SnipClipboard]::GetClipboardSequenceNumber()'))
+  assert.doesNotMatch(text,/GetPixel|Get-ImageSignature/)
+})
 
 for (const [code, result] of [[0, 'success'], [2, 'cancelled'], [6, 'save-failed'], [1, 'failed'], [null, 'failed']]) {
   test(`ps1 exit ${code} => ${result}`, () => assert.equal(exitResult(code), result))

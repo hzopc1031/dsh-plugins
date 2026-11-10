@@ -15,44 +15,29 @@ try {
         Write-Output 'DryRun OK: STA assemblies loaded; no screenclip, clipboard access, or output file write.'
         exit 0
     }
-    function Get-ImageSignature([System.Drawing.Image]$Image) {
-        $bitmap = [System.Drawing.Bitmap]::new($Image)
-        try {
-            $parts = @("$($bitmap.Width)x$($bitmap.Height)")
-            foreach ($yPart in 0..2) {
-                foreach ($xPart in 0..2) {
-                    $x = [int][Math]::Floor(($bitmap.Width - 1) * $xPart / 2)
-                    $y = [int][Math]::Floor(($bitmap.Height - 1) * $yPart / 2)
-                    $parts += $bitmap.GetPixel($x, $y).ToArgb().ToString()
-                }
-            }
-            return ($parts -join ':')
-        } finally { $bitmap.Dispose() }
-    }
-    $before = $null
-    # Busy clipboard is retried; never confuse a failed baseline read with empty.
-    $baselineReady = $false
-    for ($attempt = 0; $attempt -lt 10; $attempt++) {
-        $image = $null
-        try {
-            $image = [Windows.Forms.Clipboard]::GetImage()
-            if ($null -ne $image) { $before = Get-ImageSignature $image }
-            $baselineReady = $true
-            break
-        } catch { Start-Sleep -Milliseconds 200 }
-        finally { if ($null -ne $image) { $image.Dispose() } }
-    }
-    if (-not $baselineReady) { Write-CaptureLog 'clipboard baseline failed'; exit 2 }
+    Add-Type -TypeDefinition @"
+using System.Runtime.InteropServices;
+public static class SnipClipboard {
+    [DllImport("user32.dll")]
+    public static extern uint GetClipboardSequenceNumber();
+}
+"@
+    # Sequence changes detect fresh clipboard writes even for identical pixels.
+    $beforeSequence = [SnipClipboard]::GetClipboardSequenceNumber()
+    if ($beforeSequence -eq 0) { Write-CaptureLog 'clipboard sequence unavailable'; exit 2 }
+    # The capture overlay is an interactive tool the user must see and control.
     try { Start-Process 'ms-screenclip:' -ErrorAction Stop | Out-Null }
     catch { Start-Process -FilePath 'explorer.exe' -ArgumentList 'ms-screenclip:' -ErrorAction Stop | Out-Null }
     $watch = [Diagnostics.Stopwatch]::StartNew()
     while ($watch.Elapsed.TotalSeconds -lt $TimeoutSeconds) {
         Start-Sleep -Milliseconds 200
+        $sequence = [SnipClipboard]::GetClipboardSequenceNumber()
+        if ($sequence -eq 0 -or $sequence -eq $beforeSequence) { continue }
         $image = $null
         try { $image = [Windows.Forms.Clipboard]::GetImage() } catch { continue }
         try {
             if ($null -eq $image) { continue }
-            if ((Get-ImageSignature $image) -eq $before) { continue }
+            if ([SnipClipboard]::GetClipboardSequenceNumber() -ne $sequence) { continue }
             try { $image.Save($OutFile, [Drawing.Imaging.ImageFormat]::Png) }
             catch { Write-CaptureLog 'PNG save failed'; exit 6 }
             exit 0

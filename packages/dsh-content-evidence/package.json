@@ -1,7 +1,7 @@
 {
   "name": "dsh-content-evidence",
   "version": "0.1.0",
-  "description": "Evidence-based content workbench for DeepSeek Harness (scaffold)",
+  "description": "Evidence-based content workbench for DeepSeek Harness (in development)",
   "type": "module",
   "main": "index.js",
   "types": "lib/plugin.d.ts",
@@ -11,7 +11,19 @@
       "default": "./index.js"
     },
     "./locale/*.json": "./locale/*.json",
-    "./icon": "./icon.svg"
+    "./icon": "./icon.svg",
+    "./typert": {
+      "types": "./lib/typert.host.d.ts",
+      "default": "./lib/typert.host.js"
+    },
+    "./remote": {
+      "types": "./lib/typert.remote-client.d.ts",
+      "default": "./lib/typert.remote-client.js"
+    },
+    "./types": {
+      "types": "./lib/model.d.ts",
+      "default": "./lib/model.js"
+    }
   },
   "files": [
     "index.js",
@@ -22,7 +34,11 @@
     "icon.svg",
     "README.md",
     "LICENSE",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "lib/typert.host.js",
+    "lib/typert.host.d.ts",
+    "lib/typert.remote-client.js",
+    "lib/typert.remote-client.d.ts"
   ],
   "engines": {
     "node": ">=22",
@@ -36,7 +52,7 @@
   "license": "MIT",
   "keywords": ["dsh-plugin", "deepseek-harness", "content-evidence"],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node scripts/generate-remote.mjs",
     "typecheck": "tsc --noEmit",
     "test": "npm run build && node --test --test-isolation=none test/*.test.mjs",
     "verify-pack": "node scripts/verify-pack.mjs"
@@ -44,19 +60,26 @@
   "peerDependencies": {
     "@deepseek-ai/cordis": ">=4.0.5 <4.2.0",
     "@deepseek-ai/dsh-commands": ">=0.2.1-rc.5 <0.3.0",
-    "@deepseek-ai/schemastery": ">=3.18.5 <3.20.0"
+    "@deepseek-ai/schemastery": ">=3.18.5 <3.20.0",
+    "@deepseek-ai/dsh-typert-protocol": ">=0.2.1-rc.5 <0.3.0",
+    "zod": "^4.4.3"
   },
   "peerDependenciesMeta": {
     "@deepseek-ai/cordis": { "optional": true },
     "@deepseek-ai/dsh-commands": { "optional": true },
-    "@deepseek-ai/schemastery": { "optional": true }
+    "@deepseek-ai/schemastery": { "optional": true },
+    "@deepseek-ai/dsh-typert-protocol": { "optional": true },
+    "zod": { "optional": true }
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "~4.0.5",
     "@deepseek-ai/dsh-commands": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-typert-generator": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-typert-protocol": "0.2.1-rc.5",
     "@deepseek-ai/schemastery": "~3.18.5",
     "@types/node": "^22.0.0",
-    "typescript": "~5.9.3"
+    "typescript": "~5.9.3",
+    "zod": "4.4.3"
   },
   "repository": {
     "type": "git",

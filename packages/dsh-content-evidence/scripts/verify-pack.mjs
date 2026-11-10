@@ -9,7 +9,9 @@ const out = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json', '--ig
 const files = out[0].files.map(f => f.path).sort()
 const expected = [
   'CHANGELOG.md', 'LICENSE', 'README.md', 'cordis.patch.yml', 'icon.svg', 'index.js',
-  'lib/plugin.js', 'lib/plugin.d.ts', 'locale/en.json', 'locale/zh.json', 'package.json',
+  ...['plugin', 'model', 'service', 'store', 'validation', 'typert.host', 'typert.remote-client']
+    .flatMap(name => [`lib/${name}.js`, `lib/${name}.d.ts`]),
+  'locale/en.json', 'locale/zh.json', 'package.json',
 ].sort()
 assert.deepEqual(files, expected, 'unexpected package contents')
 assert.equal(pkg.name, 'dsh-content-evidence')
@@ -20,6 +22,10 @@ for (const hook of ['preinstall', 'install', 'postinstall', 'prepare', 'prepack'
   assert.equal(pkg.scripts?.[hook], undefined, 'unexpected lifecycle script')
 }
 assert.equal(pkg.dependencies, undefined, 'host libraries must be peers')
+for (const name of ['@deepseek-ai/dsh-typert-protocol', 'zod']) {
+  assert.ok(pkg.peerDependencies[name] && pkg.devDependencies[name], 'missing build/runtime peer ' + name)
+  assert.equal(pkg.peerDependenciesMeta[name].optional, true)
+}
 for (const value of Object.values(pkg.exports)) {
   const target = typeof value === 'string' ? value : value.default
   if (!target.includes('*')) assert.ok(existsSync(target), 'missing export ' + target)

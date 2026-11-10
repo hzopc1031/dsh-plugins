@@ -4,7 +4,7 @@ import { detectDeck } from './detect.js';
 /** Capture every detected page in DOM order, retaining failed pages as evidence. Writes no files. */
 export async function captureDeck(input, options = {}) {
     const started = performance.now();
-    const deck = await detectDeck(input);
+    const deck = await detectDeck(input, { resourceRoot: options.resourceRoot });
     const engine = await createCaptureEngine(options.resourceRoot ?? dirname(deck.inputPath), options);
     const pages = [];
     try {

@@ -23,4 +23,6 @@ export interface DetectedDeck {
     warnings: string[];
 }
 /** Read local markup/resources without executing scripts, launching a browser, or making network requests. */
-export declare function detectDeck(input: string): Promise<DetectedDeck>;
+export declare function detectDeck(input: string, options?: {
+    resourceRoot?: string;
+}): Promise<DetectedDeck>;

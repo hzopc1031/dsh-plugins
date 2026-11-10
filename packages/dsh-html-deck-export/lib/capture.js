@@ -5,6 +5,7 @@ import puppeteer from 'puppeteer-core';
 export const CHROME_ARGS = [
     '--no-sandbox', '--disable-gpu', '--force-color-profile=srgb',
     '--disable-background-networking', '--disable-extensions', '--disable-sync',
+    '--force-webrtc-ip-handling-policy=disable_non_proxied_udp',
 ];
 /** One isolated browser per deck; adapters activate slides through prepare before readiness checks. */
 export async function createCaptureEngine(directory, options = {}) {
@@ -51,7 +52,6 @@ export async function createCaptureEngine(directory, options = {}) {
         args: [...CHROME_ARGS, ...(!options.allowNetwork ? [
                 // Block sockets outside request interception too, including WebSocket and loopback traffic.
                 '--proxy-server=http://127.0.0.1:9', '--proxy-bypass-list=<-loopback>',
-                '--force-webrtc-ip-handling-policy=disable_non_proxied_udp',
             ] : [])],
     });
     let closing;
@@ -101,7 +101,7 @@ export async function createCaptureEngine(directory, options = {}) {
                                     if (request.resourceType() === 'document') {
                                         // Keep new execution contexts from bypassing the page's resource checks.
                                         await request.respond({ status: 200, contentType: 'text/html',
-                                            headers: { 'Content-Security-Policy': "sandbox allow-scripts allow-same-origin; worker-src 'none'" },
+                                            headers: { 'Content-Security-Policy': "sandbox allow-scripts allow-same-origin; worker-src 'none'; form-action 'none'; connect-src file: data: blob: http: https:" },
                                             body: await readFile(path) });
                                     }
                                     else
@@ -116,7 +116,8 @@ export async function createCaptureEngine(directory, options = {}) {
                                     await request.abort('accessdenied');
                                 }
                             }
-                            else if (['data:', 'blob:'].includes(target.protocol) || (options.allowNetwork && request.resourceType() !== 'document' && ['http:', 'https:'].includes(target.protocol))) {
+                            else if (['data:', 'blob:'].includes(target.protocol) || (options.allowNetwork &&
+                                ['GET', 'HEAD'].includes(request.method()) && request.resourceType() !== 'document' && ['http:', 'https:'].includes(target.protocol))) {
                                 await request.continue();
                             }
                             else {

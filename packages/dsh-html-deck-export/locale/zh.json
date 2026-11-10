@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "HTML 演示稿导出",
-    "description": "本地 HTML 演示稿转图片版 PPTX API；DSH 当前仅接入帮助命令。"
+    "description": "在受限的 DSH 导出工作台中，将本地 HTML 演示稿转为图片版 PPTX，附讲稿备注和逐页报告。"
   }
 }

@@ -3,6 +3,7 @@ import { extname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { ancestors, hasClass, noteText, parseElements } from './html.js';
 import { speakerNotes } from './notes.js';
+import { confinedPath, PathEscapeError } from './paths.js';
 function ignored(node) {
     return [node, ...ancestors(node)].some(item => ['template', 'noscript'].includes(item.tag) ||
         /^(?:overview|overview-grid|slide-overview)$/.test(item.attrs.id ?? '') ||
@@ -55,12 +56,14 @@ function designSize(nodes, slides, styles) {
     return sizes[0];
 }
 /** Read local markup/resources without executing scripts, launching a browser, or making network requests. */
-export async function detectDeck(input) {
+export async function detectDeck(input, options = {}) {
     if (!input || /^[a-z][\w+.-]*:\/\//i.test(input))
         throw new Error('Deck input must be a local HTML path or directory');
-    let inputPath = await realpath(input);
+    const root = options.resourceRoot === undefined ? undefined : await realpath(options.resourceRoot);
+    let inputPath = root === undefined ? await realpath(input) : await confinedPath(root, input);
     if ((await stat(inputPath)).isDirectory())
-        inputPath = await realpath(join(inputPath, 'index.html'));
+        inputPath = root === undefined
+            ? await realpath(join(inputPath, 'index.html')) : await confinedPath(root, join(inputPath, 'index.html'));
     if (!(await stat(inputPath)).isFile() || !/\.html?$/i.test(inputPath))
         throw new Error('Deck input must be an HTML file (directories use index.html)');
     const html = await readFile(inputPath, 'utf8');
@@ -112,12 +115,14 @@ export async function detectDeck(input) {
             continue;
         }
         try {
-            const path = fileURLToPath(url);
+            const path = root === undefined ? fileURLToPath(url) : await confinedPath(root, fileURLToPath(url));
             if (!(await stat(path)).isFile())
                 throw new Error('not a regular file');
             target.push(await readFile(path, 'utf8'));
         }
         catch (error) {
+            if (error instanceof PathEscapeError)
+                throw error;
             warnings.push(`Cannot read linked ${script ? 'script' : 'stylesheet'} ${reference}: ${error.code ?? error.message}`);
         }
     }

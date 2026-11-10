@@ -19,3 +19,9 @@
   atomically replace files; preserve completed PPTX files on failed attempts.
 - Verify OOXML, Chinese notes, PNG/JPEG byte totals, smaller capture settings,
   path escapes, assembly errors, report-write failures and cancellation.
+- Add the deterministic `html_deck_export` tool and `/html-deck-export start|stop`
+  workbench with agent-scoped tool restriction, execution guards, project-root
+  path containment through detection/capture/writing, and cancellation.
+- Keep reports outside the installed package; test persistence across package
+  deletion. Network opt-in allows GET/HEAD resources and blocks write methods,
+  WebSocket connections and form submissions.

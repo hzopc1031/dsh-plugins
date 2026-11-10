@@ -32,17 +32,29 @@
   "peerDependencies": {
     "@deepseek-ai/cordis": ">=4.0.5 <4.2.0",
     "@deepseek-ai/dsh-commands": ">=0.2.1-rc.5 <0.3.0",
+    "@deepseek-ai/dsh-agent": ">=0.2.1-rc.5 <0.3.0",
+    "@deepseek-ai/dsh-tools": ">=0.2.1-rc.5 <0.3.0",
+    "@deepseek-ai/dsh-scope": ">=0.2.1-rc.5 <0.3.0",
+    "@deepseek-ai/dsh-system-prompt": ">=0.2.1-rc.5 <0.3.0",
     "@deepseek-ai/schemastery": ">=3.18.5 <3.20.0"
   },
   "peerDependenciesMeta": {
     "@deepseek-ai/cordis": { "optional": true },
     "@deepseek-ai/dsh-commands": { "optional": true },
+    "@deepseek-ai/dsh-agent": { "optional": true },
+    "@deepseek-ai/dsh-tools": { "optional": true },
+    "@deepseek-ai/dsh-scope": { "optional": true },
+    "@deepseek-ai/dsh-system-prompt": { "optional": true },
     "@deepseek-ai/schemastery": { "optional": true }
   },
   "dependencies": { "pptxgenjs": "4.0.1", "puppeteer-core": "24.31.0" },
   "devDependencies": {
     "@deepseek-ai/cordis": "~4.0.5",
     "@deepseek-ai/dsh-commands": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-agent": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-tools": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-scope": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-system-prompt": "0.2.1-rc.5",
     "@deepseek-ai/schemastery": "~3.18.5",
     "@types/node": "^22.0.0",
     "typescript": "~5.9.3"

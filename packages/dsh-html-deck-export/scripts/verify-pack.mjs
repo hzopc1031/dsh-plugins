@@ -11,6 +11,7 @@ const expected = [
   'lib/adapters.js', 'lib/adapters.d.ts',
   'lib/capture.js', 'lib/capture.d.ts',
   'lib/export.js', 'lib/export.d.ts',
+  'lib/paths.js', 'lib/paths.d.ts',
   'lib/detect.js', 'lib/detect.d.ts', 'lib/html.js', 'lib/html.d.ts', 'lib/notes.js', 'lib/notes.d.ts',
   'cordis.patch.yml', 'locale/en.json', 'locale/zh.json', 'icon.svg',
   'README.md', 'LICENSE', 'CHANGELOG.md',

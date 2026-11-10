@@ -8,9 +8,10 @@ const [pack] = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json', '-
 }))
 const files = pack.files.map(file => file.path).sort()
 assert.deepEqual(files, [
-  'CHANGELOG.md', 'LICENSE', 'README.md', 'cordis.patch.yml', 'docs/decisions.md', 'docs/inputs.md',
+  'CHANGELOG.md', 'LICENSE', 'README.md', 'cordis.patch.yml', 'docs/decisions.md', 'docs/inputs.md', 'docs/reconciliation.md',
   'icon.svg', 'index.d.ts', 'index.js', 'lib/plugin.d.ts', 'lib/plugin.js', 'lib/ingest.d.ts', 'lib/ingest.js',
   'locale/en.json', 'locale/zh.json', 'package.json',
+  'lib/reconcile.d.ts', 'lib/reconcile.js',
 ].sort(), 'package allowlist mismatch')
 assert.equal(pkg.name, 'dsh-invoice-gate')
 assert.equal(pkg.version, '0.1.0')
@@ -36,4 +37,6 @@ assert.deepEqual(entry.inject, ['commands'])
 assert.deepEqual(entry.Config({}), {})
 assert.equal(typeof entry.apply, 'function')
 assert.equal(typeof entry.ingest, 'function')
+assert.equal(typeof entry.reconcile, 'function')
+assert.equal(entry.rulesVersion, 'invoice-gate/1')
 console.log(`verify-pack PASS: ${files.length} files; bundle, exports, peers and lifecycle hooks checked; ${pack.size} bytes packed`)

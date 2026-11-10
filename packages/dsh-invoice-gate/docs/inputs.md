@@ -1,6 +1,6 @@
 # Local ingest library (task 2)
 
-This library extracts evidence only. Reconciliation, integer-fen normalization, confirmations, export and DSH ingest tools are later tasks. No extracted amount or identifier is rewritten, corrected or inferred. No model or network call is required. Arithmetic is not authenticity, payment or reimbursability; evidence does not establish accounting-archive compliance.
+This library extracts evidence only. The separate [reconciliation library](reconciliation.md) provides integer-fen rules and human confirmations; export and DSH ingest tools are later tasks. No extracted amount or identifier is rewritten, corrected or inferred. No model or network call is required. Arithmetic is not authenticity, payment or reimbursability; evidence does not establish accounting-archive compliance.
 
 ```js
 import { ingest } from 'dsh-invoice-gate'

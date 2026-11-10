@@ -1,0 +1,4 @@
+- insert:
+    - id: source-impact
+      name: dsh-source-impact
+      config: {}

@@ -1,0 +1,4 @@
+- insert:
+    - id: draft-rescue
+      name: dsh-draft-rescue
+      config: {}

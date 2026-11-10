@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "type": "tickets",
+  "label": "SAMPLE 示例 / 非真实票据",
+  "records": [
+    {
+      "fields": {
+        "date": "2026-11-01",
+        "number": "12345678901234567890",
+        "buyer": "SAMPLE 示例买方",
+        "seller": "SAMPLE 示例卖方",
+        "amount": "100.00",
+        "tax": "6.00",
+        "total": "106.00",
+        "currency": "CNY",
+        "materialType": "非真实票据 SAMPLE"
+      },
+      "lineItems": [
+        {
+          "total": "106.00",
+          "materialType": "SAMPLE 非真实票据"
+        }
+      ]
+    },
+    {
+      "fields": {
+        "date": "2026-11-01",
+        "number": "SAMPLE-TICKET-ONLY",
+        "buyer": "SAMPLE 示例买方",
+        "seller": "SAMPLE 示例卖方",
+        "amount": "30.00",
+        "tax": "0.00",
+        "total": "30.00",
+        "currency": "CNY",
+        "materialType": "非真实票据 SAMPLE"
+      }
+    }
+  ]
+}

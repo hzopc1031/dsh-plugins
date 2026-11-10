@@ -8,8 +8,8 @@ const [pack] = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json', '-
 }))
 const files = pack.files.map(file => file.path).sort()
 assert.deepEqual(files, [
-  'CHANGELOG.md', 'LICENSE', 'README.md', 'cordis.patch.yml', 'docs/decisions.md',
-  'icon.svg', 'index.d.ts', 'index.js', 'lib/plugin.d.ts', 'lib/plugin.js',
+  'CHANGELOG.md', 'LICENSE', 'README.md', 'cordis.patch.yml', 'docs/decisions.md', 'docs/inputs.md',
+  'icon.svg', 'index.d.ts', 'index.js', 'lib/plugin.d.ts', 'lib/plugin.js', 'lib/ingest.d.ts', 'lib/ingest.js',
   'locale/en.json', 'locale/zh.json', 'package.json',
 ].sort(), 'package allowlist mismatch')
 assert.equal(pkg.name, 'dsh-invoice-gate')
@@ -20,7 +20,7 @@ assert.match(readFileSync('cordis.patch.yml', 'utf8'), /id: invoice-gate\s+name:
 for (const hook of ['preinstall', 'install', 'postinstall', 'prepare', 'prepack', 'postpack']) {
   assert.equal(pkg.scripts[hook], undefined, 'unexpected lifecycle hook: ' + hook)
 }
-assert.equal(pkg.dependencies, undefined)
+assert.deepEqual(pkg.dependencies, { exceljs: '4.4.0', 'fast-xml-parser': '5.12.0', 'pdfjs-dist': '4.10.38' })
 for (const name of Object.keys(pkg.peerDependencies)) {
   assert.equal(pkg.peerDependenciesMeta[name].optional, true)
   assert.ok(pkg.devDependencies[name], 'missing development peer: ' + name)
@@ -35,4 +35,5 @@ assert.equal(entry.name, 'invoice-gate')
 assert.deepEqual(entry.inject, ['commands'])
 assert.deepEqual(entry.Config({}), {})
 assert.equal(typeof entry.apply, 'function')
+assert.equal(typeof entry.ingest, 'function')
 console.log(`verify-pack PASS: ${files.length} files; bundle, exports, peers and lifecycle hooks checked; ${pack.size} bytes packed`)

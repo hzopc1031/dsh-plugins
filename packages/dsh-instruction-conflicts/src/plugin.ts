@@ -11,9 +11,10 @@ import { buildReport, renderReport } from './core.js'
 export const name = 'instruction-conflicts'
 export const inject = ['commands', 'sessionQuery']
 export const Config = z.object({})
-export const HELP = '/instruction-conflicts [history|json|history-json]\n无参数：当前正文与疑似冲突；history：附历史正文和明确标记的历史对照；json/history-json：返回完整结构。\n读取当前会话，不发起模型请求，不修改指令文件。'
+export const HELP = '/instruction-conflicts [history|json|history-json]\n无参数：当前正文与疑似冲突摘要（有限显示）；history：完整历史正文和明确标记的历史对照；json/history-json：返回完整结构。\n读取当前会话，不发起模型请求，不修改指令文件。'
 export function apply(ctx: Context): void {
   const evidence = new WeakMap<object, AssemblyEvidence[]>()
+  const cache = new WeakMap<object, { events: readonly unknown[]; assemblies: unknown; messages: ReturnType<typeof observeMessages> }>()
   // Observe the official waterfall without assembling an extra prompt or changing its result.
   ctx.on('system-prompt/assemble', async (_assembly, context, next) => {
     const result = await next()
@@ -31,7 +32,14 @@ export function apply(ctx: Context): void {
     try {
       signal.throwIfAborted()
       const events = observation.events
-      const messages = observeMessages(events, evidence.get(agent) ?? [])
+      const assemblies = evidence.get(agent)
+      // Command audit rows do not participate in rc.5 surface folding. Keep all
+      // other events, including projection/replacement records, as invalidators.
+      const relevant = events.filter(e => e.type !== 'command/run' && e.type !== 'command/done')
+      const prior = cache.get(agent.session)
+      const same = prior && prior.assemblies === assemblies && prior.events.length === relevant.length && prior.events.every((e, i) => e === relevant[i])
+      const messages = same ? prior.messages : observeMessages(events, assemblies ?? [])
+      if (!same) cache.set(agent.session, { events: relevant, assemblies, messages })
       // A cwd move makes old relative file-to-disk mappings uncertain. Do not guess.
       const moved = events.some(e => String(e.type) === 'working-directory/change')
       const metadata = await inventory(ctx.get('fs'), moved ? undefined : observation.header.cwd, messages, signal)
@@ -54,7 +62,7 @@ export function apply(ctx: Context): void {
         signal.throwIfAborted()
         const history = arg.startsWith('history')
         const report = await inspect(agent, signal, history)
-        return { kind: 'success', text: arg.endsWith('json') ? JSON.stringify(report, null, 2) : renderReport(report, history) }
+        return { kind: 'success', text: arg.endsWith('json') ? JSON.stringify(report, null, 2) : renderReport(report, history, !history) }
       } catch {
         return { kind: 'error', text: signal.aborted ? '读取已取消。' : '无法验证会话上下文，请检查 Session Query 与会话格式；未将读取失败当成规则不存在。' }
       }

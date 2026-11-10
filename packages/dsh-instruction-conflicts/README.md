@@ -1,6 +1,10 @@
-﻿# dsh-instruction-conflicts — 指令冲突解释器
+# dsh-instruction-conflicts — 指令冲突解释器
 
-版本 0.1.0，面向桌面 DSH 0.2.1-rc.5。MIT。
+当前源码版本 **0.2.0**（尚未发布本次版本到 npm）。重复命令可复用相同日志对象及 assembly 证据下的 canonical fold 结果；surface 替换、投影、正文、其他日志或 assembly 变化会使缓存失效。文件 resolve/stat 每次重读，磁盘状态不缓存。默认摘要最多 20 个来源、10 项冲突、20 段正文，每段最多 3000 字符；json/history-json 获取完整结构，history 获取完整历史正文。完整证据与冲突判断不因显示裁剪而删除。engines.dsh 与精确 rc.5 peer 对齐为 0.2.1-rc.5。
+
+本次只完成 Windows 上的 typecheck、单元/rc.5 headless 集成、browser factory 的 jsdom 检查及 verify-pack；未安装到真实 DSH、未做 Electron 目视验收。最新批次记录见仓库 [OPTIMIZE_REPORT.md](../../OPTIMIZE_REPORT.md)。
+
+版本 0.2.0，面向桌面 DSH 0.2.1-rc.5。MIT。
 
 把实际注入的规则正文、历史版本与当前上下文放在一起看：例如项目 AGENTS.md 的“禁止全局安装”与技能正文的“必须全局安装依赖”，以两列显示来源、角色、seq、行号和原句，标为**疑似冲突**。
 
@@ -22,7 +26,7 @@ github:hzopc1031/dsh-plugins#main&path:/packages/dsh-instruction-conflicts
 
 也可在桌面 **插件 → 添加插件** 中粘贴上述 Git 地址。不要依赖 PATH 上可能提示 profile 被 Electron 管理的那个 `dsh`。
 
-本次开发只将代码放入 monorepo，没有 commit、push、npm publish，也没有执行上述安装命令。Git 安装地址要等后续任务把该包提交并推送到 main 后才能使用。
+本包已有 main 安装版本；本次修改的安装 ref 与推送状态见 OPTIMIZE_REPORT.md。未执行 npm publish 或安装到用户 DSH。
 
 包内已带 `lib/`，安装期不构建、不执行生命周期脚本。宿主模块以 optional peer + devDependency 声明，不复制宿主实现。需要宿主提供 `commands`、`sessionQuery`；未挂载 Session Query 时插件等待该服务，不自行挂载数据库。`fs` 可选，缺失时文件存在状态显示“未知”。
 
@@ -88,9 +92,9 @@ npm.cmd test
 npm.cmd run verify-pack
 ```
 
-本机工作目录存在 Node 写入 EPERM，使用授权 npm-cache 下的隔离镜像构建，随后复制预构建 lib 回包目录。镜像和最终目录的源码/测试/产物核对一致，最终包目录直接执行 verify-pack。没有在 packages 中放 node_modules 或压缩包。
+本次直接在各包目录构建与验证；受限环境如默认 npm cache 不可写，可临时设置 npm_config_cache 指向 worktree 内的 .tmp/npm-cache，不修改全局 npm 配置。
 
-已测：51/51 单元与 headless 集成测试，包括来源归类、三种状态独立性、版本替换与撤回、baseline、snapshot、技能叠加、截断/混淆标题、正文疑似冲突、命名 section、跨 scope 隔离、complete 修复、真实 Cordis 注册和 effect 卸载、Session Query 单次 observation 与 readSurface 对照、取消与失败、元数据探测边界、长历史扫描上限。verify-pack 精确白名单检查 bundle、exports、预构建文件、语言包、peer、安装期脚本和说明。
+首版历史验证：51/51 单元与 headless 集成测试，包括来源归类、三种状态独立性、版本替换与撤回、baseline、snapshot、技能叠加、截断/混淆标题、正文疑似冲突、命名 section、跨 scope 隔离、complete 修复、真实 Cordis 注册和 effect 卸载、Session Query 单次 observation 与 readSurface 对照、取消与失败、元数据探测边界、长历史扫描上限。verify-pack 精确白名单检查 bundle、exports、预构建文件、语言包、peer、安装期脚本和说明。
 
 未测：真实 Electron 桌面加载、CLI/Git 安装、桌面 Markdown 表格的视觉效果、真实 provider 请求、真实持久化数据库恢复及远程/沙箱 fs 后端。本次没有把插件装进用户 DSH；headless 通过不等于桌面验收。
 
@@ -110,3 +114,16 @@ npm.cmd run verify-pack
 
 MIT，见 LICENSE。没有打包第三方音视频、海报、凭证或宿主模块。
 
+
+## 本版本开发校验
+
+在本包目录独立执行，使用本包 lockfile（根目录无 workspaces）：
+
+```powershell
+npm ci --ignore-scripts
+npm run typecheck
+npm test
+npm run verify-pack
+```
+
+`npm test` 会重建需提交的 lib/。以上通过不等于 Electron 桌面通过；真实截图、剪贴板、焦点/布局及桌面安装仍需人工验收。

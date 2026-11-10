@@ -103,5 +103,5 @@ export interface ConflictScan {
 export declare function scanConflicts(versions: readonly RuleVersion[], includeHistory?: boolean): ConflictScan;
 export declare function detectConflicts(versions: readonly RuleVersion[], includeHistory?: boolean): SuspectedConflict[];
 export declare function buildReport(messages: readonly ObservedMessage[], files?: readonly FileFact[], includeHistory?: boolean, capturedThroughSeq?: number): Report;
-export declare function renderReport(report: Report, includeHistory?: boolean): string;
+export declare function renderReport(report: Report, includeHistory?: boolean, compact?: boolean): string;
 export {};

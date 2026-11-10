@@ -1,7 +1,9 @@
-﻿# STATUS — 指令冲突解释器
+# STATUS — 指令冲突解释器
+
+本次 0.2.0 优化、验证与推送状态见 [OPTIMIZE_REPORT.md](../../OPTIMIZE_REPORT.md)。下列首版执行记录为历史记录；不表示本次已做桌面验收。
 
 - 包名：dsh-instruction-conflicts
-- 版本：0.1.0
+- 版本：`0.2.0`
 - 命令：/instruction-conflicts [history|json|history-json|help]
 - 工具：无额外模型工具，使用官方人类命令注册。
 - 最终位置：dsh-plugins/packages/dsh-instruction-conflicts

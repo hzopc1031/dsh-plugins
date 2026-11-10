@@ -51,12 +51,24 @@ test('真实 Session 注入正文→命令 JSON→疑似冲突且不发模型消
 }))
 test('官方 fold 与 Session Query readSurface 对压缩替换给出相同原文保留状态',()=>harness(async h=>{
   const original=h.append(workspace([{body:'禁止全局安装'}]))
+  assert.equal((await h.json()).rows.find(r=>r.label==='AGENTS.md').currentContext,true)
   h.append({body:'摘要中提到 AGENTS.md',source:{kind:'compaction',form:'recall'}},{surfaceOp:{op:'replace',startSeq:original.seq,endSeq:original.seq},sourceEventSeqs:[original.seq]})
   const r=await h.json('history-json')
   const row=r.rows.find(r=>r.label==='AGENTS.md');assert.equal(row.everInjected,true);assert.equal(row.currentContext,false)
   const surface=await h.ctx.sessionQuery.readSurface(h.session.id)
   assert.equal(surface.events.some(e=>e.seq===original.seq),false)
   assert.equal(r.rows.some(r=>r.label==='compaction'),false)
+}))
+
+test('repeated reads preserve evidence, new messages and assemblies invalidate cached attribution',()=>harness(async h=>{
+  h.append(workspace([{body:'禁止全局安装'}]))
+  const a=await h.json(), b=await h.json()
+  assert.deepEqual(a.rows,b.rows)
+  h.append(skill('必须全局安装依赖'))
+  assert.equal((await h.json()).conflicts.length,1)
+  const compact=(await h.execute()).result
+  assert.match(compact.text,/完整正文/)
+  assert.match(compact.text,/禁止全局安装/)
 }))
 test('空 system 替换清除规则，不将已清空节点计入当前上下文',()=>harness(async h=>{
   const a=h.session.append('system/message',{turn:0,step:0,message:createSystemMessage('禁止联网')},{surfaceOp:'append'})

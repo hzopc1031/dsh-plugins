@@ -1,6 +1,6 @@
 ﻿{
     "name":  "dsh-instruction-conflicts",
-    "version":  "0.1.0",
+    "version":  "0.2.0",
     "description":  "指令冲突解释器：规则正文疑似冲突、注入版本及当前上下文证据",
     "type":  "module",
     "main":  "index.js",
@@ -32,7 +32,7 @@
               ],
     "engines":  {
                     "node":  "\u003e=22",
-                    "dsh":  "\u003e=0.2.1-rc.5 \u003c0.3.0"
+                    "dsh":  "0.2.1-rc.5"
                 },
     "dsh":  {
                 "bundle":  {

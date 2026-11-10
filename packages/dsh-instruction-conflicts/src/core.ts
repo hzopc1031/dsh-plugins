@@ -199,26 +199,30 @@ const labels: Record<Category, string> = { project: '项目指令', global: '全
 const states: Record<Presence, string> = { yes: '是', no: '否', unknown: '未知', 'not-applicable': '不适用' }
 const lifecycle: Record<RuleVersion['lifecycle'], string> = { active: '当前版本', superseded: '已被替换（正文可能仍保留）', removed: '已撤回（正文可能仍保留）', 'not-retained': '原文不在当前 surface' }
 const cell = (s: string): string => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\|/g,'&#124;').replace(/`/g,'&#96;').replace(/[\\[\]()*!_#]/g, '\\$&').replace(/\r?\n/g,'<br>')
-export function renderReport(report: Report, includeHistory = false): string {
+export function renderReport(report: Report, includeHistory = false, compact = false): string {
   const out = ['# 指令冲突解释器', `观察截止 seq：${report.capturedThroughSeq}。来源顺序不是优先级。`,
     '', '| 来源 / 分类 | 文件存在 | 曾经注入 | 当前上下文仍含规则正文 |', '| --- | --- | --- | --- |']
-  for (const row of report.rows) out.push(`| ${cell(row.label)} / ${labels[row.category]} | ${states[row.fileExists]} | ${row.everInjected ? '是' : '否（未观察到）'} | ${row.currentContext ? '是' : '否'} |`)
+  const rows = compact ? report.rows.slice(0, 20) : report.rows
+  if (compact) out.push('摘要最多 20 个来源、10 项冲突、20 段正文，每段最多 3000 字符。完整正文：/instruction-conflicts json；历史：history-json。')
+  for (const row of rows) out.push(`| ${cell(row.label)} / ${labels[row.category]} | ${states[row.fileExists]} | ${row.everInjected ? '是' : '否（未观察到）'} | ${row.currentContext ? '是' : '否'} |`)
   out.push('', '## 正文疑似冲突')
   if (!report.conflicts.length) out.push('有限模板未检出疑似冲突；这不证明规则一致。')
-  for (const c of report.conflicts) {
+  for (const c of compact ? report.conflicts.slice(0, 10) : report.conflicts) {
     out.push('', `### 疑似冲突：${c.topic} / ${c.window === 'current' ? '当前版本' : '历史对照，非当前同时生效结论'}`,
       '| 左侧来源与原句 | 右侧来源与原句 |', '| --- | --- |',
       `| ${cell(c.left.source)} / ${c.left.role} / seq ${c.left.seq} / L${c.left.line}<br>${cell(c.left.quote)} | ${cell(c.right.source)} / ${c.right.role} / seq ${c.right.seq} / L${c.right.line}<br>${cell(c.right.quote)} |`,
       c.explanation, '修订建议：' + c.suggestion)
   }
   out.push('', '## 实际注入正文与版本')
-  for (const row of report.rows) {
+  let rendered = 0
+  for (const row of rows) {
     if (row.fileNote) out.push('', cell(row.label) + '：' + cell(row.fileNote))
     for (const v of row.versions.filter(v => includeHistory || v.current)) {
+      if (compact && rendered++ >= 20) break
       out.push('', `### ${cell(v.label)} / seq ${v.seq} / ${cell(v.role)}`,
         `版本 SHA-256：${v.digest}；${lifecycle[v.lifecycle]}；原文仍保留：${v.current && v.action !== 'remove' ? '是' : '否'}；正文：${v.bodyQuality}。`,
         ...(v.declaredDigest ? ['来源记录 digest：' + cell(v.declaredDigest) + '（文件身份，不等同于注入正文 SHA-256）。'] : []),
-        cell(v.body) || '（撤回通知或空正文）', ...(v.note ? [v.note] : []))
+        cell(compact && v.body.length > 3000 ? v.body.slice(0, 3000) + '\n[正文截断，完整内容见 json]' : v.body) || '（撤回通知或空正文）', ...(v.note ? [v.note] : []))
     }
   }
   out.push('', ...report.notices, '', ...report.limitations)

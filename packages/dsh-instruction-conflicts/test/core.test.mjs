@@ -4,6 +4,15 @@ import { buildReport, extractVersions, categoryOf, directives, detectConflicts, 
 import { workspace, runtime, skill, observed } from './fixtures.mjs'
 const active = (body, source = {kind:'skill',form:'instructions'}, seq = 0) => extractVersions(observed(body, source, seq))
 
+test('compact rendering bounds bodies while JSON report retains complete source evidence',()=>{
+  const body='ordinary text '.repeat(1500), report=buildReport([observed(body,{kind:'skill',form:'instructions'},0)])
+  assert.ok(JSON.stringify(report).includes(body))
+  const text=renderReport(report,false,true)
+  assert.match(text,/正文截断/)
+  assert.ok(text.length<10000)
+  assert.ok(renderReport(report).includes(body))
+})
+
 test('来源归类以结构化 source 和 rc.5 NUL scope 为准', () => {
   for (const scope of ['user-global\0AGENTS.md','agents-global\0AGENTS.md']) assert.equal(categoryOf({kind:'agent-instructions'},scope), 'global')
   assert.equal(categoryOf({kind:'agent-instructions'},'.\0AGENTS.md','AGENTS.md'),'project')

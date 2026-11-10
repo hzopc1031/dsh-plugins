@@ -5,7 +5,7 @@ export interface Call {
     paths: string[];
     started: number;
     duration: number | null;
-    status: 'success' | 'failure' | 'pending';
+    status: 'success' | 'failure' | 'pending' | 'unknown';
     changes: Change[];
 }
 export interface Change {

@@ -68,10 +68,10 @@ export async function archive(dir, goal, now, markdown) {
 }
 const cell = (s) => s.replace(/[|`<>]/g, c => `&#${c.charCodeAt(0)};`).replace(/[\r\n]/g, ' ');
 export function render(s) {
-    const failed = s.calls.filter(c => c.status === 'failure'), pending = s.calls.filter(c => c.status === 'pending');
+    const failed = s.calls.filter(c => c.status === 'failure'), pending = s.calls.filter(c => c.status === 'pending'), unknown = s.calls.filter(c => c.status === 'unknown');
     const retries = s.calls.filter((c, i) => s.calls.slice(0, i).some(p => p.status === 'failure' && p.name === c.name && p.args === c.args));
     return [`# 任务复盘：${text(s.goal) || '目标不可用'}`, '',
-        `摘要：${s.calls.length} 次工具调用，${s.changes.length} 项文件变更，${failed.length} 次失败，${pending.length} 次未完成。`, '',
+        `摘要：${s.calls.length} 次工具调用，${s.changes.length} 项文件变更，${failed.length} 次失败，${pending.length} 次未完成，${unknown.length} 次进程状态未知。`, '',
         `目标：${text(s.goal) || '不可用（本段没有人类用户消息）'}`,
         `结果：${s.outcome}；此处仅记录执行状态，不推断任务已完成。`,
         `范围：事件 [${s.from}, ${s.to})；耗时 ${Math.max(0, s.ended - s.started)} ms。`, '',
@@ -83,7 +83,8 @@ export function render(s) {
         '## 需要确认 / 下一步',
         ...(failed.length ? ['- 检查失败调用是否仍需处理；后续成功不自动消除早先失败。'] : []),
         ...(pending.length ? ['- 核对尚未收到最终结果的调用。'] : []),
-        ...(!failed.length && !pending.length ? ['- 未发现失败或未完成调用；没有额外确认事项的客观证据。'] : []), '',
+        ...(unknown.length ? ['- 历史 bash 结果缺少 canonical value；工具流水线成功不证明进程成功。'] : []),
+        ...(!failed.length && !pending.length && !unknown.length ? ['- 未发现失败或未完成调用；没有额外确认事项的客观证据。'] : []), '',
         '## 工具明细', '| 工具 | 参数摘要（脱敏） | 结果 | 耗时 ms | 涉及路径 |', '| --- | --- | --- | --- | --- |',
         ...s.calls.map(c => `| ${cell(c.name)} | ${cell(c.args)} | ${c.status} | ${c.duration ?? '不可用'} | ${cell(c.paths.join(', '))} |`), '',
         '限制：shell/外部工具的任意写入无法从参数可靠还原；仅列宿主变更摘要或已验证文件工具结果。', ''].join('\n');

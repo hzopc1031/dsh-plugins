@@ -1,5 +1,9 @@
 # dsh-task-review
 
+当前源码版本 **0.2.0**（尚未发布本次版本到 npm）。复盘同时识别 rc.5 bash foreground canonical value 的非零 exitCode、signal、超时、取消与 sandbox 拒绝；不解析 stdout/stderr。后台启动和提升为后台的结果标为 pending，缺少 canonical value 的历史 bash 标为 unknown。PTC 子调用按 subCallId 关联；同一次调用的实时记录与日志回放不会重复计数，外层 run_code 和真实子调用是不同调用。报告目录与路径展示使用 workingDirectory.get(session)，服务缺失时才回退初始 header.cwd；绝对 reportDir 不变。
+
+本次只完成 Windows 上的 typecheck、单元/rc.5 headless 集成、browser factory 的 jsdom 检查及 verify-pack；未安装到真实 DSH、未做 Electron 目视验收。最新批次记录见仓库 [OPTIMIZE_REPORT.md](../../OPTIMIZE_REPORT.md)。
+
 在 DeepSeek Harness 工作停止时自动生成任务复盘卡片，并将 Markdown 报告保存在本机；也可随时输入 `/review` 手动复盘。
 
 ## 安装
@@ -9,10 +13,10 @@
 收到团队分发的 tgz 后，在文件所在目录执行一条命令：
 
 ```sh
-dsh plugin --profile task-review-demo add ./dsh-task-review-0.1.1.tgz
+dsh plugin --profile task-review-demo add ./dsh-task-review-0.2.0.tgz
 ```
 
-将来 npm 发布后（当前尚未发布）：
+已发布 npm 的版本是 0.1.1（2026-11-10 只读核对）；本次源码为 0.2.0，尚未发布，不要将下面命令误作安装新功能：
 
 ```sh
 dsh plugin --profile task-review-demo add dsh-task-review@0.1.1
@@ -51,7 +55,7 @@ dsh --profile task-review-demo
 | `toolThreshold` | `10` | 工具调用次数，正整数 |
 | `fileThreshold` | `3` | 唯一改动路径数，正整数 |
 | `durationMinutes` | `10` | 段首有效事件至复盘的墙钟分钟数，最小 0.001 |
-| `reportDir` | `.dsh/reports` | 相对会话项目根目录，或绝对目录 |
+| `reportDir` | `.dsh/reports` | 相对会话当前有效工作目录，或绝对目录 |
 
 ```yaml
 - override:
@@ -83,7 +87,7 @@ dsh plugin --profile task-review-demo remove dsh-task-review
 
 ## 兼容与限制
 
-DSH 声明范围：`>=0.2.1-rc.5 <0.3.0`；实测版本：`0.2.1-rc.5`、`0.2.2-rc.1`。平台实测为 Windows、Node 24.20.0；macOS/Linux 尚未验证。范围内其他版本未逐一测试，升级后建议先在独立 profile 验证。
+DSH 声明范围：`>=0.2.1-rc.5 <0.3.0`；本批次只验证固定 rc.5 API/运行时包；旧版本记录中的 rc.1 验证不能代表本批次对其他版本的承诺。平台实测为 Windows、Node 24.20.0；macOS/Linux 尚未验证。范围内其他版本未逐一测试，升级后建议先在独立 profile 验证。
 
 卡片使用宿主原生命令结果展示，多行正文折叠，展开为 Markdown 源文本。纯 headless 没有聊天卡片。Web 界面尚未做目视验收。
 
@@ -91,7 +95,7 @@ Token 仅汇总最终 assistant 消息的权威样本并标明覆盖消息数；
 
 ## 常见问题
 
-**装不上？** 确认 tgz 路径、Node 和 DSH 版本、`pnpm --version` 可用，并查看 CLI 给出的诊断日志。不要用 `allow-version` 绕过兼容检查；先确认安装的是团队提供的 0.1.1 成品包。此包无需允许构建脚本，也无需另装任何 `@deepseek-ai/*` 包。
+**装不上？** 确认 tgz 路径、Node 和 DSH 版本、`pnpm --version` 可用，并查看 CLI 给出的诊断日志。不要用 `allow-version` 绕过兼容检查；先确认安装的是对应版本的成品包。此包无需允许构建脚本，也无需另装任何 `@deepseek-ai/*` 包。
 
 **看不到卡片？** 确认启动的是安装时使用的同一个 profile，安装或替换包后重启。先用 `--dump-config` 检查插件行，再在带命令 UI 的 Web profile 执行工具并输入 `/review`。自动卡片要等进入 idle 且达到任一门槛；没有新内容不会重复出报告。headless 请查看存档。
 
@@ -99,8 +103,23 @@ Token 仅汇总最终 assistant 消息的权威样本并标明覆盖消息数；
 
 ## English quick start
 
-Read-only task reviews for DSH: an automatic command card when work becomes idle and a local Markdown archive. Install the prebuilt tarball with `dsh plugin --profile task-review-demo add ./dsh-task-review-0.1.1.tgz`, restart that profile, and enter `/review` after tool activity. Reports default to the project's `.dsh/reports/`. Automatic review triggers at 10 tool calls, 3 evidenced changed files, or 10 minutes; all thresholds are configurable above. Remove with `dsh plugin --profile task-review-demo remove dsh-task-review`.
+Read-only task reviews for DSH: an automatic command card when work becomes idle and a local Markdown archive. Install the prebuilt tarball with `dsh plugin --profile task-review-demo add ./dsh-task-review-0.2.0.tgz`, restart that profile, and enter `/review` after tool activity. Reports default to the project's `.dsh/reports/`. Automatic review triggers at 10 tool calls, 3 evidenced changed files, or 10 minutes; all thresholds are configurable above. Remove with `dsh plugin --profile task-review-demo remove dsh-task-review`.
 
-Tested on Windows with DSH 0.2.1-rc.5 and 0.2.2-rc.1; declared range `>=0.2.1-rc.5 <0.3.0`, Node >=22. No runtime network, uploads, model calls, or install builds. Sensitive argument fields are redacted; arbitrary unmarked secrets cannot always be detected. Only reports and plugin session records are written. macOS/Linux and visual Web UI verification are pending.
+This batch uses Windows with published DSH 0.2.1-rc.5 runtime packages; declared range `>=0.2.1-rc.5 <0.3.0`, Node >=22. No runtime network, uploads, model calls, or install builds. Sensitive argument fields are redacted; arbitrary unmarked secrets cannot always be detected. Only reports and plugin session records are written. macOS/Linux and visual Web UI verification are pending.
 
 MIT；图标为本项目原创 SVG。变更见 [CHANGELOG](CHANGELOG.md)。
+
+## 本版本开发校验
+
+在本包目录独立执行，使用本包 lockfile（根目录无 workspaces）：
+
+```powershell
+npm ci --ignore-scripts
+npm run typecheck
+npm test
+npm run verify-pack
+```
+
+`npm test` 会重建需提交的 lib/。以上通过不等于 Electron 桌面通过；真实截图、剪贴板、焦点/布局及桌面安装仍需人工验收。
+
+本次接口依据（固定 rc.5）：[packages/shell/tool-bash/src/index.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/shell/tool-bash/src/index.ts)、[docs/subsystems/tools.md](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/docs/subsystems/tools.md)、[packages/session/working-directory/src/index.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/session/working-directory/src/index.ts)。

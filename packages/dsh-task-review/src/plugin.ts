@@ -8,6 +8,7 @@ import type { ToolExecutionToken } from '@deepseek-ai/dsh-tools'
 import type { WorkspaceChanges } from '@deepseek-ai/dsh-workspace-changes'
 import { archive, argumentSummary, defaults, eligible, pathsFrom, render, reportDirectory, text, type Call, type Change, type Settings } from './core.js'
 import { mark, segment } from './state.js'
+import { callStatus } from './bash.js'
 
 export const name = 'task-review'
 export const inject = ['tools', 'commands', 'sessions']
@@ -28,9 +29,25 @@ export function fileChanges(name: string, value: unknown): Change[] {
 }
 export function apply(ctx: Context, input: Partial<Settings> = {}): void {
   const config = { ...defaults, ...input }
+  const locationOf = (session: Session): { path?: string; source: 'current' | 'fallback' | 'missing' } => {
+    const service = ctx.get('workingDirectory') as { get(session: Session): string } | undefined
+    if (service) {
+      const path = service.get(session)
+      return path ? { path, source: 'current' } : { source: 'missing' }
+    }
+    return session.header.cwd ? { path: session.header.cwd, source: 'fallback' } : { source: 'missing' }
+  }
+  const directory = (session: Session): string | undefined => locationOf(session).path
+  const directoryLine = (session: Session): string => {
+    const info = locationOf(session)
+    if (!info.path) return '没有可用的项目目录。'
+    return info.source === 'current'
+      ? '使用的根目录（当前执行目录，workingDirectory.get）：' + info.path
+      : '使用的根目录（服务缺失，回退原始项目目录 header.cwd）：' + info.path
+  }
   for (const n of [config.toolThreshold, config.fileThreshold]) if (!Number.isSafeInteger(n) || n < 1) throw new Error('门槛必须为正整数')
   if (!Number.isFinite(config.durationMinutes) || config.durationMinutes <= 0 || !config.reportDir.trim()) throw new Error('耗时或目录配置无效')
-  const starts = new WeakMap<ToolExecutionToken, number>()
+  const starts = new WeakMap<ToolExecutionToken, { time: number; cwd?: string }>()
   const queues = new Map<Session, Promise<unknown>>()
   const automatic = new Map<Session, Promise<unknown>>()
   let workspace: WorkspaceChanges | undefined
@@ -38,9 +55,9 @@ export function apply(ctx: Context, input: Partial<Settings> = {}): void {
     workspace = child.workspaceChanges
     child.effect(() => () => { workspace = undefined })
   })
-  const snapshot = async (session: Session) => {
+  const snapshot = async (session: Session, cwd = directory(session)) => {
     const s = segment(session)
-    const normalize = (file: string) => session.header.cwd ? path.relative(session.header.cwd, path.resolve(session.header.cwd, file)).split(path.sep).join('/') : path.normalize(file)
+    const normalize = (file: string) => cwd ? path.relative(cwd, path.resolve(cwd, file)).split(path.sep).join('/') : path.normalize(file)
     if (s) s.changes = s.changes.map(f => ({ ...f, path: normalize(f.path) }))
     if (s && workspace) for (const e of session.snapshotEvents()) {
       if (e.seq < s.from || e.seq >= s.to || e.type !== 'workspace/changes') continue
@@ -69,24 +86,27 @@ export function apply(ctx: Context, input: Partial<Settings> = {}): void {
     operation.then(retire, retire)
     return operation
   }
-  ctx.on('tools/pre-execute', async (exec, next) => { starts.set(exec.token, Date.now()); return next() }, { prepend: true })
+  ctx.on('tools/pre-execute', async (exec, next) => { starts.set(exec.token, { time: Date.now(), cwd: exec.agent ? directory(exec.agent.session) : undefined }); return next() }, { prepend: true })
   ctx.on('tools/result', (exec, result) => {
     const session = exec.agent?.session
     if (!session || disposed) return
     const now = Date.now(), started = starts.get(exec.token)
-    const call: Call = { id: exec.callId, name: text(exec.name), args: argumentSummary(exec.arguments), paths: pathsFrom(exec.arguments), started: started ?? now, duration: started === undefined ? null : Math.max(0, now - started), status: result.isError ? 'failure' : 'success', changes: result.isError ? [] : fileChanges(exec.name, result.value) }
+    const status = callStatus(exec.name, result)
+    const changes = status === 'success' ? fileChanges(exec.name, result.value).map(change => ({ ...change, path: started?.cwd ? path.resolve(started.cwd, change.path) : change.path })) : []
+    const call: Call = { id: exec.callId, name: text(exec.name), args: argumentSummary(exec.arguments), paths: pathsFrom(exec.arguments), started: started?.time ?? now, duration: started === undefined ? null : Math.max(0, now - started.time), status, changes }
     appendPluginRecord(session, 'plugin:task-review/call', call)
     return undefined
   })
   const review = (agent: Agent): Promise<CommandResult> => schedule(agent.session, async () => {
     if (disposed) return { kind: 'error', text: '复盘插件已停止。' }
-    const s = await snapshot(agent.session)
+    const cwd = directory(agent.session)
+    const s = await snapshot(agent.session, cwd)
     if (!s) return { kind: 'success', text: '没有尚未复盘的新内容。' }
     const markdown = render(s)
     try {
-      const file = await archive(reportDirectory(agent.session.header.cwd, config.reportDir), s.goal || agent.id, s.ended, markdown)
+      const file = await archive(reportDirectory(cwd, config.reportDir), s.goal || agent.id, s.ended, markdown)
       mark(agent.session, s.to, file)
-      return { kind: 'success', text: `任务复盘：${s.calls.length} 次调用 / ${s.changes.length} 项变更 / ${s.calls.filter(c => c.status === 'failure').length} 次失败\n\n${markdown}\n存档：${text(file, 1000)}` }
+      return { kind: 'success', text: `任务复盘：${s.calls.length} 次调用 / ${s.changes.length} 项变更 / ${s.calls.filter(c => c.status === 'failure').length} 次失败\n\n${markdown}\n存档：${text(file, 1000)}\n${directoryLine(agent.session)}` }
     } catch {
       // Error strings may include OS paths or credentials; do not copy them into the log.
       return { kind: 'error', text: '报告存档失败，复盘边界未推进。请检查 reportDir 权限并重试 /review。' }

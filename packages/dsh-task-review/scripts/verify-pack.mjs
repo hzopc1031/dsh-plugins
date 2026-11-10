@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
-const [pack] = JSON.parse((await readFile('.tmp/pack-manifest.json','utf8')).replace(/^\uFEFF/,''))
-const expected = ['package.json','index.js','cordis.patch.yml','locale/en.json','locale/zh.json','icon.svg','README.md','LICENSE','CHANGELOG.md',...['core','plugin','state'].flatMap(n=>[`lib/${n}.js`,`lib/${n}.d.ts`])]
+import { execFileSync } from 'node:child_process'
+const [pack] = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], { encoding: 'utf8', shell: process.platform === 'win32' }))
+const expected = ['package.json','index.js','cordis.patch.yml','locale/en.json','locale/zh.json','icon.svg','README.md','LICENSE','CHANGELOG.md',...['bash','core','plugin','state'].flatMap(n=>[`lib/${n}.js`,`lib/${n}.d.ts`])]
 assert.deepEqual(pack.files.map(f=>f.path).sort(),expected.sort())
 const pkg=JSON.parse(await readFile('package.json','utf8'))
 for(const script of ['prepare','install','postinstall']) assert.equal(pkg.scripts[script],undefined)

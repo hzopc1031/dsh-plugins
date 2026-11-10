@@ -1,6 +1,6 @@
 {
   "name": "dsh-task-review",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Read-only task review reports for DeepSeek Harness",
   "type": "module",
   "main": "index.js",
@@ -39,7 +39,8 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "test": "npm run build && node --test --test-isolation=none test/*.test.mjs",
-    "test:profile": "node scripts/profile-smoke.mjs"
+    "test:profile": "node scripts/profile-smoke.mjs",
+    "verify-pack": "node scripts/verify-pack.mjs"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": ">=4.0.5 <4.2.0",

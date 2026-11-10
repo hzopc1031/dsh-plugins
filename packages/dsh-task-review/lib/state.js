@@ -1,10 +1,11 @@
 import { appendPluginRecord, pluginRecordOf } from '@deepseek-ai/dsh-session';
 import { argumentSummary, defaults, pathsFrom, text } from './core.js';
+import { callStatus } from './bash.js';
 function isCall(value) {
     if (!value || typeof value !== 'object')
         return false;
     const c = value;
-    return typeof c.id === 'string' && typeof c.name === 'string' && typeof c.args === 'string' && Array.isArray(c.paths) && c.paths.every(p => typeof p === 'string') && typeof c.started === 'number' && (c.duration === null || typeof c.duration === 'number') && ['success', 'failure', 'pending'].includes(c.status ?? '') && Array.isArray(c.changes) && c.changes.every(f => typeof f?.path === 'string' && ['新建', '修改', '删除', '变更（类型不可用）'].includes(f?.kind));
+    return typeof c.id === 'string' && typeof c.name === 'string' && typeof c.args === 'string' && Array.isArray(c.paths) && c.paths.every(p => typeof p === 'string') && typeof c.started === 'number' && (c.duration === null || typeof c.duration === 'number') && ['success', 'failure', 'pending', 'unknown'].includes(c.status ?? '') && Array.isArray(c.changes) && c.changes.every(f => typeof f?.path === 'string' && ['新建', '修改', '删除', '变更（类型不可用）'].includes(f?.kind));
 }
 export function boundary(events) {
     let to = 0;
@@ -25,7 +26,7 @@ export function mark(session, to, file) {
 export function segment(session, now = Date.now()) {
     const events = session.snapshotEvents(), from = Math.max(boundary(events), session.inheritedEventCount);
     const slice = events.filter(e => e.seq >= from);
-    const meaningful = slice.filter(e => ['user/message', 'tool/call', 'assistant/message', 'assistant/attempt'].includes(e.type) || pluginRecordOf(e)?.type === 'plugin:task-review/call');
+    const meaningful = slice.filter(e => ['user/message', 'tool/call', 'tool/ptc-dispatch-start', 'assistant/message', 'assistant/attempt'].includes(e.type) || pluginRecordOf(e)?.type === 'plugin:task-review/call');
     if (!meaningful.length)
         return null;
     const calls = [], changes = [];
@@ -38,14 +39,18 @@ export function segment(session, now = Date.now()) {
     }
     // Tool-call evidence without a final observed result remains visibly unfinished.
     for (const e of slice)
-        if (e.type === 'tool/call' && !calls.some(c => c.id === e.data.callId)) {
+        if (e.type === 'tool/call' || e.type === 'tool/ptc-dispatch-start') {
+            const id = e.type === 'tool/call' ? e.data.callId : e.data.subCallId;
+            if (calls.some(c => c.id === id))
+                continue;
             let args = {};
             try {
-                args = JSON.parse(e.data.arguments);
+                args = typeof e.data.arguments === 'string' ? JSON.parse(e.data.arguments) : e.data.arguments;
             }
             catch { /* Invalid JSON is not copied. */ }
-            const result = slice.find(r => r.type === 'tool/result' && r.data.message.source.callId === e.data.callId);
-            calls.push({ id: e.data.callId, name: text(e.data.name), args: argumentSummary(args), paths: pathsFrom(args), started: e.time, duration: null, status: result?.type === 'tool/result' ? result.data.message.isError ? 'failure' : 'success' : 'pending', changes: [] });
+            const result = slice.find(r => r.seq > e.seq && (r.type === 'tool/result' && r.data.message.source.callId === id || r.type === 'tool/ptc-dispatch' && r.data.subCallId === id));
+            const failed = result?.type === 'tool/result' ? result.data.message.isError : result?.type === 'tool/ptc-dispatch' ? result.data.isError : false;
+            calls.push({ id, name: text(e.data.name), args: argumentSummary(args), paths: pathsFrom(args), started: e.time, duration: null, status: result ? callStatus(e.data.name, { isError: failed }) : 'pending', changes: [] });
         }
     calls.sort((a, b) => a.started - b.started);
     const user = slice.find(e => e.type === 'user/message' && e.data.source.kind === 'user');

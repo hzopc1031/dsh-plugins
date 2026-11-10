@@ -31,6 +31,49 @@ async function harness(config={},workspace) {
   ctx.tools.register(defineTool({name:'fixture',description:'test only',parameters:{token:{type:'string'},file_path:{type:'string'}},output:{schema:{type:'string'},render:(_,v)=>[{type:'text',text:v}]},async execute(){return 'ok'}}))
   return {ctx,pluginFiber,root,session,agent,user,run,review,async close(){await ctx.fiber.dispose();await rm(root,{recursive:true,force:true})}}
 }
+
+test('canonical bash nonzero exit is a failure even when the registry succeeded; PTC replay is not duplicated', async()=>{
+  const h=await harness({auto:false})
+  try {
+    h.ctx.tools.register(defineTool({ name:'bash', description:'fixture', parameters:{}, output:{schema:{type:'json'},render:()=>[{type:'text',text:'not an authority'}]}, async execute(){return {kind:'foreground',cwd:h.root,exitCode:7,signal:null,timedOut:false,aborted:false}} }))
+    const result=await h.run('bash',{},'native-bash')
+    assert.equal(result.isError,false)
+    assert.equal(segment(h.session).calls[0].status,'failure')
+    const id='outer:ptc:1'
+    h.session.append('tool/ptc-dispatch-start',{callId:'outer',subCallId:id,name:'bash',arguments:{command:'fixture'}})
+    appendPluginRecord(h.session,'plugin:task-review/call',{id,name:'bash',args:'{}',paths:[],started:Date.now(),duration:1,status:'failure',changes:[]})
+    h.session.append('tool/ptc-dispatch',{callId:'outer',subCallId:id,name:'bash',content:[],isError:false})
+    assert.equal(segment(h.session).calls.filter(c=>c.id===id).length,1)
+    const text=(await h.review()).result.text
+    assert.match(text,/2 次失败/)
+  } finally {await h.close()}
+})
+
+test('effective workingDirectory owns relative archives after /cd; no service falls back to header', async()=>{
+  const h=await harness({auto:false})
+  try {
+    const current=path.join(h.root,'moved')
+    h.ctx.provide('workingDirectory',{get:()=>current})
+    h.user('current directory')
+    assert.equal((await h.review()).result.kind,'success')
+    assert.equal((await readdir(path.join(current,'.dsh/reports'))).length,1)
+    await assert.rejects(readdir(path.join(h.root,'.dsh/reports')))
+  } finally {await h.close()}
+})
+
+test('relative file evidence keeps the directory captured at tool start across a later cwd change',async()=>{
+  const h=await harness({auto:false})
+  try {
+    let current=h.root
+    h.ctx.provide('workingDirectory',{get:()=>current})
+    h.ctx.tools.register(defineTool({name:'write',description:'fixture',parameters:{},output:{schema:{type:'json'},render:()=>[]},async execute(){current=path.join(h.root,'moved');return {path:'a.txt',before:null,after:'fixture'}}}))
+    await h.run('write')
+    const report=(await h.review()).result
+    assert.equal(report.kind,'success')
+    assert.match(report.text,/新建：\.\.\/a.txt/)
+    assert.equal((await readdir(path.join(current,'.dsh/reports'))).length,1)
+  } finally {await h.close()}
+})
 test('real Cordis load, tool pipeline, slash command, archive, replay boundary, cleanup', async()=>{
   const h=await harness({auto:false})
   try {

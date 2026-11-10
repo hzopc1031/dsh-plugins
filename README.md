@@ -1,68 +1,91 @@
 # dsh-plugins
 
-`hzopc1031/dsh-plugins` 是 DeepSeek Harness（DSH）插件的 monorepo，目前仅包含 `dsh-task-review`。许可证：MIT。仓库地址、npm 安装命令和市场条目是后续发布的目标，本次仅完成本地准备，尚未发布。
+`hzopc1031/dsh-plugins` 是 DeepSeek Harness（DSH）插件的 monorepo，每个插件在 `packages/` 下各自独立（独立依赖和 lockfile），都以 npm 包发布，也可以直接从本仓库的子目录用 git 安装。许可证：MIT。
 
-`hzopc1031/dsh-plugins` is a monorepo for DeepSeek Harness (DSH) plugins. It currently contains only `dsh-task-review`, licensed under MIT. Repository links, npm installation, and marketplace entries below describe the planned release; this local preparation does not publish anything.
+`hzopc1031/dsh-plugins` is a monorepo of DeepSeek Harness (DSH) plugins. Each plugin under `packages/` is independent, published to npm, and installable from git via its subdirectory. MIT licensed.
 
-| 插件 / Plugin | 版本 / Version | 功能 / Purpose | 文档 / Docs |
+| 插件 / Plugin | npm 包名 / npm name | 功能 / Purpose | 文档 / Docs |
 | --- | --- | --- | --- |
-| `dsh-task-review` | `0.1.1` | 自动或手动任务复盘，保存本地 Markdown 报告 / Automatic or manual task reviews with local Markdown reports | [README](packages/dsh-task-review/README.md) |
+| 任务复盘 | [`dsh-task-review`](https://www.npmjs.com/package/dsh-task-review) | 自动或手动任务复盘，保存本地 Markdown 报告（`/review`）/ Task reviews with local Markdown reports | [README](packages/dsh-task-review/README.md) |
+| 任务心跳 | [`dsh-heartbeat-monitor`](https://www.npmjs.com/package/dsh-heartbeat-monitor) | 长任务定时进度卡、静默/重复警告（`/heartbeat`）/ Timed progress cards and stall/repeat warnings | [README](packages/dsh-heartbeat-monitor/README.md) |
+| 长安听雨主题 | [`dsh-direnjie-theme`](https://www.npmjs.com/package/dsh-direnjie-theme) | 原创长安水墨背景、配色与本机音乐播放器 / Original Chang'an ink theme with a local music player | [README](packages/dsh-direnjie-theme/README.md) |
+
+> 心跳插件的 npm 包名是 `dsh-heartbeat-monitor`：`dsh-heartbeat` 已被一个无关的包占用。
+> The heartbeat plugin is published as `dsh-heartbeat-monitor` because `dsh-heartbeat` is an unrelated package.
 
 ## 安装 / Installation
 
-需要 Node.js >= 22、兼容的 DSH（`>=0.2.1-rc.5 <0.3.0`），以及 DSH 安装流程所需的 pnpm。将 `<name>` 替换为目标 profile 名称；安装后重启该 profile，执行工具后输入 `/review`。更多配置见插件文档。
+需要兼容的 DSH（`0.2.1-rc.5` 起）。所有包都已预编译，没有安装脚本。装完后**完全退出桌面 DSH（含托盘）再重新打开**。
 
-Requires Node.js >= 22, compatible DSH (`>=0.2.1-rc.5 <0.3.0`), and pnpm for the DSH installation flow. Replace `<name>` with your target profile. Restart that profile after installation and enter `/review` after tool activity. See the plugin README for configuration.
+Requires a compatible DSH (`0.2.1-rc.5`+). Packages are prebuilt and have no install scripts. Fully quit and reopen DSH Desktop after installing.
 
-npm 发布后 / After npm publication:
+### 1. 桌面 DSH 界面 / Desktop UI
 
-```sh
-dsh plugin --profile <name> add dsh-task-review
+插件 → 添加插件，输入 npm 包名（或下面的 git 地址）：
+
+Plugins → Add plugin, then enter an npm name (or a git address below):
+
+```text
+dsh-task-review
+dsh-heartbeat-monitor
+dsh-direnjie-theme
 ```
 
-发布前可先构建本地 tgz。以下命令从仓库根目录开始，在插件目录打包，然后返回根目录安装：
+### 2. 命令行（npm）/ CLI from npm
 
-Before publication, build a local tarball. Start at the repository root, pack inside the plugin directory, then return to the root to install:
+先完全退出桌面 DSH。/ Quit DSH Desktop first.
 
-```sh
-cd packages/dsh-task-review
-npm install
-npm run typecheck
-npm test
-npm pack
-cd ../..
-dsh plugin --profile <name> add ./packages/dsh-task-review/dsh-task-review-0.1.1.tgz
+```powershell
+dsh plugin --profile desktop add dsh-task-review
+dsh plugin --profile desktop add dsh-heartbeat-monitor
+dsh plugin --profile desktop add dsh-direnjie-theme
 ```
 
-`npm test` 包含构建；`npm pack` 本身不会编译源码。安装命令会修改指定 profile，仅在准备好使用时手动执行。
+### 3. 从 GitHub 安装 / From git
 
-`npm test` includes the build; `npm pack` itself does not compile source. The installation command modifies the selected profile; run it manually when ready to use the plugin.
+DSH 把参数转给 pnpm，支持 pnpm 的 git 子目录写法 `#<分支>&path:/<子目录>`：
+
+DSH forwards to pnpm, which accepts a git subdirectory as `#<ref>&path:/<dir>`:
+
+```powershell
+dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-task-review"
+dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-heartbeat-monitor"
+dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-direnjie-theme"
+```
+
+同样的 `github:...` 地址也可以填进界面的「添加插件」。把 `main` 换成某个提交哈希即可固定版本。
+
+The same `github:...` address works in the Add plugin dialog. Replace `main` with a commit hash to pin a version.
+
+卸载 / Uninstall：`dsh plugin --profile desktop remove <npm 包名>`
 
 ## 本地开发 / Local development
 
-根 `package.json` 标记为 `private: true`，禁止发布根包。本次保留每个插件独立的依赖和 lockfile，不启用 npm workspaces，以避免迁移现有 lockfile、提升依赖位置而改变既有打包/安装验证环境。请在 `packages/dsh-task-review` 内执行 npm 命令，根目录的 `npm install` 不会安装插件依赖。
+根 `package.json` 为 `private: true`，不发布。每个插件保留独立依赖与 lockfile，没有启用 npm workspaces；请进入 `packages/<插件>` 执行 npm 命令：
 
-The root package is private. Each plugin keeps independent dependencies and its own lockfile. npm workspaces are intentionally deferred to preserve the existing lockfile and dependency layout used by packaging and installation verification. Run npm commands inside `packages/dsh-task-review`; installing at the root does not install plugin dependencies.
-
-Pack verification (PowerShell, inside `packages/dsh-task-review`):
+The root package is private. Run npm commands inside each `packages/<plugin>`:
 
 ```powershell
-New-Item -ItemType Directory -Force .tmp | Out-Null
-npm pack --json | Set-Content -Encoding UTF8 .tmp/pack-manifest.json
-node scripts/verify-pack.mjs
+npm ci --ignore-scripts
+npm run typecheck
+npm test            # 含构建 / includes the build
+npm run verify-pack # 心跳与主题 / heartbeat and theme
 ```
 
-For other shells, create `.tmp`, save the complete JSON output of `npm pack --json` as UTF-8 to `.tmp/pack-manifest.json`, then run the verifier.
+`lib/` 为预编译产物并提交到仓库，git 安装无需构建；改动源码后请 `npm test`（会重建 `lib/`）再提交。
 
-## 后续市场收录 / Future marketplace listing
+`lib/` is committed so git installs need no build; run `npm test` (rebuilds `lib/`) before committing source changes.
 
-计划条目 / Planned entry:
+dsh-task-review 的打包校验见其 README / For dsh-task-review pack verification see its README.
 
-- name: `hzopc1031/dsh-plugins#dsh-task-review`
-- url: `https://github.com/hzopc1031/dsh-plugins/tree/main/packages/dsh-task-review`
+## 市场收录 / Marketplace listing
 
-后续向 `awesome-dsh-plugin` 提交前，应核对其当时的仓库年龄、提交数量及 topic 要求，并设置仓库 topic `dsh-plugin`。保留真实开发历史，等待满足要求后再提交；本次不声称已满足门槛或已被收录。
+计划条目 / Planned entries（`awesome-dsh-plugin`）：
 
-Before a future `awesome-dsh-plugin` submission, check its current repository age, commit count, and topic requirements, and add the `dsh-plugin` repository topic. Preserve real development history and wait until eligible. No eligibility or marketplace acceptance is claimed here.
+- `hzopc1031/dsh-plugins#dsh-task-review` → `https://github.com/hzopc1031/dsh-plugins/tree/main/packages/dsh-task-review`
+- `hzopc1031/dsh-plugins#dsh-heartbeat-monitor` → `https://github.com/hzopc1031/dsh-plugins/tree/main/packages/dsh-heartbeat-monitor`
+- `hzopc1031/dsh-plugins#dsh-direnjie-theme` → `https://github.com/hzopc1031/dsh-plugins/tree/main/packages/dsh-direnjie-theme`
 
-本次变更与验证结果见 [交接文档 / handoff](docs/monorepo-handoff.md)。
+提交前需核对市场当时的仓库年龄、提交数量和 topic（`dsh-plugin`）要求。/ Check the market's repository age, commit count and topic requirements before submitting.
+
+更早的迁移记录见 [交接文档 / handoff](docs/monorepo-handoff.md)。

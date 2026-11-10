@@ -21,9 +21,15 @@
 
 ## 安装 / Installation
 
-需要兼容的 DSH（`0.2.1-rc.5` 起）。所有包都已预编译，没有安装脚本。装完后**完全退出桌面 DSH（含托盘）再重新打开**。
+本次优化源码版本与 npm 发布版本分开记录（2026-11-10）：`dsh-task-review` 和 `dsh-heartbeat-monitor` 的 npm 最新版本分别仍是 **0.1.1 / 0.1.0**。本 worktree 中它们及其余功能升级包为 **0.2.0**；仅修复路径投影的 `dsh-file-ref-copy` 为 **0.1.1**。本次未执行 npm publish，安装 npm 最新包不会得到这些新改动。
 
-Requires a compatible DSH (`0.2.1-rc.5`+). Packages are prebuilt and have no install scripts. Fully quit and reopen DSH Desktop after installing.
+本批次增加 bash 进程失败识别与 PTC 关联、有效工作目录（命令会标明当前执行目录或回退目录）、截图预览确认后再注入、组合检查模板与失败项跳转、扫描复用与精简输出、资料引用原子接受基线、诊断内存缓存以及草稿按可靠标题/工作区筛选与追加目标说明。各包 README 说明具体行为。
+
+`main` 的 Git 安装地址继续用于已有版本。本批次版本需使用包含本次提交的 ref；推送后可将以下地址中的 `main` 换成 `optimize-batch` 或固定提交 SHA。分支推送不表示已合并到 main。
+
+本批次对照官方 `dsh-v0.2.1-rc.5` 与发布类型/运行时包。草稿、文件引用、截图及指令冲突包精确声明 rc.5；其余包保留各自 engines 范围，但本次没有据此验证其他宿主版本。所有包都已预编译，没有安装脚本。装完后**完全退出桌面 DSH（含托盘）再重新打开**。
+
+This batch is checked against DSH `0.2.1-rc.5`. Per-package engine ranges do not imply other versions were tested. Packages are prebuilt and have no install scripts. Fully quit and reopen DSH Desktop after installing.
 
 ### 1. 桌面 DSH 界面 / Desktop UI
 
@@ -91,14 +97,16 @@ The root package is private. Run npm commands inside each `packages/<plugin>`:
 npm ci --ignore-scripts
 npm run typecheck
 npm test            # 含构建 / includes the build
-npm run verify-pack # 心跳 / heartbeat
+npm run verify-pack # 每个包都有 / available in every package
 ```
 
 `lib/` 为预编译产物并提交到仓库，git 安装无需构建；改动源码后请 `npm test`（会重建 `lib/`）再提交。
 
 `lib/` is committed so git installs need no build; run `npm test` (rebuilds `lib/`) before committing source changes.
 
-dsh-task-review 的打包校验见其 README / For dsh-task-review pack verification see its README.
+`verify-pack` 直接运行 `npm pack --dry-run --json --ignore-scripts` 并检查精确白名单，无需预先制作 manifest。若本机默认 npm cache 不可写，可仅为当前命令设置 `npm_config_cache` 指向 worktree 的 `.tmp/npm-cache`。不要修改全局配置。全部包分别保留自己的依赖与 lockfile。
+
+验证分为三层：typecheck/打包白名单、单元与 rc.5 headless 集成、browser factory 的 jsdom 交互。它们不能证明 Electron 桌面的布局、焦点、系统剪贴板、真实截图或安装已通过；本批次没有安装到用户 DSH。核心性能样本可用 `node scripts/optimize-benchmark.mjs` 重现。
 
 ## 市场收录 / Marketplace listing
 

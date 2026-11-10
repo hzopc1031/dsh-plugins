@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "HTML 演示稿导出",
-    "description": "本地 HTML 演示稿转图片版 PPTX 的脚手架；当前仅提供帮助。"
+    "description": "本地 HTML 演示稿转图片版 PPTX API；DSH 当前仅接入帮助命令。"
   }
 }

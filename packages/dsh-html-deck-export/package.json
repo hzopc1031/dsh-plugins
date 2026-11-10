@@ -1,7 +1,7 @@
 {
   "name": "dsh-html-deck-export",
   "version": "0.1.0",
-  "description": "Local HTML deck to image-based PPTX for DeepSeek Harness (scaffold)",
+  "description": "Local HTML deck to image-based PPTX for DeepSeek Harness",
   "type": "module",
   "main": "index.js",
   "types": "lib/plugin.d.ts",
@@ -10,6 +10,7 @@
     "./adapters": { "types": "./lib/adapters.d.ts", "default": "./lib/adapters.js" },
     "./capture": { "types": "./lib/capture.d.ts", "default": "./lib/capture.js" },
     "./detect": { "types": "./lib/detect.d.ts", "default": "./lib/detect.js" },
+    "./export": { "types": "./lib/export.d.ts", "default": "./lib/export.js" },
     "./locale/*.json": "./locale/*.json",
     "./icon": "./icon.svg"
   },
@@ -38,7 +39,7 @@
     "@deepseek-ai/dsh-commands": { "optional": true },
     "@deepseek-ai/schemastery": { "optional": true }
   },
-  "dependencies": { "puppeteer-core": "24.31.0" },
+  "dependencies": { "pptxgenjs": "4.0.1", "puppeteer-core": "24.31.0" },
   "devDependencies": {
     "@deepseek-ai/cordis": "~4.0.5",
     "@deepseek-ai/dsh-commands": "0.2.1-rc.5",

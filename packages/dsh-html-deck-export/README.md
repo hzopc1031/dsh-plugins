@@ -1,24 +1,24 @@
 # dsh-html-deck-export
 
-**Incomplete scaffold, version 0.1.0. Export is not implemented yet.**
+**Version 0.1.0: local export API available; DSH tool integration pending.**
 
-This DSH plugin currently registers only `/html-deck-export` help. The planned
-MVP exports finished local HTML decks in supported formats to **image-based
+This DSH plugin currently registers only `/html-deck-export` help. Its local
+JavaScript API exports finished local HTML decks in supported formats to **image-based
 16:9 PPTX**, with speaker notes and a per-page `export-report.json`.
 HTML remains the source of truth. Nothing is uploaded automatically.
 It does not generate decks, produce editable shapes, preserve animations,
 or accept every HTML file.
 
-**当前为未完成的脚手架（0.1.0），尚不能导出。** 仅注册
-`/html-deck-export` 帮助命令。计划将受支持格式的本地定稿 HTML 演示稿
+**0.1.0 已提供本地导出 API，DSH 工具尚未接入。** 当前仅注册
+`/html-deck-export` 帮助命令。本地 JavaScript API 可将受支持格式的定稿 HTML 演示稿
 导出为 **16:9 图片版 PPTX**，附讲稿备注和逐页报告。
 HTML 始终是源文件，不会自动上传。不生成演示稿、不输出可编辑形状、
 不保留动画，也不承诺兼容所有 HTML。
 
 Requires Node.js >=22 and DSH `>=0.2.1-rc.5 <0.3.0`. APIs are checked against
 DSH `0.2.2-rc.1`, source revision `fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159`.
-The scaffold uses command APIs already used by the sibling rc.5 packages;
-later export APIs may require revisiting this range.
+The plugin uses command APIs already used by the sibling rc.5 packages;
+later DSH tool APIs may require revisiting this range.
 
 Build and inspect the local tarball from this package directory:
 
@@ -36,7 +36,7 @@ dsh plugin --profile <name> add ./packages/dsh-html-deck-export/dsh-html-deck-ex
 ```
 
 The bundle inserts Cordis id `html-deck-export` with empty configuration.
-It ships prebuilt `lib/` and a pinned `puppeteer-core` driver. It has no lifecycle
+It ships prebuilt `lib/`, pinned `puppeteer-core` and `pptxgenjs`. It has no lifecycle
 install hooks, browser downloads, model tool, or client entry at this stage.
 
 Static detection is available as `detectDeck(path)` from
@@ -126,8 +126,7 @@ CSS API; these are diagnostics, not a guarantee of glyph coverage. The deck adap
 Results contain status, URL, successful image bytes, warnings, font families,
 elapsed time, and error text/best-effort screenshot evidence on failure. The
 engine also exposes viewport, scale, format/quality, network policy and browser
-version for the later export report. It writes no output files. PPTX assembly
-and atomic output are still pending.
+version for the export report. The capture engine writes no output files.
 Image bytes and rendering can vary across Chrome versions and machines.
 
 Deck capture is available from `dsh-html-deck-export/adapters`:
@@ -150,7 +149,7 @@ including failures. It writes no files. `run` contains the detected deck,
 viewport, scale, format/quality, network policy, browser version, total successful
 image bytes and elapsed time. Each page includes runtime notes, note source,
 fonts, warnings and `renderState` (navigation, bounds, animation final-state
-checks and chrome visibility), ready for the later JSON/PPTX writer.
+checks and chrome visibility), ready for the JSON/PPTX writer.
 
 - 歸藏 opens each one-based `?mode=preview&slide=N` URL and verifies its runtime
   page index. Capture includes the entire composited viewport and any canvas
@@ -200,5 +199,64 @@ A warning-bearing image must be reviewed before it is treated as faithful.
 The capture engine also accepts a third `finalize(page)` callback after its
 readiness waits and before font diagnostics/screenshotting; deck adapters use
 this for final-state validation. It is for trusted adapter code only.
+
+Write a captured deck using `dsh-html-deck-export/export`:
+
+```js
+import { captureDeck } from 'dsh-html-deck-export/adapters'
+import { exportCapturedDeck } from 'dsh-html-deck-export/export'
+
+const controller = new AbortController()
+const run = await captureDeck('/absolute/deck/index.html', {
+  scale: 2, format: 'png', signal: controller.signal,
+  // Smaller output: scale: 1, format: 'jpeg', quality: 65
+  // Network stays blocked unless allowNetwork: true is explicitly supplied.
+})
+const result = await exportCapturedDeck(run, '/absolute/existing/export-directory', {
+  fileName: 'deck.pptx', signal: controller.signal,
+})
+console.log(result.pptxPath, result.reportPath)
+```
+
+Each PPTX page contains one full-bleed image in a 16:9 slide; speaker notes go
+into the notes pane, including Chinese line breaks. Images retain their original
+PNG/JPEG bytes. No existing PPTX is read, merged or used as a source.
+
+The writer accepts only a plain `.pptx` filename, without directory components
+or absolute paths. The export directory must already exist. `export-report.json`
+is fixed within that directory; existing output symlinks are replaced as directory
+entries, never followed. Use a separate export directory per job: the report
+describes the most recent attempt, including failures, and replaces the previous
+report. The caller must confine the chosen export directory to its authorized
+output boundary; the upcoming DSH tool will enforce its own boundary.
+
+The report records detected format, page count, viewport, scale, image format,
+quality (`null` for PNG or Chrome's unspecified JPEG default), browser version,
+network mode, per-page successful image bytes, font warnings and actual families,
+notes, render state and preview/live differences. `totalBytes` sums successful
+image bytes; `pptxBytes` measures the published ZIP including OOXML overhead.
+`elapsedMs` includes capture and assembly/report preparation; `captureElapsedMs`
+is also retained. Screenshot sizes vary with content, fonts and Chrome.
+
+Every detected page must be present in order. If a page failed, no partial PPTX
+is published: the writer saves a failed report, writes available screenshots to
+a unique `.html-deck-export-*` evidence directory, and rejects with the report
+path. `failedPages` includes reasons and relative evidence paths when available;
+evidence bytes do not count as successful image bytes. Missing screenshot evidence
+does not remove a failed page. Fix the source and export again.
+
+PPTX and report files are staged within the export directory, flushed with
+`fsync`, and renamed individually. Assembly, report-write and pre-publication
+cancellation failures leave the previous PPTX intact. A failed report sets
+`pptxBytes: 0` even if an older good PPTX remains. These are individual atomic
+file replacements, not a crash-atomic transaction across both files; the report
+is published before the PPTX. Pass the same signal to capture and writing;
+capture cancellation closes Chrome and writer cancellation prevents publication.
+Successful staging directories are removed; failed-page evidence is retained.
+
+Export tests use Python 3's standard-library ZIP and XML parsers to check OOXML,
+relationships, full-bleed images, byte identity/order and multiline Chinese notes.
+PowerPoint and WPS have not been opened on this box; OOXML validation does not
+claim those application checks.
 
 MIT © 2026 hzopc1031. No fixture themes, scripts, or assets are bundled.

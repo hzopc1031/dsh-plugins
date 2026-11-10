@@ -10,6 +10,7 @@ const expected = [
   'package.json', 'index.js', 'lib/plugin.js', 'lib/plugin.d.ts',
   'lib/adapters.js', 'lib/adapters.d.ts',
   'lib/capture.js', 'lib/capture.d.ts',
+  'lib/export.js', 'lib/export.d.ts',
   'lib/detect.js', 'lib/detect.d.ts', 'lib/html.js', 'lib/html.d.ts', 'lib/notes.js', 'lib/notes.d.ts',
   'cordis.patch.yml', 'locale/en.json', 'locale/zh.json', 'icon.svg',
   'README.md', 'LICENSE', 'CHANGELOG.md',
@@ -23,7 +24,7 @@ assert.match(readFileSync('cordis.patch.yml', 'utf8'), /id: html-deck-export\s+n
 for (const hook of ['preinstall', 'install', 'postinstall', 'prepare', 'prepack', 'postpack']) {
   assert.equal(pkg.scripts?.[hook], undefined, `unexpected lifecycle hook: ${hook}`)
 }
-assert.deepEqual(pkg.dependencies, { 'puppeteer-core': '24.31.0' }, 'only the pinned core browser driver is needed')
+assert.deepEqual(pkg.dependencies, { 'pptxgenjs': '4.0.1', 'puppeteer-core': '24.31.0' }, 'only pinned PPTX and core browser libraries are needed')
 for (const peer of Object.keys(pkg.peerDependencies)) {
   assert.equal(pkg.peerDependenciesMeta[peer].optional, true)
   assert.ok(pkg.devDependencies[peer], `missing development peer: ${peer}`)

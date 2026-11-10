@@ -1,0 +1,19 @@
+<!doctype html>
+<!-- MIT Copyright (c) 2026 hzopc1031 -->
+<html lang="zh-CN"><head><meta charset="utf-8"><title>Image export fixture</title>
+<style>
+html, body { margin:0; overflow:hidden; font-family:'Noto Sans CJK SC',sans-serif }
+canvas { position:fixed; inset:0; z-index:-1 }
+.slide { width:100vw; height:100vh; display:grid; place-items:center; color:white }
+aside.notes { position:absolute }
+</style></head><body>
+<canvas></canvas>
+<div id="deck"><section class="slide"><h1>图片版演示稿 · HTML remains the source</h1><aside class="notes">第一行讲稿<br>第二行中文</aside></section></div>
+<script>
+const canvas = document.querySelector('canvas');
+canvas.width = innerWidth; canvas.height = innerHeight;
+const ctx = canvas.getContext('2d');
+const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+gradient.addColorStop(0, '#123456'); gradient.addColorStop(0.5, '#8456ac'); gradient.addColorStop(1, '#78abcd');
+ctx.fillStyle = gradient; ctx.fillRect(0, 0, canvas.width, canvas.height);
+</script></body></html>

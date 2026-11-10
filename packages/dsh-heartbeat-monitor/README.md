@@ -38,6 +38,14 @@ github:hzopc1031/dsh-plugins#main&path:/packages/dsh-heartbeat-monitor
 dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-heartbeat-monitor"
 ```
 
+> **Windows 命令行提示**：如果 `dsh` 报 `profile "desktop" is managed exclusively by the Electron application`，说明 PATH 上的是独立安装的 dsh；请改用桌面版自带的 CLI（命令其余部分不变）：
+>
+> ```powershell
+> & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" plugin --profile desktop add <包名或 git 地址>
+> ```
+>
+> git 安装走 HTTPS 克隆 github.com；如果 git 全局配置了 `http.proxy`，代理需要处于运行状态。
+
 装完**完全退出桌面 DSH**（托盘图标也要退出），再重新打开。
 
 卸载：

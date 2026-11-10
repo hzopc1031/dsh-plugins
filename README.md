@@ -57,6 +57,16 @@ dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packag
 
 The same `github:...` address works in the Add plugin dialog. Replace `main` with a commit hash to pin a version.
 
+> **Windows 命令行提示**：如果 `dsh` 报 `profile "desktop" is managed exclusively by the Electron application`，说明 PATH 上的是独立安装的 dsh；请改用桌面版自带的 CLI（命令其余部分不变）：
+>
+> ```powershell
+> & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" plugin --profile desktop add <包名或 git 地址>
+> ```
+>
+> git 安装走 HTTPS 克隆 github.com；如果 git 全局配置了 `http.proxy`，代理需要处于运行状态。
+
+If `dsh` says the desktop profile is managed by the Electron application, use the Desktop-bundled CLI shown above. Git installs clone github.com over HTTPS, so any configured git proxy must be running.
+
 卸载 / Uninstall：`dsh plugin --profile desktop remove <npm 包名>`
 
 ## 本地开发 / Local development

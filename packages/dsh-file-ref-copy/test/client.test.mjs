@@ -51,9 +51,22 @@ async function setup(t, version = '0.2.1-rc.5') {
 const props = (nodes, id = 'current') => ({
   messageId: id, sessionId: 'session',
   useChat: select => select({ legacy: { nodes } }),
-  useSessions: select => select({ byId: { session: { cwd: 'C:\\项目 空格' } } }),
+  useProjection: key => { assert.equal(key, 'workingDirectory'); return 'C:\\项目 空格' },
 })
 const node = (id, text, extras = {}) => ({ kind: 'assistant', messageId: id, blocks: [{ kind: 'text', text }], ...extras })
+
+test('workingDirectory projection wins over stale session-list cwd and invalidates open paths on change',async t=>{
+  const f=await setup(t), p=props([node('current','[x](src/a.ts)')])
+  p.useSessions=()=>{assert.fail('immutable header/list cwd must not be consulted')}
+  p.useProjection=()=> 'D:/current'
+  await f.render(p);await f.click('复制文件路径');await f.click('复制绝对路径')
+  assert.equal(f.copied[0],'D:/current/src/a.ts')
+  p.useProjection=()=> 'D:/changed'
+  await f.render(p)
+  assert.equal(document.querySelector('[role="dialog"]'),null)
+  await f.click('复制文件路径');await f.click('复制绝对路径')
+  assert.equal(f.copied[1],'D:/changed/src/a.ts')
+})
 
 test('预构建 factory 只注册独立 assistant-actions，真实 Cordis 可加载宿主入口', async t => {
   const f = await setup(t)
@@ -96,7 +109,7 @@ test('无工作区时禁用绝对路径复制，剪贴板拒绝显示失败', as
   const f = await setup(t)
   navigator.clipboard.writeText = async () => { throw new Error('denied') }
   const p = props([node('current', '[x](src/a.ts)')])
-  p.useSessions = select => select({ byId: {} })
+  p.useProjection = () => undefined
   await f.render(p)
   await f.click('复制文件路径')
   const buttons = [...document.querySelectorAll('button')]

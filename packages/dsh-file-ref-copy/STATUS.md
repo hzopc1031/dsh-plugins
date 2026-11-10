@@ -1,7 +1,9 @@
 # 开发状态
 
+本次 0.1.1 优化、验证与推送状态见 [OPTIMIZE_REPORT.md](../../OPTIMIZE_REPORT.md)。下列首版执行记录为历史记录；不表示本次已做桌面验收。
+
 - 包名：`dsh-file-ref-copy`
-- 版本：`0.1.0`
+- 版本：`0.1.1`
 - 许可证：MIT
 - 日期：2026-11-10
 - 代码目录：`packages/dsh-file-ref-copy`

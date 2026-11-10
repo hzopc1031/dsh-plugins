@@ -1,6 +1,10 @@
 # 文件引用路径复制 · dsh-file-ref-copy
 
-版本 **0.1.0**，MIT。面向官方 **DSH 0.2.1-rc.5**。未发布 npm / not published to npm。
+当前源码版本 **0.1.1**（尚未发布本次版本到 npm）。相对链接改用 rc.5 useProjection("workingDirectory") 的宿主计算结果，不使用会话列表的初始 cwd；投影缺失/null 时保留路径未知的降级，不猜测当前目录。目录、会话或回答变化会清空已展开的路径，避免继续复制旧解析结果。相对链接只能按当前有效目录解释，不能反推旧回答生成时的目录；历史回答请核对原始绝对链接。
+
+本次只完成 Windows 上的 typecheck、单元/rc.5 headless 集成、browser factory 的 jsdom 检查及 verify-pack；未安装到真实 DSH、未做 Electron 目视验收。最新批次记录见仓库 [OPTIMIZE_REPORT.md](../../OPTIMIZE_REPORT.md)。
+
+版本 **0.1.1**，MIT。面向官方 **DSH 0.2.1-rc.5**。未发布 npm / not published to npm。
 
 在**已加载、已完成的回答操作区**点击 **「复制文件路径」**，面板会从该回答的原始 Markdown 提取本地文件链接，列出实际路径，并提供「复制绝对路径」「复制相对路径」「复制带行号路径」。标签可以只写“报告”；复制取链接目标，不从渲染后可能已丢失 href 的 DOM 反推。
 
@@ -82,3 +86,18 @@ npm run verify-pack
 - [Discussion #9129](https://github.com/deepseek-ai/deepseek-harness/discussions/9129) 为问题背景；本插件提供显式路径面板，不接管普通划词复制、Ctrl+C 或整条回答复制。
 
 MIT，见 LICENSE。
+
+## 本版本开发校验
+
+在本包目录独立执行，使用本包 lockfile（根目录无 workspaces）：
+
+```powershell
+npm ci --ignore-scripts
+npm run typecheck
+npm test
+npm run verify-pack
+```
+
+`npm test` 会重建需提交的 lib/。以上通过不等于 Electron 桌面通过；真实截图、剪贴板、焦点/布局及桌面安装仍需人工验收。
+
+本次接口依据（固定 rc.5）：[packages/client/ui-session/src/client/index.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-session/src/client/index.ts)、[packages/session/working-directory/src/index.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/session/working-directory/src/index.ts)。

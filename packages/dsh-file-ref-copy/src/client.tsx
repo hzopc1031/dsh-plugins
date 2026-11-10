@@ -4,28 +4,35 @@ export type {} from '@deepseek-ai/dsh-client-ui-chat/client'
 export type {} from '@deepseek-ai/dsh-client-ui-session/client'
 import type { PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import { Modal } from '@deepseek-ai/dsh-client-ui-primitives'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { completedMarkdown, copyPath, extractReferences, type FileReference } from './core.js'
 
 export const inject = ['slots']
 type Props = PropsRuntime<'conversation.chat.assistant-actions'>
+declare module '@deepseek-ai/dsh-session-projection/types' {
+  interface SessionProjectionMap { workingDirectory: string | null }
+}
 
-export function FileRefCopy({ messageId, sessionId, useChat, useSessions }: Props) {
+export function FileRefCopy({ messageId, sessionId, useChat, useProjection }: Props) {
   const markdown = useChat(snapshot => completedMarkdown(
     snapshot.legacy.nodes.filter(node => node.kind === 'assistant'), messageId,
   ))
-  const cwd = useSessions(snapshot => snapshot.byId[sessionId]?.cwd)
+  const cwd = useProjection('workingDirectory') ?? undefined
   const [open, setOpen] = useState(false)
   const [refs, setRefs] = useState<FileReference[]>([])
   const [notice, setNotice] = useState('')
+  const generation = useRef(0)
+  const close = () => { generation.current++; setOpen(false); setRefs([]); setNotice('') }
+  useEffect(() => { close(); return () => { generation.current++ } }, [cwd, sessionId, messageId, markdown])
   if (markdown === undefined) return null
   async function copy(ref: FileReference, mode: 'absolute' | 'relative' | 'line') {
+    const revision = generation.current
     try {
       const value = copyPath(ref, mode)
       if (value === undefined) throw new Error('当前路径形式不可用。')
       await navigator.clipboard.writeText(value)
-      setNotice('已复制：' + value)
-    } catch { setNotice('复制失败，请检查剪贴板权限，或从路径预览手动复制。') }
+      if (revision === generation.current) setNotice('已复制：' + value)
+    } catch { if (revision === generation.current) setNotice('复制失败，请检查剪贴板权限，或从路径预览手动复制。') }
   }
   return <>
     <button type="button" title="从这条已完成回答的原始 Markdown 提取本地文件链接" onClick={() => {
@@ -33,7 +40,7 @@ export function FileRefCopy({ messageId, sessionId, useChat, useSessions }: Prop
       catch { setRefs([]); setNotice('解析失败，未复制任何内容。') }
       setOpen(true)
     }}>复制文件路径</button>
-    <Modal open={open} onClose={() => { setOpen(false); setRefs([]); setNotice('') }} title="回答中的文件引用" closeLabel="关闭">
+    <Modal open={open} onClose={close} title="回答中的文件引用" closeLabel="关闭">
       <div style={{ width: 'min(640px, 75vw)', maxHeight: '65vh', overflowY: 'auto' }}>
         <p>仅来自这条已加载且已完成的回答。路径使用 /；带行号复制保留 #L 起止范围。</p>
         <p role="status" aria-live="polite">{notice}</p>

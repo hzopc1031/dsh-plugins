@@ -7576,24 +7576,38 @@ function copyPath(reference, mode) {
 // src/client.tsx
 var import_jsx_runtime = require("react/jsx-runtime");
 var inject = ["slots"];
-function FileRefCopy({ messageId, sessionId, useChat, useSessions }) {
+function FileRefCopy({ messageId, sessionId, useChat, useProjection }) {
   const markdown = useChat((snapshot) => completedMarkdown(
     snapshot.legacy.nodes.filter((node2) => node2.kind === "assistant"),
     messageId
   ));
-  const cwd = useSessions((snapshot) => snapshot.byId[sessionId]?.cwd);
+  const cwd = useProjection("workingDirectory") ?? void 0;
   const [open, setOpen] = (0, import_react.useState)(false);
   const [refs, setRefs] = (0, import_react.useState)([]);
   const [notice, setNotice] = (0, import_react.useState)("");
+  const generation = (0, import_react.useRef)(0);
+  const close = () => {
+    generation.current++;
+    setOpen(false);
+    setRefs([]);
+    setNotice("");
+  };
+  (0, import_react.useEffect)(() => {
+    close();
+    return () => {
+      generation.current++;
+    };
+  }, [cwd, sessionId, messageId, markdown]);
   if (markdown === void 0) return null;
   async function copy(ref, mode) {
+    const revision = generation.current;
     try {
       const value = copyPath(ref, mode);
       if (value === void 0) throw new Error("\u5F53\u524D\u8DEF\u5F84\u5F62\u5F0F\u4E0D\u53EF\u7528\u3002");
       await navigator.clipboard.writeText(value);
-      setNotice("\u5DF2\u590D\u5236\uFF1A" + value);
+      if (revision === generation.current) setNotice("\u5DF2\u590D\u5236\uFF1A" + value);
     } catch {
-      setNotice("\u590D\u5236\u5931\u8D25\uFF0C\u8BF7\u68C0\u67E5\u526A\u8D34\u677F\u6743\u9650\uFF0C\u6216\u4ECE\u8DEF\u5F84\u9884\u89C8\u624B\u52A8\u590D\u5236\u3002");
+      if (revision === generation.current) setNotice("\u590D\u5236\u5931\u8D25\uFF0C\u8BF7\u68C0\u67E5\u526A\u8D34\u677F\u6743\u9650\uFF0C\u6216\u4ECE\u8DEF\u5F84\u9884\u89C8\u624B\u52A8\u590D\u5236\u3002");
     }
   }
   return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
@@ -7607,11 +7621,7 @@ function FileRefCopy({ messageId, sessionId, useChat, useSessions }) {
       }
       setOpen(true);
     }, children: "\u590D\u5236\u6587\u4EF6\u8DEF\u5F84" }),
-    /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_dsh_client_ui_primitives.Modal, { open, onClose: () => {
-      setOpen(false);
-      setRefs([]);
-      setNotice("");
-    }, title: "\u56DE\u7B54\u4E2D\u7684\u6587\u4EF6\u5F15\u7528", closeLabel: "\u5173\u95ED", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { width: "min(640px, 75vw)", maxHeight: "65vh", overflowY: "auto" }, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_dsh_client_ui_primitives.Modal, { open, onClose: close, title: "\u56DE\u7B54\u4E2D\u7684\u6587\u4EF6\u5F15\u7528", closeLabel: "\u5173\u95ED", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { width: "min(640px, 75vw)", maxHeight: "65vh", overflowY: "auto" }, children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u4EC5\u6765\u81EA\u8FD9\u6761\u5DF2\u52A0\u8F7D\u4E14\u5DF2\u5B8C\u6210\u7684\u56DE\u7B54\u3002\u8DEF\u5F84\u4F7F\u7528 /\uFF1B\u5E26\u884C\u53F7\u590D\u5236\u4FDD\u7559 #L \u8D77\u6B62\u8303\u56F4\u3002" }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { role: "status", "aria-live": "polite", children: notice }),
       !refs.length && !notice && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u8FD9\u6761\u56DE\u7B54\u6CA1\u6709\u7B26\u5408 rc.5 \u89C4\u5219\u7684\u672C\u5730\u6587\u4EF6\u94FE\u63A5\u3002" }),

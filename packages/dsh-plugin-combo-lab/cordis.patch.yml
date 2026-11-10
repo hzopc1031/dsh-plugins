@@ -1,0 +1,4 @@
+- insert:
+    - id: plugin-combo-lab
+      name: dsh-plugin-combo-lab
+      config: {}

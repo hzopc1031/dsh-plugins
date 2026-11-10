@@ -1,0 +1,4 @@
+- insert:
+    - id: dll-doctor
+      name: dsh-dll-doctor
+      config: {}

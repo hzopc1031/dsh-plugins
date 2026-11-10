@@ -1,0 +1,80 @@
+{
+  "name": "dsh-direnjie-theme",
+  "version": "0.1.0",
+  "description": "原创长安水墨主题与本机音乐播放器",
+  "type": "module",
+  "main": "index.js",
+  "types": "lib/plugin.d.ts",
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "types": "./lib/plugin.d.ts",
+      "default": "./index.js"
+    },
+    "./client": "./lib/client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "lib",
+    "assets",
+    "cordis.patch.yml",
+    "locale",
+    "icon.svg",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "docs"
+  ],
+  "engines": {
+    "node": ">=22",
+    "dsh": ">=0.2.1-rc.5 <0.2.2"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-theme"
+      ]
+    }
+  },
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "theme"
+  ],
+  "scripts": {
+    "build": "tsc && node scripts/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run build && node --test test/*.test.mjs",
+    "verify-pack": "node scripts/verify-pack.mjs"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "~4.0.5",
+    "@deepseek-ai/schemastery": "~3.18.5"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "~4.0.5",
+    "@deepseek-ai/schemastery": "~3.18.5",
+    "@deepseek-ai/dsh-host-webserver": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-client-ui-theme": "0.2.1-rc.5",
+    "@types/node": "^22.0.0",
+    "typescript": "~5.9.3",
+    "esbuild": "^0.25.0",
+    "jsdom": "^26.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hzopc1031/dsh-plugins.git",
+    "directory": "packages/dsh-direnjie-theme"
+  },
+  "homepage": "https://github.com/hzopc1031/dsh-plugins/tree/main/packages/dsh-direnjie-theme#readme",
+  "bugs": {
+    "url": "https://github.com/hzopc1031/dsh-plugins/issues"
+  },
+  "author": "hzopc1031"
+}

@@ -96,12 +96,64 @@ var inject = ["slots"];
 function boot() {
   return window.__DSH_BOOT__;
 }
-function DraftRescue({ useInput, inputActions }) {
+function formatMeta(meta) {
+  return "\u6807\u9898\uFF1A" + (meta.title ?? "\u672A\u77E5") + "\uFF1B\u5DE5\u4F5C\u533A\uFF1A" + (meta.workspace ?? "\u672A\u77E5");
+}
+function DraftRescue({ sessionId, useInput, inputActions, useSessions, useProjection }) {
   const input = useInput((value) => value);
+  const sessionsById = (useSessions ?? ((select) => select({ byId: {} })))((state) => state.byId);
+  const projectedTitle = (useProjection ?? ((_key) => null))("title");
+  const projectedCwd = (useProjection ?? ((_key) => null))("workingDirectory");
+  function sessionMeta(id) {
+    const row = sessionsById?.[id];
+    let title;
+    let workspace;
+    if (row && typeof row.title === "string" && row.title.trim()) title = row.title;
+    if (row && typeof row.cwd === "string" && row.cwd.trim()) workspace = row.cwd;
+    if (id === sessionId) {
+      if (typeof projectedTitle === "string" && projectedTitle.trim()) title = projectedTitle;
+      if (typeof projectedCwd === "string" && projectedCwd.trim()) workspace = projectedCwd;
+    }
+    return { title, workspace };
+  }
   const [open, setOpen] = (0, import_react.useState)(false);
   const [drafts, setDrafts] = (0, import_react.useState)([]);
   const [notice, setNotice] = (0, import_react.useState)("");
+  const [query, setQuery] = (0, import_react.useState)("");
+  const [page, setPage] = (0, import_react.useState)(0);
+  const [preview, setPreview] = (0, import_react.useState)(null);
+  const live = (0, import_react.useRef)(input);
+  live.current = input;
+  const generation = (0, import_react.useRef)(0);
+  const close = () => {
+    generation.current++;
+    setOpen(false);
+    setDrafts([]);
+    setNotice("");
+    setQuery("");
+    setPage(0);
+    setPreview(null);
+  };
+  (0, import_react.useEffect)(() => {
+    close();
+    return () => {
+      generation.current++;
+    };
+  }, [sessionId]);
+  const filtered = (0, import_react.useMemo)(() => {
+    const needle = query.toLocaleLowerCase();
+    return drafts.filter((d) => {
+      const meta = sessionMeta(d.sessionId);
+      return [d.sessionId, d.text, meta.title ?? "", meta.workspace ?? ""].join("\n").toLocaleLowerCase().includes(needle);
+    });
+  }, [drafts, query, sessionId, sessionsById, projectedTitle, projectedCwd]);
+  const pages = Math.max(1, Math.ceil(filtered.length / 20));
+  const currentPage = Math.min(page, pages - 1);
+  const targetMeta = sessionMeta(sessionId);
   function refresh() {
+    generation.current++;
+    setPage(0);
+    setPreview(null);
     try {
       requireVersion(boot());
       setDrafts(listDrafts(window.localStorage, boot()));
@@ -112,18 +164,19 @@ function DraftRescue({ useInput, inputActions }) {
     }
   }
   async function copy(draft) {
+    const revision = generation.current;
     try {
       requireVersion(boot());
       await navigator.clipboard.writeText(copyText(draft));
-      setNotice("\u5DF2\u590D\u5236\u539F\u6587\u3002");
+      if (generation.current === revision) setNotice("\u5DF2\u590D\u5236\u539F\u6587\u3002");
     } catch {
-      setNotice("\u590D\u5236\u5931\u8D25\uFF1B\u8BF7\u5237\u65B0\u5E76\u68C0\u67E5\u7248\u672C\u3001\u526A\u8D34\u677F\u6743\u9650\uFF0C\u6216\u4ECE\u9884\u89C8\u624B\u52A8\u590D\u5236\u3002");
+      if (generation.current === revision) setNotice("\u590D\u5236\u5931\u8D25\uFF1B\u8BF7\u5237\u65B0\u5E76\u68C0\u67E5\u7248\u672C\u3001\u526A\u8D34\u677F\u6743\u9650\uFF0C\u6216\u4ECE\u9884\u89C8\u624B\u52A8\u590D\u5236\u3002");
     }
   }
   function append(draft) {
     try {
       requireVersion(boot());
-      const prepared = prepareAppend(draft, input);
+      const prepared = prepareAppend(draft, live.current);
       if (!inputActions.insertText(prepared.text, prepared.span)) throw new Error("\u8F93\u5165\u6846\u5DF2\u53D8\u5316\u6216\u6682\u4E0D\u53EF\u7F16\u8F91\uFF0C\u8BF7\u91CD\u8BD5\u3002");
       setNotice("\u5DF2\u8FFD\u52A0\u5230\u5F53\u524D\u8F93\u5165\u6846\uFF0C\u5C1A\u672A\u53D1\u9001\u3002");
     } catch (error) {
@@ -135,32 +188,65 @@ function DraftRescue({ useInput, inputActions }) {
       refresh();
       setOpen(true);
     }, children: "\u672A\u53D1\u9001\u8349\u7A3F" }),
-    /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_dsh_client_ui_primitives.Modal, { open, onClose: () => {
-      setOpen(false);
-      setDrafts([]);
-      setNotice("");
-    }, title: "\u672A\u53D1\u9001\u8349\u7A3F", closeLabel: "\u5173\u95ED", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { width: "min(640px, 75vw)", maxHeight: "65vh", overflowY: "auto" }, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u53EA\u6062\u590D\u6587\u5B57\uFF1B\u5F15\u7528\u80F6\u56CA\u663E\u793A\u4E3A\u6587\u5B57\uFF0C\u9644\u4EF6\u4E0D\u6062\u590D\u3002\u6309\u4F1A\u8BDD ID \u6392\u5E8F\u3002" }),
+    /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_dsh_client_ui_primitives.Modal, { open, onClose: close, title: "\u672A\u53D1\u9001\u8349\u7A3F", closeLabel: "\u5173\u95ED", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { width: "min(640px, 75vw)", maxHeight: "65vh", overflowY: "auto" }, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u53EA\u6062\u590D\u6587\u5B57\uFF1B\u5F15\u7528\u80F6\u56CA\u663E\u793A\u4E3A\u6587\u5B57\uFF0C\u9644\u4EF6\u4E0D\u6062\u590D\u3002\u6309\u4F1A\u8BDD ID \u6392\u5E8F\u3002\u6807\u9898\u548C\u5DE5\u4F5C\u533A\u4EC5\u5728\u80FD\u4ECE\u5B98\u65B9\u4F1A\u8BDD\u5217\u8868\u6216\u6295\u5F71\u53EF\u9760\u8BFB\u5230\u65F6\u663E\u793A\uFF0C\u5426\u5219\u4E3A\u672A\u77E5\uFF1B\u4E0D\u7F16\u9020\u66F4\u65B0\u65F6\u95F4\u3002" }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
+        "\u8FFD\u52A0\u76EE\u6807\uFF1A\u5F53\u524D\u4F1A\u8BDD ",
+        sessionId,
+        "\uFF1B",
+        formatMeta(targetMeta)
+      ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", "data-modal-autofocus": true, onClick: refresh, children: "\u5237\u65B0\u8349\u7A3F" }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { children: [
+        "\u7B5B\u9009\u4F1A\u8BDD\u3001\u6807\u9898\u3001\u5DE5\u4F5C\u533A\u6216\u6B63\u6587 ",
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { value: query, onChange: (event) => {
+          setQuery(event.target.value);
+          setPage(0);
+          setPreview(null);
+        } })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
+        filtered.length,
+        " \u6761 \xB7 \u7B2C ",
+        currentPage + 1,
+        "/",
+        pages,
+        " \u9875"
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", disabled: currentPage === 0, onClick: () => {
+        setPage(currentPage - 1);
+        setPreview(null);
+      }, children: "\u4E0A\u4E00\u9875" }),
+      " ",
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", disabled: currentPage + 1 >= pages, onClick: () => {
+        setPage(currentPage + 1);
+        setPreview(null);
+      }, children: "\u4E0B\u4E00\u9875" }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { role: "status", "aria-live": "polite", children: notice }),
       !drafts.length && !notice && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u672C\u673A\u6CA1\u6709\u975E\u7A7A\u6587\u5B57\u8349\u7A3F\u3002" }),
-      drafts.map((draft) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { style: { marginTop: 16 }, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("details", { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("summary", { children: [
+      filtered.slice(currentPage * 20, (currentPage + 1) * 20).map((draft) => {
+        const meta = sessionMeta(draft.sessionId);
+        const current = draft.sessionId === sessionId;
+        return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { style: { marginTop: 16 }, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
             "\u4F1A\u8BDD ",
             draft.sessionId,
             " \xB7 ",
             draft.text.length,
-            " \u5B57\u7B26"
+            " \u5B57\u7B26",
+            current ? " \xB7 \u5F53\u524D\u4F1A\u8BDD\u8349\u7A3F" : "",
+            " \xB7 ",
+            formatMeta(meta)
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("pre", { style: { whiteSpace: "pre-wrap", overflowWrap: "anywhere", userSelect: "text" }, children: draft.text })
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", onClick: () => {
-          void copy(draft);
-        }, children: "\u590D\u5236\u539F\u6587" }),
-        " ",
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", disabled: input.phase !== "plain", onClick: () => append(draft), children: "\u8FFD\u52A0\u5230\u5F53\u524D\u8F93\u5165\u6846" })
-      ] }, draft.sessionId))
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", onClick: () => setPreview(preview === draft.sessionId ? null : draft.sessionId), children: "\u9884\u89C8\u539F\u6587" }),
+          preview === draft.sessionId && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("pre", { style: { whiteSpace: "pre-wrap", overflowWrap: "anywhere", userSelect: "text" }, children: draft.text }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", onClick: () => {
+            void copy(draft);
+          }, children: "\u590D\u5236\u539F\u6587" }),
+          " ",
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", disabled: input.phase !== "plain", onClick: () => append(draft), children: "\u8FFD\u52A0\u5230\u5F53\u524D\u8F93\u5165\u6846" })
+        ] }, draft.sessionId);
+      })
     ] }) })
   ] });
 }

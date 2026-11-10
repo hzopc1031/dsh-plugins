@@ -1,8 +1,12 @@
 # 未发送草稿 · dsh-draft-rescue
 
-版本 **0.1.0**，MIT。适用于官方 **DSH 0.2.1-rc.5**。未发布 npm / not published to npm。
+当前源码版本 **0.2.0**（尚未发布本次版本到 npm）。草稿面板支持按会话 ID 或正文筛选，每页 20 条，点击“预览原文”才挂载该条正文。搜索和分页不修改 localStorage；复制/追加保留原文。追加使用最新输入状态的 draftRev 和胶囊坐标，由宿主 insertText 做 revision guard，不使用 setDraft 覆盖现有输入。会话切换关闭面板并清理预览，迟到的剪贴板结果不回填新面板。仍需枚举并读取当前源中的草稿，分页只减少 DOM/正文渲染开销。
 
-切到新会话后，在会话头部点击 **「未发送草稿」**，即可查看本机保存的非空文字草稿，包括已被侧栏隐藏的旧空会话。面板按会话 ID 排序；展开条目预览，用「复制原文」复制完整文字，或用「追加到当前输入框」追加文字。支持手动刷新。
+本次只完成 Windows 上的 typecheck、单元/rc.5 headless 集成、browser factory 的 jsdom 检查及 verify-pack；未安装到真实 DSH、未做 Electron 目视验收。
+
+版本 **0.2.0**，MIT。适用于官方 **DSH 0.2.1-rc.5**。未发布 npm / not published to npm。
+
+切到新会话后，在会话头部点击 **「未发送草稿」**，即可查看本机保存的非空文字草稿，包括已被侧栏隐藏的旧空会话。面板按会话 ID 排序，并显示会话列表或当前会话投影中的可靠标题和工作区（读不到则标为「未知」，不使用会回退到 id/目录名的 displayTitle）。当前会话条目标为「当前会话草稿」，顶部写明追加目标。可用标题、工作区、会话 ID 或正文筛选。展开条目预览，用「复制原文」复制完整文字，或用「追加到当前输入框」追加文字。支持手动刷新。
 
 首版只处理文字：结构草稿的 `text` 中若有引用的剪贴板文字，也按普通文字复制，不重建 mention pills、命令胶囊或附件。复制保留原文的首尾空白、换行和 Unicode。已有输入非空时，追加先加一个换行，再插入原文。追加通过官方 `inputActions.insertText(text, span)` 执行，范围折叠到文末，并使用 `draftRev` 防止覆盖之后的编辑；已有引用胶囊按 rc.5 的一字符坐标计算。输入框忙碌或处于命令模式时禁止追加，复制仍可使用。不会自动发送。
 
@@ -77,3 +81,18 @@ npm run verify-pack
 - [Discussion #10021](https://github.com/deepseek-ai/deepseek-harness/discussions/10021) 为问题背景；讨论里的后续提案不作为 rc.5 可用接口。
 
 MIT，见 LICENSE。
+
+## 本版本开发校验
+
+在本包目录独立执行，使用本包 lockfile（根目录无 workspaces）：
+
+```powershell
+npm ci --ignore-scripts
+npm run typecheck
+npm test
+npm run verify-pack
+```
+
+`npm test` 会重建需提交的 lib/。以上通过不等于 Electron 桌面通过；真实截图、剪贴板、焦点/布局及桌面安装仍需人工验收。
+
+本次接口依据（固定 rc.5）：[packages/client/ui-conversation/src/client/contract/input.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-conversation/src/client/contract/input.ts)。

@@ -10,6 +10,7 @@ import { Context } from '@deepseek-ai/cordis'
 import * as host from '../index.js'
 
 const require = createRequire(import.meta.url)
+const { Simulate } = require('react-dom/test-utils')
 async function setup(t, version = '0.2.1-rc.5') {
   const dom = new JSDOM('<div id="root"></div>', { url: 'https://dsh.test/' })
   const saved = new Map()
@@ -75,6 +76,8 @@ test('模拟新会话：隐藏旧草稿可预览、原文复制与末尾 insertT
   await f.click('未发送草稿')
   assert.ok(document.body.textContent.includes('hidden-old'))
   assert.ok(!document.body.textContent.includes('new-session'))
+  assert.equal(document.querySelector('pre'), null, '正文按需挂载')
+  await f.click('预览原文')
   assert.equal(document.querySelector('pre').textContent, text)
   await f.click('复制原文')
   assert.deepEqual(f.copied, [text])
@@ -86,6 +89,24 @@ test('模拟新会话：隐藏旧草稿可预览、原文复制与末尾 insertT
   assert.equal(document.querySelector('pre'), null)
 })
 function localStorageSet(id, text) { window.localStorage.setItem('dsh.conversation.' + id, JSON.stringify({ draft: { text, references: [] }, view: null, viewRequest: null })) }
+
+test('large draft lists paginate, mount previews lazily and preserve latest draftRev after input edits',async t=>{
+  const f=await setup(t), inserted=[], state={...input}
+  for(let i=0;i<45;i++) localStorageSet('session-'+String(i).padStart(2,'0'),'body-'+i)
+  const props={sessionId:'a',useInput:select=>select(state),inputActions:{insertText:(...args)=>{inserted.push(args);return true}}}
+  await f.render(props);await f.click('未发送草稿')
+  assert.equal(document.querySelectorAll('section').length,20)
+  assert.equal(document.querySelectorAll('pre').length,0)
+  await f.click('下一页');assert.equal(document.querySelectorAll('section').length,20)
+  await f.click('下一页');assert.equal(document.querySelectorAll('section').length,5)
+  state.draft='newer text';state.draftRev=99;await f.render(props)
+  await f.click('追加到当前输入框')
+  assert.equal(inserted[0][1].draftRev,99)
+  assert.equal(inserted[0][1].start,state.draft.length)
+  props.sessionId='b';await f.render(props)
+  assert.equal(document.querySelector('[role="dialog"]'),null)
+  assert.equal(document.querySelectorAll('pre').length,0)
+})
 test('版本不符时 UI 显示拒绝信息，完全不读取 storage', async t => {
   const f = await setup(t, '0.2.2')
   Object.defineProperty(window, 'localStorage', { get() { assert.fail('must not read storage') } })
@@ -104,4 +125,36 @@ test('过期 revision 插入失败和剪贴板拒绝均显示失败，不误报�
   assert.match(document.body.textContent, /复制失败/)
   await f.click('追加到当前输入框')
   assert.match(document.body.textContent, /已变化或暂不可编辑/)
+})
+
+test('durable title and workspace come from session list or current projection; displayTitle is never used', async t => {
+  const f = await setup(t)
+  localStorageSet('hidden-old', '旧草稿正文')
+  localStorageSet('session-now', '当前草稿正文')
+  const byId = {
+    'hidden-old': { title: '上周讨论', cwd: 'D:\\work\\alpha', displayTitle: 'hidden-old' },
+    'session-now': { title: '', cwd: '', displayTitle: 'session-now' },
+  }
+  await f.render({
+    sessionId: 'session-now',
+    useInput: select => select(input),
+    inputActions: { insertText: () => true },
+    useSessions: select => select({ byId }),
+    useProjection: key => {
+      assert.notEqual(key, 'displayTitle')
+      return key === 'title' ? '今日计划' : key === 'workingDirectory' ? 'D:\\work\\today' : null
+    },
+  })
+  await f.click('未发送草稿')
+  assert.match(document.body.textContent, /追加目标：当前会话 session-now/)
+  assert.match(document.body.textContent, /标题：今日计划；工作区：D:\\work\\today/)
+  assert.match(document.body.textContent, /当前会话草稿/)
+  assert.match(document.body.textContent, /标题：上周讨论；工作区：D:\\work\\alpha/)
+  assert.doesNotMatch(document.body.textContent, /displayTitle/)
+  const box = document.querySelector('label input')
+  assert.ok(box, 'missing filter input')
+  await act(async () => { Simulate.change(box, { target: { value: '上周' } }) })
+  assert.equal(document.querySelectorAll('section').length, 1)
+  assert.match(document.body.textContent, /hidden-old/)
+  assert.ok(!document.body.textContent.includes('当前草稿正文'))
 })

@@ -57,10 +57,16 @@ dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packag
 内部 id（`direnjie-theme`）、包名和配置键都没变，直接升级，原来的配置会保留。先完全退出桌面 DSH，再运行：
 
 ```powershell
-dsh plugin --profile desktop add dsh-direnjie-theme@latest
+dsh plugin --profile desktop add dsh-direnjie-theme@0.1.1
 ```
 
-`dsh plugin` 会把参数原样交给 pnpm，所以 `add <包名>@latest` 会把已装版本换成最新版。从 git 装的，重新执行一次上面的 git 地址 add 命令即可拉取 main 最新提交。完成后重新打开 DSH。
+或者（效果相同）：
+
+```powershell
+dsh plugin --profile desktop update dsh-direnjie-theme --latest
+```
+
+`dsh plugin` 会把参数原样交给桌面版自带的 pnpm 11。pnpm 11 默认不选发布不满 1 天的新版本，所以发布当天 `add dsh-direnjie-theme@latest` 仍会停在 0.1.0；写明版本号或用 `update --latest` 可以直接升级（pnpm 会在 profile 目录的 pnpm-workspace.yaml 里记一条 minimumReleaseAgeExclude）。从 git 装的，重新执行一次上面的 git 地址 add 命令即可拉取 main 最新提交。完成后重新打开 DSH。
 
 ## 配置
 

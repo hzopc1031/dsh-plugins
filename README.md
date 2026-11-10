@@ -8,7 +8,7 @@
 | --- | --- | --- | --- |
 | 任务复盘 | [`dsh-task-review`](https://www.npmjs.com/package/dsh-task-review) | 自动或手动任务复盘，保存本地 Markdown 报告（`/review`）/ Task reviews with local Markdown reports | [README](packages/dsh-task-review/README.md) |
 | 任务心跳 | [`dsh-heartbeat-monitor`](https://www.npmjs.com/package/dsh-heartbeat-monitor) | 长任务定时进度卡、静默/重复警告（`/heartbeat`）/ Timed progress cards and stall/repeat warnings | [README](packages/dsh-heartbeat-monitor/README.md) |
-| 长安听雨主题 | [`dsh-direnjie-theme`](https://www.npmjs.com/package/dsh-direnjie-theme) | 原创长安水墨背景、配色与本机音乐播放器 / Original Chang'an ink theme with a local music player | [README](packages/dsh-direnjie-theme/README.md) |
+| 神探狄仁杰主题 | [`dsh-direnjie-theme`](https://www.npmjs.com/package/dsh-direnjie-theme) | 非官方同人主题：原创狄仁杰插画背景、配色与本机音乐播放器（音乐需本地配置） / Unofficial Detective Dee fan theme with an original illustrated background and a local music player | [README](packages/dsh-direnjie-theme/README.md) |
 
 > 心跳插件的 npm 包名是 `dsh-heartbeat-monitor`：`dsh-heartbeat` 已被一个无关的包占用。
 > The heartbeat plugin is published as `dsh-heartbeat-monitor` because `dsh-heartbeat` is an unrelated package.

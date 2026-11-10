@@ -12,8 +12,8 @@ export function mount(doc: Document, boot: Boot, css: string): () => void {
  if (!boot.enabled) return () => {}
  const style=doc.createElement('style'); style.dataset.plugin=name; style.textContent=css; doc.head.append(style)
  const old=doc.body.getAttribute('data-direnjie'); doc.body.setAttribute('data-direnjie','')
- const panel=doc.createElement('details'); panel.id='direnjie-music'; panel.setAttribute('aria-label','长安听雨音乐播放器')
- const title=doc.createElement('summary'); title.textContent='长安听雨 · 乐'; panel.append(title)
+ const panel=doc.createElement('details'); panel.id='direnjie-music'; panel.setAttribute('aria-label','神探狄仁杰音乐播放器')
+ const title=doc.createElement('summary'); title.textContent='神探狄仁杰 · 乐'; panel.append(title)
  const audio=doc.createElement('audio'); audio.controls=true; audio.preload='none'; audio.volume=Math.min(1,Math.max(0,boot.volume)); audio.loop=boot.loop
  const status=doc.createElement('p'); status.setAttribute('role','status'); status.textContent=boot.musicUrl ? '本机音乐已配置，点击播放。' : '选择本机音频，或配置 musicPath 后重启。'
  const label=doc.createElement('label'); label.textContent='选择本机音频 '

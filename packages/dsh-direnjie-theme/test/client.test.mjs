@@ -19,7 +19,7 @@ const boot={enabled:true,musicUrl:'/music/token',volume:.35,loop:true,autoplay:f
 test('actual client artifact: defaults, controls, selection, cleanup and reload',()=>{
  const s=setup();const doc=s.window.document
  const cleanup=s.api.mount(doc,boot,'body[data-direnjie]{color:green}')
- assert.equal(s.plays,0);assert.ok(doc.querySelector('audio').controls);assert.equal(doc.querySelector('audio').loop,true)
+ assert.equal(s.plays,0);assert.equal(doc.querySelector('summary').textContent,'神探狄仁杰 · 乐');assert.ok(doc.querySelector('audio').controls);assert.equal(doc.querySelector('audio').loop,true)
  assert.equal(doc.querySelector('audio').volume,.35);assert.equal(doc.querySelector('details').open,false)
  const input=doc.querySelector('input');Object.defineProperty(input,'files',{value:[new s.window.File(['x'],'test.wav')]});input.dispatchEvent(new s.window.Event('change'))
  assert.equal(doc.querySelector('audio').getAttribute('src'),'blob:test')
@@ -37,6 +37,6 @@ test('plugin apply uses theme layer and registers reversible effects',()=>{
  const s=setup();const cleanup=[];let removed=false;let count=0
  s.window.__DSH_DIRENJIE__=boot
  const ctx={theme:{overrideTokens:(name,tokens)=>{assert.equal(name,'dsh-direnjie-theme');assert.ok(tokens['--dsw-alias-bg-base'].dark);count++;return ()=>removed=true}},effect:fn=>cleanup.push(fn())}
- s.api.apply(ctx);assert.equal(count,1);assert.ok(s.window.document.querySelector('style').textContent.includes('data:image/svg+xml'))
+ s.api.apply(ctx);assert.equal(count,1);assert.ok(s.window.document.querySelector('style').textContent.includes('data:image/webp;base64,'))
  cleanup.reverse().forEach(fn=>fn());assert.equal(removed,true);assert.equal(s.window.document.querySelector('style'),null);s.dom.window.close()
 })

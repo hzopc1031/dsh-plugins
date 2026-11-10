@@ -3,8 +3,7 @@ import assert from 'node:assert/strict'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { Context } from '@deepseek-ai/cordis'
-import Commands from '@deepseek-ai/dsh-commands'
+import { Context, Commands, mountTools } from './harness.mjs'
 import { remoteErrorOf, remoteMethods } from '@deepseek-ai/dsh-typert-protocol'
 import * as plugin from '../index.js'
 import remote from '../lib/typert.remote-client.js'
@@ -15,6 +14,7 @@ test('generated Host and client contracts agree with the registered service and 
   const ctx = new Context()
   t.after(async () => { await ctx.fiber.dispose(); await rm(dataDir, { recursive: true, force: true }) })
   await ctx.plugin(Commands)
+  await mountTools(ctx)
   await ctx.plugin(plugin, { dataDir })
   const service = ctx.contentEvidence
   const endpoints = remoteMethods(service).map(item => `contentEvidence/${item.method}`).sort()

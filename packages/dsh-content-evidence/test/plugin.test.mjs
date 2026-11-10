@@ -1,17 +1,17 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { Context } from '@deepseek-ai/cordis'
-import Commands from '@deepseek-ai/dsh-commands'
+import { Context, Commands, mountTools } from './harness.mjs'
 import { remoteMethods, remoteErrorOf } from '@deepseek-ai/dsh-typert-protocol'
 import * as plugin from '../index.js'
 
 test('bundle loads with the command service and removes its help command on disposal', async () => {
   assert.equal(plugin.name, 'content-evidence')
-  assert.deepEqual(plugin.inject, ['commands'])
+  assert.deepEqual(plugin.inject, ['commands', 'tools'])
   assert.deepEqual(plugin.Config({}), {})
   const ctx = new Context()
   try {
     await ctx.plugin(Commands)
+    await mountTools(ctx)
     const fiber = await ctx.plugin(plugin, {})
     assert.equal(ctx.contentEvidence.typertRemote.serviceKey, 'contentEvidence')
     assert.equal(ctx.contentEvidence.typertRemote.namespace, 'contentEvidence')
@@ -25,7 +25,7 @@ test('bundle loads with the command service and removes its help command on disp
     assert.deepEqual(ctx.commands.list(agent).map(c => c.name), ['content-evidence'])
     const command = ctx.commands.find(agent, 'content-evidence')
     assert.equal(command.recordInput, false)
-    const result = await command.handler({ rawInput: '', signal: new AbortController().signal })
+    const result = await command.handler({ agent, rawInput: '', signal: new AbortController().signal })
     assert.equal(result.kind, 'success')
     assert.match(result.text, /local storage/)
     assert.match(result.text, /Nothing is published automatically/)
@@ -33,6 +33,7 @@ test('bundle loads with the command service and removes its help command on disp
     await fiber.dispose()
     assert.deepEqual(ctx.commands.list(agent), [])
     assert.equal(ctx.get('contentEvidence'), undefined)
+    assert.deepEqual(ctx.tools.schemas().map(tool => tool.name), [])
   } finally {
     await ctx.fiber.dispose()
   }

@@ -9,7 +9,7 @@ const out = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json', '--ig
 const files = out[0].files.map(f => f.path).sort()
 const expected = [
   'CHANGELOG.md', 'LICENSE', 'README.md', 'cordis.patch.yml', 'icon.svg', 'index.js',
-  ...['plugin', 'model', 'service', 'store', 'validation', 'typert.host', 'typert.remote-client']
+  ...['plugin', 'model', 'service', 'store', 'validation', 'tools', 'typert.host', 'typert.remote-client']
     .flatMap(name => [`lib/${name}.js`, `lib/${name}.d.ts`]),
   'locale/en.json', 'locale/zh.json', 'package.json',
 ].sort()
@@ -22,7 +22,7 @@ for (const hook of ['preinstall', 'install', 'postinstall', 'prepare', 'prepack'
   assert.equal(pkg.scripts?.[hook], undefined, 'unexpected lifecycle script')
 }
 assert.equal(pkg.dependencies, undefined, 'host libraries must be peers')
-for (const name of ['@deepseek-ai/dsh-typert-protocol', 'zod']) {
+for (const name of ['@deepseek-ai/dsh-tools', '@deepseek-ai/dsh-agent', '@deepseek-ai/dsh-scope', '@deepseek-ai/dsh-system-prompt', '@deepseek-ai/dsh-typert-protocol', 'zod']) {
   assert.ok(pkg.peerDependencies[name] && pkg.devDependencies[name], 'missing build/runtime peer ' + name)
   assert.equal(pkg.peerDependenciesMeta[name].optional, true)
 }

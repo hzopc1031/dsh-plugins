@@ -2,7 +2,7 @@
 
 **Under development, version 0.1.0. Not published to npm.**
 
-A local verification gate + evidence pack for invoices and spreadsheets, under development. Local ingest and deterministic reconciliation libraries are available; the DSH command still provides help only. 本地导入与确定性核对规则已提供；证据导出、DSH 工具和界面尚未实现。
+A local verification gate + evidence pack for invoices and spreadsheets, under development. Local ingest, deterministic reconciliation and evidence export libraries are available; the DSH command still provides help only. 本地导入、确定性核对与证据包导出已提供；DSH 工具和界面尚未实现。
 
 Requires Node.js >=22 and DSH `>=0.2.1-rc.5 <0.3.0`. API reference: DSH `0.2.2-rc.1`, source commit `fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159`.
 
@@ -10,7 +10,9 @@ This is not OCR or tax-bureau verification (验真). The model must never invent
 
 The library accepts explicitly mapped CSV/XLSX, documented structured/OCR JSON, labelled PDF text layers and the fixture-backed Invoice XML dialect. OFD and images/scanned PDFs without OCR JSON are refused. Read [docs/inputs.md](docs/inputs.md) for the API, JSON schema, supported XML shape and limitations. `ingest` returns raw evidence for local processing; never dump its result into model context.
 
-`reconcile(ingestResult, options?, corrections?)` checks integer-fen arithmetic, line totals, duplicate numbers/hashes, optional buyer/period rules and number-based ledger matches. Raw, normalized and human-confirmed values remain separate; optional corrections JSON carries before/after provenance. Missing fields stay unchecked and block full confirmation. Read [docs/reconciliation.md](docs/reconciliation.md) for the result contract, rules and correction schema. No export writer or DSH check tool exists yet; the full library result must stay out of model context.
+`reconcile(ingestResult, options?, corrections?)` checks integer-fen arithmetic, line totals, duplicate numbers/hashes, optional buyer/period rules and number-based ledger matches. Raw, normalized and human-confirmed values remain separate; optional corrections JSON carries before/after provenance. Missing fields stay unchecked and block full confirmation. Read [docs/reconciliation.md](docs/reconciliation.md) for the result contract, rules and correction schema. The full library result must stay out of model context.
+
+`exportPack(projectDir, newRelativeDirectory, result, { includeOriginals: false })` atomically writes Markdown, XLSX text cells and JSON, with optional hash-checked original copies. Packs show textual red flags, source pointers, inventories, separate value layers and draft status for unresolved runs. Existing directories are refused. Its return value contains only paths, status and counts. Read [docs/exports.md](docs/exports.md) for the contract and limits. No DSH export tool exists yet.
 
 Arithmetic checks do not establish authenticity, payment or reimbursability. An evidence pack does not establish accounting-archive compliance. SHA-256 detects file changes; it does not prove a ticket is genuine.
 

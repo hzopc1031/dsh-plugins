@@ -11,4 +11,6 @@
 - Add deterministic BigInt integer-fen rules, explicit unchecked/unimplemented results, duplicate reporting, optional buyer/period checks and number-based ledger reconciliation.
 - Keep extracted, normalized and human-confirmed values separate, validate corrections JSON provenance, and gate full confirmation on key reviews, rule outcomes and ingest exceptions.
 - Add synthetic reconciliation tests and document the rules/result/corrections contract.
-- Evidence export, DSH ingest/check/export tools and UI remain unimplemented.
+- Add confined, atomic Markdown/XLSX/JSON packs, optional hash-checked original copies and explicit summary-only/draft status.
+- Preserve textual red flags, evidence pointers, string identifiers, separate value layers, corrections, inventories, unexecuted rules and verification disclaimers in exports; add export tests and API docs.
+- DSH ingest/check/export tools and UI remain unimplemented.

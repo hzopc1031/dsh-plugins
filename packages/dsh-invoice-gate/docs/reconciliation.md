@@ -73,4 +73,4 @@ A fully confirmed result describes local review within this selected scope. It d
 
 Conservative limit: a partial import remains draft even when all accepted fields are later corrected. The inventory records the historical parse problem and this MVP has no unit-level exception confirmation. Correcting fields re-runs their rules but does not certify that no input row/page was lost.
 
-The JSON result is available even while `fullyConfirmed` is false. A later exporter may write a clearly labelled draft. This task implements no Markdown/XLSX pack writer, filesystem corrections writer, DSH check tools or UI.
+The JSON result is available even while `fullyConfirmed` is false. The [local pack writer](exports.md) can export a clearly labelled draft with Markdown, XLSX and JSON. No filesystem corrections writer, DSH check tools or UI is implemented yet.

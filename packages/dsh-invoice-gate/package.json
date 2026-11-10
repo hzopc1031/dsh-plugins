@@ -12,7 +12,7 @@
   },
   "files": [
     "index.js", "index.d.ts", "lib/*.js", "lib/*.d.ts", "cordis.patch.yml",
-    "locale/*.json", "icon.svg", "README.md", "LICENSE", "CHANGELOG.md", "docs/decisions.md", "docs/inputs.md", "docs/reconciliation.md"
+    "locale/*.json", "icon.svg", "README.md", "LICENSE", "CHANGELOG.md", "docs/decisions.md", "docs/inputs.md", "docs/reconciliation.md", "docs/exports.md"
   ],
   "engines": { "node": ">=22", "dsh": ">=0.2.1-rc.5 <0.3.0" },
   "dsh": { "bundle": { "patch": "./cordis.patch.yml" } },

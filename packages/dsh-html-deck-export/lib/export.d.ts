@@ -1,8 +1,10 @@
-import type { DeckCapture, SlideCapture } from './adapters.js';
+import { type DeckCaptureOptions, type DeckCapture, type SlideCapture } from './adapters.js';
 export interface ExportOptions {
     /** A plain filename within the existing export directory. */
     fileName?: string;
     signal?: AbortSignal;
+    /** Called after sidecars publish, before committing the PPTX. */
+    onReport?: (report: ExportReport) => Promise<void>;
 }
 export interface ReportPage extends Omit<SlideCapture, 'image'> {
     fontWarnings: string[];
@@ -42,5 +44,14 @@ export declare function exportCapturedDeck(capture: DeckCapture, directory: stri
     reportPath: string;
     markdownReportPath: string;
     summary: string;
+    report: ExportReport;
+}>;
+/** Capture and assemble with a confined, atomically replaced progress file. */
+export declare function exportDeck(input: string, directory: string, options?: Omit<DeckCaptureOptions, 'onProgress'> & Pick<ExportOptions, 'fileName'>): Promise<{
+    progressPath: string;
+    summary: string;
+    pptxPath: string;
+    reportPath: string;
+    markdownReportPath: string;
     report: ExportReport;
 }>;

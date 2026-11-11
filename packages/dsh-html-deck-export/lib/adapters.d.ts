@@ -3,6 +3,13 @@ import { type DeckSlide, type DetectedDeck } from './detect.js';
 export interface DeckCaptureOptions extends CaptureOptions {
     /** Explicit asset boundary for decks with sibling assets; defaults to the HTML directory. */
     resourceRoot?: string;
+    onProgress?: (progress: {
+        inputPath: string;
+        phase: 'launch' | 'capture';
+        currentPage: number;
+        totalPages: number;
+        error?: string;
+    }) => Promise<void>;
 }
 export interface SlideCapture extends CaptureResult {
     index: number;

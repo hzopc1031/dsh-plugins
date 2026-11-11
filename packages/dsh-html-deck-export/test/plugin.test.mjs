@@ -55,7 +55,7 @@ test('one prefixed tool, honest bilingual help and no publish/post/login/shell t
   const help = await command()
   assert.equal(help.kind, 'success')
   for (const pattern of [/image-based 16:9 PPTX/, /HTML remains the source/, /Nothing is uploaded automatically/,
-    /Network is blocked by default/, /export-report.json/, /export-report.md/, /图片版 PPTX/, /start/, /stop/, /fixed canvas/]) assert.match(help.text, pattern)
+    /Network is blocked by default/, /export-report.json/, /export-report.md/, /export-progress.json/, /图片版 PPTX/, /start/, /stop/, /fixed canvas/]) assert.match(help.text, pattern)
   await fork.dispose()
   assert.equal(ctx.commands.find(undefined, 'html-deck-export'), undefined)
   assert.equal(ctx.tools.schemas().length, 0)
@@ -156,8 +156,10 @@ test('DSH tool exports PPTX/report offline, opt-in reads assets but refuses netw
   assert.equal(offline.isError, false, text(offline))
   assert.equal(offline.value.report.networkMode, 'blocked')
   assert.match(text(offline), /导出完成：共 1 页/)
-  assert.match(text(offline), /第 1 页字体回退：请求字体「Tool Missing Font」；实际使用「Noto Sans CJK SC」；字体排版可能不同/)
-  assert.equal(text(offline), await readFile(offline.value.markdownReportPath, 'utf8'))
+  assert.match(text(offline), /字体回退警告：1 条；失败页：无/)
+  assert.match(await readFile(offline.value.markdownReportPath, 'utf8'), /第 1 页字体回退：请求字体「Tool Missing Font」；实际使用「Noto Sans CJK SC」；字体排版可能不同/)
+  assert.equal(text(offline), offline.value.summary)
+  assert.equal(JSON.parse(await readFile(offline.value.progressPath, 'utf8')).phase, 'done')
   assert.ok(!text(offline).startsWith('{'), 'render the Chinese summary instead of raw JSON')
   assert.ok(offline.value.report.pages.some(page => page.warnings.some(warning => /Blocked resource/.test(warning))))
   assert.equal(hits.length, 0)
@@ -190,7 +192,7 @@ test('DSH tool exports PPTX/report offline, opt-in reads assets but refuses netw
 })
 
 test('tool forwards cancellation; stop and agent disposal release policies', async t => {
-  const { root, command, execute, ctx, agent } = await setup(t)
+  const { root, out, command, execute, ctx, agent } = await setup(t)
   await writeFile(join(root, 'slow.html'), '<section class="slide">Wait</section><script>Object.defineProperty(document.fonts,"ready",{get:()=>new Promise(()=>{})})</script>')
   ctx.tools.register(dummy('other'))
   await command('start')
@@ -198,9 +200,11 @@ test('tool forwards cancellation; stop and agent disposal release policies', asy
   const pending = execute({ ...args, inputPath: 'slow.html' }, { signal: controller.signal })
   const timer = setTimeout(() => controller.abort(new Error('test cancellation')), 300)
   try { assert.equal((await pending).isError, true) } finally { clearTimeout(timer) }
+  assert.equal(JSON.parse(await readFile(join(out, 'export-progress.json'), 'utf8')).phase, 'failed')
   const stopped = execute({ ...args, inputPath: 'slow.html' })
   const stopTimer = setTimeout(() => { void command('stop') }, 300)
   try { assert.equal((await stopped).isError, true) } finally { clearTimeout(stopTimer) }
+  assert.equal(JSON.parse(await readFile(join(out, 'export-progress.json'), 'utf8')).phase, 'failed')
   assert.ok(ctx.tools.get('other', agent))
   await command('start')
   ctx.emit('agent/disposed', { agent })

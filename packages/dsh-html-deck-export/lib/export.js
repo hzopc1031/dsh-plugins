@@ -1,6 +1,7 @@
 import { mkdtemp, open, realpath, rename, rm, stat } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { basename, isAbsolute, join, relative } from 'node:path';
+import { captureDeck } from './adapters.js';
 // Use 4.0.1's CJS entry to avoid its ESM metadata/declaration mismatch under NodeNext.
 const PptxGenJS = createRequire(import.meta.url)('pptxgenjs');
 async function syncedWrite(path, data) {
@@ -73,6 +74,7 @@ export async function exportCapturedDeck(capture, directory, options = {}) {
         await syncedWrite(stagedMarkdown, formatReport(report, reportPath, markdownReportPath));
         await rename(stagedReport, reportPath);
         await rename(stagedMarkdown, markdownReportPath);
+        await options.onReport?.(report);
     }
     try {
         options.signal?.throwIfAborted();
@@ -146,5 +148,81 @@ export async function exportCapturedDeck(capture, directory, options = {}) {
         await rm(stagedMarkdown, { force: true }).catch(() => { });
         if (!hasEvidence)
             await rm(staging, { recursive: true, force: true }).catch(() => { });
+    }
+}
+/** Capture and assemble with a confined, atomically replaced progress file. */
+export async function exportDeck(input, directory, options = {}) {
+    const root = await realpath(directory);
+    if (!(await stat(root)).isDirectory())
+        throw new Error('Export directory must be an existing directory');
+    const progressPath = join(root, 'export-progress.json');
+    const staging = await mkdtemp(join(root, '.html-deck-progress-'));
+    const stagedProgress = join(staging, 'export-progress.json');
+    const state = {
+        inputPath: input, phase: 'launch', currentPage: 0, totalPages: null, lastError: null,
+        reportPath: join(root, 'export-report.json'), markdownReportPath: join(root, 'export-report.md'),
+        reportsWritten: false, pptxPath: null, failedPages: [],
+    };
+    let report;
+    async function saveProgress() {
+        await syncedWrite(stagedProgress, JSON.stringify(state, null, 2) + '\n');
+        await rename(stagedProgress, progressPath);
+    }
+    function summary() {
+        const fontFallbacks = report?.pages.reduce((sum, page) => sum + page.fontWarnings.filter(warning => warning.startsWith('字体回退：')).length, 0);
+        return [
+            state.phase === 'done' ? `导出完成：共 ${state.totalPages} 页，图片版 PPTX。`
+                : `导出失败${options.signal?.aborted ? '（已取消）' : ''}：当前第 ${state.currentPage} 页 / 共 ${state.totalPages ?? '未知'} 页；未生成本次 PPTX。`,
+            `字体回退警告：${fontFallbacks === undefined ? '未完成统计' : `${fontFallbacks} 条`}；失败页：${state.failedPages.length ? state.failedPages.map(page => page.index).join('、') : state.phase === 'done' ? '无' : '无已记录失败页'}。`,
+            ...(state.lastError ? [`原因：${state.lastError}`] : []),
+            ...state.failedPages.map(page => `第 ${page.index} 页失败：${page.error ?? '未提供原因'}；${page.evidencePath ? `证据截图：${join(root, page.evidencePath)}` : '无截图'}。`),
+            ...(state.pptxPath ? [`PPTX：${state.pptxPath}`] : []),
+            `进度：${progressPath}`,
+            `${state.reportsWritten ? '详细报告' : '本次报告尚未生成，以下路径可能是上次报告'}：${state.reportPath}`,
+            `中文报告：${state.markdownReportPath}`,
+        ].join('\n');
+    }
+    try {
+        await saveProgress();
+        options.signal?.throwIfAborted();
+        const capture = await captureDeck(input, { ...options, async onProgress(update) {
+                state.inputPath = update.inputPath;
+                state.phase = update.phase;
+                state.currentPage = update.currentPage;
+                state.totalPages = update.totalPages;
+                state.lastError = update.error ?? state.lastError;
+                await saveProgress();
+            } });
+        state.phase = 'assemble';
+        await saveProgress();
+        const result = await exportCapturedDeck(capture, root, { fileName: options.fileName, signal: options.signal,
+            async onReport(published) {
+                report = published;
+                state.phase = published.status === 'completed' ? 'done' : 'failed';
+                state.lastError = published.failedPages.at(-1)?.error ?? published.error ?? null;
+                state.failedPages = published.failedPages.map(({ index, error, evidencePath }) => ({ index, error, evidencePath }));
+                state.reportsWritten = true;
+                state.pptxPath = published.status === 'completed' ? published.pptxPath : null;
+                // shortcut: terminal sidecars precede PPTX commit; use a transaction manifest if crash consistency is required.
+                await saveProgress();
+            },
+        });
+        return { ...result, progressPath, summary: summary() };
+    }
+    catch (error) {
+        state.phase = 'failed';
+        state.pptxPath = null;
+        state.lastError = report?.failedPages.at(-1)?.error ?? report?.error ?? (error instanceof Error ? error.message : String(error));
+        try {
+            await rm(stagedProgress, { force: true });
+            await saveProgress();
+        }
+        catch (progressError) {
+            throw new AggregateError([error, progressError], summary() + `\n进度写入失败：${progressError.message}`);
+        }
+        throw new Error(summary(), { cause: error });
+    }
+    finally {
+        await rm(staging, { recursive: true, force: true }).catch(() => { });
     }
 }

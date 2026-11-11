@@ -5,8 +5,7 @@ import type { Agent } from '@deepseek-ai/dsh-agent'
 import { CommandDefinitionId } from '@deepseek-ai/dsh-commands'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import z from '@deepseek-ai/schemastery'
-import { captureDeck } from './adapters.js'
-import { exportCapturedDeck } from './export.js'
+import { exportDeck } from './export.js'
 import { confinedPath, isWithinRoot } from './paths.js'
 
 export const name = 'html-deck-export'
@@ -24,6 +23,7 @@ const HELP = [
   '支持歸藏预览、hash/query 翻页、固定画布和 section.slide；不支持的 HTML 会被拒绝。',
   'PPTX + export-report.json + export-report.md are written inside the selected project directory; failed pages retain evidence and preserve an earlier PPTX.',
   '输入、素材与输出限于当前项目目录，输出目录须已存在；失败报告保留逐页证据，原有 PPTX 不被失败导出覆盖。',
+  '导出期间可打开输出目录内的 export-progress.json，查看阶段、当前页/总页数与最后错误；完成后保留终态和报告路径。',
   'Network is blocked by default; only explicit allowNetwork:true permits remote assets. scale:1|2, format:png|jpeg, quality:1..100 (jpeg only).',
   '默认禁止联网；仅 allowNetwork:true 可加载远程素材。中文报告列出字体回退、失败页原因和截图证据路径。',
   'HTML remains the source of truth. No deck generation, editable shapes, or preserved animations. Nothing is uploaded automatically.',
@@ -82,7 +82,7 @@ export function apply(ctx: Context): void {
 
   ctx.effect(() => ctx.tools.register(defineTool({
     name: TOOL,
-    description: 'Export a finished trusted local HTML deck to image-based 16:9 PPTX, notes, export-report.json and Chinese export-report.md. Requires /html-deck-export start. All paths/assets stay within that project root. No generation or uploads. Network blocked unless allowNetwork:true. Inspect report warnings/failures.',
+    description: 'Export a finished trusted local HTML deck to image-based 16:9 PPTX, notes, export-report.json and Chinese export-report.md. Open export-progress.json in the export directory during capture for progress. Requires /html-deck-export start. All paths/assets stay within that project root. No generation or uploads. Network blocked unless allowNetwork:true. Inspect report warnings/failures.',
     parameters: {
       inputPath: { type: 'string', required: true, description: 'Local HTML file or directory with index.html, relative to the workbench root or absolute within it.' },
       exportDirectory: { type: 'string', required: true, description: 'Existing directory within the workbench root, outside the installed plugin package. Use one directory per job.' },
@@ -114,11 +114,10 @@ export function apply(ctx: Context): void {
       if (isWithinRoot(packageRoot, output)) {
         throw new Error('Export reports must be stored outside the installed plugin package')
       }
-      const capture = await captureDeck(input, {
+      return JSON.parse(JSON.stringify(await exportDeck(input, output, {
         resourceRoot: workbench.root, scale: args.scale, format: args.format,
-        quality: args.quality, allowNetwork: args.allowNetwork ?? false, signal,
-      })
-      return JSON.parse(JSON.stringify(await exportCapturedDeck(capture, output, { fileName: args.fileName, signal })))
+        quality: args.quality, allowNetwork: args.allowNetwork ?? false, signal, fileName: args.fileName,
+      })))
     },
   })))
 }

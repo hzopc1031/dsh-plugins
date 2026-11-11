@@ -5,10 +5,13 @@ import { detectDeck } from './detect.js';
 export async function captureDeck(input, options = {}) {
     const started = performance.now();
     const deck = await detectDeck(input, { resourceRoot: options.resourceRoot });
+    const progress = (phase, currentPage, error) => options.onProgress?.({ inputPath: deck.inputPath, phase, currentPage, totalPages: deck.slides.length, error });
+    await progress('launch', 0);
     const engine = await createCaptureEngine(options.resourceRoot ?? dirname(deck.inputPath), options);
     const pages = [];
     try {
         for (const slide of deck.slides) {
+            await progress('capture', slide.index);
             const metadata = { notes: slide.notes, notesSource: slide.notesSource };
             const warnings = [];
             const result = await engine.capture(slide.url, async (page) => {
@@ -192,6 +195,7 @@ export async function captureDeck(input, options = {}) {
             });
             pages.push({ ...result, index: slide.index, id: slide.id, title: slide.title, ...metadata,
                 warnings: [...deck.warnings, ...result.warnings, ...warnings] });
+            await progress('capture', slide.index, result.error);
         }
         return {
             deck, viewport: engine.viewport, scale: engine.scale, format: engine.format, quality: engine.quality,

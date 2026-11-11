@@ -5,6 +5,9 @@ import { detectDeck, type DeckSlide, type DetectedDeck } from './detect.js'
 export interface DeckCaptureOptions extends CaptureOptions {
   /** Explicit asset boundary for decks with sibling assets; defaults to the HTML directory. */
   resourceRoot?: string
+  onProgress?: (progress: {
+    inputPath: string; phase: 'launch' | 'capture'; currentPage: number; totalPages: number; error?: string
+  }) => Promise<void>
 }
 
 export interface SlideCapture extends CaptureResult {
@@ -43,10 +46,14 @@ export interface DeckCapture {
 export async function captureDeck(input: string, options: DeckCaptureOptions = {}): Promise<DeckCapture> {
   const started = performance.now()
   const deck = await detectDeck(input, { resourceRoot: options.resourceRoot })
+  const progress = (phase: 'launch' | 'capture', currentPage: number, error?: string) =>
+    options.onProgress?.({ inputPath: deck.inputPath, phase, currentPage, totalPages: deck.slides.length, error })
+  await progress('launch', 0)
   const engine = await createCaptureEngine(options.resourceRoot ?? dirname(deck.inputPath), options)
   const pages: SlideCapture[] = []
   try {
     for (const slide of deck.slides) {
+      await progress('capture', slide.index)
       const metadata: Pick<SlideCapture, 'notes' | 'notesSource' | 'renderState'> = { notes: slide.notes, notesSource: slide.notesSource }
       const warnings: string[] = []
       const result = await engine.capture(slide.url, async page => {
@@ -201,6 +208,7 @@ export async function captureDeck(input: string, options: DeckCaptureOptions = {
       })
       pages.push({ ...result, index: slide.index, id: slide.id, title: slide.title, ...metadata,
         warnings: [...deck.warnings, ...result.warnings, ...warnings] })
+      await progress('capture', slide.index, result.error)
     }
     return {
       deck, viewport: engine.viewport, scale: engine.scale, format: engine.format, quality: engine.quality,

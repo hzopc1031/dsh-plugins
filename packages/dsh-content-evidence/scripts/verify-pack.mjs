@@ -10,7 +10,7 @@ const files = out[0].files.map(f => f.path).sort()
 const expected = [
   'CHANGELOG.md', 'LICENSE', 'README.md', 'cordis.patch.yml', 'icon.svg', 'index.js',
   'dist/client.js',
-  ...['plugin', 'model', 'service', 'store', 'validation', 'drafts', 'exports', 'tools', 'typert.host', 'typert.remote-client']
+  ...['plugin', 'model', 'service', 'store', 'validation', 'drafts', 'exports', 'directory-io', 'tools', 'typert.host', 'typert.remote-client']
     .flatMap(name => [`lib/${name}.js`, `lib/${name}.d.ts`]),
   'locale/en.json', 'locale/zh.json', 'package.json',
 ].sort()
@@ -26,6 +26,16 @@ for (const hook of ['preinstall', 'install', 'postinstall', 'prepare', 'prepack'
   assert.equal(pkg.scripts?.[hook], undefined, 'unexpected lifecycle script')
 }
 assert.equal(pkg.dependencies, undefined, 'host libraries must be peers')
+const nativePackages = ['linux-x64', 'linux-arm64', 'darwin-x64', 'darwin-arm64'].map(host => '@koromix/koffi-' + host)
+assert.deepEqual(pkg.optionalDependencies, Object.fromEntries(nativePackages.map(name => [name, '3.3.7'])))
+const lock = JSON.parse(readFileSync('package-lock.json', 'utf8'))
+for (const name of nativePackages) {
+  const entry = lock.packages['node_modules/' + name]
+  assert.equal(entry.version, '3.3.7')
+  assert.equal(entry.hasInstallScript, undefined, 'native helper must have no install hook')
+  assert.equal(entry.dependencies, undefined, 'native helper must have no transitive dependencies')
+}
+
 for (const name of ['@deepseek-ai/dsh-tools', '@deepseek-ai/dsh-agent', '@deepseek-ai/dsh-scope', '@deepseek-ai/dsh-system-prompt', '@deepseek-ai/dsh-typert-protocol', '@deepseek-ai/dsh-api-gateway', '@deepseek-ai/dsh-client-ui-renderer', '@deepseek-ai/dsh-client-ui-slots', '@deepseek-ai/dsh-client-ui-layout', '@deepseek-ai/dsh-client-ui-sidebar', 'react', 'zod']) {
   assert.ok(pkg.peerDependencies[name] && pkg.devDependencies[name], 'missing build/runtime peer ' + name)
   assert.equal(pkg.peerDependenciesMeta[name].optional, true)

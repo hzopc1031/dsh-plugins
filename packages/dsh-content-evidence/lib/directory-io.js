@@ -1,0 +1,153 @@
+import { constants, close, fstat, fsync, read, writeFile } from 'node:fs';
+import { mkdir, open, realpath, rename, rmdir, unlink } from 'node:fs/promises';
+import { createRequire } from 'node:module';
+import { promisify, getSystemErrorName } from 'node:util';
+import { RemoteError } from '@deepseek-ai/dsh-typert-protocol';
+import { fileName, invalid } from './validation.js';
+const directoryFlags = constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW;
+const closeFd = promisify(close), statFd = promisify(fstat), syncFd = promisify(fsync);
+const readFd = promisify(read), writeFd = promisify(writeFile);
+function unsupported(cause) {
+    throw new RemoteError('content-evidence/export-unsupported', '此主机缺少安全目录句柄 I/O 支持；未写入导出文件。Windows 暂不支持。Safe export/material reading requires verified fd paths or the Linux/macOS native helper; no export files were written.', null, { cause });
+}
+let native;
+function loadNative() {
+    try {
+        // Use the hook-free prebuilt packages directly; the koffi umbrella has an install hook.
+        const koffi = createRequire(import.meta.url)(`@koromix/koffi-${process.platform}-${process.arch}`);
+        const libc = koffi.load(process.platform === 'darwin' ? '/usr/lib/libSystem.B.dylib' : 'libc.so.6');
+        const openat = libc.func('int openat(int dirfd, const char *path, int flags, ...)');
+        const mkdirat = libc.func('int mkdirat(int dirfd, const char *path, unsigned int mode)');
+        const renameat = libc.func('int renameat(int oldfd, const char *oldpath, int newfd, const char *newpath)');
+        const unlinkat = libc.func('int unlinkat(int dirfd, const char *path, int flags)');
+        const check = (result, syscall) => {
+            if (result < 0) {
+                const errno = koffi.errno(), code = getSystemErrorName(-errno);
+                throw Object.assign(new Error(`${code}: ${syscall}`), { code, errno: -errno, syscall });
+            }
+            return result;
+        };
+        return {
+            open(fd, name, flags, mode) {
+                // Darwin arm64 requires the variadic mode argument to use its variadic ABI.
+                return check(openat(fd, name, flags | (process.platform === 'darwin' ? 0x1000000 : 0x80000), 'uint', mode), 'openat');
+            },
+            mkdir(fd, name) { check(mkdirat(fd, name, 0o700), 'mkdirat'); },
+            rename(fd, from, to) { check(renameat(fd, from, fd, to), 'renameat'); },
+            unlink(fd, name, directory) { check(unlinkat(fd, name, directory ? (process.platform === 'darwin' ? 0x80 : 0x200) : 0), 'unlinkat'); },
+        };
+    }
+    catch (cause) {
+        unsupported(cause);
+    }
+}
+export function nativeIO() { return native ??= loadNative(); }
+function nativeHandle(fd) {
+    return {
+        fd, stat: () => statFd(fd), close: () => closeFd(fd), sync: () => syncFd(fd),
+        writeFile: bytes => writeFd(fd, bytes),
+        read: (buffer, offset, length, position) => readFd(fd, buffer, offset, length, position),
+    };
+}
+export class Directory {
+    handle;
+    prefix;
+    constructor(handle, prefix) {
+        this.handle = handle;
+        this.prefix = prefix;
+    }
+    static supported() {
+        if (!['linux', 'darwin'].includes(process.platform) || !constants.O_DIRECTORY || !constants.O_NOFOLLOW)
+            unsupported();
+    }
+    static async open(path) {
+        Directory.supported();
+        let directory = new Directory(await open('/', directoryFlags));
+        try {
+            for (const prefix of ['/proc/self/fd', '/dev/fd']) {
+                let probe;
+                try {
+                    probe = await open(`${prefix}/${directory.handle.fd}/.`, directoryFlags);
+                    const pinned = await statFd(directory.handle.fd, { bigint: true }), stat = await statFd(probe.fd, { bigint: true });
+                    if (stat.dev === pinned.dev && stat.ino === pinned.ino) {
+                        await realpath(`${prefix}/${directory.handle.fd}`);
+                        directory = new Directory(directory.handle, prefix);
+                        break;
+                    }
+                }
+                catch (error) {
+                    if (!['ENOENT', 'ENOTDIR', 'ELOOP', 'EACCES', 'ENOSYS', 'ENOTSUP'].includes(error.code ?? ''))
+                        throw error;
+                }
+                finally {
+                    await probe?.close();
+                }
+            }
+            if (!directory.prefix)
+                nativeIO();
+            for (const part of path.split('/').filter(Boolean)) {
+                const next = await directory.openDirectory(part);
+                await directory.handle.close();
+                directory = next;
+            }
+            return directory;
+        }
+        catch (error) {
+            await directory.handle.close();
+            throw error;
+        }
+    }
+    path(name) { return `${this.prefix}/${this.handle.fd}/${name}`; }
+    async openFile(name, flags, mode = 0o600) {
+        fileName(name);
+        return this.prefix ? open(this.path(name), flags, mode) : nativeHandle(nativeIO().open(this.handle.fd, name, flags, mode));
+    }
+    async openDirectory(name) { return new Directory(await this.openFile(name, directoryFlags), this.prefix); }
+    async mkdir(name) {
+        fileName(name);
+        if (this.prefix)
+            await mkdir(this.path(name), { mode: 0o700 });
+        else
+            nativeIO().mkdir(this.handle.fd, name);
+    }
+    async rename(from, to) {
+        fileName(from);
+        fileName(to);
+        if (this.prefix)
+            await rename(this.path(from), this.path(to));
+        else
+            nativeIO().rename(this.handle.fd, from, to);
+    }
+    async unlink(name, directory = false) {
+        fileName(name);
+        try {
+            if (this.prefix) {
+                if (directory)
+                    await rmdir(this.path(name));
+                else
+                    await unlink(this.path(name));
+            }
+            else
+                nativeIO().unlink(this.handle.fd, name, directory);
+        }
+        catch (error) {
+            if (error.code !== 'ENOENT')
+                throw error;
+        }
+    }
+    async canonical(original) {
+        if (this.prefix)
+            return realpath(`${this.prefix}/${this.handle.fd}`);
+        const path = await realpath(original);
+        const check = await open(path, directoryFlags);
+        try {
+            const pinned = await statFd(this.handle.fd, { bigint: true }), current = await statFd(check.fd, { bigint: true });
+            if (pinned.dev !== current.dev || pinned.ino !== current.ino)
+                invalid('destination directory changed');
+        }
+        finally {
+            await check.close();
+        }
+        return path;
+    }
+}

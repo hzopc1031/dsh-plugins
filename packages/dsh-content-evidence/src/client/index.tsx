@@ -199,7 +199,7 @@ function Exports({ api, sheet, platform, run, reload, dirty }: { api: Actions; s
       void run(async () => { value(await api.export(sheet.id, platform, get('format') as ExportFormat, get('directory'))); await reload() })
     }}>
       <Field name="directory" label="DSH 主机上已存在的绝对目录" />
-      <p>需要可遍历的目录句柄（/proc/self/fd 或 /dev/fd）；标准 macOS / Windows 不支持时会安全拒绝，不写入导出文件。</p>
+      <p>支持 Linux / macOS 本机目录导出；Windows 暂不支持。缺少安全目录 I/O 支持时会拒绝，不写入导出文件。</p>
       <label>导出格式<select name="format" defaultValue="all">{exportFormats.map((format, i) => <option key={format} value={format}>{['Markdown', '纯文本', '引用列表', '材料文件夹', '全部'][i]}</option>)}</select></label>
       <button type="submit" disabled={!sheet.drafts[platform] || dirty}>导出到本机目录</button>
     </form>

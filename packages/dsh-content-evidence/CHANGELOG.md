@@ -2,7 +2,7 @@
 
 ## 0.1.0
 
-- Unreleased; install prebuilt artifacts from the `feat/content-evidence` git branch. Local export probes directory-handle support and refuses unsupported hosts safely.
+- Unreleased; install prebuilt artifacts from the `feat/content-evidence` git branch. Local export uses verified directory handles and refuses unsupported hosts safely.
 - Add the installable DSH bundle and `/content-evidence` status command.
 - Persist topics, copied materials, experiments, source-linked claims, structured drafts, reviews, export history and manual published links outside the package.
 - Add the Host Remote service and generated strict Host/client contracts, atomic writes and validation of stored paths and references.
@@ -20,6 +20,6 @@
 - Preserve unsaved editor text on conflicts, block topic/platform changes until save/discard, and direct model-assisted work to confined sessions.
 - Test compiled client exports, slot/service disposal, descriptor-checked UI actions, preview safety, draft forms/review invalidation, conflicting saves, export and backfill. Nothing is published automatically.
 - Verify the 49-test suite and prebuilt package, and exercise the web workbench in installed DSH 0.2.2-rc.1 with headless Chrome; document branch installation and export limits.
-- Probe `/proc/self/fd` then `/dev/fd` for verified directory-relative access; share it with material reads and retain path, symlink, race and integrity protections.
-- Refuse export clearly on standard macOS/Windows or hosts without traversable handles, before export files are created; no weaker absolute-path fallback. Test these paths and the forced `/dev/fd` path on Linux.
+- Probe verified `/proc/self/fd` and `/dev/fd` paths, then use libc directory-relative I/O through pinned hook-free Koffi platform binaries on Linux/macOS; share the backend with material reads and retain path, symlink, race and integrity protections.
+- Keep Windows and unavailable-helper refusal before export creation; no weaker absolute-path writer. Test all formats, material reads, ancestor replacement, integrity, cleanup and cancellation with both fd paths disabled on Linux, alongside both fd-path backends. Native macOS/Windows were not executed.
 - Explain the configured-model prerequisite, confined-session command and four-platform rewrite prompt in the UI; the local Host status check found no usable model, so no live rewrite is claimed.

@@ -1,61 +1,23 @@
 import { constants } from 'node:fs'
-import { mkdir, open, realpath, rename, rm, type FileHandle } from 'node:fs/promises'
-import { dirname, isAbsolute, join, relative, sep } from 'node:path'
-import { RemoteError } from '@deepseek-ai/dsh-typert-protocol'
+import { isAbsolute, join, relative, sep } from 'node:path'
+import { Directory } from './directory-io.js'
 import type { Draft, ExportFormat, Material, Platform, Topic } from './model.js'
 import { fileName, id, invalid, text } from './validation.js'
 
-const directoryFlags = constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW
-function unsupported(): never {
-  throw new RemoteError('content-evidence/export-unsupported', '此主机不支持安全的目录句柄导出；未写入导出文件。请在支持 /proc/self/fd 或可遍历 /dev/fd 目录句柄的主机导出。Safe export/material reading is unavailable on this host (including standard macOS and Windows): traversable directory handles are required; no export files were written.', null)
-}
-
-export async function directoryPath(directory: FileHandle): Promise<string> {
-  const pinned = await directory.stat()
-  for (const prefix of ['/proc/self/fd', '/dev/fd']) {
-    const path = `${prefix}/${directory.fd}`
-    let probe: FileHandle | undefined
-    try {
-      probe = await open(`${path}/.`, directoryFlags)
-      const stat = await probe.stat()
-      if (stat.dev === pinned.dev && stat.ino === pinned.ino) {
-        await realpath(path)
-        return path
-      }
-    } catch (error) {
-      if (!['ENOENT', 'ENOTDIR', 'ELOOP', 'EACCES', 'ENOSYS', 'ENOTSUP'].includes((error as NodeJS.ErrnoException).code ?? '')) throw error
-    } finally { await probe?.close() }
-  }
-  unsupported()
-}
-
 async function openTarget(directory: string, blockedRoots: string[]) {
-  // shortcut: Node lacks openat; add native directory-relative I/O before enabling macOS/Windows export.
-  if (process.platform === 'win32' || !constants.O_DIRECTORY || !constants.O_NOFOLLOW) unsupported()
+  Directory.supported()
   text(directory, 'directory', 4096)
   const parts = directory.split('/').filter(Boolean)
   if (!isAbsolute(directory) || !parts.length || parts.some(part => part === '.' || part === '..') || directory.includes('\\')) invalid('directory')
-  let handle = await open('/', directoryFlags)
+  const root = await Directory.open(directory)
   try {
-    const prefix = dirname(await directoryPath(handle))
-    const fdPath = (directory: FileHandle) => `${prefix}/${directory.fd}`
-    // Pin each directory fd so ancestor replacement cannot redirect later writes.
-    for (const part of parts) {
-      const next = await open(join(fdPath(handle), part), directoryFlags)
-      await handle.close()
-      handle = next
-    }
-    const canonical = await realpath(fdPath(handle))
-    for (const root of blockedRoots) {
-      const rel = relative(root, canonical)
+    const canonical = await root.canonical(directory)
+    for (const blocked of blockedRoots) {
+      const rel = relative(blocked, canonical)
       if (rel !== '..' && !rel.startsWith('..' + sep) && !isAbsolute(rel)) invalid('directory inside package or data store')
     }
-    return { root: handle, fdPath }
-  } catch (error) {
-    await handle.close()
-    if (['ELOOP', 'ENOTDIR'].includes((error as NodeJS.ErrnoException).code ?? '')) invalid('directory symlink or non-directory')
-    throw error
-  }
+    return root
+  } catch (error) { await root.handle.close(); throw error }
 }
 
 function citations(topic: Topic): string {
@@ -97,21 +59,26 @@ export async function writeExport(
 ): Promise<{ directory: string; files: string[] }> {
   signal?.throwIfAborted()
   id(exportId)
-  const { root, fdPath } = await openTarget(directory, blockedRoots)
-  const name = `content-evidence-${exportId}`
-  const temporary = join(fdPath(root), `.${name}.tmp`)
-  let staging: FileHandle | undefined
-  let materialDirectory: FileHandle | undefined
-  let created = false
+  let root: Directory
+  try { root = await openTarget(directory, blockedRoots) }
+  catch (error) {
+    if (['ELOOP', 'ENOTDIR'].includes((error as NodeJS.ErrnoException).code ?? '')) invalid('directory symlink or non-directory')
+    throw error
+  }
+  const name = `content-evidence-${exportId}`, temporary = `.${name}.tmp`
+  let staging: Directory | undefined, materialDirectory: Directory | undefined
+  let created = false, materialsCreated = false
+  const written: { parent: Directory; name: string }[] = []
   try {
-    await mkdir(temporary, { mode: 0o700 })
+    await root.mkdir(temporary)
     created = true
-    staging = await open(temporary, directoryFlags)
+    staging = await root.openDirectory(temporary)
     const files: string[] = []
-    const write = async (parent: FileHandle, name: string, bytes: string | Buffer) => {
+    const write = async (parent: Directory, name: string, bytes: string | Buffer) => {
       fileName(name)
       signal?.throwIfAborted()
-      const file = await open(join(fdPath(parent), name), constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW, 0o600)
+      const file = await parent.openFile(name, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW)
+      written.push({ parent, name })
       try { await file.writeFile(bytes); await file.sync() } finally { await file.close() }
     }
     for (const [file, content] of Object.entries(documents)) {
@@ -119,8 +86,9 @@ export async function writeExport(
       files.push(file)
     }
     if (materials !== null) {
-      await mkdir(join(fdPath(staging), 'materials'), { mode: 0o700 })
-      materialDirectory = await open(join(fdPath(staging), 'materials'), directoryFlags)
+      await staging.mkdir('materials')
+      materialsCreated = true
+      materialDirectory = await staging.openDirectory('materials')
       for (const material of materials) {
         id(material.id)
         await write(materialDirectory, material.id, await readMaterial(material))
@@ -128,17 +96,25 @@ export async function writeExport(
       }
       await write(materialDirectory, 'index.json', JSON.stringify(materials, null, 2) + '\n')
       files.push('materials/index.json')
-      await materialDirectory.sync()
+      await materialDirectory.handle.sync()
     }
-    await staging.sync()
+    await staging.handle.sync()
+    const canonical = await root.canonical(directory)
     signal?.throwIfAborted()
-    await rename(temporary, join(fdPath(root), name))
-    await root.sync()
-    return { directory: join(await realpath(fdPath(root)), name), files }
+    await root.rename(temporary, name)
+    created = false
+    await root.handle.sync()
+    return { directory: join(canonical, name), files }
   } finally {
-    await materialDirectory?.close()
-    await staging?.close()
-    try { if (created) await rm(temporary, { recursive: true, force: true }) }
-    finally { await root.close() }
+    try {
+      if (created) {
+        for (const file of written.reverse()) await file.parent.unlink(file.name)
+        if (materialsCreated) await staging!.unlink('materials', true)
+        await root.unlink(temporary, true)
+      }
+    } finally {
+      try { await materialDirectory?.handle.close() }
+      finally { try { await staging?.handle.close() } finally { await root.handle.close() } }
+    }
   }
 }

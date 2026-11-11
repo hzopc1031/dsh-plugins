@@ -8,7 +8,8 @@ import { RemoteError } from '@deepseek-ai/dsh-typert-protocol';
 import { exportFormats, } from './model.js';
 import { fileName, hash, id, invalid, parseWorkspace, platform, record, text, url } from './validation.js';
 import { checkCompliance, draftHash, evidenceHash, parseDraftInput, renderDraft, revision, rulesHash, stringList, validateFacts } from './drafts.js';
-import { directoryPath, exportDocuments, writeExport } from './exports.js';
+import { exportDocuments, writeExport } from './exports.js';
+import { Directory } from './directory-io.js';
 const pendingReview = () => ({ status: 'pending', contentHash: null, findings: [], reviewedAt: null });
 const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const STATE_LIMIT = 16 * 1024 * 1024;
@@ -19,8 +20,9 @@ function within(root, target) {
     return rel !== '..' && !rel.startsWith('..' + sep) && !isAbsolute(rel);
 }
 function missing(error) { return error?.code === 'ENOENT'; }
-async function readFile(file, limit) {
-    const handle = await open(file, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+async function readFile(file, limit, directory) {
+    const flags = constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK;
+    const handle = directory ? await directory.openFile(file, flags) : await open(file, flags);
     try {
         const stat = await handle.stat();
         if (!stat.isFile() || stat.size > limit)
@@ -228,18 +230,20 @@ export class EvidenceStore {
         const material = topic.materials.find(item => item.id === materialId);
         if (!material)
             invalid('materialId');
-        const bytes = await this.materialBytes(await this.root(), material);
+        const bytes = await this.materialBytes(await this.root(), material, signal);
         return { name: material.name, mediaType: material.mediaType, base64: bytes.toString('base64'), sourceId: material.sourceId };
     }
-    async materialBytes(root, material) {
-        const directory = await open(await this.materials(root), constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW);
+    async materialBytes(root, material, signal) {
+        signal?.throwIfAborted();
+        const directory = await Directory.open(await this.materials(root));
         let bytes;
         try {
-            bytes = await readFile(join(await directoryPath(directory), material.id), MATERIAL_LIMIT);
+            bytes = await readFile(material.id, MATERIAL_LIMIT, directory);
         }
         finally {
-            await directory.close();
+            await directory.handle.close();
         }
+        signal?.throwIfAborted();
         if (bytes.length !== material.bytes || hash(bytes) !== material.sha256) {
             throw new RemoteError('content-evidence/corrupt-store', 'Material integrity check failed', null);
         }
@@ -336,7 +340,7 @@ export class EvidenceStore {
             const reviewPassed = draft.review.status === 'passed' && draft.review.contentHash === draftHash(draft)
                 && draft.evidenceHash === evidenceHash(topic) && draft.review.rulesHash === rulesHash(this.extraSensitiveTerms);
             const exportId = randomUUID();
-            const output = await writeExport(directory, [await realpath(PACKAGE_ROOT), root], exportId, exportDocuments(topic, target, draft, format, reviewPassed), format === 'all' || format === 'materials' ? topic.materials : null, material => this.materialBytes(root, material), signal);
+            const output = await writeExport(directory, [await realpath(PACKAGE_ROOT), root], exportId, exportDocuments(topic, target, draft, format, reviewPassed), format === 'all' || format === 'materials' ? topic.materials : null, material => this.materialBytes(root, material, signal), signal);
             const item = {
                 id: exportId, platform: target, format, status: 'complete', createdAt: new Date().toISOString(),
                 contentHash: draft.contentHash, reviewPassed, ...output,

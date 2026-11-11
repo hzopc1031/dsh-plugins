@@ -13,7 +13,8 @@ import {
 } from './model.js'
 import { fileName, hash, id, invalid, parseWorkspace, platform, record, text, url } from './validation.js'
 import { checkCompliance, draftHash, evidenceHash, parseDraftInput, renderDraft, revision, rulesHash, stringList, validateFacts } from './drafts.js'
-import { directoryPath, exportDocuments, writeExport } from './exports.js'
+import { exportDocuments, writeExport } from './exports.js'
+import { Directory } from './directory-io.js'
 
 const pendingReview = () => ({ status: 'pending' as const, contentHash: null, findings: [], reviewedAt: null })
 const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -26,8 +27,9 @@ function within(root: string, target: string): boolean {
 }
 function missing(error: unknown): boolean { return (error as NodeJS.ErrnoException)?.code === 'ENOENT' }
 
-async function readFile(file: string, limit: number): Promise<Buffer> {
-  const handle = await open(file, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK)
+async function readFile(file: string, limit: number, directory?: Directory): Promise<Buffer> {
+  const flags = constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK
+  const handle = directory ? await directory.openFile(file, flags) : await open(file, flags)
   try {
     const stat = await handle.stat()
     if (!stat.isFile() || stat.size > limit) invalid('stored file')
@@ -184,14 +186,16 @@ export class EvidenceStore {
     const topic = await this.readEvidence(topicId, signal)
     const material = topic.materials.find(item => item.id === materialId)
     if (!material) invalid('materialId')
-    const bytes = await this.materialBytes(await this.root(), material)
+    const bytes = await this.materialBytes(await this.root(), material, signal)
     return { name: material.name, mediaType: material.mediaType, base64: bytes.toString('base64'), sourceId: material.sourceId }
   }
-  private async materialBytes(root: string, material: Material): Promise<Buffer> {
-    const directory = await open(await this.materials(root), constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW)
+  private async materialBytes(root: string, material: Material, signal?: AbortSignal): Promise<Buffer> {
+    signal?.throwIfAborted()
+    const directory = await Directory.open(await this.materials(root))
     let bytes: Buffer
-    try { bytes = await readFile(join(await directoryPath(directory), material.id), MATERIAL_LIMIT) }
-    finally { await directory.close() }
+    try { bytes = await readFile(material.id, MATERIAL_LIMIT, directory) }
+    finally { await directory.handle.close() }
+    signal?.throwIfAborted()
     if (bytes.length !== material.bytes || hash(bytes) !== material.sha256) {
       throw new RemoteError('content-evidence/corrupt-store', 'Material integrity check failed', null)
     }
@@ -281,7 +285,7 @@ export class EvidenceStore {
       const output = await writeExport(directory, [await realpath(PACKAGE_ROOT), root], exportId,
         exportDocuments(topic, target, draft, format, reviewPassed),
         format === 'all' || format === 'materials' ? topic.materials : null,
-        material => this.materialBytes(root, material), signal)
+        material => this.materialBytes(root, material, signal), signal)
       const item: ExportRecord = {
         id: exportId, platform: target, format, status: 'complete', createdAt: new Date().toISOString(),
         contentHash: draft.contentHash, reviewPassed, ...output,

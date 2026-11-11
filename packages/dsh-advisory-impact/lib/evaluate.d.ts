@@ -42,6 +42,7 @@ export interface EvaluateOptions {
     cache: SourceCache;
     osv: OsvClient;
     force?: boolean;
+    signal?: AbortSignal;
 }
 /** Shared, model-free pipeline. Only the injected cache transports can perform HTTP. */
 export declare function evaluatePins(options: EvaluateOptions): Promise<Evaluation>;

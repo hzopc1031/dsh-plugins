@@ -1,5 +1,13 @@
 import type { Context } from '@deepseek-ai/cordis'
 import { CommandDefinitionId } from '@deepseek-ai/dsh-commands'
+import type { Agent } from '@deepseek-ai/dsh-agent'
+import path from 'node:path'
+import os from 'node:os'
+import { SourceCache } from './cache.js'
+import { OsvClient } from './osv.js'
+import { createHttpClient, createOsvHttpClient } from './http.js'
+import { AdvisoryService, parseInput } from './surface.js'
+import { argumentError, directoryError, toolDefinitions, TOOL_NAMES } from './tools.js'
 
 export { evaluateProject, parseAffectedRanges } from './verdicts.js'
 export type { ProjectId, SourceMetadata, SourceDocument, HttpClient, MavenQuery, VersionPin, VersionRange, Verdict, PinVerdict, OfficialVerdict, ProjectVerdicts, SuppressionSection } from './types.js'
@@ -13,27 +21,79 @@ export { evaluatePins } from './evaluate.js'
 export type { EvaluateOptions, Evaluation, EvaluatedProject, OsvOnlyItem } from './evaluate.js'
 export { createHttpClient, createOsvHttpClient } from './http.js'
 export type { HttpOptions } from './http.js'
+export { createViewModel, displayTime, VERDICT_LABELS, STATE_LABELS, summarize } from './view-model.js'
+export type { AdvisoryViewModel } from './view-model.js'
+export { renderReport, saveReport, openReport, REPORT_FILE } from './report.js'
+export { AdvisoryService, HELP, parseInput } from './surface.js'
+export type { Action, ActionArgs, SurfaceResult } from './surface.js'
 
 export const name = 'advisory-impact'
-export const inject = ['commands']
+export const inject = ['commands', 'tools', 'agents']
 
-export const HELP = `官方公告影响核对（开发中：当前仅提供帮助命令与抓取库）
-针对你填写的运行版本，在本地核对官方安全公告。
-官方页面为判定依据；OSV 仅作第二来源，可能返回未收录（HTTP 404）。
-官方 suppressions 单列为「扫描器报了，但官方说明不适用」。
-默认关注 Kafka / Hadoop / Flink；没有默认运行版本，必须自行填写。
-未填写运行版本，无法判断。
-Flink 的 ASF 列表为实验性，说明覆盖 2023 年以来的公告，可能滞后官方 CVE 发布。
-全过程无需模型调用或模型 API key，也不需要聊天轮次；这不是 lockfile 扫描器。
-配置、版本判定、OSV 第二来源和本地缓存已有共享库；命令操作、报告与 DSH 原生面板将在后续任务接入。`
+export function projectDirectory(ctx: Pick<Context, 'get'>, agent: Agent): string | undefined {
+  const service = ctx.get('workingDirectory') as { get(session: Agent['session']): string } | undefined
+  return service ? service.get(agent.session) : agent.session.header.cwd
+}
 
-export function apply(ctx: Context): void {
+export function apply(ctx: Context, config: unknown = {}): void {
+  const cacheRoot = path.join(os.homedir(), '.cache', 'dsh-advisory-impact')
+  const service = new AdvisoryService({ config,
+    cache: new SourceCache(path.join(cacheRoot, 'official'), createHttpClient()),
+    osv: new OsvClient(new SourceCache(path.join(cacheRoot, 'osv'), createOsvHttpClient())) })
   ctx.effect(() => ctx.commands.register({
     definitionId: CommandDefinitionId('dsh-advisory-impact'),
     name,
-    description: '官方公告影响核对：查看用途、来源与开发状态',
+    description: '官方公告影响核对：运行版本、关注列表、刷新、中文报告与单条 CVE',
+    input: { hint: 'help | pin | watch | refresh | report [save] | open | lookup <CVE-id>' },
     recordInput: false,
-    handler: () => ({ kind: 'success', text: HELP }),
+    handler: async ({ agent, rawInput, signal }) => {
+      try {
+        const { action, args } = parseInput(rawInput)
+        const result = await service.execute(action === 'help' ? undefined : projectDirectory(ctx, agent), action, args, signal)
+        return { kind: 'success', text: result.text }
+      } catch (error) {
+        return { kind: 'error', text: signal.aborted ? '操作已取消。' : error instanceof Error ? error.message : '操作失败。' }
+      }
+    },
   }))
+  for (const definition of toolDefinitions(async () => { throw new Error('工具必须从受约束的 agent.ctx 调用') })) {
+    ctx.effect(() => ctx.tools.register(definition))
+  }
+  const fibers = new Map<Agent, ReturnType<Context['inject']>>()
+  const install = (agent: Agent) => {
+    if (fibers.has(agent)) return
+    const fiber = agent.ctx.inject(['tools'], scope => {
+      // Hide inherited entry points; only caller-bound registrations can reach project files.
+      scope.tools.restrict({ deny: TOOL_NAMES })
+      scope.tools.guard(exec => {
+        if (!TOOL_NAMES.includes(exec.name)) return
+        return exec.agent !== agent ? '工具调用者与项目作用域不匹配'
+          : argumentError(exec.name, exec.arguments) ?? directoryError(projectDirectory(ctx, agent))
+      })
+      for (const definition of toolDefinitions(async (action, args, exec) => {
+        exec.signal.throwIfAborted()
+        if (exec.agent !== agent) throw new Error('工具调用者与项目作用域不匹配')
+        const directory = projectDirectory(ctx, agent)
+        const error = directoryError(directory)
+        if (error) throw new Error(error)
+        const result = await service.execute(directory, action, action === 'report' ? { save: true } : args, exec.signal)
+        return JSON.stringify(result.summary)
+      })) scope.tools.register(definition)
+    })
+    fibers.set(agent, fiber)
+    return fiber
+  }
+  for (const agent of ctx.agents.list()) install(agent)
+  ctx.on('agent/created', async ({ agent }) => { await install(agent) })
+  ctx.on('agent/disposed', async ({ agent }) => {
+    const fiber = fibers.get(agent)
+    fibers.delete(agent)
+    await fiber?.dispose()
+  })
+  ctx.effect(() => async () => {
+    const pending = [...fibers.values()]
+    fibers.clear()
+    await Promise.all(pending.map(fiber => fiber.dispose()))
+  })
   // Native UI hook: docs/dsh-api.md specifies main + sidebar.panellist; no chat/model dependency.
 }

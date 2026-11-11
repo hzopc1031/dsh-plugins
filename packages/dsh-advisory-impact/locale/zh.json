@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "官方公告影响核对",
-    "description": "本地核对 Kafka、Hadoop、Flink 官方安全公告；当前为开发中脚手架，仅提供帮助命令。"
+    "description": "按用户填写的运行版本核对 Kafka、Hadoop、Flink 官方公告，生成带来源时间的中文报告；OSV 仅作第二来源。原生面板开发中。"
   }
 }

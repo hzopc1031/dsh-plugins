@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Official advisory impact",
-    "description": "Local Kafka, Hadoop and Flink official advisory checks; development scaffold with help command only."
+    "description": "Check pinned running versions against official Kafka, Hadoop and Flink advisories; Chinese reports cite sources and fetch times. OSV is secondary. Native panel in development."
   }
 }

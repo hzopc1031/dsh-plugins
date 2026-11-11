@@ -5,15 +5,20 @@ import { identities, rangeDifference } from './osv.js';
 import { evaluateProject } from './verdicts.js';
 /** Shared, model-free pipeline. Only the injected cache transports can perform HTTP. */
 export async function evaluatePins(options) {
+    const check = () => options.signal?.throwIfAborted();
+    check();
     const settings = await loadSettings(options.config, options.projectDirectory);
     const { cache, osv, force = false } = options;
     const ttl = settings.cacheTtlMs;
     const suppressions = settings.watch.includes('kafka') ? await cache.load(SOURCES.suppressions, parseSuppressions, ttl, force) : null;
+    check();
     const guidance = settings.watch.includes('kafka') ? await cache.load(SOURCES.guidance, parseDependencyGuidance, ttl, force) : null;
+    check();
     const flinkPointer = settings.watch.includes('flink') ? await cache.load(SOURCES.flinkPointer, parseFlinkPointer, ttl, force) : null;
     const projects = [];
     // Keep all public requests bounded and serial, including when transports are supplied by callers.
     for (const project of settings.watch) {
+        check();
         const pins = settings.pins.filter(p => p.project === project).map(({ project: _, ...pin }) => pin);
         const item = { project, pins, source: null, verdicts: null, queries: [],
             osvOnly: { title: '仅见 OSV，未见官方公告', items: [], inventoryAvailable: false } };
@@ -37,6 +42,7 @@ export async function evaluatePins(options) {
                 pins: a.pins.map(p => ({ ...p, verdict: 'unknown', reason })) }));
         }
         for (const pin of pins) {
+            check();
             if (!pin.maven)
                 continue;
             const query = { maven: pin.maven, version: pin.version };
@@ -54,6 +60,7 @@ export async function evaluatePins(options) {
         }
         const advisories = [];
         for (const advisory of official.advisories) {
+            check();
             const lookup = await osv.lookup(advisory.id, ttl, force);
             const queryMatches = [];
             for (const { query, result } of item.queries) {
@@ -72,5 +79,6 @@ export async function evaluatePins(options) {
         }
         item.verdicts = { ...official, advisories };
     }
+    check();
     return { settings, projects, suppressions, guidance, flinkPointer };
 }

@@ -1,0 +1,81 @@
+{
+  "name": "dsh-apache-radar",
+  "version": "0.1.0",
+  "description": "Local Apache community radar with explicit official source scopes",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "lib/*.js",
+    "lib/*.d.ts",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "docs/decisions.md"
+  ],
+  "engines": {
+    "node": ">=22",
+    "dsh": ">=0.2.1-rc.5 <0.3.0"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "license": "MIT",
+  "keywords": [
+    "dsh-plugin",
+    "apache",
+    "deepseek-harness"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run build && node --test --test-isolation=none test/*.test.mjs",
+    "verify-pack": "node scripts/verify-pack.mjs"
+  },
+  "dependencies": {
+    "parse5": "7.3.0"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": ">=4.0.5 <4.2.0",
+    "@deepseek-ai/dsh-commands": ">=0.2.1-rc.5 <0.3.0",
+    "@deepseek-ai/schemastery": ">=3.18.5 <3.20.0"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/cordis": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-commands": {
+      "optional": true
+    },
+    "@deepseek-ai/schemastery": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "4.1.0",
+    "@deepseek-ai/dsh-commands": "0.2.2-rc.1",
+    "@deepseek-ai/schemastery": "3.18.5",
+    "@types/node": "22.19.0",
+    "typescript": "5.9.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hzopc1031/dsh-plugins.git",
+    "directory": "packages/dsh-apache-radar"
+  },
+  "homepage": "https://github.com/hzopc1031/dsh-plugins/tree/feat/apache-radar/packages/dsh-apache-radar#readme",
+  "bugs": {
+    "url": "https://github.com/hzopc1031/dsh-plugins/issues"
+  },
+  "author": "hzopc1031"
+}

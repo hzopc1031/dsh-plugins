@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Apache Radar",
+    "description": "Local Apache community radar. Scaffold: /apache-radar help; data feeds are not connected yet."
+  }
+}

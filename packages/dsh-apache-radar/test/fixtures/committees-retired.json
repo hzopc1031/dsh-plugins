@@ -1,0 +1,6439 @@
+[
+{
+"established": "2006-04",
+"homepage": "http://hivemind.apache.org/",
+"id": "hivemind",
+"name": "Apache HiveMind",
+"retired": "2009-04"
+},
+{
+"established": "2006-06",
+"homepage": "http://shale.apache.org/",
+"id": "shale",
+"name": "Apache Shale",
+"retired": "2009-05"
+},
+{
+"established": "2005-07",
+"homepage": "http://beehive.apache.org/",
+"id": "beehive",
+"name": "Apache Beehive",
+"retired": "2010-01"
+},
+{
+"established": "2005-05",
+"homepage": "http://ibatis.apache.org/",
+"id": "ibatis",
+"name": "Apache iBatis",
+"retired": "2010-06"
+},
+{
+"established": "2004-05",
+"homepage": "http://excalibur.apache.org/",
+"id": "excalibur",
+"name": "Apache Excalibur",
+"retired": "2010-12"
+},
+{
+"established": "2006-10",
+"homepage": "http://harmony.apache.org/",
+"id": "harmony",
+"name": "Apache Harmony",
+"retired": "2011-11"
+},
+{
+"established": "1999-09",
+"homepage": "http://jakarta.apache.org/",
+"id": "jakarta",
+"name": "Apache Jakarta",
+"retired": "2011-12"
+},
+{
+"established": "2007-11",
+"homepage": "http://stdcxx.apache.org/",
+"id": "stdcxx",
+"name": "Apache C++ Standard Library",
+"retired": "2013-07"
+},
+{
+"established": "2010-12",
+"homepage": "http://esme.apache.org/",
+"id": "esme",
+"name": "Apache ESME",
+"retired": "2013-07"
+},
+{
+"established": "2004-06",
+"homepage": "http://xmlbeans.apache.org/",
+"id": "xmlbeans",
+"name": "Apache XML Beans",
+"retired": "2013-07"
+},
+{
+"established": "2011-08",
+"homepage": "http://whirr.apache.org/",
+"id": "whirr",
+"name": "Apache Whirr",
+"retired": "2015-03"
+},
+{
+"established": "2009-11",
+"homepage": "http://click.apache.org/",
+"id": "click",
+"name": "Apache Click",
+"retired": "2015-04"
+},
+{
+"established": "2004-09",
+"homepage": "http://lenya.apache.org/",
+"id": "lenya",
+"name": "Apache Lenya",
+"retired": "2015-04"
+},
+{
+"established": "2011-10",
+"homepage": "http://deltacloud.apache.org/",
+"id": "deltacloud",
+"name": "Apache Deltacloud",
+"retired": "2015-07",
+"shortdesc": "RESTful cloud management interface"
+},
+{
+"established": "2012-08",
+"homepage": "http://directmemory.apache.org/",
+"id": "directmemory",
+"name": "Apache DirectMemory",
+"retired": "2015-07",
+"shortdesc": "An off-heap cache for the Java Virtual Machine"
+},
+{
+"established": "2010-01",
+"homepage": "http://shindig.apache.org/",
+"id": "shindig",
+"name": "Apache Shindig",
+"retired": "2015-10",
+"shortdesc": "Opensocial Reference Implementation"
+},
+{
+"established": "2013-04",
+"homepage": "http://onami.apache.org/",
+"id": "onami",
+"name": "Apache Onami",
+"retired": "2016-01",
+"roster": {
+"ash2k": {
+"date": "2013-04-17",
+"name": "Mikhail Mazursky"
+},
+"danielmanzke": {
+"date": "2013-04-17",
+"name": "Daniel Manzke"
+},
+"eric": {
+"date": "2013-04-17",
+"name": "Eric Charles"
+},
+"iocanel": {
+"date": "2013-04-17",
+"name": "Ioannis Canellos"
+},
+"jordi": {
+"date": "2013-04-17",
+"name": "Jordi Gerona"
+},
+"marcosperanza": {
+"date": "2013-04-17",
+"name": "Marco Speranza"
+},
+"mcculls": {
+"date": "2013-04-17",
+"name": "Stuart McCulloch"
+},
+"mnour": {
+"date": "2013-04-17",
+"name": "Mohammad Nour El-Din"
+},
+"nmwael": {
+"date": "2013-04-17",
+"name": "Nino Martinez Wael"
+},
+"olamy": {
+"date": "2013-04-17",
+"name": "Olivier Lamy"
+},
+"randgalt": {
+"date": "2013-04-17",
+"name": "Jordan Zimmerman"
+},
+"sclassen": {
+"date": "2014-07-03",
+"name": "Stephan Classen"
+},
+"simonetripodi": {
+"date": "2013-04-17",
+"name": "Simone Tripodi"
+}
+},
+"shortdesc": "Development and maintenance of a set of Google Guice extensions"
+},
+{
+"established": "2012-03",
+"homepage": "http://rave.apache.org/",
+"id": "rave",
+"name": "Apache Rave",
+"retired": "2016-01",
+"roster": {
+"ard": {
+"date": "2012-03-21",
+"name": "Ard Schrijvers"
+},
+"asgoyal": {
+"date": "2012-03-27",
+"name": "Ankur Shashikant Goyal"
+},
+"ate": {
+"date": "2012-03-21",
+"name": "Ate Douma"
+},
+"bas": {
+"date": "2012-03-21",
+"name": "Bas Zoetekouw"
+},
+"carlucci": {
+"date": "2012-03-21",
+"name": "Tony Carlucci"
+},
+"cgeer": {
+"date": "2012-05-13",
+"name": "Chris Geer"
+},
+"cthings": {
+"date": "2012-03-21",
+"name": "Niels van Dijk"
+},
+"dgornstein": {
+"date": "2013-09-24",
+"name": "Dan Gornstein"
+},
+"erinnp": {
+"date": "2013-03-20",
+"name": "Erin Noe-Payne"
+},
+"hadrian": {
+"date": "2012-03-21",
+"name": "Hadrian Zbarcea"
+},
+"jasha": {
+"date": "2012-03-21",
+"name": "Jasha Joachimsthal"
+},
+"jcian": {
+"date": "2012-03-21",
+"name": "Jesse Ciancetta"
+},
+"joostvandijk": {
+"date": "2012-03-21",
+"name": "Joost van Dijk"
+},
+"klegacy": {
+"date": "2012-09-18",
+"name": "Kristen Legacy"
+},
+"marijan": {
+"date": "2012-03-27",
+"name": "Marijan Milicevic"
+},
+"mfranklin": {
+"date": "2012-03-21",
+"name": "Matt Franklin"
+},
+"mkremers": {
+"date": "2012-03-21",
+"name": "Maarten Kremers"
+},
+"mpierce": {
+"date": "2012-03-21",
+"name": "Marlon Pierce"
+},
+"oharsta": {
+"date": "2012-03-21",
+"name": "Okke Harsta"
+},
+"psharples": {
+"date": "2012-03-27",
+"name": "Paul Sharples"
+},
+"raminder": {
+"date": "2012-03-21",
+"name": "Raminderjeet Singh"
+},
+"rgardler": {
+"date": "2012-03-21",
+"name": "Ross Gardler"
+},
+"scottbw": {
+"date": "2012-03-21",
+"name": "Scott Wilson"
+},
+"sdrozdet": {
+"date": "2012-09-18",
+"name": "Stan Drozdetski"
+},
+"secooper": {
+"date": "2012-03-21",
+"name": "Sean Cooper"
+},
+"smarru": {
+"date": "2012-03-21",
+"name": "Suresh Marru"
+},
+"ssievers": {
+"date": "2015-01-29",
+"name": "Stanton Sievers"
+},
+"svanderwaal": {
+"date": "2012-03-21",
+"name": "Sander van der Waal"
+},
+"unico": {
+"date": "2012-03-21",
+"name": "Unico Hommes"
+},
+"venkatm": {
+"date": "2012-03-21",
+"name": "Venkat Mahadevan"
+},
+"woonsan": {
+"date": "2012-03-21",
+"name": "Woonsan Ko"
+},
+"zhguo": {
+"date": "2012-03-21",
+"name": "Gerald Guo"
+}
+},
+"shortdesc": "Web and social mashup engine"
+},
+{
+"established": "2012-11",
+"homepage": "http://wookie.apache.org/",
+"id": "wookie",
+"name": "Apache Wookie",
+"retired": "2016-03",
+"roster": {
+"ate": {
+"date": "2012-11-21",
+"name": "Ate Douma"
+},
+"hmt": {
+"date": "2012-11-21",
+"name": "Hoang Minh Tien"
+},
+"krispopat": {
+"date": "2012-11-21",
+"name": "Kris Popat"
+},
+"mfranklin": {
+"date": "2012-11-21",
+"name": "Matt Franklin"
+},
+"psharples": {
+"date": "2012-11-21",
+"name": "Paul Sharples"
+},
+"raido": {
+"date": "2012-11-21",
+"name": "Raido Kuli"
+},
+"rgardler": {
+"date": "2012-11-21",
+"name": "Ross Gardler"
+},
+"scottbw": {
+"date": "2012-11-21",
+"name": "Scott Wilson"
+},
+"stevelee": {
+"date": "2013-02-20",
+"name": "Steve Lee"
+}
+},
+"shortdesc": "Widgets for Applications"
+},
+{
+"established": "2012-05",
+"homepage": "http://mrunit.apache.org/",
+"id": "mrunit",
+"name": "Apache MRUnit",
+"retired": "2016-05",
+"roster": {
+"brock": {
+"date": "2012-05-16",
+"name": "Brock Noland"
+},
+"cos": {
+"date": "2012-05-16",
+"name": "Konstantin Boudnik"
+},
+"dbeech": {
+"date": "2012-05-16",
+"name": "Dave Beech"
+},
+"dechouxb": {
+"date": "2012-09-17",
+"name": "Bertrand Dechoux"
+},
+"esammer": {
+"date": "2012-05-16",
+"name": "Eric Sammer"
+},
+"gwu": {
+"date": "2012-05-16",
+"name": "Garrett Wu"
+},
+"jarcec": {
+"date": "2012-05-16",
+"name": "Jarek Jarcec Cecho"
+},
+"jdonofrio": {
+"date": "2012-05-16",
+"name": "Jim Donofrio"
+},
+"kimballa": {
+"date": "2012-05-16",
+"name": "Aaron Kimball"
+},
+"kinley": {
+"date": "2012-09-19",
+"name": "James Robert Kinley"
+},
+"nigel": {
+"date": "2012-05-16",
+"name": "Nigel Daley"
+},
+"phunt": {
+"date": "2012-05-16",
+"name": "Patrick Hunt"
+}
+},
+"shortdesc": "Java library that helps developers unit test Apache Hadoop map reduce jobs"
+},
+{
+"established": "2008-02",
+"homepage": "http://continuum.apache.org/",
+"id": "continuum",
+"name": "Apache Continuum",
+"retired": "2016-06",
+"roster": {
+"batkinson": {
+"date": "2012-09-02",
+"name": "Brent Atkinson"
+},
+"brett": {
+"date": "2008-02-20",
+"name": "Brett Porter"
+},
+"carlos": {
+"date": "2008-02-20",
+"name": "Carlos Sanchez"
+},
+"ctan": {
+"date": "2009-03-17",
+"name": "Marica Tan"
+},
+"epunzalan": {
+"date": "2008-02-20",
+"name": "Edwin Punzalan"
+},
+"evenisse": {
+"date": "2008-02-20",
+"name": "Emmanuel Venisse"
+},
+"handyande": {
+"date": "2008-02-20",
+"name": "Andrew Williams"
+},
+"jmcconnell": {
+"date": "2008-02-20",
+"name": "Jesse McConnell"
+},
+"kenney": {
+"date": "2008-02-20",
+"name": "Kenney Westerhof"
+},
+"oching": {
+"date": "2008-02-20",
+"name": "Maria Odea Ching"
+},
+"olamy": {
+"date": "2008-02-20",
+"name": "Olivier Lamy"
+},
+"rinku": {
+"date": "2008-02-20",
+"name": "Rahul Thakur"
+},
+"trygvis": {
+"date": "2008-02-20",
+"name": "Trygve Laugstol"
+}
+},
+"shortdesc": "Continuous Integration and Build Server"
+},
+{
+"charter": "Apache Tuscany software simplifies the task of developing SOA solutions by providing a comprehensive infrastructure for SOA development and management that is based on Service Component Architecture (SCA) standard.",
+"established": "2008-05",
+"homepage": "http://tuscany.apache.org/",
+"id": "tuscany",
+"name": "Apache Tuscany",
+"retired": "2016-06",
+"roster": {
+"adrianocrestani": {
+"date": "2008-05-21",
+"name": "Adriano Crestani Campos"
+},
+"antelder": {
+"date": "2008-05-21",
+"name": "Ant Elder"
+},
+"beckerdo": {
+"date": "2008-11-11",
+"name": "Daniel Becker"
+},
+"bjohnson": {
+"date": "2008-05-21",
+"name": "Brady Johnson"
+},
+"edwardsmj": {
+"date": "2008-05-21",
+"name": "Mike Edwards"
+},
+"fmoga": {
+"date": "2011-02-09",
+"name": "Florian Moga"
+},
+"frankb": {
+"date": "2008-05-21",
+"name": "Frank Budinsky"
+},
+"hmahbod": {
+"date": "2009-02-25",
+"name": "Haleh Mahbod"
+},
+"isilval": {
+"date": "2008-05-21",
+"name": "Ignacio Silva-Lepe"
+},
+"jsdelfino": {
+"date": "2008-05-21",
+"name": "Jean-Sebastien Delfino"
+},
+"kelvingoodson": {
+"date": "2008-05-21",
+"name": "Kelvin Goodson"
+},
+"lresende": {
+"date": "2008-05-21",
+"name": "Luciano Resende"
+},
+"mcombellack": {
+"date": "2008-05-21",
+"name": "Mark Combellack"
+},
+"mriou": {
+"date": "2008-05-21",
+"name": "Matthieu Riou"
+},
+"nash": {
+"date": "2008-05-21",
+"name": "Simon Nash"
+},
+"pzf": {
+"date": "2008-05-21",
+"name": "Paul Fremantle"
+},
+"ramkumar": {
+"date": "2008-12-19",
+"name": "Ramkumar Ramalingam"
+},
+"rfeng": {
+"date": "2008-05-21",
+"name": "Zhaohui Feng"
+},
+"robbinspg": {
+"date": "2008-05-21",
+"name": "Pete Robbins"
+},
+"scottkurz": {
+"date": "2011-06-20",
+"name": "Scott Kurz"
+},
+"slaws": {
+"date": "2008-05-21",
+"name": "Simon Laws"
+},
+"svkrish": {
+"date": "2008-05-21",
+"name": "Venkata Krishnan"
+},
+"wjaniszewski": {
+"date": "2009-04-23",
+"name": "Wojciech Janiszewski"
+}
+},
+"shortdesc": "An SCA based Service Composition Framework"
+},
+{
+"charter": "Etch is a cross-platform, language- and transport-independent framework for building and consuming network services. The Etch toolset includes a network service description language, a compiler, and binding libraries for a variety of programming languages. Etch is also transport-independent, allowing for a variety of different transports to be used based on need and circumstance. The goal of Etch is to make it simple to define small, focused services that can be easily accessed, combined, and deployed in a similar manner. With Etch, service development and consumption becomes no more difficult than library development and consumption.",
+"established": "2013-01",
+"homepage": "http://etch.apache.org/",
+"id": "etch",
+"name": "Apache Etch",
+"retired": "2016-06",
+"roster": {
+"dashorst": {
+"date": "2013-01-29",
+"name": "Martijn Dashorst"
+},
+"fitzner": {
+"date": "2013-01-29",
+"name": "Michael Fitzner"
+},
+"sccomer": {
+"date": "2013-01-29",
+"name": "Scott Comer"
+},
+"veithm": {
+"date": "2013-01-29",
+"name": "Martin Veith"
+},
+"ypark": {
+"date": "2013-01-29",
+"name": "Youngjin Park"
+}
+},
+"shortdesc": "Cross-platform, language- and transport-independent RPC-like messaging framework"
+},
+{
+"established": "2014-11",
+"homepage": "http://devicemap.apache.org/",
+"id": "devicemap",
+"name": "Apache DeviceMap",
+"retired": "2016-12",
+"roster": {
+"radu": {
+"date": "2014-11-19",
+"name": "Radu Cotescu"
+},
+"wkeil": {
+"date": "2014-11-19",
+"name": "Werner Keil"
+}
+},
+"shortdesc": "data repository containing device information, images and other relevant information for all sorts of mobile devices"
+},
+{
+"established": "2014-05",
+"homepage": "http://stratos.apache.org/",
+"id": "stratos",
+"name": "Apache Stratos",
+"retired": "2017-01",
+"roster": {
+"antelder": {
+"date": "2014-05-21",
+"name": "Ant Elder"
+},
+"anuruddha": {
+"date": "2014-09-16",
+"name": "Anuruddha Liyanarachchi"
+},
+"azeez": {
+"date": "2014-05-21",
+"name": "Afkham Azeez"
+},
+"chamila": {
+"date": "2015-03-10",
+"name": "Chamila De Alwis"
+},
+"chanaka": {
+"date": "2014-05-21",
+"name": "Chanaka Jayasena"
+},
+"chsnow": {
+"date": "2014-05-21",
+"name": "Chris Snow"
+},
+"dakshika": {
+"date": "2015-03-10",
+"name": "Dakshika Jayathilaka"
+},
+"damitha": {
+"date": "2014-05-21",
+"name": "Damitha Kumarage"
+},
+"ddutta": {
+"date": "2014-05-21",
+"name": "Debo Dutta"
+},
+"deepal": {
+"date": "2014-05-21",
+"name": "Deepal Jayasinghe"
+},
+"dineshb": {
+"date": "2014-07-03",
+"name": "Dinesh Bandara"
+},
+"dinithi": {
+"date": "2015-09-10",
+"name": "Dinithi De Silva"
+},
+"gayan": {
+"date": "2014-12-22",
+"name": "Gayan Gunarathne"
+},
+"imesh": {
+"date": "2014-05-21",
+"name": "Imesh Gunaratne"
+},
+"isuru": {
+"date": "2014-05-21",
+"name": "Isuru Perera"
+},
+"isuruh": {
+"date": "2014-05-21",
+"name": "Isuru Haththotuwa"
+},
+"jasondalycan": {
+"date": "2014-05-21",
+"name": "Jason Daly"
+},
+"jeffrngu": {
+"date": "2014-05-21",
+"name": "Jeffrey Nguyen"
+},
+"jonathanmarsh": {
+"date": "2014-05-21",
+"name": "Jonathan Marsh"
+},
+"jzb": {
+"date": "2014-05-21",
+"name": "Joe Brockmeier"
+},
+"lahirus": {
+"date": "2014-05-21",
+"name": "Lahiru Sandaruwan"
+},
+"lakmal": {
+"date": "2014-05-21",
+"name": "Lakmal Warusawithana"
+},
+"lasindu": {
+"date": "2014-10-06",
+"name": "Lasindu Charith"
+},
+"madhura": {
+"date": "2014-05-21",
+"name": "Madhura Mendis"
+},
+"manula": {
+"date": "2014-05-21",
+"name": "Manula Chathurika Thantriwatte"
+},
+"mariangela": {
+"date": "2014-05-21",
+"name": "Mariangela Hills"
+},
+"melan": {
+"date": "2014-05-21",
+"name": "Melan Nimesh"
+},
+"meppel": {
+"date": "2014-06-06",
+"name": "Martin Eppel"
+},
+"nandana": {
+"date": "2014-05-21",
+"name": "Nandana Mihindukulasooriya"
+},
+"nirmal070125": {
+"date": "2014-05-21",
+"name": "Nirmal Fernando"
+},
+"nslater": {
+"date": "2014-05-21",
+"name": "Noah Slater"
+},
+"plinnell": {
+"date": "2014-05-21",
+"name": "Peter Linnell"
+},
+"pradeepfn": {
+"date": "2014-05-21",
+"name": "Pradeep Fernando"
+},
+"pubudu": {
+"date": "2015-09-25",
+"name": "Pubudu Gunatilaka"
+},
+"pzf": {
+"date": "2014-05-21",
+"name": "Paul Fremantle"
+},
+"raj": {
+"date": "2014-10-06",
+"name": "Rajkumar Rajaratnam"
+},
+"ravihansa": {
+"date": "2014-07-25",
+"name": "Akila Perera"
+},
+"reka": {
+"date": "2014-05-21",
+"name": "Reka Thirunavakurussu"
+},
+"sajith": {
+"date": "2014-05-21",
+"name": "Sajith Kariyawasam"
+},
+"samisa": {
+"date": "2014-05-21",
+"name": "Samisa Abeysinghe"
+},
+"smarru": {
+"date": "2014-05-21",
+"name": "Suresh Marru"
+},
+"srhaque": {
+"date": "2015-04-21",
+"name": "Shaheedur Haque"
+},
+"tuna": {
+"date": "2014-05-21",
+"name": "Anh Tu Nguyen"
+},
+"udara": {
+"date": "2014-05-21",
+"name": "Udara Liyanage"
+},
+"vishanth": {
+"date": "2015-06-14",
+"name": "Vishanth Balasubramaniam"
+}
+},
+"shortdesc": "highly-extensible Platform-as-a-Service (PaaS) framework"
+},
+{
+"charter": "The mission of Apache Abdera is the creation and maintenance of software related to a framework for building clients and servers for the Atom Publishing Protocol and other related technology",
+"established": "2008-11",
+"homepage": "http://abdera.apache.org/",
+"id": "abdera",
+"name": "Apache Abdera",
+"retired": "2017-03",
+"roster": {
+"antelder": {
+"date": "2009-10-21",
+"name": "Ant Elder"
+},
+"calavera": {
+"date": "2008-11-19",
+"name": "David Calavera"
+},
+"ckoppelt": {
+"date": "2010-06-13",
+"name": "Christine Koppelt"
+},
+"dandiep": {
+"date": "2008-11-19",
+"name": "Dan Diephouse"
+},
+"jancona": {
+"date": "2008-11-19",
+"name": "Jim Ancona"
+},
+"jmsnell": {
+"date": "2008-11-19",
+"name": "James M. Snell"
+},
+"jrduncans": {
+"date": "2008-11-19",
+"name": "Stephen Duncan Jr."
+},
+"rooneg": {
+"date": "2008-11-19",
+"name": "Garrett Rooney"
+},
+"ugo": {
+"date": "2008-11-19",
+"name": "Ugo Cei"
+}
+},
+"shortdesc": "Atom Publishing Protocol Implementation"
+},
+{
+"established": "2012-12",
+"homepage": "http://wink.apache.org/",
+"id": "wink",
+"name": "Apache Wink",
+"retired": "2017-04",
+"roster": {
+"bluk": {
+"date": "2012-12-19",
+"name": "Bryant Luk"
+},
+"cjblythe": {
+"date": "2012-12-19",
+"name": "Christopher James Blythe"
+},
+"damrhei": {
+"date": "2012-12-19",
+"name": "Dustin Amrhein"
+},
+"dims": {
+"date": "2012-12-19",
+"name": "Davanum Srinivas"
+},
+"elib": {
+"date": "2012-12-19",
+"name": "Eli Baram"
+},
+"elman": {
+"date": "2012-12-19",
+"name": "Michael Elman"
+},
+"jramos": {
+"date": "2012-12-19",
+"name": "Jesse A. Ramos"
+},
+"kevan": {
+"date": "2012-12-19",
+"name": "Kevan Lee Miller"
+},
+"lresende": {
+"date": "2012-12-19",
+"name": "Luciano Resende"
+},
+"martins": {
+"date": "2012-12-19",
+"name": "Martin Snitkovsky"
+},
+"nfischer": {
+"date": "2012-12-19",
+"name": "Nadav Fischer"
+},
+"ngallardo": {
+"date": "2012-12-19",
+"name": "Nicholas L. Gallardo"
+},
+"rfeng": {
+"date": "2012-12-19",
+"name": "Zhaohui Feng"
+},
+"rott": {
+"date": "2012-12-19",
+"name": "Michael Rheinheimer"
+},
+"tomershadi": {
+"date": "2012-12-19",
+"name": "Tomer Shadi"
+}
+},
+"shortdesc": "RESTful Web services Framework"
+},
+{
+"charter": "The mission of Apache Ace is the creation and maintenance of software related to the centralized life cycle management and deployment of OSGi based and related modular software artifacts",
+"established": "2011-12",
+"homepage": "http://ace.apache.org/",
+"id": "ace",
+"name": "Apache ACE",
+"retired": "2017-12",
+"roster": {
+"angelos": {
+"date": "2011-12-21",
+"name": "Angelo van der Sijpt"
+},
+"bramk": {
+"date": "2013-07-08",
+"name": "Bram de Kruijff"
+},
+"btopping": {
+"date": "2011-12-21",
+"name": "Brian Topping"
+},
+"clement": {
+"date": "2011-12-21",
+"name": "Clement Escoffier"
+},
+"cziegeler": {
+"date": "2011-12-21",
+"name": "Carsten Ziegeler"
+},
+"jawi": {
+"date": "2013-07-08",
+"name": "Jan Willem Janssen"
+},
+"jbonofre": {
+"date": "2011-12-21",
+"name": "Jean-Baptiste Onofre"
+},
+"marrs": {
+"date": "2011-12-21",
+"name": "Marcel Offermans"
+},
+"paulb": {
+"date": "2013-07-08",
+"name": "Paul Bakker"
+},
+"pauls": {
+"date": "2011-12-21",
+"name": "Karl Pauls"
+},
+"tonit": {
+"date": "2011-12-21",
+"name": "Toni Menzel"
+}
+},
+"shortdesc": "Centralized life cycle management and deployment of OSGi based and related modular software artifacts for distribution."
+},
+{
+"established": "2013-01",
+"homepage": "http://oltu.apache.org/",
+"id": "oltu",
+"name": "Apache Oltu",
+"retired": "2018-03",
+"roster": {
+"asanso": {
+"date": "2013-01-16",
+"name": "Antonio Sanso"
+},
+"jasha": {
+"date": "2016-06-13",
+"name": "Jasha Joachimsthal"
+},
+"lmoren": {
+"date": "2013-01-16",
+"name": "Lukasz Moren"
+},
+"mmachulak": {
+"date": "2013-01-16",
+"name": "Maciej Pawel Machulak"
+},
+"pidster": {
+"date": "2013-01-16",
+"name": "Stuart Williams"
+},
+"rfeng": {
+"date": "2013-01-16",
+"name": "Zhaohui Feng"
+},
+"simonetripodi": {
+"date": "2013-01-16",
+"name": "Simone Tripodi"
+},
+"stein": {
+"date": "2016-06-13",
+"name": "Stein Welberg"
+}
+},
+"shortdesc": "OAuth protocol implementation in Java"
+},
+{
+"established": "2012-03",
+"homepage": "http://lucy.apache.org/",
+"id": "lucy",
+"name": "Apache Lucy",
+"retired": "2018-06",
+"roster": {
+"bch": {
+"date": "2012-03-21",
+"name": "Brad C. Harder"
+},
+"dmarkham": {
+"date": "2012-03-21",
+"name": "Dan Markham"
+},
+"joes": {
+"date": "2012-03-21",
+"name": "Joe Schaefer"
+},
+"karpet": {
+"date": "2012-03-21",
+"name": "Peter Karman"
+},
+"logie": {
+"date": "2012-03-21",
+"name": "Logan Bell"
+},
+"marvin": {
+"date": "2012-03-21",
+"name": "Marvin Humphrey"
+},
+"mikemccand": {
+"date": "2012-03-21",
+"name": "Michael McCandless"
+},
+"nate": {
+"date": "2012-03-21",
+"name": "Nathan Kurz"
+},
+"nwellnhof": {
+"date": "2012-03-21",
+"name": "Nikolas Wellnhofer"
+},
+"simonw": {
+"date": "2012-03-21",
+"name": "Simon Willnauer"
+},
+"twilkens": {
+"date": "2014-09-15",
+"name": "Timothy Wilkens"
+},
+"upayavira": {
+"date": "2012-03-21",
+"name": "Upayavira"
+}
+},
+"shortdesc": "Search engine library for dynamic languages"
+},
+{
+"established": "2015-03",
+"homepage": "http://polygene.apache.org/",
+"id": "polygene",
+"name": "Apache Polygene",
+"retired": "2018-12",
+"roster": {
+"akarasulu": {
+"date": "2015-03-18",
+"name": "Alex Karasulu"
+},
+"jcarman": {
+"date": "2015-03-18",
+"name": "James Carman"
+},
+"jgenender": {
+"date": "2015-03-18",
+"name": "Jeff Genender"
+},
+"jiri": {
+"date": "2015-06-01",
+"name": "Jiri Jetmar"
+},
+"marrs": {
+"date": "2015-03-18",
+"name": "Marcel Offermans"
+},
+"mattmann": {
+"date": "2015-03-18",
+"name": "Chris Mattmann"
+},
+"niclas": {
+"date": "2015-03-18",
+"name": "Niclas Hedhman"
+},
+"paulmerlin": {
+"date": "2015-05-01",
+"name": "Paul Merlin"
+},
+"rvs": {
+"date": "2015-03-18",
+"name": "Roman Shaposhnik"
+},
+"smartini": {
+"date": "2015-03-18",
+"name": "Sandro Martini"
+},
+"soelvsten": {
+"date": "2015-09-22",
+"name": "Kent S\u00f8lvsten"
+},
+"stanislavm": {
+"date": "2017-06-12",
+"name": "Stanislav Muhametsin"
+}
+},
+"shortdesc": "community based effort exploring Composite Oriented Programming for domain centric application development"
+},
+{
+"established": "2006-12",
+"homepage": "http://tiles.apache.org/",
+"id": "tiles",
+"name": "Apache Tiles",
+"retired": "2018-12",
+"roster": {
+"craigmcc": {
+"date": "2006-12-20",
+"name": "Craig McClanahan"
+},
+"ddewolf": {
+"date": "2006-12-20",
+"name": "David H. DeWolf"
+},
+"germuska": {
+"date": "2007-01-20",
+"name": "Joe Germuska"
+},
+"greddin": {
+"date": "2006-12-20",
+"name": "Gregory D. Reddin"
+},
+"mck": {
+"date": "2011-08-11",
+"name": "Mick Semb Wever"
+},
+"nbubna": {
+"date": "2006-12-20",
+"name": "Nathan Bubna"
+},
+"nlebas": {
+"date": "2012-04-23",
+"name": "Nicolas LE BAS"
+},
+"wsmoak": {
+"date": "2006-12-20",
+"name": "Wendy Smoak"
+}
+},
+"shortdesc": "A templating framework for web application user interfaces"
+},
+{
+"charter": "The mission of ODE is the creation and maintenance of software related to Orchestration Director Engine: Business Process Management (BPM), Process Orchestration and Workflow through service composition.",
+"established": "2007-07",
+"homepage": "http://ode.apache.org/",
+"id": "ode",
+"name": "Apache ODE",
+"retired": "2019-08",
+"roster": {
+"assaf": {
+"date": "2007-07-18",
+"name": "Assaf Arkin"
+},
+"boisvert": {
+"date": "2007-07-18",
+"name": "Alex Boisvert"
+},
+"charper": {
+"date": "2007-07-18",
+"name": "Cory Harper"
+},
+"gnodet": {
+"date": "2007-07-18",
+"name": "Guillaume Nodet"
+},
+"hadrian": {
+"date": "2013-06-28",
+"name": "Hadrian Zbarcea"
+},
+"jeffyu": {
+"date": "2010-04-14",
+"name": "Jeff Yu"
+},
+"lwaterman": {
+"date": "2007-07-18",
+"name": "Lance Waterman"
+},
+"midon": {
+"date": "2008-08-29",
+"name": "Alexis Midon"
+},
+"milinda": {
+"date": "2011-05-14",
+"name": "Milinda Pathirage"
+},
+"mriou": {
+"date": "2007-07-18",
+"name": "Matthieu Riou"
+},
+"mszefler": {
+"date": "2007-07-18",
+"name": "Maciej Szefler"
+},
+"paulrbrown": {
+"date": "2007-07-18",
+"name": "Paul R. Brown"
+},
+"rr": {
+"date": "2014-10-01",
+"name": "Rafal Rusin"
+},
+"sathwik": {
+"date": "2013-06-25",
+"name": "Sathwik Bantwal Premakumar"
+},
+"vanto": {
+"date": "2007-09-24",
+"name": "Tammo van Lessen"
+}
+},
+"shortdesc": "Orchestration Director Engine: Business Process Management (BPM), Process Orchestration and Workflow through service composition."
+},
+{
+"charter": "Apache Falcon is a data processing and management solution for Hadoop designed for data motion, coordination of data pipelines, lifecycle management, and data discovery. Falcon enables end consumers to quickly onboard their data and its associated processing and management tasks on Hadoop clusters.",
+"established": "2014-12",
+"homepage": "http://falcon.apache.org/",
+"id": "falcon",
+"name": "Apache Falcon",
+"retired": "2019-09",
+"roster": {
+"ajayyadava": {
+"date": "2015-12-03",
+"name": "Ajay Yadav"
+},
+"amareshwari": {
+"date": "2014-12-17",
+"name": "Amareshwari Sriramadasu"
+},
+"arpit": {
+"date": "2014-12-17",
+"name": "Arpit Gupta"
+},
+"jbonofre": {
+"date": "2014-12-17",
+"name": "Jean-Baptiste Onofre"
+},
+"pallavi": {
+"date": "2016-05-10",
+"name": "Pallavi Rao"
+},
+"raghav": {
+"date": "2014-12-17",
+"name": "Raghav Kumar Gautam"
+},
+"rishumehrothra": {
+"date": "2014-12-17",
+"name": "Rishu Mehrotra"
+},
+"rostafiychuk": {
+"date": "2014-12-17",
+"name": "Ruslan Ostafiychuk"
+},
+"samarthg": {
+"date": "2014-12-17",
+"name": "Samarth Gupta"
+},
+"shaikidris": {
+"date": "2014-12-17",
+"name": "Shaik Idris"
+},
+"sharad": {
+"date": "2014-12-17",
+"name": "Sharad Agarwal"
+},
+"shwethags": {
+"date": "2014-12-17",
+"name": "Shwetha GS"
+},
+"sowmya_kr": {
+"date": "2016-06-06",
+"name": "Sowmya Ramesh"
+},
+"sradia": {
+"date": "2014-12-17",
+"name": "Sanjay Radia"
+},
+"sriksun": {
+"date": "2014-12-17",
+"name": "Srikanth Sundarrajan"
+},
+"suhasv": {
+"date": "2014-12-17",
+"name": "Suhas Vasu"
+},
+"venkatesh": {
+"date": "2014-12-17",
+"name": "Venkatesh Seetharam"
+}
+},
+"shortdesc": "Data management and processing platform."
+},
+{
+"charter": "The mission of Apex is the creation and maintenance of software related to Enterprise-grade unified stream and batch processing engine",
+"established": "2016-04",
+"homepage": "http://apex.apache.org/",
+"id": "apex",
+"name": "Apache Apex",
+"retired": "2019-09",
+"roster": {
+"akekre": {
+"date": "2016-04-20",
+"name": "Amol Kekre"
+},
+"boyork": {
+"date": "2016-04-20",
+"name": "Brennon York"
+},
+"chetan": {
+"date": "2016-04-20",
+"name": "Chetan Narsude"
+},
+"chinmay": {
+"date": "2018-05-16",
+"name": "Chinmay Kolhatkar"
+},
+"cnauroth": {
+"date": "2016-04-20",
+"name": "Chris Nauroth"
+},
+"csingh": {
+"date": "2016-09-07",
+"name": "Chandni Singh"
+},
+"davidyan": {
+"date": "2016-04-20",
+"name": "David Yan"
+},
+"gauravgopi123": {
+"date": "2016-04-20",
+"name": "Gaurav Gupta"
+},
+"hitesh": {
+"date": "2016-04-20",
+"name": "Hitesh Shah"
+},
+"hsy541": {
+"date": "2016-06-07",
+"name": "Siyuan Hua"
+},
+"ilganeli": {
+"date": "2016-04-20",
+"name": "Ilya Ganelin"
+},
+"jmclean": {
+"date": "2016-04-20",
+"name": "Justin Mclean"
+},
+"pramod": {
+"date": "2016-04-20",
+"name": "Pramod Immaneni"
+},
+"ptgoetz": {
+"date": "2016-04-20",
+"name": "P. Taylor Goetz"
+},
+"thw": {
+"date": "2016-04-20",
+"name": "Thomas Weise"
+},
+"tushar": {
+"date": "2017-10-13",
+"name": "Tushar Gosavi"
+},
+"vrozov": {
+"date": "2016-04-20",
+"name": "Vlad Rozov"
+}
+},
+"shortdesc": "Enterprise-grade unified stream and batch processing engine"
+},
+{
+"charter": "Creation and maintenance of software related to providing an implementation of a parallel XML Query processor.",
+"established": "2014-07",
+"homepage": "http://vxquery.apache.org/",
+"id": "vxquery",
+"name": "Apache VXQuery",
+"retired": "2020-01",
+"roster": {
+"antelder": {
+"date": "2014-07-16",
+"name": "Anthony Elder"
+},
+"cezar": {
+"date": "2014-07-16",
+"name": "Cezar Cristian Andrei"
+},
+"christina": {
+"date": "2018-10-29",
+"name": "Christina Pavlopoulou"
+},
+"dtabass": {
+"date": "2014-07-16",
+"name": "Michael J. Carey"
+},
+"prestonc": {
+"date": "2014-07-16",
+"name": "Preston Carman"
+},
+"sjaco002": {
+"date": "2014-07-16",
+"name": "Steven Jacobs"
+},
+"tillw": {
+"date": "2014-07-16",
+"name": "Till Westmann"
+},
+"vinayakb": {
+"date": "2014-07-16",
+"name": "Vinayak Borkar"
+}
+},
+"shortdesc": "A parallel XQuery processor"
+},
+{
+"charter": "The mission of Aurora is the creation and maintenance of software related to Mesos framework for long-running services and cron jobs",
+"established": "2015-03",
+"homepage": "http://aurora.apache.org/",
+"id": "aurora",
+"name": "Apache Aurora",
+"retired": "2020-02",
+"roster": {
+"benh": {
+"date": "2015-03-18",
+"name": "Benjamin Hindman"
+},
+"dlester": {
+"date": "2015-03-18",
+"name": "Dave Lester"
+},
+"dmclaughlin": {
+"date": "2015-03-18",
+"name": "David McLaughlin"
+},
+"hsaputra": {
+"date": "2015-03-18",
+"name": "Henry Saputra"
+},
+"jcohen": {
+"date": "2015-12-23",
+"name": "Joshua Cohen"
+},
+"jfarrell": {
+"date": "2015-03-18",
+"name": "Jake Farrell"
+},
+"jordanly": {
+"date": "2018-05-03",
+"name": "Jordan Ly"
+},
+"jsirois": {
+"date": "2016-01-04",
+"name": "John Sirois"
+},
+"kevints": {
+"date": "2015-03-18",
+"name": "Kevin Sweeney"
+},
+"mansu": {
+"date": "2015-03-18",
+"name": "Suman Karumuri"
+},
+"mattmann": {
+"date": "2015-03-18",
+"name": "Chris Mattmann"
+},
+"mauricio": {
+"date": "2019-07-30",
+"name": "Mauricio Garavaglia"
+},
+"maxim": {
+"date": "2015-03-18",
+"name": "Maxim Khutornenko"
+},
+"mchucarroll": {
+"date": "2015-03-18",
+"name": "Mark Chu-Carroll"
+},
+"mehrdad": {
+"date": "2017-02-25",
+"name": "Mehrdad Nurolahzade"
+},
+"renan": {
+"date": "2018-01-29",
+"name": "Renan DelValle"
+},
+"santhk": {
+"date": "2018-05-03",
+"name": "Santhosh Kumar Shanmugham"
+},
+"serb": {
+"date": "2016-02-04",
+"name": "Stephan Erb"
+},
+"sniemitz": {
+"date": "2016-01-12",
+"name": "Steve Niemitz"
+},
+"wfarner": {
+"date": "2015-03-18",
+"name": "Bill Farner"
+},
+"wickman": {
+"date": "2015-03-18",
+"name": "Brian Wickman"
+},
+"zmanji": {
+"date": "2015-03-18",
+"name": "Zameer Manji"
+}
+},
+"shortdesc": "Mesos framework for long-running services and cron jobs"
+},
+{
+"charter": "The mission of Apache Forrest is the generation of aggregated multi-channel documentation, maintaining a separation of content and presentation.",
+"established": "2004-05",
+"homepage": "http://forrest.apache.org/",
+"id": "forrest",
+"name": "Apache Forrest",
+"retired": "2020-02",
+"roster": {
+"antonio": {
+"date": "2004-05-26",
+"name": "Antonio Gallardo"
+},
+"bdube": {
+"date": "2007-05-31",
+"name": "Brian Dube"
+},
+"brondsem": {
+"date": "2004-05-26",
+"name": "Dave Brondsema"
+},
+"cdupoirieux": {
+"date": "2005-08-25",
+"name": "Cyriaque Dupoirieux"
+},
+"cheche": {
+"date": "2004-05-26",
+"name": "Juan Jose Pablos"
+},
+"crossley": {
+"date": "2004-05-26",
+"name": "David Crossley"
+},
+"diwaker": {
+"date": "2005-07-19",
+"name": "Diwaker Gupta"
+},
+"josch": {
+"date": "2005-04-02",
+"name": "Johannes Sch\u00e4fer"
+},
+"rick": {
+"date": "2004-11-11",
+"name": "Rick Tessner"
+},
+"sina": {
+"date": "2009-06-08",
+"name": "Sina Heshmati"
+},
+"sjur": {
+"date": "2006-11-13",
+"name": "Sjur Moshagen"
+},
+"thorsten": {
+"date": "2004-10-15",
+"name": "Thorsten Scherler"
+},
+"twilliams": {
+"date": "2005-07-20",
+"name": "Tim Williams"
+}
+},
+"shortdesc": "Aggregated multi-channel documentation, separation of concerns"
+},
+{
+"charter": "The mission of Hama is the creation and maintenance of software related to a Bulk Synchronous Parallel computing framework on top of Apache Hadoop",
+"established": "2012-05",
+"homepage": "http://hama.apache.org/",
+"id": "hama",
+"name": "Apache Hama",
+"retired": "2020-04",
+"roster": {
+"andronat": {
+"date": "2014-03-13",
+"name": "Andronidis Anastasios"
+},
+"bsikander": {
+"date": "2016-02-01",
+"name": "Behroz Sikander"
+},
+"chl501": {
+"date": "2012-05-16",
+"name": "ChiaHung Lin"
+},
+"edwardyoon": {
+"date": "2012-05-16",
+"name": "Edward J. Yoon"
+},
+"kennethxian": {
+"date": "2013-08-03",
+"name": "MaoYuan Xian"
+},
+"millecker": {
+"date": "2013-04-17",
+"name": "Martin Illecker"
+},
+"stevel": {
+"date": "2012-05-16",
+"name": "Steve Loughran"
+},
+"surajsmenon": {
+"date": "2012-05-16",
+"name": "Suraj Menon"
+},
+"tommaso": {
+"date": "2012-05-16",
+"name": "Tommaso Teofili"
+},
+"yxjiang": {
+"date": "2014-03-13",
+"name": "Yexi Jiang"
+}
+},
+"shortdesc": "a Bulk Synchronous Parallel computing framework on top of Apache Hadoop"
+},
+{
+"charter": "The mission of Stanbol is the creation and maintenance of software related to Reusable components for semantic content management",
+"established": "2012-09",
+"homepage": "http://stanbol.apache.org/",
+"id": "stanbol",
+"name": "Apache Stanbol",
+"retired": "2020-04",
+"roster": {
+"adperezmorales": {
+"date": "2018-12-21",
+"name": "Antonio David P\u00e9rez Morales"
+},
+"agruber": {
+"date": "2012-09-19",
+"name": "Andreas Gruber"
+},
+"aku": {
+"date": "2012-09-19",
+"name": "Andreas Kuckartz"
+},
+"alexdma": {
+"date": "2012-09-19",
+"name": "Alessandro Adamou"
+},
+"anuzzolese": {
+"date": "2012-09-19",
+"name": "Andrea Nuzzolese"
+},
+"bnagel": {
+"date": "2012-09-19",
+"name": "Benjamin Nagel"
+},
+"cihan": {
+"date": "2012-09-19",
+"name": "Cihan Cimen"
+},
+"concelvio": {
+"date": "2012-09-19",
+"name": "Concetto Bonafede"
+},
+"cpetroaca": {
+"date": "2016-07-28",
+"name": "Cristian Petroaca"
+},
+"enridaga": {
+"date": "2012-09-19",
+"name": "Enrico Daga"
+},
+"fchrist": {
+"date": "2012-09-19",
+"name": "Fabian Christ"
+},
+"florent": {
+"date": "2012-09-19",
+"name": "Florent Andr\u00e9"
+},
+"ogrisel": {
+"date": "2012-09-19",
+"name": "Olivier Grisel"
+},
+"ozgur": {
+"date": "2012-09-19",
+"name": "Ozgur Kilic"
+},
+"reto": {
+"date": "2012-09-19",
+"name": "Reto Gm\u00fcr"
+},
+"rharo": {
+"date": "2016-07-28",
+"name": "Rafa Haro"
+},
+"rwesten": {
+"date": "2012-09-19",
+"name": "Rupert Westenthaler"
+},
+"sinaci": {
+"date": "2012-09-19",
+"name": "Ali Anil Sinaci"
+},
+"suat": {
+"date": "2012-09-19",
+"name": "Suat Gonul"
+},
+"szabyg": {
+"date": "2013-04-09",
+"name": "Szaby Gr\u00fcnwald"
+},
+"tommaso": {
+"date": "2012-09-19",
+"name": "Tommaso Teofili"
+},
+"val": {
+"date": "2012-09-19",
+"name": "Valentina Presutti"
+},
+"wkasper": {
+"date": "2012-09-19",
+"name": "Walter Kasper"
+}
+},
+"shortdesc": "Reusable components for semantic content management"
+},
+{
+"charter": "The mission of Chukwa is the creation and maintenance of software related to Open source data collection system for monitoring large distributed systems.",
+"established": "2013-10",
+"homepage": "http://chukwa.apache.org/",
+"id": "chukwa",
+"name": "Apache Chukwa",
+"retired": "2020-05",
+"roster": {
+"adc": {
+"date": "2013-10-16",
+"name": "Alan Cabrera"
+},
+"afathalla": {
+"date": "2013-10-16",
+"name": "Ahmed Fathalla"
+},
+"antelder": {
+"date": "2013-10-16",
+"name": "Ant Elder"
+},
+"asrabkin": {
+"date": "2013-10-16",
+"name": "Ariel Rabkin"
+},
+"billgraham": {
+"date": "2013-10-16",
+"name": "Bill Graham"
+},
+"eyang": {
+"date": "2013-10-16",
+"name": "Eric Yang"
+},
+"ivytang": {
+"date": "2013-10-16",
+"name": "Ivy Tang"
+},
+"jboulon": {
+"date": "2013-10-16",
+"name": "Jerome Boulon"
+},
+"jiehuang": {
+"date": "2013-10-16",
+"name": "Grace Huang"
+},
+"shreyas": {
+"date": "2013-10-16",
+"name": "Shreyas Subramanya"
+},
+"sluangsay": {
+"date": "2013-10-16",
+"name": "Sourygna Luangsay"
+},
+"tanjiaqi": {
+"date": "2013-10-16",
+"name": "Jiaqi Tan"
+}
+},
+"shortdesc": "Open source data collection system for monitoring large distributed systems."
+},
+{
+"charter": "The mission of Twill is the creation and maintenance of software related to Use Apache Hadoop YARN's distributed capabilities with a programming model that is similar to running threads",
+"established": "2016-06",
+"homepage": "http://twill.apache.org/",
+"id": "twill",
+"name": "Apache Twill",
+"retired": "2020-05",
+"roster": {
+"anew": {
+"date": "2016-06-15",
+"name": "Andreas Neumann"
+},
+"ashau": {
+"date": "2016-06-15",
+"name": "Albert Shau"
+},
+"chtyim": {
+"date": "2016-06-15",
+"name": "Terence Yim"
+},
+"garyh": {
+"date": "2016-06-15",
+"name": "Gary Helmling"
+},
+"hsaputra": {
+"date": "2016-06-15",
+"name": "Henry Saputra"
+},
+"poorna": {
+"date": "2016-06-15",
+"name": "Poorna Chandra"
+}
+},
+"shortdesc": "Use Apache Hadoop YARN's distributed capabilities with a programming model that is similar to running threads"
+},
+{
+"charter": "The mission of Crunch is the creation and maintenance of software related to Simple and Efficient MapReduce Pipelines",
+"established": "2013-02",
+"homepage": "http://crunch.apache.org/",
+"id": "crunch",
+"name": "Apache Crunch",
+"retired": "2020-06",
+"roster": {
+"brock": {
+"date": "2013-02-20",
+"name": "Brock Noland"
+},
+"chaoshi": {
+"date": "2013-08-20",
+"name": "Chao Shi"
+},
+"greid": {
+"date": "2013-02-20",
+"name": "Gabriel Reid"
+},
+"jwills": {
+"date": "2013-02-20",
+"name": "Josh Wills"
+},
+"kiyan": {
+"date": "2013-02-20",
+"name": "Kiyan Ahmadizadeh"
+},
+"mafr": {
+"date": "2013-02-20",
+"name": "Matthias Friedrich"
+},
+"mkwhit": {
+"date": "2014-04-03",
+"name": "Micah Whitacre"
+},
+"robertchu": {
+"date": "2013-02-20",
+"name": "Robert Chu"
+},
+"rsharma": {
+"date": "2013-02-20",
+"name": "Rahul Sharma"
+},
+"tomwhite": {
+"date": "2013-02-20",
+"name": "Tom White"
+},
+"tzolov": {
+"date": "2013-02-20",
+"name": "Christian Tzolov"
+},
+"vinodkv": {
+"date": "2013-02-20",
+"name": "Vinod Kumar Vavilapalli"
+}
+},
+"shortdesc": "Simple and Efficient MapReduce Pipelines"
+},
+{
+"charter": "The mission of Apache SystemML is the creation and maintenance of software related to declarative, large-scale machine learning that compiles to hybrid runtime execution plans ranging from single node, in-memory computations, to distributed computations such as on Apache Hadoop MapReduce or Apache Spark.",
+"established": "2017-05",
+"homepage": "http://systemml.apache.org/",
+"id": "systemml",
+"name": "Apache SystemML",
+"retired": "2020-07",
+"roster": {
+"acs_s": {
+"date": "2017-05-17",
+"name": "Arvind Surve"
+},
+"ae2015": {
+"date": "2017-05-17",
+"name": "Alexandre V Evfimievski"
+},
+"dbtsai": {
+"date": "2017-05-17",
+"name": "DB Tsai"
+},
+"deron": {
+"date": "2017-05-17",
+"name": "Deron Eriksson"
+},
+"dusenberrymw": {
+"date": "2017-05-17",
+"name": "Mike Dusenberry"
+},
+"fmakari": {
+"date": "2017-05-17",
+"name": "Faraz Makari"
+},
+"freiss": {
+"date": "2017-05-17",
+"name": "Fred Reiss"
+},
+"fschueler": {
+"date": "2017-05-17",
+"name": "Felix Schueler"
+},
+"gweidner": {
+"date": "2017-05-17",
+"name": "Glenn Weidner"
+},
+"holden": {
+"date": "2017-05-17",
+"name": "Holden Karau"
+},
+"hsaputra": {
+"date": "2017-05-17",
+"name": "Henry Saputra"
+},
+"jkbradley": {
+"date": "2017-05-17",
+"name": "Joseph Bradley"
+},
+"lresende": {
+"date": "2017-05-17",
+"name": "Luciano Resende"
+},
+"mboehm7": {
+"date": "2017-05-17",
+"name": "Matthias Boehm"
+},
+"meng": {
+"date": "2017-05-17",
+"name": "Xiangrui Meng"
+},
+"nakul02": {
+"date": "2017-05-17",
+"name": "Nakul Jindal"
+},
+"niketanpansare": {
+"date": "2017-05-17",
+"name": "Niketan Pansare"
+},
+"prithvi": {
+"date": "2017-05-17",
+"name": "Prithviraj Sen"
+},
+"pwendell": {
+"date": "2017-05-17",
+"name": "Patrick Wendell"
+},
+"rbowen": {
+"date": "2017-05-17",
+"name": "Rich Bowen"
+},
+"reinwald": {
+"date": "2017-05-17",
+"name": "Berthold Reinwald"
+},
+"rxin": {
+"date": "2017-05-17",
+"name": "Reynold Xin"
+},
+"shirisht": {
+"date": "2017-05-17",
+"name": "Shirish Tatikonda"
+}
+},
+"shortdesc": "A machine learning platform optimal for big data"
+},
+{
+"charter": "The mission of Apache Distributed Release Audit Tool is the creation and maintenance of software related to large scale code license analysis, auditing and reporting.",
+"established": "2017-09",
+"homepage": "http://drat.apache.org/",
+"id": "drat",
+"name": "Apache DRAT",
+"retired": "2020-08",
+"roster": {
+"brianf": {
+"date": "2017-09-20",
+"name": "Brian Fox"
+},
+"francus": {
+"date": "2017-09-20",
+"name": "Steven Francus"
+},
+"ifhaam": {
+"date": "2018-08-31",
+"name": "Ahmed Ifhaam"
+},
+"joyce": {
+"date": "2017-09-20",
+"name": "Michael James Joyce"
+},
+"karanjeet": {
+"date": "2017-09-20",
+"name": "Karanjeet Singh"
+},
+"lewismc": {
+"date": "2017-09-20",
+"name": "Lewis John McGibbney"
+},
+"magicaltrout": {
+"date": "2017-09-20",
+"name": "Tom Barber"
+},
+"mattmann": {
+"date": "2017-09-20",
+"name": "Chris Mattmann"
+},
+"ndoshi": {
+"date": "2018-06-13",
+"name": "Nipurn Doshi"
+},
+"pottlinger": {
+"date": "2018-02-27",
+"name": "Philipp Ottlinger"
+},
+"pramirez": {
+"date": "2017-09-20",
+"name": "Paul Ramirez"
+},
+"thejanw": {
+"date": "2018-06-11",
+"name": "Thejan Wijesinghe"
+},
+"tpalsulich": {
+"date": "2017-09-20",
+"name": "Tyler Palsulich"
+},
+"wmb": {
+"date": "2017-09-20",
+"name": "Wayne Burke"
+}
+},
+"shortdesc": "large scale code license analysis, auditing and reporting"
+},
+{
+"charter": "The mission of Labs is the creation and maintenance of software related to A place for innovation where committers of the foundation can experiment with new ideas",
+"established": "2006-11",
+"homepage": "http://labs.apache.org/",
+"id": "labs",
+"name": "Apache Labs",
+"retired": "2020-08",
+"roster": {
+"danny": {
+"date": "2006-11-15",
+"name": "Danny Angus"
+},
+"geirm": {
+"date": "2006-11-15",
+"name": "Geir Magnusson Jr."
+},
+"minfrin": {
+"date": "2006-11-15",
+"name": "Graham Leggett"
+},
+"niallp": {
+"date": "2006-11-15",
+"name": "Niall Pemberton"
+},
+"sctemme": {
+"date": "2006-11-15",
+"name": "Sander Temme"
+},
+"sgala": {
+"date": "2006-11-15",
+"name": "Santiago Gala"
+},
+"simoneg": {
+"date": "2008-08-05",
+"name": "Simone Gianni"
+},
+"simonetripodi": {
+"date": "2011-06-14",
+"name": "Simone Tripodi"
+},
+"twilliams": {
+"date": "2010-07-01",
+"name": "Tim Williams"
+},
+"twl": {
+"date": "2006-11-15",
+"name": "Ted Leung"
+}
+},
+"shortdesc": "A place for innovation where committers of the foundation can experiment with new ideas"
+},
+{
+"charter": "Lens provides an Unified Analytics interface. Lens aims to cut the Data Analytics silos by providing a single view of data across multiple tiered data stores and optimal execution environment for the analytical query. It seamlessly integrates Hadoop with traditional data warehouses to appear like one.",
+"established": "2015-08",
+"homepage": "http://lens.apache.org/",
+"id": "lens",
+"name": "Apache Lens",
+"retired": "2020-08",
+"roster": {
+"amareshwari": {
+"date": "2015-08-19",
+"name": "Amareshwari Sriramadasu"
+},
+"arshadmatin": {
+"date": "2015-08-19",
+"name": "Arshad Matin"
+},
+"deepakbarr": {
+"date": "2016-05-23",
+"name": "Deepak Barr"
+},
+"gunther": {
+"date": "2015-08-19",
+"name": "Gunther Hagleitner"
+},
+"himanshugahlaut": {
+"date": "2015-08-19",
+"name": "Himanshu Gahlaut"
+},
+"jbonofre": {
+"date": "2015-08-19",
+"name": "Jean-Baptiste Onofre"
+},
+"jdhok": {
+"date": "2015-08-19",
+"name": "Jaideep Dhok"
+},
+"prongs": {
+"date": "2015-08-19",
+"name": "Rajat Khandelwal"
+},
+"puneetgupta": {
+"date": "2016-09-20",
+"name": "Puneet Gupta"
+},
+"raghavsingh": {
+"date": "2015-08-19",
+"name": "Raghavendra Singh"
+},
+"raju": {
+"date": "2015-08-19",
+"name": "Raju Bairishetti"
+},
+"sharad": {
+"date": "2015-08-19",
+"name": "Sharad Agarwal"
+},
+"sreekanth": {
+"date": "2015-08-19",
+"name": "Sreekanth Ramakrishnan"
+},
+"sriksun": {
+"date": "2015-08-19",
+"name": "Srikanth Sundarrajan"
+},
+"sumasai": {
+"date": "2015-08-19",
+"name": "Suma Shivaprasad"
+},
+"vikram": {
+"date": "2015-08-19",
+"name": "Vikram Dixit K"
+},
+"vinodkv": {
+"date": "2015-08-19",
+"name": "Vinod Kumar Vavilapalli"
+},
+"yash": {
+"date": "2015-08-19",
+"name": "Yash Sharma"
+}
+},
+"shortdesc": "Unified analytics platform"
+},
+{
+"charter": "The mission of Apache Predictionio is the creation and maintenance of software related to a machine learning server built on top of state-of-the-art open source stack, that enables developers to manage and deploy production-ready predictive services for various kinds of machine learning tasks",
+"established": "2017-10",
+"homepage": "http://predictionio.apache.org/",
+"id": "predictionio",
+"name": "Apache PredictionIO",
+"retired": "2020-09",
+"roster": {
+"apurtell": {
+"date": "2017-10-18",
+"name": "Andrew Kyle Purtell"
+},
+"chanlee": {
+"date": "2017-10-18",
+"name": "Chan Lee"
+},
+"donald": {
+"date": "2017-10-18",
+"name": "Donald Szeto"
+},
+"emergentorder": {
+"date": "2017-10-18",
+"name": "Alex Merritt"
+},
+"felipe": {
+"date": "2017-10-18",
+"name": "Felipe Oliveira"
+},
+"hagino": {
+"date": "2017-10-18",
+"name": "Takahiro Hagino"
+},
+"jtaylor": {
+"date": "2017-10-18",
+"name": "James Taylor"
+},
+"kenneth": {
+"date": "2017-10-18",
+"name": "Kenneth Chan"
+},
+"larsh": {
+"date": "2017-10-18",
+"name": "Lars Hofhansl"
+},
+"lresende": {
+"date": "2017-10-18",
+"name": "Luciano Resende"
+},
+"mars": {
+"date": "2017-10-18",
+"name": "Mars Hall"
+},
+"meng": {
+"date": "2017-10-18",
+"name": "Xiangrui Meng"
+},
+"moon": {
+"date": "2017-10-18",
+"name": "Lee Moon Soo"
+},
+"mvivero": {
+"date": "2017-10-18",
+"name": "Marco Vivero"
+},
+"pat": {
+"date": "2017-10-18",
+"name": "Pat Ferrel"
+},
+"paulli": {
+"date": "2017-10-18",
+"name": "Paul Li"
+},
+"shimamoto": {
+"date": "2017-10-18",
+"name": "Takako Shimamoto"
+},
+"shinsuke": {
+"date": "2017-10-18",
+"name": "Shinsuke Sugaya"
+},
+"simonc": {
+"date": "2017-10-18",
+"name": "Simon Chan"
+},
+"takezoe": {
+"date": "2017-10-18",
+"name": "Naoki Takezoe"
+},
+"tchan": {
+"date": "2017-10-18",
+"name": "Tom Chan"
+},
+"tjambor": {
+"date": "2017-10-18",
+"name": "Tamas Jambor"
+},
+"tovbinm": {
+"date": "2017-10-18",
+"name": "Matthew Tovbin"
+},
+"vitaly": {
+"date": "2017-10-18",
+"name": "Vitaly Gordon"
+},
+"yev": {
+"date": "2017-10-18",
+"name": "Yevgeny Khodorkovsky"
+},
+"yin": {
+"date": "2017-10-18",
+"name": "Xusen Yin"
+},
+"yipjustin": {
+"date": "2017-10-18",
+"name": "Justin Yip"
+},
+"ziemin": {
+"date": "2017-10-18",
+"name": "Marcin Ziemi\u0144ski"
+}
+},
+"shortdesc": "a machine learning server built on top of state-of-the-art open source stack, that enables developers to manage and deploy production-ready predictive services for various kinds of machine learning tasks"
+},
+{
+"charter": "The mission of Tajo is the creation and maintenance of software related to Big data warehouse system on Apache Hadoop",
+"established": "2014-03",
+"homepage": "http://tajo.apache.org/",
+"id": "tajo",
+"name": "Apache Tajo",
+"retired": "2020-09",
+"roster": {
+"akarasulu": {
+"date": "2014-03-20",
+"name": "Alex Karasulu"
+},
+"blrunner": {
+"date": "2014-03-20",
+"name": "JaeHwa Jung"
+},
+"ereisman": {
+"date": "2014-03-20",
+"name": "Eli Reisman"
+},
+"hjkim": {
+"date": "2014-12-08",
+"name": "Hyoung Jun Kim"
+},
+"hyunsik": {
+"date": "2014-03-20",
+"name": "Hyunsik Choi"
+},
+"jghoman": {
+"date": "2014-03-20",
+"name": "Jakob Homan"
+},
+"jhkim": {
+"date": "2014-03-20",
+"name": "Jinho Kim"
+},
+"jihoonson": {
+"date": "2014-03-20",
+"name": "Jihoon Son"
+},
+"mattmann": {
+"date": "2014-03-20",
+"name": "Chris Mattmann"
+},
+"rsumbaly": {
+"date": "2014-03-20",
+"name": "Roshan Sumbaly"
+},
+"sirpkt": {
+"date": "2014-03-20",
+"name": "Keuntae Park"
+},
+"swkim": {
+"date": "2014-03-20",
+"name": "Sangwook Kim"
+},
+"yliu": {
+"date": "2014-03-20",
+"name": "Yi Liu"
+}
+},
+"shortdesc": "Big data warehouse system on Apache Hadoop"
+},
+{
+"charter": "The mission of Open Climate Workbench is the creation and maintenance of software related to Climate model evaluation",
+"established": "2014-02",
+"homepage": "http://climate.apache.org/",
+"id": "climate",
+"name": "Apache Open Climate Workbench",
+"retired": "2020-10",
+"roster": {
+"ahart": {
+"date": "2014-02-19",
+"name": "Andrew Hart"
+},
+"boustani": {
+"date": "2014-02-19",
+"name": "Maziyar Boustani"
+},
+"cdouglas": {
+"date": "2014-02-19",
+"name": "Christopher Douglas"
+},
+"cjack": {
+"date": "2014-02-19",
+"name": "Chris Jack"
+},
+"crichton": {
+"date": "2014-02-19",
+"name": "Dan Crichton"
+},
+"dnadeau": {
+"date": "2014-02-19",
+"name": "Denis Nadeau"
+},
+"estani": {
+"date": "2014-02-19",
+"name": "estani"
+},
+"goodale": {
+"date": "2014-02-19",
+"name": "Cameron Goodale"
+},
+"goodman": {
+"date": "2014-02-19",
+"name": "Alex Goodman"
+},
+"huikyole": {
+"date": "2014-02-19",
+"name": "Huikyo Lee"
+},
+"jarifibrahim": {
+"date": "2016-04-26",
+"name": "Ibrahim Jarif"
+},
+"jasonevans": {
+"date": "2014-02-19",
+"name": "Jason Peter Evans"
+},
+"jkim": {
+"date": "2014-02-19",
+"name": "Jinwon Kim"
+},
+"joyce": {
+"date": "2014-02-19",
+"name": "Michael James Joyce"
+},
+"lcarriere": {
+"date": "2014-02-19",
+"name": "Laura Carriere"
+},
+"lewismc": {
+"date": "2014-07-07",
+"name": "Lewis John McGibbney"
+},
+"lfitaborrell": {
+"date": "2014-02-19",
+"name": "Lluis Fita Borrell"
+},
+"luca": {
+"date": "2014-02-19",
+"name": "Luca Cinquini"
+},
+"mattmann": {
+"date": "2014-02-19",
+"name": "Chris Mattmann"
+},
+"omkarr": {
+"date": "2016-01-21",
+"name": "Omkar Reddy"
+},
+"ploikith": {
+"date": "2014-02-19",
+"name": "Paul Loikith"
+},
+"pramirez": {
+"date": "2014-02-19",
+"name": "Paul Ramirez"
+},
+"pzimdars": {
+"date": "2014-02-19",
+"name": "Paul Zimdars"
+},
+"ramarao": {
+"date": "2014-02-19",
+"name": "M. V. S. Rama Rao"
+},
+"rlaidlaw": {
+"date": "2014-11-07",
+"name": "Ross Laidlaw"
+},
+"sanjay": {
+"date": "2014-02-19",
+"name": "J Sanjay"
+},
+"skhudiky": {
+"date": "2014-02-19",
+"name": "Shakeh Khudikyan"
+},
+"smarru": {
+"date": "2014-02-19",
+"name": "Suresh Marru"
+},
+"waliser": {
+"date": "2014-02-19",
+"name": "Duane Waliser"
+},
+"whitehall": {
+"date": "2014-02-19",
+"name": "Kim Whitehall"
+}
+},
+"shortdesc": "Climate model evaluation"
+},
+{
+"charter": "The mission of Apache Eagle is the creation and maintenance of software related to a distributed monitoring solution for identifying security and performance issues in real time on big data platforms, including Apache Hadoop and Apache Spark.",
+"established": "2016-12",
+"homepage": "http://eagle.apache.org/",
+"id": "eagle",
+"name": "Apache Eagle",
+"retired": "2020-11",
+"roster": {
+"arunmanoharan": {
+"date": "2016-12-21",
+"name": "Manoharan Arun"
+},
+"cgupta": {
+"date": "2016-12-21",
+"name": "Gupta Chaitali"
+},
+"dazhou": {
+"date": "2016-12-21",
+"name": "Daniel Zhou"
+},
+"denglg": {
+"date": "2017-05-09",
+"name": "Deng Lingang"
+},
+"hao": {
+"date": "2016-12-21",
+"name": "Hao Chen"
+},
+"hdendukuri": {
+"date": "2016-12-21",
+"name": "Dendukuri Hemanth"
+},
+"jhyde": {
+"date": "2016-12-21",
+"name": "Julian Hyde"
+},
+"jilin": {
+"date": "2016-12-21",
+"name": "Jilin Jiang"
+},
+"jinhuwu": {
+"date": "2016-12-21",
+"name": "Jinhu Wu"
+},
+"libsun": {
+"date": "2016-12-21",
+"name": "Libin Sun"
+},
+"mw": {
+"date": "2016-12-21",
+"name": "Wu Michael"
+},
+"ptgoetz": {
+"date": "2016-12-21",
+"name": "P. Taylor Goetz"
+},
+"qingwzhao": {
+"date": "2016-12-21",
+"name": "Qingwen Zhao"
+},
+"ralphsu": {
+"date": "2016-12-21",
+"name": "Ralph Su"
+},
+"senthilec566": {
+"date": "2016-12-21",
+"name": "Kumar Senthil"
+},
+"yonzhang2012": {
+"date": "2016-12-21",
+"name": "Edward Zhang"
+}
+},
+"shortdesc": "open source analytics solution for identifying security and performance issues instantly on big data platforms"
+},
+{
+"charter": "The mission of Marmotta is the creation and maintenance of software related to An Open Platform for Linked Data",
+"established": "2013-11",
+"homepage": "http://marmotta.apache.org/",
+"id": "marmotta",
+"name": "Apache Marmotta",
+"retired": "2020-11",
+"roster": {
+"ansell": {
+"date": "2013-11-20",
+"name": "Peter Ansell"
+},
+"dglachs": {
+"date": "2013-11-20",
+"name": "Dietmar Glachs"
+},
+"fchrist": {
+"date": "2013-11-20",
+"name": "Fabian Christ"
+},
+"jakob": {
+"date": "2013-11-20",
+"name": "Jakob Frank"
+},
+"matienzo": {
+"date": "2016-08-18",
+"name": "Mark A. Matienzo"
+},
+"nandana": {
+"date": "2013-11-20",
+"name": "Nandana Mihindukulasooriya"
+},
+"rpalmieri": {
+"date": "2013-11-20",
+"name": "Raffaele Palmieri"
+},
+"rwesten": {
+"date": "2013-11-20",
+"name": "Rupert Westenthaler"
+},
+"sschaffert": {
+"date": "2013-11-20",
+"name": "Sebastian Schaffert"
+},
+"tkurz": {
+"date": "2013-11-20",
+"name": "Thomas Kurz"
+},
+"wikier": {
+"date": "2013-11-20",
+"name": "Sergio Fern\u00e1ndez"
+}
+},
+"shortdesc": "An Open Platform for Linked Data"
+},
+{
+"charter": "The mission of Apache Metron is the creation and maintenance of software related to a security analytics platform for big data use cases.",
+"established": "2017-04",
+"homepage": "http://metron.apache.org/",
+"id": "metron",
+"name": "Apache Metron",
+"retired": "2020-12",
+"roster": {
+"bjkolly": {
+"date": "2017-04-19",
+"name": "Brad Kolarov"
+},
+"cestella": {
+"date": "2017-04-19",
+"name": "Casey Stella"
+},
+"cporter": {
+"date": "2017-04-19",
+"name": "Charles Porter"
+},
+"dbhirko": {
+"date": "2017-04-19",
+"name": "Dave Hirko"
+},
+"ddutta": {
+"date": "2017-04-19",
+"name": "Debo Dutta"
+},
+"dev_warlord": {
+"date": "2017-04-19",
+"name": "Andrew Hartnett"
+},
+"discovery": {
+"date": "2017-04-19",
+"name": "Discovery Gerdes"
+},
+"gvetticaden": {
+"date": "2017-04-19",
+"name": "George Vetticaden"
+},
+"jsirota": {
+"date": "2017-04-19",
+"name": "James Sirota"
+},
+"kirankom": {
+"date": "2017-04-19",
+"name": "Kiran Komaravolu"
+},
+"leet": {
+"date": "2017-12-04",
+"name": "Justin Leet"
+},
+"lmccay": {
+"date": "2017-04-19",
+"name": "Larry McCay"
+},
+"lyle": {
+"date": "2017-04-19",
+"name": "David Lyle"
+},
+"mbittmann": {
+"date": "2017-04-19",
+"name": "Mark Bittmann"
+},
+"mmiklavcic": {
+"date": "2017-12-01",
+"name": "Michael Miklavcic"
+},
+"mperez": {
+"date": "2017-04-19",
+"name": "Michael Perez"
+},
+"nickallen": {
+"date": "2017-04-19",
+"name": "Nick Allen"
+},
+"otto": {
+"date": "2017-12-01",
+"name": "Otto Fowler"
+},
+"prhodes": {
+"date": "2017-04-19",
+"name": "Phillip Rhodes"
+},
+"ptgoetz": {
+"date": "2017-04-19",
+"name": "P. Taylor Goetz"
+},
+"reaperhulk": {
+"date": "2017-04-19",
+"name": "Paul Kehrer"
+},
+"rmerriman": {
+"date": "2017-04-19",
+"name": "Ryan Merriman"
+},
+"rurcioli": {
+"date": "2017-04-19",
+"name": "Ray Sting"
+},
+"sheetal_dolas": {
+"date": "2017-04-19",
+"name": "Sheetal Dolas"
+},
+"sirsean": {
+"date": "2017-04-19",
+"name": "Sean Schulte"
+},
+"smogg": {
+"date": "2017-04-19",
+"name": "Oskar Zabik"
+},
+"vinodkv": {
+"date": "2017-04-19",
+"name": "Vinod Kumar Vavilapalli"
+}
+},
+"shortdesc": "Real-time big data security"
+},
+{
+"charter": "The mission of Sentry is the creation and maintenance of software related to Fine grained authorization to data and metadata in Apache Hadoop",
+"established": "2016-03",
+"homepage": "http://sentry.apache.org/",
+"id": "sentry",
+"name": "Apache Sentry",
+"retired": "2020-12",
+"roster": {
+"akolb": {
+"date": "2017-05-09",
+"name": "Alex Kolbasov"
+},
+"ali": {
+"date": "2016-03-16",
+"name": "Ali Rizvi"
+},
+"anneyu": {
+"date": "2016-03-16",
+"name": "Anne Yu"
+},
+"asuresh": {
+"date": "2016-03-16",
+"name": "Arun Suresh"
+},
+"brock": {
+"date": "2016-03-16",
+"name": "Brock Noland"
+},
+"coheigea": {
+"date": "2016-06-08",
+"name": "Colm O hEigeartaigh"
+},
+"colin": {
+"date": "2016-03-16",
+"name": "Colin Ma"
+},
+"ctang": {
+"date": "2016-03-16",
+"name": "Chaoyu Tang"
+},
+"daisy": {
+"date": "2016-03-16",
+"name": "Daisy Zhou"
+},
+"daly": {
+"date": "2016-03-16",
+"name": "Patrick Daly"
+},
+"dreambird": {
+"date": "2016-03-16",
+"name": "Johnny Zhang"
+},
+"erickt": {
+"date": "2016-03-16",
+"name": "Erick Tryzelaar"
+},
+"gchanan": {
+"date": "2016-03-16",
+"name": "Gregory Chanan"
+},
+"gqshen": {
+"date": "2016-03-16",
+"name": "Guoquan Shen"
+},
+"hadi": {
+"date": "2016-03-16",
+"name": "Hadi Nahari"
+},
+"hahao": {
+"date": "2016-03-16",
+"name": "Hao Hao"
+},
+"jarcec": {
+"date": "2016-03-16",
+"name": "Jarek Jarcec Cecho"
+},
+"kalyan": {
+"date": "2018-02-05",
+"name": "Kalyan Kalvagadda"
+},
+"ke4qqq": {
+"date": "2016-03-16",
+"name": "David Nalley"
+},
+"kramachandran": {
+"date": "2016-03-16",
+"name": "Karthik Ramachandran"
+},
+"lili": {
+"date": "2016-06-08",
+"name": "Li Li"
+},
+"linaataustin": {
+"date": "2018-12-11",
+"name": "Na Li"
+},
+"lskuff": {
+"date": "2016-03-16",
+"name": "Lenni Kuff"
+},
+"mackrorysd": {
+"date": "2016-03-16",
+"name": "Sean Mackrory"
+},
+"mark": {
+"date": "2016-03-16",
+"name": "Mark Grover"
+},
+"milo": {
+"date": "2016-03-16",
+"name": "Milo Polte"
+},
+"phunt": {
+"date": "2016-03-16",
+"name": "Patrick Hunt"
+},
+"prasadm": {
+"date": "2016-03-16",
+"name": "Prasad Mujumdar"
+},
+"raghu_mani": {
+"date": "2016-03-16",
+"name": "Raghu Mani"
+},
+"sdp": {
+"date": "2016-03-16",
+"name": "Dapeng Sun"
+},
+"shreepadma": {
+"date": "2016-03-16",
+"name": "Shreepadma Venugopalan"
+},
+"spena": {
+"date": "2017-10-16",
+"name": "Sergio Pe\u00f1a"
+},
+"sravya": {
+"date": "2016-03-16",
+"name": "Sravya Tirukkovalur"
+},
+"tuongtruong": {
+"date": "2016-03-16",
+"name": "Tuong Truong"
+},
+"vamsee": {
+"date": "2016-03-16",
+"name": "Vamsee Yarlagadda"
+},
+"vspec": {
+"date": "2017-06-12",
+"name": "Vadim Spector"
+},
+"xiaom": {
+"date": "2016-03-16",
+"name": "Xiaomeng Huang"
+},
+"xuefu": {
+"date": "2016-03-16",
+"name": "Xuefu Zhang"
+}
+},
+"shortdesc": "Fine grained authorization to data and metadata in Apache Hadoop"
+},
+{
+"charter": "The mission of Apache Trafodion is the creation and maintenance of software related to webscale SQL-on-Hadoop solution enabling transactional or operational workloads.",
+"established": "2017-12",
+"homepage": "http://trafodion.apache.org/",
+"id": "trafodion",
+"name": "Apache Trafodion",
+"retired": "2021-04",
+"roster": {
+"amanda": {
+"date": "2017-12-20",
+"name": "Amanda K Moran"
+},
+"ansharma": {
+"date": "2018-12-06",
+"name": "Anoop Sharma"
+},
+"dbirdsall": {
+"date": "2017-12-20",
+"name": "Dave Birdsall"
+},
+"gtapper": {
+"date": "2017-12-20",
+"name": "Gunnar Tapper"
+},
+"hzeller": {
+"date": "2018-12-06",
+"name": "Hans Zeller"
+},
+"jleroux": {
+"date": "2017-12-20",
+"name": "Jacques Le Roux"
+},
+"liuming": {
+"date": "2017-12-20",
+"name": "Ming Liu"
+},
+"pierresmits": {
+"date": "2017-12-20",
+"name": "Pierre Smits"
+},
+"rmarton": {
+"date": "2017-12-20",
+"name": "Roberta Marton"
+},
+"sandhya": {
+"date": "2018-08-14",
+"name": "Sandhya Sundaresan"
+},
+"sbroeder": {
+"date": "2018-06-18",
+"name": "Sean Broeder"
+},
+"selva": {
+"date": "2017-12-20",
+"name": "Selva Govindarajan"
+},
+"stack": {
+"date": "2017-12-20",
+"name": "Michael Stack"
+},
+"sureshs": {
+"date": "2017-12-20",
+"name": "Suresh Subbiah"
+},
+"svarnau": {
+"date": "2017-12-20",
+"name": "Steve Varnau"
+}
+},
+"shortdesc": "webscale SQL-on-Hadoop solution enabling transactional or operational workloads."
+},
+{
+"charter": "The mission of MetaModel is the creation and maintenance of software related to common interface for discovery, exploration of metadata and querying of different types of data sources",
+"established": "2014-11",
+"homepage": "http://metamodel.apache.org/",
+"id": "metamodel",
+"name": "Apache MetaModel",
+"retired": "2021-06",
+"roster": {
+"ankitkumar2711": {
+"date": "2014-11-19",
+"name": "Ankit Kumar"
+},
+"ardlema": {
+"date": "2014-11-19",
+"name": "Alberto Rodriguez"
+},
+"arjansh": {
+"date": "2019-08-29",
+"name": "Arjan Seijkens"
+},
+"arvind": {
+"date": "2014-11-19",
+"name": "Arvind Prabhakar"
+},
+"delostilos": {
+"date": "2014-11-19",
+"name": "Juan Jose van der Linden"
+},
+"hsaputra": {
+"date": "2014-11-19",
+"name": "Henry Saputra"
+},
+"kaspersor": {
+"date": "2014-11-19",
+"name": "Kasper S\u00f8rensen"
+},
+"losd": {
+"date": "2016-09-06",
+"name": "Dennis Du Kr\u00f8ger"
+},
+"mfranklin": {
+"date": "2014-11-19",
+"name": "Matt Franklin"
+},
+"nslater": {
+"date": "2014-11-19",
+"name": "Noah Slater"
+},
+"sarora": {
+"date": "2014-11-19",
+"name": "Sameer Arora"
+},
+"tomaszguzialek": {
+"date": "2014-11-19",
+"name": "Tomasz Guzia\u0142ek"
+}
+},
+"shortdesc": "common interface for discovery, exploration of metadata and querying of different types of data sources"
+},
+{
+"charter": "The mission of Sqoop is the creation and maintenance of software related to Bulk Data Transfer for Apache Hadoop and Structured Datastores",
+"established": "2012-03",
+"homepage": "http://sqoop.apache.org/",
+"id": "sqoop",
+"name": "Apache Sqoop",
+"retired": "2021-06",
+"roster": {
+"abayer": {
+"date": "2012-03-21",
+"name": "Andrew Bayer"
+},
+"abe": {
+"date": "2015-03-16",
+"name": "Abraham Elmahrek"
+},
+"afine": {
+"date": "2016-11-29",
+"name": "Abraham Fine"
+},
+"ahmed": {
+"date": "2012-03-21",
+"name": "Ahmed Radwan"
+},
+"arvind": {
+"date": "2012-03-21",
+"name": "Arvind Prabhakar"
+},
+"blee": {
+"date": "2012-03-21",
+"name": "Bilung Lee"
+},
+"bogi": {
+"date": "2018-10-16",
+"name": "Boglarka Egyed"
+},
+"gcottman": {
+"date": "2012-03-21",
+"name": "Greg Cottman"
+},
+"guylemar": {
+"date": "2012-03-21",
+"name": "Guy le Mar"
+},
+"jarcec": {
+"date": "2012-03-21",
+"name": "Jarek Jarcec Cecho"
+},
+"jmhsieh": {
+"date": "2012-03-21",
+"name": "Jonathan Hsieh"
+},
+"kathleen": {
+"date": "2012-09-22",
+"name": "Kathleen Ting"
+},
+"kimballa": {
+"date": "2012-03-21",
+"name": "Aaron Kimball"
+},
+"olamy": {
+"date": "2012-03-21",
+"name": "Olivier Lamy"
+},
+"pzimdars": {
+"date": "2012-03-21",
+"name": "Paul Zimdars"
+},
+"rvs": {
+"date": "2012-03-21",
+"name": "Roman Shaposhnik"
+},
+"vasas": {
+"date": "2018-11-06",
+"name": "Vasas Szabolcs"
+},
+"venkatrangan": {
+"date": "2014-08-06",
+"name": "Venkat Ranganathan"
+}
+},
+"shortdesc": "Bulk Data Transfer for Apache Hadoop and Structured Datastores"
+},
+{
+"charter": "The mission of Apache Joshua is the creation and maintenance of software related to statistical and other forms of machine translation.",
+"established": "2018-10",
+"homepage": "http://joshua.apache.org/",
+"id": "joshua",
+"name": "Apache Joshua",
+"retired": "2021-12",
+"roster": {
+"fhieber": {
+"date": "2018-10-17",
+"name": "Felix Hieber"
+},
+"hsaputra": {
+"date": "2018-10-17",
+"name": "Henry Saputra"
+},
+"kellen": {
+"date": "2018-10-17",
+"name": "Kellen Sunderland"
+},
+"lewismc": {
+"date": "2018-10-17",
+"name": "Lewis John McGibbney"
+},
+"magicaltrout": {
+"date": "2018-10-17",
+"name": "Tom Barber"
+},
+"mattmann": {
+"date": "2018-10-17",
+"name": "Chris Mattmann"
+},
+"mjpost": {
+"date": "2018-10-17",
+"name": "Matt Post"
+},
+"pramirez": {
+"date": "2018-10-17",
+"name": "Paul Ramirez"
+},
+"thammegowda": {
+"date": "2018-10-17",
+"name": "Thamme Gowda"
+},
+"tommaso": {
+"date": "2018-10-17",
+"name": "Tommaso Teofili"
+}
+},
+"shortdesc": "statistical and other forms of machine translation."
+},
+{
+"charter": "The mission of Usergrid is the creation and maintenance of software related to The BaaS Framework you run",
+"established": "2015-08",
+"homepage": "http://usergrid.apache.org/",
+"id": "usergrid",
+"name": "Apache Usergrid",
+"retired": "2021-12",
+"roster": {
+"aasanaliev": {
+"date": "2015-08-19",
+"name": "Askhat Asanaliev"
+},
+"akarasulu": {
+"date": "2015-08-19",
+"name": "Alex Karasulu"
+},
+"amuramoto": {
+"date": "2015-08-19",
+"name": "Alex Muramoto"
+},
+"edanuff": {
+"date": "2015-08-19",
+"name": "Ed Anuff"
+},
+"fbicak": {
+"date": "2015-08-19",
+"name": "Furkan B\u0131\u00e7ak"
+},
+"grey": {
+"date": "2015-10-21",
+"name": "George Reyes"
+},
+"jeffreyawest": {
+"date": "2015-08-19",
+"name": "Jeff West"
+},
+"jfarrell": {
+"date": "2015-08-19",
+"name": "Jake Farrell"
+},
+"jim": {
+"date": "2015-08-19",
+"name": "Jim Jagielski"
+},
+"lewismc": {
+"date": "2015-08-19",
+"name": "Lewis John McGibbney"
+},
+"lresende": {
+"date": "2015-08-19",
+"name": "Luciano Resende"
+},
+"mdunker": {
+"date": "2016-01-19",
+"name": "Mike Dunker"
+},
+"mrusso": {
+"date": "2016-01-19",
+"name": "Michael Russo"
+},
+"rockerston": {
+"date": "2015-08-19",
+"name": "Rod Simpson"
+},
+"ryanb": {
+"date": "2015-08-19",
+"name": "Ryan Bridges"
+},
+"scottganyo": {
+"date": "2015-08-19",
+"name": "Scott Ganyo"
+},
+"skardan": {
+"date": "2015-08-19",
+"name": "Salih Kardan"
+},
+"snoopdave": {
+"date": "2015-08-19",
+"name": "David M. Johnson"
+},
+"stliu": {
+"date": "2015-08-19",
+"name": "Strong Liu"
+},
+"sungju": {
+"date": "2015-08-19",
+"name": "Sungju Jin"
+},
+"timanglade": {
+"date": "2015-08-19",
+"name": "Tim Anglade"
+},
+"toddnine": {
+"date": "2015-08-19",
+"name": "Todd Nine"
+},
+"yigits": {
+"date": "2015-08-19",
+"name": "Yi\u011fit \u015eapl\u0131"
+},
+"zznate": {
+"date": "2015-08-19",
+"name": "Nate McCall"
+}
+},
+"shortdesc": "The BaaS Framework you run"
+},
+{
+"charter": "The mission of Chemistry is the creation and maintenance of software related to CMIS (Content Managment Interoperability Services) Clients and Servers",
+"established": "2011-02",
+"homepage": "http://chemistry.apache.org/",
+"id": "chemistry",
+"name": "Apache Chemistry",
+"retired": "2022-02",
+"roster": {
+"bchevallereau": {
+"date": "2014-12-11",
+"name": "Ben Chevallereau"
+},
+"bs": {
+"date": "2011-02-16",
+"name": "Bogdan Stefanescu"
+},
+"cstephenson": {
+"date": "2014-12-11",
+"name": "Colin Stephenson"
+},
+"dcaruana": {
+"date": "2011-02-16",
+"name": "David Caruana"
+},
+"dpfister": {
+"date": "2011-02-16",
+"name": "Dominique Pfister"
+},
+"dward": {
+"date": "2011-02-16",
+"name": "David Ward"
+},
+"fguillaume": {
+"date": "2011-02-16",
+"name": "Florent Guillaume"
+},
+"fmui": {
+"date": "2011-02-16",
+"name": "Florian M\u00fcller"
+},
+"gabriele": {
+"date": "2011-02-16",
+"name": "Gabriele Columbro"
+},
+"gavincornwell": {
+"date": "2013-01-12",
+"name": "Gavin Cornwell"
+},
+"gihyunlee": {
+"date": "2013-01-12",
+"name": "Gi Hyun Lee"
+},
+"hermesm": {
+"date": "2011-02-16",
+"name": "Martin Hermes"
+},
+"jbarrez": {
+"date": "2013-01-12",
+"name": "Joram Barrez"
+},
+"jens": {
+"date": "2011-02-16",
+"name": "Jens H\u00fcbel"
+},
+"jmpascal": {
+"date": "2012-06-06",
+"name": "Jean Marie Pascal"
+},
+"jnasr": {
+"date": "2014-12-11",
+"name": "Jim Nasr"
+},
+"jpotts": {
+"date": "2011-02-16",
+"name": "Jeff Potts"
+},
+"karstene": {
+"date": "2012-10-30",
+"name": "Karsten Eberding"
+},
+"lgross": {
+"date": "2013-01-12",
+"name": "Lukas Gross"
+},
+"lmignon": {
+"date": "2017-09-23",
+"name": "Laurent Mignon"
+},
+"mduerig": {
+"date": "2011-05-12",
+"name": "Michael D\u00fcrig"
+},
+"mjohnson": {
+"date": "2014-12-11",
+"name": "Mark Johnson"
+},
+"nick": {
+"date": "2011-02-16",
+"name": "Nick Burch"
+},
+"paolo": {
+"date": "2011-02-16",
+"name": "Paolo Mottadelli"
+},
+"pblackwelder": {
+"date": "2014-12-11",
+"name": "Patricia Blackwelder"
+},
+"peberlein": {
+"date": "2013-01-12",
+"name": "Peter Eberlein"
+},
+"pgoetz": {
+"date": "2011-02-16",
+"name": "Paul Goetz"
+},
+"psutter": {
+"date": "2014-07-28",
+"name": "Peter Sutter"
+},
+"pweschmidt": {
+"date": "2013-01-12",
+"name": "Peter Schmidt"
+},
+"richardm": {
+"date": "2011-02-16",
+"name": "Richard McKnight"
+},
+"sfermigier": {
+"date": "2011-02-16",
+"name": "St\u00e9fane Fermigier"
+},
+"slacoin": {
+"date": "2011-02-16",
+"name": "St\u00e9phane Lacoin"
+},
+"sshabani": {
+"date": "2014-12-11",
+"name": "Sanija Shabani"
+},
+"stan": {
+"date": "2011-02-16",
+"name": "Sun Seng David Tan"
+},
+"timraff": {
+"date": "2011-08-15",
+"name": "Tim Raff"
+},
+"uncled": {
+"date": "2011-02-16",
+"name": "David Nuescheler"
+}
+},
+"shortdesc": "CMIS (Content Managment Interoperability Services) Clients and Servers"
+},
+{
+"charter": "The mission of River is the creation and maintenance of software related to Jini service oriented architecture",
+"established": "2011-01",
+"homepage": "http://river.apache.org/",
+"id": "river",
+"name": "Apache River",
+"retired": "2022-02",
+"roster": {
+"bhamail": {
+"date": "2017-12-01",
+"name": "Dan Rollo"
+},
+"dreedy": {
+"date": "2021-05-01",
+"name": "Dennis Reedy"
+},
+"fielding": {
+"date": "2021-05-01",
+"name": "Roy T. Fielding"
+},
+"thompsonbry": {
+"date": "2015-08-31",
+"name": "Bryan Thompson"
+}
+},
+"shortdesc": "Jini service oriented architecture"
+},
+{
+"charter": "The mission of Clerezza is the creation and maintenance of software related to Semantically linked data for OSGi",
+"established": "2013-02",
+"homepage": "http://clerezza.apache.org/",
+"id": "clerezza",
+"name": "Apache Clerezza",
+"retired": "2022-06",
+"roster": {
+"dspicar": {
+"date": "2013-02-20",
+"name": "Daniel Spicar"
+},
+"enridaga": {
+"date": "2013-08-16",
+"name": "Enrico Daga"
+},
+"florent": {
+"date": "2013-02-20",
+"name": "Florent Andr\u00e9"
+},
+"hasan": {
+"date": "2013-02-20",
+"name": "Hasan Hasan"
+},
+"ito": {
+"date": "2013-02-20",
+"name": "Tsuyoshi Ito"
+},
+"kamaci": {
+"date": "2018-12-27",
+"name": "Furkan Kamaci"
+},
+"misl": {
+"date": "2013-03-26",
+"name": "Minto van der Sluis"
+},
+"reto": {
+"date": "2013-02-20",
+"name": "Reto Gm\u00fcr"
+},
+"rwesten": {
+"date": "2013-02-20",
+"name": "Rupert Westenthaler"
+},
+"tommaso": {
+"date": "2013-02-20",
+"name": "Tommaso Teofili"
+}
+},
+"shortdesc": "Semantically linked data for OSGi"
+},
+{
+"charter": "Apache Buildr software is a build system for Java-based applications, including support for Scala, Groovy and a growing number of JVM languages and tools.",
+"established": "2008-11",
+"homepage": "http://buildr.apache.org/",
+"id": "buildr",
+"name": "Apache Buildr",
+"retired": "2022-07",
+"roster": {
+"assaf": {
+"date": "2008-11-16",
+"name": "Assaf Arkin"
+},
+"boisvert": {
+"date": "2008-11-16",
+"name": "Alex Boisvert"
+},
+"donaldp": {
+"date": "2013-10-16",
+"name": "Peter Donald"
+},
+"lacton": {
+"date": "2008-11-16",
+"name": "Antoine Contal"
+},
+"mriou": {
+"date": "2008-11-16",
+"name": "Matthieu Riou"
+},
+"toulmean": {
+"date": "2010-09-29",
+"name": "Antoine Toulme"
+},
+"vborja": {
+"date": "2008-11-16",
+"name": "Victor Hugo Borja"
+}
+},
+"shortdesc": "Simple and intuitive build system for Java applications"
+},
+{
+"charter": "The mission of REEF is the creation and maintenance of software related to Retainable Evaluator Execution Framework",
+"established": "2015-11",
+"homepage": "http://reef.apache.org/",
+"id": "reef",
+"name": "Apache REEF",
+"retired": "2022-07",
+"roster": {
+"afchung90": {
+"date": "2015-11-18",
+"name": "Andrew Chung"
+},
+"bgchun": {
+"date": "2015-11-18",
+"name": "Byung-Gon Chun"
+},
+"cdouglas": {
+"date": "2015-11-18",
+"name": "Chris Douglas"
+},
+"chobrian": {
+"date": "2015-11-18",
+"name": "Brian Cho"
+},
+"dongjoon": {
+"date": "2015-11-18",
+"name": "Dongjoon Hyun"
+},
+"dougservice": {
+"date": "2017-09-29",
+"name": "Doug Service"
+},
+"gwkim": {
+"date": "2015-11-18",
+"name": "Geon-Woo Kim"
+},
+"gwlee": {
+"date": "2015-11-18",
+"name": "Gyewon Lee"
+},
+"johnyangk": {
+"date": "2015-11-18",
+"name": "Youngseok Yang"
+},
+"jsjason": {
+"date": "2015-11-18",
+"name": "Joo Seong Jeong"
+},
+"juliaw": {
+"date": "2015-11-18",
+"name": "Julia Wang"
+},
+"mariia": {
+"date": "2015-11-18",
+"name": "Mariia Mykhailova"
+},
+"mattmann": {
+"date": "2015-11-18",
+"name": "Chris Mattmann"
+},
+"motus": {
+"date": "2015-11-18",
+"name": "Sergiy Matusevych"
+},
+"sezgin": {
+"date": "2015-11-18",
+"name": "Beysim Sezgin"
+},
+"shravan": {
+"date": "2015-11-18",
+"name": "Shravan M Narayanamurthy"
+},
+"shulmanb": {
+"date": "2015-11-18",
+"name": "Boris Shulman"
+},
+"taegeonum": {
+"date": "2015-11-18",
+"name": "Tae-Geon Um"
+},
+"tcondie": {
+"date": "2015-11-18",
+"name": "Tyson Condie"
+},
+"weimer": {
+"date": "2015-11-18",
+"name": "Markus Weimer"
+},
+"yingdachen": {
+"date": "2015-11-18",
+"name": "Yingda Chen"
+},
+"yunseong": {
+"date": "2015-11-18",
+"name": "Yunseong Lee"
+}
+},
+"shortdesc": "Retainable Evaluator Execution Framework"
+},
+{
+"charter": "The mission of Isis is the creation and maintenance of software related to Framework for rapidly developing domain-driven apps in Java",
+"established": "2012-10",
+"homepage": "http://isis.apache.org/",
+"id": "isis",
+"name": "Apache Isis",
+"retired": "2023-01",
+"roster": {
+"ahuber": {
+"date": "2017-10-09",
+"name": "Andi Huber"
+},
+"bibryam": {
+"date": "2016-11-09",
+"name": "Bilgin Ismet Ibryam"
+},
+"danhaywood": {
+"date": "2012-10-17",
+"name": "Dan Haywood"
+},
+"dslaughter": {
+"date": "2012-10-17",
+"name": "Dave Slaughter"
+},
+"jcvanderwal": {
+"date": "2013-08-12",
+"name": "Jeroen van der Wal"
+},
+"jdoornenbal": {
+"date": "2018-04-05",
+"name": "Johan Doornenbal"
+},
+"joergrade": {
+"date": "2020-04-12",
+"name": "J\u00f6rg Rade"
+},
+"kevin": {
+"date": "2012-10-17",
+"name": "Kevin Meyer"
+},
+"madytyoo": {
+"date": "2013-08-12",
+"name": "Maurizio Taverna"
+},
+"mgrigorov": {
+"date": "2014-12-23",
+"name": "Martin Grigorov"
+},
+"mnour": {
+"date": "2012-10-17",
+"name": "Mohammad Nour El-Din"
+},
+"oscarbou": {
+"date": "2013-08-12",
+"name": "\u00d3scar Bou"
+},
+"rmatthews": {
+"date": "2012-10-17",
+"name": "Robert Matthews"
+},
+"struberg": {
+"date": "2012-10-17",
+"name": "Mark Struberg"
+},
+"themalkolm": {
+"date": "2012-10-17",
+"name": "Alexander Krasnukhin"
+}
+},
+"shortdesc": "Framework for rapidly developing domain-driven apps in Java"
+},
+{
+"charter": "The mission of jUDDI is the creation and maintenance of software related to Java implementation of the Universal Description, Discovery, and Integration specification",
+"established": "2010-08",
+"homepage": "http://juddi.apache.org/",
+"id": "juddi",
+"name": "Apache jUDDI",
+"retired": "2023-02",
+"roster": {
+"alexoree": {
+"date": "2013-03-18",
+"name": "Alex O'Ree"
+},
+"anil": {
+"date": "2010-08-22",
+"name": "Anil Saldhana"
+},
+"djencks": {
+"date": "2010-08-22",
+"name": "David Jencks"
+},
+"jfaath": {
+"date": "2010-08-22",
+"name": "Jeffrey Faath"
+},
+"kstam": {
+"date": "2010-08-22",
+"name": "Kurt Stam"
+},
+"sviens": {
+"date": "2010-08-22",
+"name": "Steve Viens"
+},
+"tcunning": {
+"date": "2010-08-22",
+"name": "Tom Cunningham"
+}
+},
+"shortdesc": "Java implementation of the Universal Description, Discovery, and Integration specification"
+},
+{
+"charter": "The mission of OODT is the creation and maintenance of software related to Object Oriented Data Technology (middleware metadata)",
+"established": "2010-11",
+"homepage": "http://oodt.apache.org/",
+"id": "oodt",
+"name": "Apache OODT",
+"retired": "2023-04",
+"roster": {
+"ahart": {
+"date": "2010-11-17",
+"name": "Andrew Hart"
+},
+"angela_wang": {
+"date": "2014-11-07",
+"name": "Angela Wang"
+},
+"bfoster": {
+"date": "2010-11-17",
+"name": "Brian Foster"
+},
+"brbarkstrom": {
+"date": "2012-03-12",
+"name": "Bruce Barkstrom"
+},
+"chris": {
+"date": "2014-05-19",
+"name": "Chris Schollar"
+},
+"crichton": {
+"date": "2010-11-17",
+"name": "Dan Crichton"
+},
+"davekale": {
+"date": "2010-11-17",
+"name": "David Kale"
+},
+"dfreeborn": {
+"date": "2015-03-27",
+"name": "Dana Freeborn"
+},
+"gabe": {
+"date": "2011-06-16",
+"name": "Gabriel Resneck"
+},
+"gmcdonald": {
+"date": "2013-04-09",
+"name": "Gavin McDonald"
+},
+"goodale": {
+"date": "2010-11-17",
+"name": "Cameron Goodale"
+},
+"ianh": {
+"date": "2010-11-17",
+"name": "Ian Holsman"
+},
+"imesha": {
+"date": "2017-08-28",
+"name": "Imesha Sudasingha"
+},
+"joshuaga": {
+"date": "2010-11-17",
+"name": "Joshua Garcia"
+},
+"joyce": {
+"date": "2012-12-01",
+"name": "Michael James Joyce"
+},
+"jshughes": {
+"date": "2011-03-27",
+"name": "Steve Hughes"
+},
+"kelly": {
+"date": "2010-11-17",
+"name": "Sean Kelly"
+},
+"lewismc": {
+"date": "2013-05-14",
+"name": "Lewis John McGibbney"
+},
+"luca": {
+"date": "2012-02-01",
+"name": "Luca Cinquini"
+},
+"magicaltrout": {
+"date": "2013-07-14",
+"name": "Tom Barber"
+},
+"mattmann": {
+"date": "2010-11-17",
+"name": "Chris Mattmann"
+},
+"mcayanan": {
+"date": "2012-07-03",
+"name": "Michael Cayanan"
+},
+"nadeeshan": {
+"date": "2021-04-25",
+"name": "Nadeeshan Gimhana"
+},
+"nchung": {
+"date": "2013-04-02",
+"name": "Nga Thien Chung"
+},
+"pramirez": {
+"date": "2010-11-17",
+"name": "Paul Ramirez"
+},
+"pvee": {
+"date": "2011-09-10",
+"name": "Paul Vee"
+},
+"pzimdars": {
+"date": "2012-02-23",
+"name": "Paul Zimdars"
+},
+"radumanole": {
+"date": "2015-10-18",
+"name": "Radu Manole"
+},
+"rickdn": {
+"date": "2011-12-14",
+"name": "Ricky Nguyen"
+},
+"riverma": {
+"date": "2011-04-13",
+"name": "Rishi Verma"
+},
+"rlaidlaw": {
+"date": "2012-05-19",
+"name": "Ross Laidlaw"
+},
+"shardman": {
+"date": "2010-11-17",
+"name": "Sean Hardman"
+},
+"sherylj": {
+"date": "2011-11-12",
+"name": "Sheryl John"
+},
+"siriwardana": {
+"date": "2013-07-26",
+"name": "Rajith Siriwardana"
+},
+"skhudiky": {
+"date": "2012-02-24",
+"name": "Shakeh Khudikyan"
+},
+"smcclees": {
+"date": "2010-11-17",
+"name": "Sean William McCleese"
+},
+"sparkler": {
+"date": "2013-10-21",
+"name": "Sam Park"
+},
+"starchmd": {
+"date": "2014-07-14",
+"name": "Michael Starch"
+},
+"sujen": {
+"date": "2017-04-05",
+"name": "Sujen Shah"
+},
+"sumarlidason": {
+"date": "2013-06-04",
+"name": "Arni Sumarlidason"
+},
+"thomas": {
+"date": "2011-05-20",
+"name": "Thomas Bennett"
+},
+"tpalsulich": {
+"date": "2014-07-22",
+"name": "Tyler Palsulich"
+},
+"varunr": {
+"date": "2013-05-16",
+"name": "Varun Ratnakar"
+},
+"vmallder": {
+"date": "2014-11-25",
+"name": "Val Mallder"
+},
+"webb": {
+"date": "2012-03-17",
+"name": "Billy Webb"
+},
+"woollard": {
+"date": "2010-11-17",
+"name": "David Woollard"
+}
+},
+"shortdesc": "Object Oriented Data Technology (middleware metadata)"
+},
+{
+"charter": "The mission of Apache Any23 is the creation and maintenance of software related to automatic crawling, parsing, analyzing, producing, validating and converting RDF (Resource Description Framework) data",
+"established": "2012-08",
+"homepage": "http://any23.apache.org/",
+"id": "any23",
+"name": "Apache Any23",
+"retired": "2023-06",
+"roster": {
+"andy": {
+"date": "2012-08-28",
+"name": "Andy Seaborne"
+},
+"ansell": {
+"date": "2012-08-28",
+"name": "Peter Ansell"
+},
+"dpalmisano": {
+"date": "2012-08-28",
+"name": "Davide Palmisano"
+},
+"giovanni": {
+"date": "2012-08-28",
+"name": "Giovanni Tummarello"
+},
+"hansbrende": {
+"date": "2018-02-26",
+"name": "Hans Brende"
+},
+"jgrzebyta": {
+"date": "2017-08-31",
+"name": "Jacek Grzebyta"
+},
+"lewismc": {
+"date": "2012-08-28",
+"name": "Lewis John McGibbney"
+},
+"mattmann": {
+"date": "2013-05-26",
+"name": "Chris Mattmann"
+},
+"mostarda": {
+"date": "2012-08-28",
+"name": "Michele Mostarda"
+},
+"pramirez": {
+"date": "2012-08-28",
+"name": "Paul Ramirez"
+},
+"scor": {
+"date": "2014-09-08",
+"name": "Stephane Corlosquet"
+},
+"simonetripodi": {
+"date": "2012-08-28",
+"name": "Simone Tripodi"
+},
+"szydan": {
+"date": "2012-08-28",
+"name": "Szymon Danielczyk"
+},
+"tommaso": {
+"date": "2012-08-28",
+"name": "Tommaso Teofili"
+}
+},
+"shortdesc": "Anything to Triples"
+},
+{
+"charter": "The mission of Giraph is the creation and maintenance of software related to Iterative graph processing system built for high scalability",
+"established": "2012-05",
+"homepage": "http://giraph.apache.org/",
+"id": "giraph",
+"name": "Apache Giraph",
+"retired": "2023-10",
+"roster": {
+"aching": {
+"date": "2012-05-16",
+"name": "Avery Ching"
+},
+"claudio": {
+"date": "2012-05-16",
+"name": "Claudio Martella"
+},
+"dionysios": {
+"date": "2018-04-23",
+"name": "Dionysios Logothetis"
+},
+"dvryaboy": {
+"date": "2012-05-16",
+"name": "Dmitriy V. Ryaboy"
+},
+"edunov": {
+"date": "2016-08-25",
+"name": "Sergey Edunov"
+},
+"ekoontz": {
+"date": "2012-05-16",
+"name": "Eugene Joseph Koontz"
+},
+"ereisman": {
+"date": "2014-01-25",
+"name": "Eli Reisman"
+},
+"hyunsik": {
+"date": "2012-05-16",
+"name": "Hyunsik Choi"
+},
+"jmannix": {
+"date": "2012-05-16",
+"name": "Jake Mannix"
+},
+"kunzchr": {
+"date": "2012-05-16",
+"name": "Christian Kunz"
+},
+"maja": {
+"date": "2014-04-22",
+"name": "Maja Kabiljo"
+},
+"omalley": {
+"date": "2012-05-16",
+"name": "Owen O'Malley"
+},
+"ssc": {
+"date": "2012-05-16",
+"name": "Sebastian Schelter"
+}
+},
+"shortdesc": "Iterative graph processing system built for high scalability"
+},
+{
+"charter": "The mission of Apache MXNet is the creation and maintenance of software related to a flexible and efficient library for Deep Learning",
+"established": "2022-09",
+"homepage": "http://mxnet.apache.org",
+"id": "mxnet",
+"name": "Apache MXNet",
+"retired": "2023-10",
+"roster": {
+"anirudh2290": {
+"date": "2022-09-21",
+"name": "Anirudh Subramanian"
+},
+"bayard": {
+"date": "2022-09-21",
+"name": "Henri Yandell"
+},
+"bingxu": {
+"date": "2022-09-21",
+"name": "Bing Xu"
+},
+"bob": {
+"date": "2022-09-21",
+"name": "Bob Paulin"
+},
+"cjolivier01": {
+"date": "2022-09-21",
+"name": "Chris Olivier"
+},
+"cmeier": {
+"date": "2022-09-21",
+"name": "Carin Meier"
+},
+"codingcat": {
+"date": "2022-09-21",
+"name": "Nan Zhu"
+},
+"dickjc123": {
+"date": "2022-09-21",
+"name": "Dick Carter"
+},
+"gengyifeng": {
+"date": "2022-09-21",
+"name": "Yifeng Geng"
+},
+"haibin": {
+"date": "2022-09-21",
+"name": "Haibin Lin"
+},
+"hliu": {
+"date": "2022-09-21",
+"name": "Hongliang Liu"
+},
+"hotpxl": {
+"date": "2022-09-21",
+"name": "Yutian Li"
+},
+"indhub": {
+"date": "2022-09-21",
+"name": "Indhu Bharathi"
+},
+"jasondai": {
+"date": "2022-09-21",
+"name": "Jason Dai"
+},
+"jevans": {
+"date": "2022-09-21",
+"name": "Joe Evans"
+},
+"jianzhangzju": {
+"date": "2022-09-21",
+"name": "Jian Zhang"
+},
+"jspisak": {
+"date": "2022-09-21",
+"name": "Joe Spisak"
+},
+"jxie": {
+"date": "2022-09-21",
+"name": "Eric Xie"
+},
+"kamaci": {
+"date": "2022-09-21",
+"name": "Furkan Kamaci"
+},
+"lanking": {
+"date": "2022-09-21",
+"name": "Qing Lan"
+},
+"lausen": {
+"date": "2022-09-21",
+"name": "Leonard Lausen"
+},
+"ldpe2g": {
+"date": "2022-09-21",
+"name": "Liang Depeng"
+},
+"liuyizhi": {
+"date": "2022-09-21",
+"name": "YiZhi Liu"
+},
+"lxn2": {
+"date": "2022-09-21",
+"name": "Ly Nguyen"
+},
+"madjam": {
+"date": "2022-09-21",
+"name": "Madan Jampani"
+},
+"marcoabreu": {
+"date": "2022-09-21",
+"name": "Marco de Abreu"
+},
+"muli": {
+"date": "2022-09-21",
+"name": "Mu Li"
+},
+"nswamy": {
+"date": "2022-09-21",
+"name": "Naveen Swamy"
+},
+"ozawa": {
+"date": "2022-09-21",
+"name": "Tsuyoshi Ozawa"
+},
+"pluskid": {
+"date": "2022-09-21",
+"name": "Chiyuan Zhang"
+},
+"ptrendx": {
+"date": "2022-09-21",
+"name": "Przemys\u0142aw Tr\u0119dak"
+},
+"qkou": {
+"date": "2022-09-21",
+"name": "Qiang Kou"
+},
+"reminisce": {
+"date": "2022-09-21",
+"name": "Jun Wu"
+},
+"sergeykolychev": {
+"date": "2022-09-21",
+"name": "Sergey Kolychev"
+},
+"skm": {
+"date": "2022-09-21",
+"name": "Sandeep Krishnamurthy"
+},
+"sxjscience": {
+"date": "2022-09-21",
+"name": "Xingjian Shi"
+},
+"taolv": {
+"date": "2022-09-21",
+"name": "Tao Lv"
+},
+"terrychen": {
+"date": "2022-09-21",
+"name": "Terry Chen"
+},
+"terrytangyuan": {
+"date": "2022-09-21",
+"name": "Yuan Tang"
+},
+"the": {
+"date": "2022-09-21",
+"name": "Tong He"
+},
+"thomasdelteil": {
+"date": "2022-09-21",
+"name": "Thomas Delteil"
+},
+"tqchen": {
+"date": "2022-09-21",
+"name": "Tianqi Chen"
+},
+"weimer": {
+"date": "2022-09-21",
+"name": "Markus Weimer"
+},
+"wkcn": {
+"date": "2022-09-21",
+"name": "Jackie Wu"
+},
+"yajiedesign": {
+"date": "2022-09-21",
+"name": "Shiwen Hu"
+},
+"yzhang87": {
+"date": "2022-09-21",
+"name": "Yu Zhang"
+},
+"zhasheng": {
+"date": "2022-09-21",
+"name": "Sheng Zha"
+},
+"zhreshold": {
+"date": "2022-09-21",
+"name": "Zhi Zhang"
+},
+"zihaolucky": {
+"date": "2022-09-21",
+"name": "Zihao Zheng"
+},
+"ziheng": {
+"date": "2022-09-21",
+"name": "Ziheng Jiang"
+},
+"ziyue": {
+"date": "2022-09-21",
+"name": "Ziyue Huang"
+}
+},
+"shortdesc": "a flexible and efficient library for Deep Learning"
+},
+{
+"charter": "The mission of Bahir is the creation and maintenance of software related to Extensions to distributed analytic platforms such as Apache Spark",
+"established": "2016-05",
+"homepage": "http://bahir.apache.org/",
+"id": "bahir",
+"name": "Apache Bahir",
+"retired": "2024-01",
+"roster": {
+"ckadner": {
+"date": "2017-03-14",
+"name": "Christian Kadner"
+},
+"eskabetxe": {
+"date": "2020-07-10",
+"name": "Jo\u00e3o Boto"
+},
+"jbonofre": {
+"date": "2016-05-18",
+"name": "Jean-Baptiste Onofr\u00e9"
+},
+"lresende": {
+"date": "2016-05-18",
+"name": "Luciano Resende"
+},
+"mattmann": {
+"date": "2016-05-18",
+"name": "Chris Mattmann"
+},
+"mridulm80": {
+"date": "2016-05-18",
+"name": "Mridul Muralidharan"
+},
+"prashant": {
+"date": "2018-10-20",
+"name": "Prashant Sharma"
+},
+"rmetzger": {
+"date": "2017-04-06",
+"name": "Robert Metzger"
+},
+"rxin": {
+"date": "2016-05-18",
+"name": "Reynold Xin"
+},
+"stevel": {
+"date": "2016-05-18",
+"name": "Steve Loughran"
+},
+"tedyu": {
+"date": "2018-06-25",
+"name": "Zhihong Yu"
+},
+"vanzin": {
+"date": "2016-05-18",
+"name": "Marcelo Masiero Vanzin"
+}
+},
+"shortdesc": "Extensions to distributed analytic platforms such as Apache Spark"
+},
+{
+"charter": "The mission of Archiva is the creation and maintenance of software related to Build Artifact Repository Manager",
+"established": "2008-03",
+"homepage": "http://archiva.apache.org/",
+"id": "archiva",
+"name": "Apache Archiva",
+"retired": "2024-02",
+"roster": {
+"brett": {
+"date": "2008-03-19",
+"name": "Brett Porter"
+},
+"carlos": {
+"date": "2008-03-19",
+"name": "Carlos Sanchez"
+},
+"epunzalan": {
+"date": "2008-03-19",
+"name": "Edwin Punzalan"
+},
+"jbonofre": {
+"date": "2014-07-11",
+"name": "Jean-Baptiste Onofre"
+},
+"martin_s": {
+"date": "2017-04-10",
+"name": "Martin Stockhammer"
+},
+"nicolas": {
+"date": "2008-03-19",
+"name": "Nicolas De Loof"
+},
+"oching": {
+"date": "2008-03-19",
+"name": "Maria Odea Ching"
+},
+"olamy": {
+"date": "2011-08-31",
+"name": "Olivier Lamy"
+},
+"skygo": {
+"date": "2012-09-16",
+"name": "Eric Barboni"
+}
+},
+"shortdesc": "Build Artifact Repository Manager"
+},
+{
+"charter": "The mission of Flume is the creation and maintenance of software related to A reliable service for efficiently collecting, aggregating, and moving large amounts of log data",
+"established": "2012-06",
+"homepage": "http://flume.apache.org/",
+"id": "flume",
+"name": "Apache Flume",
+"retired": "2024-03",
+"roster": {
+"abayer": {
+"date": "2012-06-20",
+"name": "Andrew Bayer"
+},
+"ahmed": {
+"date": "2012-06-20",
+"name": "Ahmed Radwan"
+},
+"arvind": {
+"date": "2012-06-20",
+"name": "Arvind Prabhakar"
+},
+"bessbd": {
+"date": "2017-03-09",
+"name": "Bessenyei Bal\u00e1zs Don\u00e1t"
+},
+"brock": {
+"date": "2012-06-20",
+"name": "Brock Noland"
+},
+"brucem": {
+"date": "2012-06-20",
+"name": "Bruce Mitchener"
+},
+"ddeeter": {
+"date": "2012-06-20",
+"name": "Derek Deeter"
+},
+"denes": {
+"date": "2017-11-06",
+"name": "Denes Arvay"
+},
+"esammer": {
+"date": "2012-06-20",
+"name": "Eric Sammer"
+},
+"henry": {
+"date": "2012-06-20",
+"name": "Henry Robinson"
+},
+"hshreedharan": {
+"date": "2012-06-20",
+"name": "Hari Shreedharan"
+},
+"jarcec": {
+"date": "2012-06-20",
+"name": "Jarek Jarcec Cecho"
+},
+"jmhsieh": {
+"date": "2012-06-20",
+"name": "Jonathan Hsieh"
+},
+"juhanic": {
+"date": "2012-06-20",
+"name": "Juhani Connolly"
+},
+"kimballa": {
+"date": "2012-06-20",
+"name": "Aaron Kimball"
+},
+"mlai": {
+"date": "2012-06-20",
+"name": "Mingjie Lai"
+},
+"mpercy": {
+"date": "2012-06-20",
+"name": "Mike Percy"
+},
+"nerdynick": {
+"date": "2012-06-20",
+"name": "Nick Verbeck"
+},
+"phunt": {
+"date": "2012-06-20",
+"name": "Patrick Hunt"
+},
+"prasadm": {
+"date": "2012-06-20",
+"name": "Prasad Suresh Mujumdar"
+},
+"rgoers": {
+"date": "2012-06-20",
+"name": "Ralph Goers"
+},
+"roshannaik": {
+"date": "2014-11-04",
+"name": "Roshan Naik"
+},
+"szaboferee": {
+"date": "2019-01-28",
+"name": "Ferenc Szabo"
+},
+"tristan": {
+"date": "2022-04-10",
+"name": "Tristan Stevens"
+},
+"will": {
+"date": "2012-06-20",
+"name": "Will McQueen"
+}
+},
+"shortdesc": "A reliable service for efficiently collecting, aggregating, and moving large amounts of log data"
+},
+{
+"charter": "The mission of Apache Submarine is the creation and maintenance of software related to allowing infrastructure engineers and data scientists to build deep learning applications (TensorFlow, PyTorch, etc.) end to end on cluster management platforms (like YARN/K8s)",
+"established": "2019-10",
+"homepage": "http://submarine.apache.org/",
+"id": "submarine",
+"name": "Apache Submarine",
+"retired": "2024-05",
+"roster": {
+"cdmikechen": {
+"date": "2023-01-06",
+"name": "Xiang Chen"
+},
+"kaihsun": {
+"date": "2021-07-27",
+"name": "Kai-Hsun Chen"
+},
+"khu": {
+"date": "2019-11-14",
+"name": "Keqiu Hu"
+},
+"liuxun": {
+"date": "2019-10-16",
+"name": "Liu Xun"
+},
+"omalley": {
+"date": "2019-10-16",
+"name": "Owen O'Malley"
+},
+"pingsutw": {
+"date": "2020-10-08",
+"name": "Kevin Su"
+},
+"sunilg": {
+"date": "2019-10-16",
+"name": "Sunil G"
+},
+"wangda": {
+"date": "2019-10-16",
+"name": "Wangda Tan"
+},
+"weichiu": {
+"date": "2020-04-02",
+"name": "Wei-Chiu Chuang"
+},
+"zhouquan": {
+"date": "2019-10-16",
+"name": "Zac Zhou"
+},
+"ztang": {
+"date": "2019-10-16",
+"name": "Zhankun Tang"
+}
+},
+"shortdesc": "allowing infrastructure engineers and data scientists to build deep learning applications (TensorFlow, PyTorch, etc.) end to end on cluster management platforms (like YARN/K8s)"
+},
+{
+"charter": "The mission of Bloodhound is the creation and maintenance of software related to Issue tracking, wiki and repository browser",
+"established": "2013-03",
+"homepage": "http://bloodhound.apache.org/",
+"id": "bloodhound",
+"name": "Apache Bloodhound",
+"retired": "2024-07",
+"roster": {
+"andrej": {
+"date": "2013-03-20",
+"name": "Andrej Golcov"
+},
+"asemonella": {
+"date": "2014-01-09",
+"name": "Antony Semonella"
+},
+"astaric": {
+"date": "2013-04-10",
+"name": "An\u017ee Stari\u010d"
+},
+"brane": {
+"date": "2013-03-20",
+"name": "Branko \u010cibej"
+},
+"chambej": {
+"date": "2013-03-20",
+"name": "John Chambers"
+},
+"dammina": {
+"date": "2017-01-08",
+"name": "Dammina Sahabandu"
+},
+"gjm": {
+"date": "2013-03-20",
+"name": "Gary Martin"
+},
+"gstein": {
+"date": "2013-03-20",
+"name": "Greg Stein"
+},
+"jdreimann": {
+"date": "2013-03-20",
+"name": "Joachim Dreimann"
+},
+"jure": {
+"date": "2013-03-20",
+"name": "Jure \u017ditnik"
+},
+"matevz": {
+"date": "2013-03-20",
+"name": "Matev\u017e Brada\u010d"
+},
+"mpoole": {
+"date": "2013-03-20",
+"name": "Mark Poole"
+},
+"peter": {
+"date": "2013-03-20",
+"name": "Peter Ko\u017eelj"
+},
+"saintgermain": {
+"date": "2014-01-01",
+"name": "SaintGermain"
+}
+},
+"shortdesc": "Issue tracking, wiki and repository browser"
+},
+{
+"charter": "The mission of Apache HAWQ is the creation and maintenance of software related to a Hadoop native SQL query engine that combines the key technological advantages of an MPP database with the scalability and convenience of Hadoop",
+"established": "2018-08",
+"homepage": "http://hawq.apache.org/",
+"id": "hawq",
+"name": "Apache HAWQ",
+"retired": "2024-07",
+"roster": {
+"abai": {
+"date": "2018-08-15",
+"name": "Amy Bai"
+},
+"adenissov": {
+"date": "2018-08-15",
+"name": "Alexander Denissov"
+},
+"atri": {
+"date": "2018-08-15",
+"name": "Atri Sharma"
+},
+"bhuvnesh2703": {
+"date": "2018-08-15",
+"name": "Bhuvnesh Chaudhary"
+},
+"bosco": {
+"date": "2018-08-15",
+"name": "Bosco"
+},
+"chiyang10000": {
+"date": "2022-01-25",
+"name": "Wan Chiyang"
+},
+"entong": {
+"date": "2018-08-15",
+"name": "Entong Shen"
+},
+"espino": {
+"date": "2018-08-15",
+"name": "Ed Espino"
+},
+"foyzur": {
+"date": "2018-08-15",
+"name": "Foyzur Rahman"
+},
+"gates": {
+"date": "2018-08-15",
+"name": "Alan Gates"
+},
+"godenyao": {
+"date": "2018-08-15",
+"name": "Goden Yao"
+},
+"gregchase": {
+"date": "2018-08-15",
+"name": "Gregory Chase"
+},
+"hubertzhang": {
+"date": "2018-08-15",
+"name": "Hubert Zhang"
+},
+"huor": {
+"date": "2018-08-15",
+"name": "Ruilong Huo"
+},
+"interma": {
+"date": "2018-08-15",
+"name": "Hongxu Ma"
+},
+"iweng": {
+"date": "2018-08-15",
+"name": "Ivan Weng"
+},
+"jaoki": {
+"date": "2018-08-15",
+"name": "Jun Aoki"
+},
+"jian": {
+"date": "2018-08-15",
+"name": "Lirong Jian"
+},
+"jyao": {
+"date": "2018-08-15",
+"name": "Jiali Yao"
+},
+"jz": {
+"date": "2018-08-15",
+"name": "Jesse Zhang"
+},
+"kavinder": {
+"date": "2018-08-15",
+"name": "Kavinder Dhaliwal"
+},
+"lavjain": {
+"date": "2018-08-15",
+"name": "Lav Jain"
+},
+"lei_chang": {
+"date": "2018-08-15",
+"name": "Lei Chang"
+},
+"lilima": {
+"date": "2018-08-15",
+"name": "Lili Ma"
+},
+"lisao": {
+"date": "2018-08-15",
+"name": "Lisa Owen"
+},
+"mli": {
+"date": "2018-08-15",
+"name": "Ming Li"
+},
+"msoliman": {
+"date": "2018-08-15",
+"name": "Mohamed Soliman"
+},
+"nalex": {
+"date": "2018-08-15",
+"name": "Newton Alex"
+},
+"nhorn": {
+"date": "2018-08-15",
+"name": "Noa Horn"
+},
+"odiachenko": {
+"date": "2018-08-15",
+"name": "Oleksandr Diachenko"
+},
+"outofmemory": {
+"date": "2018-08-15",
+"name": "Shubham Sharma"
+},
+"paulguo": {
+"date": "2018-08-15",
+"name": "Paul Guo"
+},
+"rlei": {
+"date": "2018-08-15",
+"name": "Radar Da Lei"
+},
+"rvs": {
+"date": "2018-08-15",
+"name": "Roman Shaposhnik"
+},
+"shivram": {
+"date": "2018-08-15",
+"name": "Shivram Mani"
+},
+"tushar_pednekar": {
+"date": "2018-08-15",
+"name": "Tushar Pednekar"
+},
+"vraghavan78": {
+"date": "2018-08-15",
+"name": "Venkatesh Raghavan"
+},
+"vvineet": {
+"date": "2018-08-15",
+"name": "Vineet Goel"
+},
+"wangchunling": {
+"date": "2018-08-15",
+"name": "Chunling Wang"
+},
+"wangzw": {
+"date": "2018-08-15",
+"name": "Zhanwei Wang"
+},
+"wlin": {
+"date": "2018-08-15",
+"name": "Wen Lin"
+},
+"xsheng": {
+"date": "2018-08-15",
+"name": "Xiang Sheng"
+},
+"xunzhang": {
+"date": "2018-08-15",
+"name": "Hong Wu"
+},
+"yjin": {
+"date": "2018-08-15",
+"name": "Yi Jin"
+},
+"yozie": {
+"date": "2018-08-15",
+"name": "David Yozie"
+},
+"ztao1987": {
+"date": "2018-08-15",
+"name": "Zhenglin Tao"
+}
+},
+"shortdesc": "a Hadoop native SQL query engine that combines the key technological advantages of an MPP database with the scalability and convenience of Hadoop"
+},
+{
+"charter": "The mission of Apache Logo Development is the creation and maintenance of software related to Creation and development of a brand and logo for the Foundation",
+"established": "2024-08",
+"homepage": "http://logodevelopment.apache.org/",
+"id": "logodevelopment",
+"name": "Apache Logo Development",
+"retired": "2024-08",
+"roster": {
+"akm": {
+"date": "2024-08-21",
+"name": "Andrew Musselman"
+},
+"bdelacretaz": {
+"date": "2024-08-21",
+"name": "Bertrand Delacretaz"
+},
+"bkp": {
+"date": "2024-08-21",
+"name": "Brian Proffitt"
+},
+"clr": {
+"date": "2024-08-21",
+"name": "Craig Russell"
+},
+"cml": {
+"date": "2024-08-21",
+"name": "Chris Lambertus"
+},
+"erans": {
+"date": "2024-08-21",
+"name": "Gilles Sadowski"
+},
+"gstein": {
+"date": "2024-08-21",
+"name": "Greg Stein"
+},
+"hartmannathan": {
+"date": "2024-08-21",
+"name": "Nathan Hartman"
+},
+"humbedooh": {
+"date": "2024-08-21",
+"name": "Daniel Gruno"
+},
+"iroh": {
+"date": "2024-08-21",
+"name": "Chris Wells"
+},
+"jdailey": {
+"date": "2024-08-21",
+"name": "James Dailey"
+},
+"jgenender": {
+"date": "2024-08-21",
+"name": "Jeff Genender"
+},
+"jim": {
+"date": "2024-08-21",
+"name": "Jim Jagielski"
+},
+"knmc": {
+"date": "2024-08-21",
+"name": "Keith N. McKenna"
+},
+"rvs": {
+"date": "2024-08-21",
+"name": "Roman Shaposhnik"
+},
+"suehle": {
+"date": "2024-08-21",
+"name": "Ruth Suehle"
+},
+"wave": {
+"date": "2024-08-21",
+"name": "Dave Fisher"
+}
+},
+"shortdesc": "Creation and development of a brand and logo for the Foundation"
+},
+{
+"charter": "The mission of Apache Streams is the creation and maintenance of software related to interoperability of online profiles and activity feeds",
+"established": "2017-07",
+"homepage": "http://streams.apache.org/",
+"id": "streams",
+"name": "Apache Streams",
+"retired": "2024-10",
+"roster": {
+"ate": {
+"date": "2017-07-19",
+"name": "Ate Douma"
+},
+"bhodge": {
+"date": "2020-06-19",
+"name": "Brian Hodge"
+},
+"jfrazee": {
+"date": "2017-07-19",
+"name": "Joey Frazee"
+},
+"mfranklin": {
+"date": "2017-07-19",
+"name": "Matt Franklin"
+},
+"rawkintrevo": {
+"date": "2017-07-19",
+"name": "Trevor Grant"
+},
+"rdouglas": {
+"date": "2017-07-19",
+"name": "Robert Baker Douglas"
+},
+"rebanks": {
+"date": "2017-07-19",
+"name": "Ryan Edward Ebanks"
+},
+"sblackmon": {
+"date": "2017-07-19",
+"name": "Stephen D Blackmon"
+},
+"smarthi": {
+"date": "2017-07-19",
+"name": "Suneel Marthi"
+}
+},
+"shortdesc": "interoperability of online profiles and activity feeds"
+},
+{
+"charter": "The mission of Cocoon is the creation and maintenance of software related to Web development framework: separation of concerns, component-based",
+"established": "2003-01",
+"homepage": "http://cocoon.apache.org/",
+"id": "cocoon",
+"name": "Apache Cocoon",
+"retired": "2025-01",
+"roster": {
+"ahochsteger": {
+"date": "2006-09-28",
+"name": "Andreas Hochsteger"
+},
+"anathaniel": {
+"date": "2006-12-14",
+"name": "Alfred Nathaniel"
+},
+"andreas": {
+"date": "2008-08-25",
+"name": "Andreas Hartmann"
+},
+"antonio": {
+"date": "2004-08-15",
+"name": "Antonio Gallardo"
+},
+"asavory": {
+"date": "2003-05-23",
+"name": "Andrew Savory"
+},
+"bruno": {
+"date": "2003-05-23",
+"name": "Bruno Dumon"
+},
+"cdamioli": {
+"date": "2012-01-03",
+"name": "C\u00e9dric Damioli"
+},
+"cdutz": {
+"date": "2024-01-30",
+"name": "Christofer Dutz"
+},
+"crossley": {
+"date": "2003-01-22",
+"name": "David Crossley"
+},
+"danielf": {
+"date": "2005-06-25",
+"name": "Daniel Fagerstrom"
+},
+"dlegg": {
+"date": "2008-09-16",
+"name": "David Legg"
+},
+"ghoward": {
+"date": "2003-05-23",
+"name": "Geoff Howard"
+},
+"gkossakowski": {
+"date": "2007-03-13",
+"name": "Grzegorz Kossakowski"
+},
+"huber": {
+"date": "2003-01-22",
+"name": "Bernhard Huber"
+},
+"ilgrosso": {
+"date": "2011-03-08",
+"name": "Francesco Chicchiricc\u00f2"
+},
+"javier": {
+"date": "2012-07-06",
+"name": "Javier Puerto"
+},
+"jbq": {
+"date": "2006-01-24",
+"name": "Jean-Baptiste Quenot"
+},
+"joerg": {
+"date": "2003-05-30",
+"name": "Joerg Heinicke"
+},
+"lgawron": {
+"date": "2005-05-01",
+"name": "Leszek Gawron"
+},
+"lmorandini": {
+"date": "2008-08-28",
+"name": "Luca Morandini"
+},
+"ltrieloff": {
+"date": "2006-11-16",
+"name": "Lars Trieloff"
+},
+"michaelm": {
+"date": "2003-01-22",
+"name": "Michael Melhem"
+},
+"michi": {
+"date": "2003-05-23",
+"name": "Michael Wechner"
+},
+"mpfingsthorn": {
+"date": "2005-10-24",
+"name": "Max Pfingsthorn"
+},
+"phunsberger": {
+"date": "2006-07-28",
+"name": "Peter Hunsberger"
+},
+"reinhard": {
+"date": "2004-02-26",
+"name": "Reinhard P\u00f6tz"
+},
+"robbypelssers": {
+"date": "2012-01-03",
+"name": "Robby Pelssers"
+},
+"simonetripodi": {
+"date": "2009-01-05",
+"name": "Simone Tripodi"
+},
+"stevendolg": {
+"date": "2008-10-03",
+"name": "Steven Dolg"
+},
+"sylvain": {
+"date": "2003-01-22",
+"name": "Sylvain Wallez"
+},
+"tcurdt": {
+"date": "2024-01-30",
+"name": "Torsten Curdt"
+},
+"thorsten": {
+"date": "2008-08-10",
+"name": "Thorsten Scherler"
+},
+"unico": {
+"date": "2004-07-10",
+"name": "Unico Hommes"
+},
+"vgritsenko": {
+"date": "2003-01-22",
+"name": "Vadim Gritsenko"
+}
+},
+"shortdesc": "Web development framework: separation of concerns, component-based"
+},
+{
+"charter": "The mission of Pivot is the creation and maintenance of software related to Rich Internet applications in Java",
+"established": "2009-12",
+"homepage": "http://pivot.apache.org/",
+"id": "pivot",
+"name": "Apache Pivot",
+"retired": "2025-01",
+"roster": {
+"cbartlett": {
+"date": "2011-03-14",
+"name": "Chris Bartlett"
+},
+"gbrown": {
+"date": "2009-12-16",
+"name": "Greg Brown"
+},
+"gmcdonald": {
+"date": "2022-04-14",
+"name": "Gavin McDonald"
+},
+"noelgrandin": {
+"date": "2009-12-16",
+"name": "Noel Grandin"
+},
+"rwhitcomb": {
+"date": "2011-10-25",
+"name": "Roger Whitcomb"
+},
+"smartini": {
+"date": "2009-12-16",
+"name": "Sandro Martini"
+},
+"tvolkert": {
+"date": "2009-12-16",
+"name": "Todd Volkert"
+}
+},
+"shortdesc": "Rich Internet applications in Java"
+},
+{
+"charter": "The mission of Apache Mnemonic is the creation and maintenance of software related to a transparent nonvolatile hybrid memory oriented library for Big data, High-performance computing, and Analytics",
+"established": "2020-12",
+"homepage": "http://mnemonic.apache.org/",
+"id": "mnemonic",
+"name": "Apache Mnemonic",
+"retired": "2025-02",
+"roster": {
+"apurtell": {
+"date": "2017-11-15",
+"name": "Andrew Kyle Purtell"
+},
+"chenyang": {
+"date": "2020-11-05",
+"name": "Chenyang Li"
+},
+"chhao01": {
+"date": "2017-11-15",
+"name": "Hao Cheng"
+},
+"ddutta": {
+"date": "2017-11-15",
+"name": "Debojyoti Dutta"
+},
+"djkevincr": {
+"date": "2020-10-27",
+"name": "Kevin Ratnasekera"
+},
+"drankye": {
+"date": "2017-11-15",
+"name": "Kai Zheng"
+},
+"garyw": {
+"date": "2017-11-15",
+"name": "Gang Wang"
+},
+"jamestaylor": {
+"date": "2017-11-15",
+"name": "James R. Taylor"
+},
+"johnu": {
+"date": "2017-11-15",
+"name": "Johnu George"
+},
+"katarina": {
+"date": "2024-09-03",
+"name": "Katarina King"
+},
+"lishen": {
+"date": "2020-11-05",
+"name": "Li Shen"
+},
+"phunt": {
+"date": "2017-11-15",
+"name": "Patrick D. Hunt"
+},
+"rakeshr": {
+"date": "2017-11-15",
+"name": "Rakesh Radhakrishnan"
+},
+"umamahesh": {
+"date": "2017-11-15",
+"name": "Uma Maheswara Rao G"
+},
+"xjiao": {
+"date": "2024-06-12",
+"name": "Xiaojin Jiao"
+},
+"yzhao": {
+"date": "2018-07-11",
+"name": "Yanhui Zhao"
+},
+"zanelee": {
+"date": "2024-04-28",
+"name": "Zhen Li"
+}
+},
+"shortdesc": "a transparent nonvolatile hybrid memory oriented library for Big data, High-performance computing, and Analytics"
+},
+{
+"charter": "The mission of Oozie is the creation and maintenance of software related to A workflow scheduler system to manage Apache Hadoop jobs.",
+"established": "2012-08",
+"homepage": "http://oozie.apache.org/",
+"id": "oozie",
+"name": "Apache Oozie",
+"retired": "2025-02",
+"roster": {
+"andras": {
+"date": "2018-06-21",
+"name": "Andras Piros"
+},
+"anew": {
+"date": "2012-08-28",
+"name": "Andreas Neumann"
+},
+"angeloh": {
+"date": "2012-08-28",
+"name": "Angelo Huang"
+},
+"asalamon74": {
+"date": "2020-01-07",
+"name": "Andras Salamon"
+},
+"asasvari": {
+"date": "2018-01-30",
+"name": "Attila Sasv\u00e1ri"
+},
+"brookwc": {
+"date": "2012-08-28",
+"name": "Chao Wang"
+},
+"ddas": {
+"date": "2012-08-28",
+"name": "Devaraj Das"
+},
+"dionusos": {
+"date": "2021-04-08",
+"name": "D\u00e9nes Bod\u00f3"
+},
+"gates": {
+"date": "2012-08-28",
+"name": "Alan Gates"
+},
+"gezapeti": {
+"date": "2018-01-30",
+"name": "G\u00e9zapeti"
+},
+"harsh": {
+"date": "2012-08-28",
+"name": "Harsh Chouraria"
+},
+"kamrul": {
+"date": "2012-08-28",
+"name": "Mohammad Islam"
+},
+"kmarton": {
+"date": "2019-07-16",
+"name": "Kinga Marton"
+},
+"mayank": {
+"date": "2012-08-28",
+"name": "Mayank Bansal"
+},
+"mona": {
+"date": "2013-05-28",
+"name": "Mona Chitnis"
+},
+"pbacsko": {
+"date": "2018-01-31",
+"name": "Peter Bacsko"
+},
+"puru": {
+"date": "2015-08-04",
+"name": "Purshotam Shah"
+},
+"rkanter": {
+"date": "2013-05-28",
+"name": "Robert Kanter"
+},
+"rohini": {
+"date": "2014-06-17",
+"name": "Rohini Palaniswamy"
+},
+"ryota": {
+"date": "2015-08-11",
+"name": "Ryota Egashira"
+},
+"satishsaley": {
+"date": "2017-12-11",
+"name": "Satish Saley"
+},
+"shwethags": {
+"date": "2015-08-04",
+"name": "Shwetha GS"
+},
+"virag": {
+"date": "2012-08-28",
+"name": "Virag Kothari"
+}
+},
+"shortdesc": "A workflow scheduler system to manage Apache Hadoop jobs."
+},
+{
+"charter": "The mission of Gora is the creation and maintenance of software related to ORM framework for column stores such as Apache HBase and Apache Cassandra with a specific focus on Hadoop",
+"established": "2012-01",
+"homepage": "http://gora.apache.org/",
+"id": "gora",
+"name": "Apache Gora",
+"retired": "2025-03",
+"roster": {
+"ab": {
+"date": "2012-01-24",
+"name": "Andrzej Bialecki"
+},
+"ahart": {
+"date": "2012-01-24",
+"name": "Andrew Hart"
+},
+"alfonsonishikawa": {
+"date": "2012-12-09",
+"name": "Alfonso Nishikawa"
+},
+"alparslanavci": {
+"date": "2014-04-04",
+"name": "Alparslan Avc\u0131"
+},
+"apgiannakidis": {
+"date": "2014-01-17",
+"name": "Apostolos Giannakidis"
+},
+"carlosrmng": {
+"date": "2018-12-05",
+"name": "Carlos Mu\u00f1oz"
+},
+"cguzel": {
+"date": "2018-03-14",
+"name": "Cihad Guzel"
+},
+"chanakadkb": {
+"date": "2019-09-07",
+"name": "Chanaka Balasooriya"
+},
+"djkevincr": {
+"date": "2017-01-13",
+"name": "Kevin Ratnasekera"
+},
+"dogacan": {
+"date": "2012-01-24",
+"name": "Dogacan Guney"
+},
+"drazzib": {
+"date": "2014-08-04",
+"name": "Damien Raude-Morvan"
+},
+"enis": {
+"date": "2012-01-24",
+"name": "Enis Soztutar"
+},
+"ferdy": {
+"date": "2012-01-24",
+"name": "Ferdy Galema"
+},
+"hsaputra": {
+"date": "2012-01-24",
+"name": "Henry Saputra"
+},
+"iocanel": {
+"date": "2012-01-24",
+"name": "Ioannis Canellos"
+},
+"jhnmora000": {
+"date": "2019-09-24",
+"name": "John Mora"
+},
+"kamaci": {
+"date": "2015-09-17",
+"name": "Furkan Kamaci"
+},
+"kazk": {
+"date": "2012-06-11",
+"name": "Kazuomi Kashii"
+},
+"kturner": {
+"date": "2012-02-01",
+"name": "Keith Turner"
+},
+"lahiruj": {
+"date": "2020-04-30",
+"name": "Lahiru Jayasekara"
+},
+"lewismc": {
+"date": "2012-01-24",
+"name": "Lewis John McGibbney"
+},
+"mattmann": {
+"date": "2012-01-24",
+"name": "Chris Mattmann"
+},
+"nishadi": {
+"date": "2017-09-11",
+"name": "Nishadi Kirielle"
+},
+"otrack": {
+"date": "2016-06-14",
+"name": "Pierre Sutra"
+},
+"rherget": {
+"date": "2013-03-06",
+"name": "Roland von Herget"
+},
+"rmarroquin": {
+"date": "2012-10-16",
+"name": "Renato Javier Marroqu\u00edn Mogrovejo"
+},
+"sheriffo": {
+"date": "2019-10-01",
+"name": "Sheriffo Ceesay"
+},
+"talat": {
+"date": "2015-01-28",
+"name": "Talat Uyarer"
+},
+"woollard": {
+"date": "2012-01-24",
+"name": "David Woollard"
+}
+},
+"shortdesc": "ORM framework for column stores such as Apache HBase and Apache Cassandra with a specific focus on Hadoop"
+},
+{
+"charter": "The mission of jclouds is the creation and maintenance of software related to Java cloud APIs and abstractions",
+"established": "2013-10",
+"homepage": "http://jclouds.apache.org/",
+"id": "jclouds",
+"name": "Apache jclouds",
+"retired": "2025-06",
+"roster": {
+"abayer": {
+"date": "2013-10-16",
+"name": "Andrew Bayer"
+},
+"andreaturli": {
+"date": "2016-10-21",
+"name": "Andrea Turli"
+},
+"andrewp": {
+"date": "2013-10-16",
+"name": "Andrew Phillips"
+},
+"ccustine": {
+"date": "2014-11-28",
+"name": "Chris Custine"
+},
+"everett": {
+"date": "2013-10-16",
+"name": "Everett Toews"
+},
+"gaul": {
+"date": "2013-10-16",
+"name": "Andrew Gaul"
+},
+"iocanel": {
+"date": "2013-10-16",
+"name": "Ioannis Canellos"
+},
+"jbonofre": {
+"date": "2021-03-13",
+"name": "Jean-Baptiste Onofr\u00e9"
+},
+"ke4qqq": {
+"date": "2013-10-16",
+"name": "David Nalley"
+},
+"mattstep": {
+"date": "2013-10-16",
+"name": "Matt Stephenson"
+},
+"nacx": {
+"date": "2013-10-16",
+"name": "Ignasi Barrera"
+},
+"silkysun": {
+"date": "2013-10-16",
+"name": "Becca Wood"
+},
+"zachsh": {
+"date": "2015-09-20",
+"name": "Zahari Shoylev"
+}
+},
+"shortdesc": "Java cloud APIs and abstractions"
+},
+{
+"charter": "The mission of Apache Logo Development is the creation and maintenance of software related to Creation and development of a brand and logo for the Foundation",
+"established": "2024-08",
+"homepage": "https://logodev.apache.org/",
+"id": "logodev",
+"name": "Apache Logo Development",
+"retired": "2025-08",
+"roster": {
+"bdelacretaz": {
+"date": "2024-08-21",
+"name": "Bertrand Delacretaz"
+},
+"bkp": {
+"date": "2024-08-21",
+"name": "Brian Proffitt"
+},
+"clr": {
+"date": "2024-08-21",
+"name": "Craig Russell"
+},
+"erans": {
+"date": "2024-08-21",
+"name": "Gilles Sadowski"
+},
+"gstein": {
+"date": "2024-08-21",
+"name": "Greg Stein"
+},
+"hartmannathan": {
+"date": "2024-08-21",
+"name": "Nathan Hartman"
+},
+"humbedooh": {
+"date": "2024-08-21",
+"name": "Daniel Gruno"
+},
+"jdailey": {
+"date": "2024-08-21",
+"name": "James Dailey"
+},
+"knmc": {
+"date": "2024-08-21",
+"name": "Keith N. McKenna"
+},
+"melissalogan": {
+"date": "2024-08-28",
+"name": "Melissa Logan"
+},
+"rvs": {
+"date": "2024-08-21",
+"name": "Roman Shaposhnik"
+},
+"suehle": {
+"date": "2024-08-21",
+"name": "Ruth Suehle"
+},
+"wells": {
+"date": "2024-08-21",
+"name": "Chris Wells"
+}
+},
+"shortdesc": "Creation and development of a brand and logo for the Foundation"
+},
+{
+"charter": "The mission of Mesos is the creation and maintenance of software related to a cluster manager that provides efficient resource isolation and sharing across distributed applications",
+"established": "2013-06",
+"homepage": "https://mesos.apache.org/",
+"id": "mesos",
+"name": "Apache Mesos",
+"retired": "2025-08",
+"roster": {
+"abudnik": {
+"date": "2019-03-12",
+"name": "Andrei Budnik"
+},
+"alexr": {
+"date": "2016-03-21",
+"name": "Alex R"
+},
+"alig": {
+"date": "2013-06-19",
+"name": "Ali Ghodsi"
+},
+"anand": {
+"date": "2016-07-19",
+"name": "Anand Mazumdar"
+},
+"andrew": {
+"date": "2013-06-19",
+"name": "Andy Konwinski"
+},
+"andschwa": {
+"date": "2017-11-22",
+"name": "Andrew Schwartzmeyer"
+},
+"arojas": {
+"date": "2017-07-02",
+"name": "Alexander Rojas"
+},
+"asekretenko": {
+"date": "2020-01-21",
+"name": "Andrei Sekretenko"
+},
+"bbannier": {
+"date": "2017-09-12",
+"name": "Benjamin Bannier"
+},
+"benh": {
+"date": "2013-06-19",
+"name": "Benjamin Hindman"
+},
+"bennoe": {
+"date": "2019-03-12",
+"name": "Benno Evers"
+},
+"bernd": {
+"date": "2015-07-06",
+"name": "Bernd Mathiske"
+},
+"bmahler": {
+"date": "2013-06-19",
+"name": "Ben Mahler"
+},
+"brenden": {
+"date": "2013-06-19",
+"name": "Brenden Matthews"
+},
+"brianm": {
+"date": "2013-06-19",
+"name": "Brian McCallister"
+},
+"cfnatali": {
+"date": "2021-08-08",
+"name": "Charles-Fran\u00e7ois Natali"
+},
+"chhsiao": {
+"date": "2018-03-19",
+"name": "Chun-Hung Hsiao"
+},
+"dlester": {
+"date": "2013-07-15",
+"name": "Dave Lester"
+},
+"dma": {
+"date": "2014-07-07",
+"name": "Dominic Hamon"
+},
+"gaston": {
+"date": "2018-07-09",
+"name": "Gast\u00f3n Kleiman"
+},
+"gilbert": {
+"date": "2017-05-02",
+"name": "Gilbert Song"
+},
+"grag": {
+"date": "2017-06-29",
+"name": "Greg Mann"
+},
+"gyliu": {
+"date": "2017-01-09",
+"name": "Guangya Liu"
+},
+"haosdent": {
+"date": "2017-01-09",
+"name": "Haosdent Huang"
+},
+"ianh": {
+"date": "2013-06-19",
+"name": "Ian Holsman"
+},
+"idownes": {
+"date": "2014-04-11",
+"name": "Ian Downes"
+},
+"jieyu": {
+"date": "2014-01-26",
+"name": "Jie Yu"
+},
+"joris": {
+"date": "2015-09-20",
+"name": "Joris Van Remoortere"
+},
+"josephwu": {
+"date": "2016-07-19",
+"name": "Joseph Wu"
+},
+"jpeach": {
+"date": "2017-07-15",
+"name": "James Peach"
+},
+"kapil": {
+"date": "2016-07-20",
+"name": "Kapil Arya"
+},
+"klueska": {
+"date": "2017-02-22",
+"name": "Kevin Klues"
+},
+"matei": {
+"date": "2013-06-19",
+"name": "Matei Zaharia"
+},
+"mattmann": {
+"date": "2013-06-19",
+"name": "Chris Mattmann"
+},
+"me": {
+"date": "2014-06-23",
+"name": "Adam Bordelon"
+},
+"mpark": {
+"date": "2015-07-28",
+"name": "Michael Park"
+},
+"mzhu": {
+"date": "2018-10-29",
+"name": "Meng Zhu"
+},
+"neilc": {
+"date": "2017-01-12",
+"name": "Neil Conway"
+},
+"nnielsen": {
+"date": "2013-11-25",
+"name": "Niklas Nielsen"
+},
+"qianzhang": {
+"date": "2016-11-15",
+"name": "Qian Zhang"
+},
+"ssorallen": {
+"date": "2013-07-15",
+"name": "Ross Allen"
+},
+"tillt": {
+"date": "2014-05-08",
+"name": "Till Toenshoff"
+},
+"tmarshall": {
+"date": "2013-06-19",
+"name": "Thomas Marshall"
+},
+"tnachen": {
+"date": "2014-09-15",
+"name": "Timothy Chen"
+},
+"tomwhite": {
+"date": "2013-06-19",
+"name": "Tom White"
+},
+"tstclair": {
+"date": "2014-07-28",
+"name": "Timothy St. Clair"
+},
+"vinodkone": {
+"date": "2013-06-19",
+"name": "Vinod Kone"
+},
+"woggle": {
+"date": "2013-06-19",
+"name": "Charles Reiss"
+},
+"yan": {
+"date": "2014-03-24",
+"name": "Yan Xu"
+},
+"zhitao": {
+"date": "2018-03-19",
+"name": "Zhitao Li"
+}
+},
+"shortdesc": "a cluster manager that provides efficient resource isolation and sharing across distributed applications"
+},
+{
+"established": "2025-08",
+"homepage": "http://apachetraining.apache.org",
+"id": "apachetraining",
+"name": "Apache Apache Training",
+"retired": "2025-08",
+"roster": {
+"andreww": {
+"date": "2025-08-20",
+"name": "Andrew Wetmore"
+},
+"cdutz": {
+"date": "2025-08-20",
+"name": "Christofer Dutz"
+},
+"clr": {
+"date": "2025-08-20",
+"name": "Craig L Russell"
+},
+"jmclean": {
+"date": "2025-08-20",
+"name": "Justin Mclean"
+},
+"rbowen": {
+"date": "2025-08-20",
+"name": "Rich Bowen"
+}
+},
+"shortdesc": "training materials for Apache projects and the Apache Software Foundation"
+},
+{
+"charter": "The mission of Apache Griffin is the creation and maintenance of software related to a data quality solution for big data, including both streaming and batch mode. It offers an unified process to measure data quality from different perspectives.",
+"established": "2018-11",
+"homepage": "https://griffin.apache.org/",
+"id": "griffin",
+"name": "Apache Griffin",
+"retired": "2025-09",
+"roster": {
+"alexlv": {
+"date": "2018-11-21",
+"name": "Alex Lv"
+},
+"chitralverma": {
+"date": "2020-05-06",
+"name": "Chitral Verma"
+},
+"dyyao": {
+"date": "2018-11-21",
+"name": "Kevin Yao"
+},
+"guoyp": {
+"date": "2018-11-21",
+"name": "William Guo"
+},
+"hsaputra": {
+"date": "2018-11-21",
+"name": "Henry Saputra"
+},
+"icesmartjuan": {
+"date": "2018-11-21",
+"name": "Juan Li"
+},
+"jasonliao": {
+"date": "2018-11-21",
+"name": "Jason Liao"
+},
+"johnliu": {
+"date": "2018-11-21",
+"name": "John Liu"
+},
+"liangshao": {
+"date": "2018-11-21",
+"name": "Liang Shao"
+},
+"lionelliu": {
+"date": "2018-11-21",
+"name": "Lionel Liu"
+},
+"liujin": {
+"date": "2018-11-21",
+"name": "Eugene Liu"
+},
+"lresende": {
+"date": "2018-11-21",
+"name": "Luciano Resende"
+},
+"nsokolov": {
+"date": "2018-11-21",
+"name": "Nick Sokolov"
+},
+"wanghe": {
+"date": "2018-11-21",
+"name": "He Wang"
+},
+"wankun": {
+"date": "2019-11-11",
+"name": "Wan Kun"
+},
+"wenzhao": {
+"date": "2018-11-21",
+"name": "Vincent Zhao"
+},
+"xuanyq": {
+"date": "2018-11-21",
+"name": "Yuqin Xuan"
+},
+"xuexu": {
+"date": "2018-11-21",
+"name": "Grant Guo"
+},
+"yosha": {
+"date": "2018-11-21",
+"name": "Shawn Sha"
+}
+},
+"shortdesc": "a data quality solution for big data, including both streaming and batch mode. It offers an unified process to measure data quality from different perspectives."
+},
+{
+"charter": "The mission of Portals is the creation and maintenance of software related to Portal technology",
+"established": "2004-02",
+"homepage": "https://portals.apache.org/",
+"id": "portals",
+"name": "Apache Portals",
+"retired": "2025-09",
+"roster": {
+"asfgriff": {
+"date": "2017-02-12",
+"name": "Neil Griffin"
+},
+"ate": {
+"date": "2005-03-01",
+"name": "Ate Douma"
+},
+"cdoremus": {
+"date": "2007-05-05",
+"name": "Craig Doremus"
+},
+"ddewolf": {
+"date": "2004-11-14",
+"name": "David H. DeWolf"
+},
+"dims": {
+"date": "2004-02-18",
+"name": "Davanum Srinivas"
+},
+"esm": {
+"date": "2007-03-12",
+"name": "Elliot Metsger"
+},
+"jmacna": {
+"date": "2004-02-18",
+"name": "Julie MacNaught"
+},
+"msnicklous": {
+"date": "2017-02-12",
+"name": "Martin Scott Nicklous"
+},
+"nlothian": {
+"date": "2005-02-18",
+"name": "Nick Lothian"
+},
+"rogerrut": {
+"date": "2007-05-05",
+"name": "Roger Ruttimann"
+},
+"rwatler": {
+"date": "2015-05-12",
+"name": "Randy Watler"
+},
+"sgala": {
+"date": "2004-02-18",
+"name": "Santiago Gala"
+},
+"shinsuke": {
+"date": "2007-05-05",
+"name": "Shinsuke Sugaya"
+},
+"smilek": {
+"date": "2007-05-05",
+"name": "Steve Milek"
+},
+"sthepper": {
+"date": "2004-02-18",
+"name": "Stefan Hepper"
+},
+"taylor": {
+"date": "2004-02-18",
+"name": "David Sean Taylor"
+},
+"weaver": {
+"date": "2004-02-18",
+"name": "Scott Weaver"
+}
+},
+"shortdesc": "Portal technology"
+},
+{
+"charter": "The mission of Apache Fluo is the creation and maintenance of software related to the storage and incremental processing of large data sets",
+"established": "2017-07",
+"homepage": "https://fluo.apache.org/",
+"id": "fluo",
+"name": "Apache Fluo",
+"retired": "2025-09",
+"roster": {},
+"shortdesc": "Storage and incremental processing of large data sets"
+},
+{
+"charter": "The mission of Apache Kibble is the creation and maintenance of software related to an interactive project activity analyzer and aggregator",
+"established": "2017-10",
+"homepage": "https://kibble.apache.org/",
+"id": "kibble",
+"name": "Apache Kibble",
+"retired": "2025-10",
+"roster": {
+"cdutz": {
+"date": "2017-10-18",
+"name": "Christofer Dutz"
+},
+"hboutemy": {
+"date": "2017-10-18",
+"name": "Herve Boutemy"
+},
+"humbedooh": {
+"date": "2017-10-18",
+"name": "Daniel Gruno"
+},
+"ke4qqq": {
+"date": "2017-10-18",
+"name": "David Nalley"
+},
+"lmccay": {
+"date": "2017-10-18",
+"name": "Larry McCay"
+},
+"michalslowikowski": {
+"date": "2021-05-03",
+"name": "Micha\u0142 S\u0142owikowski"
+},
+"pono": {
+"date": "2017-10-18",
+"name": "Daniel Takamori"
+},
+"rafael": {
+"date": "2017-12-09",
+"name": "Rafael Weing\u00e4rtner"
+},
+"rbowen": {
+"date": "2017-10-18",
+"name": "Rich Bowen"
+},
+"sbp": {
+"date": "2017-10-18",
+"name": "Sean Palmer"
+},
+"sharan": {
+"date": "2017-10-18",
+"name": "Sharan Foga"
+},
+"turbaszek": {
+"date": "2021-05-03",
+"name": "Tomasz Urbaszek"
+},
+"ucb": {
+"date": "2017-10-18",
+"name": "Ulises Beresi"
+}
+},
+"shortdesc": "an interactive project activity analyzer and aggregator"
+},
+{
+"charter": "The mission of Apache Traffic Control is the creation and maintenance of software related to building, monitoring, configuring, and provisioning a large scale content delivery network (CDN)",
+"established": "2018-05",
+"homepage": "https://trafficcontrol.apache.org/",
+"id": "trafficcontrol",
+"name": "Apache Traffic Control",
+"retired": "2025-10",
+"roster": {
+"covener": {
+"date": "2018-05-16",
+"name": "Eric Covener"
+},
+"dangogh": {
+"date": "2018-05-16",
+"name": "Dan Kirkwood"
+},
+"dewrich": {
+"date": "2018-05-16",
+"name": "Dewayne Richardson"
+},
+"dgelinas": {
+"date": "2019-03-18",
+"name": "Derek Gelinas"
+},
+"elsloo": {
+"date": "2018-05-16",
+"name": "Jeff Elsloo"
+},
+"friede": {
+"date": "2018-05-16",
+"name": "Eric Friedrich"
+},
+"hbeatty": {
+"date": "2018-05-16",
+"name": "Hank Beatty"
+},
+"jvd": {
+"date": "2018-05-16",
+"name": "Jan van Doorn"
+},
+"mitchell852": {
+"date": "2018-05-16",
+"name": "Jeremy Mitchell"
+},
+"mtorluemke": {
+"date": "2018-05-16",
+"name": "Mark Torluemke"
+},
+"neuman": {
+"date": "2018-05-16",
+"name": "David Neuman"
+},
+"ocket8888": {
+"date": "2021-02-17",
+"name": "Brennan Fieck"
+},
+"rawlin": {
+"date": "2019-02-26",
+"name": "Rawlin Peters"
+},
+"rob": {
+"date": "2020-03-13",
+"name": "Robert Butts"
+},
+"shamrick": {
+"date": "2023-02-08",
+"name": "Steve Hamrick"
+},
+"smalenfant": {
+"date": "2018-05-16",
+"name": "Steve Malenfant"
+},
+"sorber": {
+"date": "2018-05-16",
+"name": "Phil Sorber"
+},
+"zrhoffman": {
+"date": "2021-11-19",
+"name": "Zach Hoffman"
+},
+"zwoop": {
+"date": "2018-05-16",
+"name": "Leif Hedstrom"
+}
+},
+"shortdesc": "building, monitoring, configuring, and provisioning a large scale content delivery network (CDN)"
+},
+{
+"charter": "The Apache Olingo Project be and hereby is responsible for the creation and maintenance of software related to providing an implemention of the OASIS OData (Open Data Protocol) specifications, in server and client form;",
+"established": "2014-03",
+"homepage": "https://olingo.apache.org/",
+"id": "olingo",
+"name": "Apache Olingo",
+"retired": "2025-12",
+"roster": {
+"archanarai": {
+"date": "2019-04-07",
+"name": "Archana Rai"
+},
+"challenh": {
+"date": "2014-03-19",
+"name": "Challen He"
+},
+"chandanva": {
+"date": "2014-03-19",
+"name": "Chandan V A"
+},
+"chrisam": {
+"date": "2014-03-19",
+"name": "Christian Amend"
+},
+"eduardk": {
+"date": "2014-03-19",
+"name": "Eduard Koller"
+},
+"fmui": {
+"date": "2014-03-19",
+"name": "Florian M\u00fcller"
+},
+"ilgrosso": {
+"date": "2014-03-19",
+"name": "Francesco Chicchiricc\u00f2"
+},
+"jhuesken": {
+"date": "2014-03-19",
+"name": "Jens Huesken"
+},
+"koblers": {
+"date": "2014-10-20",
+"name": "Sven Kobler-Morris"
+},
+"mibo": {
+"date": "2014-03-19",
+"name": "Michael Bolz"
+},
+"ramyav": {
+"date": "2019-04-15",
+"name": "Ramya Vasanth"
+},
+"rareddy": {
+"date": "2015-10-08",
+"name": "Ramesh Reddy"
+},
+"sklevenz": {
+"date": "2014-03-19",
+"name": "Stephan Klevenz"
+},
+"tboehm": {
+"date": "2014-03-19",
+"name": "Tamara Boehm"
+},
+"wave": {
+"date": "2014-03-19",
+"name": "David Fisher"
+}
+},
+"shortdesc": "OASIS OData protocol libraries"
+},
+{
+"charter": "The mission of Apache ServiceMix project is to create and maintain a flexible, open-source integration container, powered by OSGi, that unifies the features and functionality of Apache ActiveMQ, Camel, CXF, and Karaf into a powerful runtime platform you can use to build your own integrations solutions.",
+"established": "2007-09",
+"homepage": "https://servicemix.apache.org/",
+"id": "servicemix",
+"name": "Apache ServiceMix",
+"retired": "2026-03",
+"roster": {
+"aco": {
+"date": "2007-09-19",
+"name": "Adrian T. Co"
+},
+"acosentino": {
+"date": "2017-03-15",
+"name": "Andrea Cosentino"
+},
+"bsnyder": {
+"date": "2007-09-19",
+"name": "Bruce Snyder"
+},
+"ccustine": {
+"date": "2009-01-27",
+"name": "Chris Custine"
+},
+"chirino": {
+"date": "2007-09-19",
+"name": "Hiram R. Chirino"
+},
+"dkulp": {
+"date": "2013-12-19",
+"name": "Daniel Kulp"
+},
+"ffang": {
+"date": "2007-11-18",
+"name": "Freeman Yue Fang"
+},
+"gertv": {
+"date": "2007-09-19",
+"name": "Gert Vanthienen"
+},
+"gnodet": {
+"date": "2007-09-19",
+"name": "Guillaume Nodet"
+},
+"hogstrom": {
+"date": "2007-09-19",
+"name": "Matt Richard Hogstrom"
+},
+"janstey": {
+"date": "2013-12-19",
+"name": "Jonathan Anstey"
+},
+"jbonofre": {
+"date": "2009-10-07",
+"name": "Jean-Baptiste Onofr\u00e9"
+},
+"jgenender": {
+"date": "2007-09-19",
+"name": "Jeff Genender"
+},
+"jlaskowski": {
+"date": "2007-09-19",
+"name": "Jacek Laskowski"
+},
+"jlim": {
+"date": "2007-09-19",
+"name": "Jonas Lim"
+},
+"jstrachan": {
+"date": "2007-09-19",
+"name": "James Strachan"
+},
+"ksobkowiak": {
+"date": "2014-07-05",
+"name": "Krzysztof Sobkowiak"
+},
+"ningjiang": {
+"date": "2014-01-06",
+"name": "Willem Ning Jiang"
+},
+"pdodds": {
+"date": "2007-09-19",
+"name": "Philip Dodds"
+},
+"rajdavies": {
+"date": "2007-09-19",
+"name": "Rob Davies"
+},
+"tterm": {
+"date": "2007-09-19",
+"name": "Thomas Termin"
+}
+},
+"shortdesc": "Enterprise Service Bus"
+},
+{
+"charter": "The mission of Apache Petri is the creation and maintenance of software related to assessment of, education in, and adoption of the Foundation's policies and procedures for collaborative development and the pros and cons of joining the Foundation",
+"established": "2019-11",
+"homepage": "https://petri.apache.org",
+"id": "petri",
+"name": "Apache Petri",
+"retired": "2026-06",
+"roster": {
+"danielsh": {
+"date": "2019-11-20",
+"name": "Daniel Shahaf"
+},
+"gstein": {
+"date": "2019-11-20",
+"name": "Greg Stein"
+},
+"humbedooh": {
+"date": "2019-11-20",
+"name": "Daniel Gruno"
+},
+"ke4qqq": {
+"date": "2019-11-20",
+"name": "David Nalley"
+},
+"wave": {
+"date": "2019-11-20",
+"name": "Dave Fisher"
+}
+},
+"shortdesc": "assessment of, education in, and adoption of the Foundation's policies and procedures for collaborative development and the pros and cons of joining the Foundation"
+},
+{
+"charter": "The mission of Apache MADlib is the creation and maintenance of software related to a scalable, Big Data, SQL-driven machine learning framework for Data Scientists",
+"established": "2017-07",
+"homepage": "https://madlib.apache.org/",
+"id": "madlib",
+"name": "Apache MADlib",
+"retired": "2026-09",
+"roster": {
+"atri": {
+"date": "2017-07-19",
+"name": "Atri Sharma"
+},
+"espino": {
+"date": "2023-03-23",
+"name": "Ed Espino"
+},
+"gregchase": {
+"date": "2017-07-19",
+"name": "Greg Chase"
+},
+"okislal": {
+"date": "2017-07-19",
+"name": "Orhan Kislal"
+},
+"rvs": {
+"date": "2017-07-19",
+"name": "Roman Shaposhnik"
+}
+},
+"shortdesc": "Scalable, Big Data, SQL-driven machine learning framework for Data Scientists"
+}
+]

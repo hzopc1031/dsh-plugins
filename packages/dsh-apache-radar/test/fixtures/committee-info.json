@@ -1,0 +1,931 @@
+{
+  "last_updated": "2026-11-10 10:09:45 UTC",
+  "committee_count": 231,
+  "pmc_count": 216,
+  "committees": {
+    "accumulo": {
+      "display_name": "Accumulo",
+      "pmc": true
+    },
+    "activemq": {
+      "display_name": "ActiveMQ",
+      "pmc": true
+    },
+    "age": {
+      "display_name": "AGE",
+      "pmc": true
+    },
+    "airavata": {
+      "display_name": "Airavata",
+      "pmc": true
+    },
+    "airflow": {
+      "display_name": "Airflow",
+      "pmc": true
+    },
+    "allura": {
+      "display_name": "Allura",
+      "pmc": true
+    },
+    "ambari": {
+      "display_name": "Ambari",
+      "pmc": true
+    },
+    "answer": {
+      "display_name": "Answer",
+      "pmc": true
+    },
+    "ant": {
+      "display_name": "Ant",
+      "pmc": true
+    },
+    "apisix": {
+      "display_name": "APISIX",
+      "pmc": true
+    },
+    "aries": {
+      "display_name": "Aries",
+      "pmc": true
+    },
+    "arrow": {
+      "display_name": "Arrow",
+      "pmc": true
+    },
+    "artemis": {
+      "display_name": "Artemis",
+      "pmc": true
+    },
+    "asterixdb": {
+      "display_name": "AsterixDB",
+      "pmc": true
+    },
+    "atlas": {
+      "display_name": "Atlas",
+      "pmc": true
+    },
+    "attic": {
+      "display_name": "Attic",
+      "pmc": true
+    },
+    "auron": {
+      "display_name": "Auron",
+      "pmc": true
+    },
+    "avro": {
+      "display_name": "Avro",
+      "pmc": true
+    },
+    "axis": {
+      "display_name": "Axis",
+      "pmc": true
+    },
+    "beam": {
+      "display_name": "Beam",
+      "pmc": true
+    },
+    "bigtop": {
+      "display_name": "Bigtop",
+      "pmc": true
+    },
+    "bookkeeper": {
+      "display_name": "BookKeeper",
+      "pmc": true
+    },
+    "brooklyn": {
+      "display_name": "Brooklyn",
+      "pmc": true
+    },
+    "brpc": {
+      "display_name": "bRPC",
+      "pmc": true
+    },
+    "buildstream": {
+      "display_name": "BuildStream",
+      "pmc": true
+    },
+    "bval": {
+      "display_name": "BVal",
+      "pmc": true
+    },
+    "calcite": {
+      "display_name": "Calcite",
+      "pmc": true
+    },
+    "camel": {
+      "display_name": "Camel",
+      "pmc": true
+    },
+    "carbondata": {
+      "display_name": "CarbonData",
+      "pmc": true
+    },
+    "cassandra": {
+      "display_name": "Cassandra",
+      "pmc": true
+    },
+    "causeway": {
+      "display_name": "Causeway",
+      "pmc": true
+    },
+    "cayenne": {
+      "display_name": "Cayenne",
+      "pmc": true
+    },
+    "celeborn": {
+      "display_name": "Celeborn",
+      "pmc": true
+    },
+    "celix": {
+      "display_name": "Celix",
+      "pmc": true
+    },
+    "cloudstack": {
+      "display_name": "CloudStack",
+      "pmc": true
+    },
+    "commons": {
+      "display_name": "Commons",
+      "pmc": true
+    },
+    "comdev": {
+      "display_name": "Community Development",
+      "pmc": true
+    },
+    "cordova": {
+      "display_name": "Cordova",
+      "pmc": true
+    },
+    "couchdb": {
+      "display_name": "CouchDB",
+      "pmc": true
+    },
+    "creadur": {
+      "display_name": "Creadur",
+      "pmc": true
+    },
+    "ctakes": {
+      "display_name": "cTAKES",
+      "pmc": true
+    },
+    "curator": {
+      "display_name": "Curator",
+      "pmc": true
+    },
+    "cxf": {
+      "display_name": "CXF",
+      "pmc": true
+    },
+    "daffodil": {
+      "display_name": "Daffodil",
+      "pmc": true
+    },
+    "datafu": {
+      "display_name": "DataFu",
+      "pmc": true
+    },
+    "datafusion": {
+      "display_name": "DataFusion",
+      "pmc": true
+    },
+    "datasketches": {
+      "display_name": "DataSketches",
+      "pmc": true
+    },
+    "db": {
+      "display_name": "DB",
+      "pmc": true
+    },
+    "deltaspike": {
+      "display_name": "DeltaSpike",
+      "pmc": true
+    },
+    "devlake": {
+      "display_name": "DevLake",
+      "pmc": true
+    },
+    "directory": {
+      "display_name": "Directory",
+      "pmc": true
+    },
+    "dolphinscheduler": {
+      "display_name": "DolphinScheduler",
+      "pmc": true
+    },
+    "doris": {
+      "display_name": "Doris",
+      "pmc": true
+    },
+    "drill": {
+      "display_name": "Drill",
+      "pmc": true
+    },
+    "druid": {
+      "display_name": "Druid",
+      "pmc": true
+    },
+    "dubbo": {
+      "display_name": "Dubbo",
+      "pmc": true
+    },
+    "echarts": {
+      "display_name": "ECharts",
+      "pmc": true
+    },
+    "empire-db": {
+      "display_name": "Empire-db",
+      "pmc": true
+    },
+    "eventmesh": {
+      "display_name": "EventMesh",
+      "pmc": true
+    },
+    "felix": {
+      "display_name": "Felix",
+      "pmc": true
+    },
+    "fineract": {
+      "display_name": "Fineract",
+      "pmc": true
+    },
+    "flagon": {
+      "display_name": "Flagon",
+      "pmc": true
+    },
+    "flex": {
+      "display_name": "Flex",
+      "pmc": true
+    },
+    "flink": {
+      "display_name": "Flink",
+      "pmc": true
+    },
+    "fluss": {
+      "display_name": "Fluss",
+      "pmc": true
+    },
+    "fory": {
+      "display_name": "Fory",
+      "pmc": true
+    },
+    "freemarker": {
+      "display_name": "FreeMarker",
+      "pmc": true
+    },
+    "geode": {
+      "display_name": "Geode",
+      "pmc": true
+    },
+    "geronimo": {
+      "display_name": "Geronimo",
+      "pmc": true
+    },
+    "gluten": {
+      "display_name": "Gluten",
+      "pmc": true
+    },
+    "gobblin": {
+      "display_name": "Gobblin",
+      "pmc": true
+    },
+    "grails": {
+      "display_name": "Grails",
+      "pmc": true
+    },
+    "gravitino": {
+      "display_name": "Gravitino",
+      "pmc": true
+    },
+    "groovy": {
+      "display_name": "Groovy",
+      "pmc": true
+    },
+    "guacamole": {
+      "display_name": "Guacamole",
+      "pmc": true
+    },
+    "gump": {
+      "display_name": "Gump",
+      "pmc": true
+    },
+    "hadoop": {
+      "display_name": "Hadoop",
+      "pmc": true
+    },
+    "hbase": {
+      "display_name": "HBase",
+      "pmc": true
+    },
+    "helix": {
+      "display_name": "Helix",
+      "pmc": true
+    },
+    "hertzbeat": {
+      "display_name": "HertzBeat",
+      "pmc": true
+    },
+    "hive": {
+      "display_name": "Hive",
+      "pmc": true
+    },
+    "hop": {
+      "display_name": "Hop",
+      "pmc": true
+    },
+    "httpd": {
+      "display_name": "HTTP Server",
+      "pmc": true
+    },
+    "httpcomponents": {
+      "display_name": "HttpComponents",
+      "pmc": true
+    },
+    "hudi": {
+      "display_name": "Hudi",
+      "pmc": true
+    },
+    "hugegraph": {
+      "display_name": "HugeGraph",
+      "pmc": true
+    },
+    "iceberg": {
+      "display_name": "Iceberg",
+      "pmc": true
+    },
+    "iggy": {
+      "display_name": "Iggy",
+      "pmc": true
+    },
+    "ignite": {
+      "display_name": "Ignite",
+      "pmc": true
+    },
+    "impala": {
+      "display_name": "Impala",
+      "pmc": true
+    },
+    "incubator": {
+      "display_name": "Incubator",
+      "pmc": true
+    },
+    "inlong": {
+      "display_name": "InLong",
+      "pmc": true
+    },
+    "iotdb": {
+      "display_name": "IoTDB",
+      "pmc": true
+    },
+    "jackrabbit": {
+      "display_name": "Jackrabbit",
+      "pmc": true
+    },
+    "james": {
+      "display_name": "James",
+      "pmc": true
+    },
+    "jena": {
+      "display_name": "Jena",
+      "pmc": true
+    },
+    "jmeter": {
+      "display_name": "JMeter",
+      "pmc": true
+    },
+    "johnzon": {
+      "display_name": "Johnzon",
+      "pmc": true
+    },
+    "jspwiki": {
+      "display_name": "JSPWiki",
+      "pmc": true
+    },
+    "juneau": {
+      "display_name": "Juneau",
+      "pmc": true
+    },
+    "kafka": {
+      "display_name": "Kafka",
+      "pmc": true
+    },
+    "karaf": {
+      "display_name": "Karaf",
+      "pmc": true
+    },
+    "knox": {
+      "display_name": "Knox",
+      "pmc": true
+    },
+    "kudu": {
+      "display_name": "Kudu",
+      "pmc": true
+    },
+    "kvrocks": {
+      "display_name": "Kvrocks",
+      "pmc": true
+    },
+    "kylin": {
+      "display_name": "Kylin",
+      "pmc": true
+    },
+    "kyuubi": {
+      "display_name": "Kyuubi",
+      "pmc": true
+    },
+    "libcloud": {
+      "display_name": "Libcloud",
+      "pmc": true
+    },
+    "linkis": {
+      "display_name": "Linkis",
+      "pmc": true
+    },
+    "livy": {
+      "display_name": "Livy",
+      "pmc": true
+    },
+    "logging": {
+      "display_name": "Logging Services",
+      "pmc": true
+    },
+    "lucene": {
+      "display_name": "Lucene",
+      "pmc": true
+    },
+    "lucenenet": {
+      "display_name": "Lucene.NET",
+      "pmc": true
+    },
+    "magpie": {
+      "display_name": "Magpie",
+      "pmc": true
+    },
+    "mahout": {
+      "display_name": "Mahout",
+      "pmc": true
+    },
+    "manifoldcf": {
+      "display_name": "ManifoldCF",
+      "pmc": true
+    },
+    "maven": {
+      "display_name": "Maven",
+      "pmc": true
+    },
+    "mina": {
+      "display_name": "MINA",
+      "pmc": true
+    },
+    "myfaces": {
+      "display_name": "MyFaces",
+      "pmc": true
+    },
+    "mynewt": {
+      "display_name": "Mynewt",
+      "pmc": true
+    },
+    "netbeans": {
+      "display_name": "NetBeans",
+      "pmc": true
+    },
+    "nifi": {
+      "display_name": "NiFi",
+      "pmc": true
+    },
+    "nutch": {
+      "display_name": "Nutch",
+      "pmc": true
+    },
+    "nuttx": {
+      "display_name": "NuttX",
+      "pmc": true
+    },
+    "ofbiz": {
+      "display_name": "OFBiz",
+      "pmc": true
+    },
+    "opendal": {
+      "display_name": "OpenDAL",
+      "pmc": true
+    },
+    "openjpa": {
+      "display_name": "OpenJPA",
+      "pmc": true
+    },
+    "openmeetings": {
+      "display_name": "OpenMeetings",
+      "pmc": true
+    },
+    "opennlp": {
+      "display_name": "OpenNLP",
+      "pmc": true
+    },
+    "openoffice": {
+      "display_name": "OpenOffice",
+      "pmc": true
+    },
+    "openwebbeans": {
+      "display_name": "OpenWebBeans",
+      "pmc": true
+    },
+    "openwhisk": {
+      "display_name": "OpenWhisk",
+      "pmc": true
+    },
+    "orc": {
+      "display_name": "ORC",
+      "pmc": true
+    },
+    "ozone": {
+      "display_name": "Ozone",
+      "pmc": true
+    },
+    "paimon": {
+      "display_name": "Paimon",
+      "pmc": true
+    },
+    "parquet": {
+      "display_name": "Parquet",
+      "pmc": true
+    },
+    "pdfbox": {
+      "display_name": "PDFBox",
+      "pmc": true
+    },
+    "pekko": {
+      "display_name": "Pekko",
+      "pmc": true
+    },
+    "perl": {
+      "display_name": "Perl",
+      "pmc": true
+    },
+    "phoenix": {
+      "display_name": "Phoenix",
+      "pmc": true
+    },
+    "pig": {
+      "display_name": "Pig",
+      "pmc": true
+    },
+    "pinot": {
+      "display_name": "Pinot",
+      "pmc": true
+    },
+    "plc4x": {
+      "display_name": "PLC4X",
+      "pmc": true
+    },
+    "poi": {
+      "display_name": "POI",
+      "pmc": true
+    },
+    "polaris": {
+      "display_name": "Polaris",
+      "pmc": true
+    },
+    "ponymail": {
+      "display_name": "Pony Mail",
+      "pmc": true
+    },
+    "apr": {
+      "display_name": "Portable Runtime (APR)",
+      "pmc": true
+    },
+    "pulsar": {
+      "display_name": "Pulsar",
+      "pmc": true
+    },
+    "qpid": {
+      "display_name": "Qpid",
+      "pmc": true
+    },
+    "ranger": {
+      "display_name": "Ranger",
+      "pmc": true
+    },
+    "ratis": {
+      "display_name": "Ratis",
+      "pmc": true
+    },
+    "reqsign": {
+      "display_name": "Reqsign",
+      "pmc": true
+    },
+    "resilientdb": {
+      "display_name": "ResilientDB",
+      "pmc": true
+    },
+    "rocketmq": {
+      "display_name": "RocketMQ",
+      "pmc": true
+    },
+    "roller": {
+      "display_name": "Roller",
+      "pmc": true
+    },
+    "royale": {
+      "display_name": "Royale",
+      "pmc": true
+    },
+    "rya": {
+      "display_name": "Rya",
+      "pmc": true
+    },
+    "samza": {
+      "display_name": "Samza",
+      "pmc": true
+    },
+    "santuario": {
+      "display_name": "Santuario",
+      "pmc": true
+    },
+    "sdap": {
+      "display_name": "SDAP",
+      "pmc": true
+    },
+    "seatunnel": {
+      "display_name": "SeaTunnel",
+      "pmc": true
+    },
+    "sedona": {
+      "display_name": "Sedona",
+      "pmc": true
+    },
+    "serf": {
+      "display_name": "Serf",
+      "pmc": true
+    },
+    "servicecomb": {
+      "display_name": "ServiceComb",
+      "pmc": true
+    },
+    "shardingsphere": {
+      "display_name": "ShardingSphere",
+      "pmc": true
+    },
+    "shenyu": {
+      "display_name": "ShenYu",
+      "pmc": true
+    },
+    "shiro": {
+      "display_name": "Shiro",
+      "pmc": true
+    },
+    "singa": {
+      "display_name": "SINGA",
+      "pmc": true
+    },
+    "sis": {
+      "display_name": "SIS",
+      "pmc": true
+    },
+    "skywalking": {
+      "display_name": "SkyWalking",
+      "pmc": true
+    },
+    "sling": {
+      "display_name": "Sling",
+      "pmc": true
+    },
+    "solr": {
+      "display_name": "Solr",
+      "pmc": true
+    },
+    "sourcelume": {
+      "display_name": "Sourcelume",
+      "pmc": true
+    },
+    "spamassassin": {
+      "display_name": "SpamAssassin",
+      "pmc": true
+    },
+    "spark": {
+      "display_name": "Spark",
+      "pmc": true
+    },
+    "steve": {
+      "display_name": "STeVe",
+      "pmc": true
+    },
+    "storm": {
+      "display_name": "Storm",
+      "pmc": true
+    },
+    "stormcrawler": {
+      "display_name": "StormCrawler",
+      "pmc": true
+    },
+    "streampark": {
+      "display_name": "StreamPark",
+      "pmc": true
+    },
+    "streampipes": {
+      "display_name": "StreamPipes",
+      "pmc": true
+    },
+    "struts": {
+      "display_name": "Struts",
+      "pmc": true
+    },
+    "subversion": {
+      "display_name": "Subversion",
+      "pmc": true
+    },
+    "superset": {
+      "display_name": "Superset",
+      "pmc": true
+    },
+    "synapse": {
+      "display_name": "Synapse",
+      "pmc": true
+    },
+    "syncope": {
+      "display_name": "Syncope",
+      "pmc": true
+    },
+    "systemds": {
+      "display_name": "SystemDS",
+      "pmc": true
+    },
+    "tapestry": {
+      "display_name": "Tapestry",
+      "pmc": true
+    },
+    "tcl": {
+      "display_name": "Tcl",
+      "pmc": true
+    },
+    "teaclave": {
+      "display_name": "Teaclave",
+      "pmc": true
+    },
+    "tez": {
+      "display_name": "Tez",
+      "pmc": true
+    },
+    "thrift": {
+      "display_name": "Thrift",
+      "pmc": true
+    },
+    "tika": {
+      "display_name": "Tika",
+      "pmc": true
+    },
+    "tinkerpop": {
+      "display_name": "TinkerPop",
+      "pmc": true
+    },
+    "tomcat": {
+      "display_name": "Tomcat",
+      "pmc": true
+    },
+    "tomee": {
+      "display_name": "TomEE",
+      "pmc": true
+    },
+    "trafficserver": {
+      "display_name": "Traffic Server",
+      "pmc": true
+    },
+    "training": {
+      "display_name": "Training",
+      "pmc": true
+    },
+    "tsfile": {
+      "display_name": "TsFile",
+      "pmc": true
+    },
+    "turbine": {
+      "display_name": "Turbine",
+      "pmc": true
+    },
+    "tvm": {
+      "display_name": "TVM",
+      "pmc": true
+    },
+    "uima": {
+      "display_name": "UIMA",
+      "pmc": true
+    },
+    "uniffle": {
+      "display_name": "Uniffle",
+      "pmc": true
+    },
+    "unomi": {
+      "display_name": "Unomi",
+      "pmc": true
+    },
+    "vcl": {
+      "display_name": "VCL",
+      "pmc": true
+    },
+    "velocity": {
+      "display_name": "Velocity",
+      "pmc": true
+    },
+    "wayang": {
+      "display_name": "Wayang",
+      "pmc": true
+    },
+    "ws": {
+      "display_name": "Web Services",
+      "pmc": true
+    },
+    "whimsy": {
+      "display_name": "Whimsy",
+      "pmc": true
+    },
+    "wicket": {
+      "display_name": "Wicket",
+      "pmc": true
+    },
+    "xalan": {
+      "display_name": "Xalan",
+      "pmc": true
+    },
+    "xerces": {
+      "display_name": "Xerces",
+      "pmc": true
+    },
+    "xmlgraphics": {
+      "display_name": "XML Graphics",
+      "pmc": true
+    },
+    "yetus": {
+      "display_name": "Yetus",
+      "pmc": true
+    },
+    "yunikorn": {
+      "display_name": "YuniKorn",
+      "pmc": true
+    },
+    "zeppelin": {
+      "display_name": "Zeppelin",
+      "pmc": true
+    },
+    "zookeeper": {
+      "display_name": "ZooKeeper",
+      "pmc": true
+    },
+    "legal": {
+      "display_name": "Legal Affairs",
+      "pmc": false
+    },
+    "security": {
+      "display_name": "Security Team",
+      "pmc": false
+    },
+    "brand": {
+      "display_name": "Brand Management",
+      "pmc": false
+    },
+    "concom": {
+      "display_name": "Conferences",
+      "pmc": false
+    },
+    "dataprivacy": {
+      "display_name": "Data Privacy",
+      "pmc": false
+    },
+    "diversity": {
+      "display_name": "Diversity and Inclusion",
+      "pmc": false
+    },
+    "ecmarelations": {
+      "display_name": "ECMA Relations",
+      "pmc": false
+    },
+    "fundraising": {
+      "display_name": "Fundraising",
+      "pmc": false
+    },
+    "infrastructure": {
+      "display_name": "Infrastructure",
+      "pmc": false
+    },
+    "infrastructureadministrator": {
+      "display_name": "Infrastructure Administrator",
+      "pmc": false
+    },
+    "marketingandpublicity": {
+      "display_name": "Marketing and Publicity",
+      "pmc": false
+    },
+    "publicaffairs": {
+      "display_name": "Public Affairs",
+      "pmc": false
+    },
+    "sponsorrelations": {
+      "display_name": "Sponsor Relations",
+      "pmc": false
+    },
+    "tooling": {
+      "display_name": "Tooling",
+      "pmc": false
+    },
+    "tac": {
+      "display_name": "Travel Assistance",
+      "pmc": false
+    }
+  }
+}

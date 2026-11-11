@@ -12,6 +12,7 @@ export declare class SourceCache {
     readonly directory: string;
     private readonly http;
     private readonly now;
+    private readonly failures;
     constructor(directory: string, http: HttpClient, now?: () => Date);
     load<T extends SourceMetadata>(url: string, parse: (doc: SourceDocument) => T, ttlMs: number, force?: boolean, query?: MavenQuery): Promise<SourceResult<T>>;
 }

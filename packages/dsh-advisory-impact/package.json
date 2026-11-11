@@ -1,7 +1,7 @@
 {
   "name": "dsh-advisory-impact",
   "version": "0.1.0",
-  "description": "Local official-advisory impact checks for DeepSeek Harness (scaffold; fetchers and help only)",
+  "description": "Local official-first Kafka, Hadoop and Flink advisory checks with pinned versions and a native DSH panel",
   "type": "module",
   "main": "index.js",
   "types": "index.d.ts",
@@ -25,7 +25,8 @@
     "README.md",
     "LICENSE",
     "CHANGELOG.md",
-    "docs/*.md"
+    "docs/*.md",
+    "docs/images/*.png"
   ],
   "engines": {
     "node": ">=22",

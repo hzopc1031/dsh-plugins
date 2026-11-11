@@ -18,6 +18,7 @@
 | 文件占用程序查询 | `dsh-file-holder`（未发布 npm / not published to npm） | 查询 Windows 项目内文件的占用程序、PID 与观察时间（`/file-holder`）；仅支持 rc.5 / Windows project file holder lookup | [README](packages/dsh-file-holder/README.md) |
 | DLL 诊断 | `dsh-dll-doctor`（未发布 npm / not published to npm） | 只读检查 Windows EXE/DLL 的缺失依赖与架构不匹配（`/dll-check`）/ Static Windows DLL diagnostics | [README](packages/dsh-dll-doctor/README.md) |
 | GitHub issue/PR 研判 | `dsh-github-triage`（未发布 npm / not published to npm） | AI 结合业务说明和你自己的本地代码，判断上游问题是否存在、PR 是否适合合入或回迁；三档建议、首次有界全量扫描、后续定时看变化，纠正规则可导出编辑。 | [README](packages/dsh-github-triage/README.md) |
+| 官方公告影响核对 | `dsh-advisory-impact`（未发布 npm；开发分支 / unreleased, feature branch） | 按运行版本核对 Kafka/Hadoop/Flink 官方公告，原生面板显示三态、来源与时间 / Official-first version checks in a native panel | [README](packages/dsh-advisory-impact/README.md) |
 
 > 心跳插件的 npm 包名是 `dsh-heartbeat-monitor`：`dsh-heartbeat` 已被一个无关的包占用。
 > The heartbeat plugin is published as `dsh-heartbeat-monitor` because `dsh-heartbeat` is an unrelated package.
@@ -71,7 +72,10 @@ dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packag
 dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-file-ref-copy"
 dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-snip-attach"
 & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-github-triage"
+dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#feat/advisory-impact&path:/packages/dsh-advisory-impact"
 ```
+
+`dsh-advisory-impact` 尚未发布，必须使用上面的 `feat/advisory-impact` 地址；该分支尚未合并 main。其原生面板已在 DSH 0.2.2-rc.1 Web 实测，无需模型 key。/ Advisory Impact is unreleased; use its feature-branch URL above.
 
 同样的 `github:...` 地址也可以填进界面的「添加插件」。把 `main` 换成某个提交哈希即可固定版本。
 

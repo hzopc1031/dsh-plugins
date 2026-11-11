@@ -14,6 +14,7 @@ export interface SourceResult<T> {
 
 /** Plugin-owned directory; hashed request keys never become caller-controlled relative paths. */
 export class SourceCache {
+  private readonly failures = new Map<string, string>()
   constructor(readonly directory: string, private readonly http: HttpClient, private readonly now: () => Date = () => new Date()) {}
 
   async load<T extends SourceMetadata>(url: string, parse: (doc: SourceDocument) => T, ttlMs: number, force = false, query?: MavenQuery): Promise<SourceResult<T>> {
@@ -39,19 +40,26 @@ export class SourceCache {
     }
     const extra = () => cacheError ? { cacheError } : {}
     const age = previous ? this.now().getTime() - Date.parse(previous.fetchedAt) : Infinity
-    if (!force && previous && previousData && age >= 0 && age < ttlMs) return { url, state: 'cached', data: previousData, fetchedAt: previous.fetchedAt, ...extra() }
+    if (!force && previous && previousData && age >= 0 && age < ttlMs) {
+      const error = this.failures.get(key)
+      return { url, state: error !== undefined ? 'stale' : 'cached', data: previousData, fetchedAt: previous.fetchedAt,
+        ...(error !== undefined ? { error } : {}), ...extra() }
+    }
     try {
       const doc = await this.http(url, query)
       if (doc.url !== url || !Number.isFinite(Date.parse(doc.fetchedAt))) throw new Error('Invalid HTTP source metadata')
       const data = parse(doc)
+      this.failures.delete(key)
       try {
         await writeLocal(this.directory, key, JSON.stringify({ ...doc, sourceTimestamp: data.sourceTimestamp, ...(query ? { query } : {}) }), true)
       } catch (error) { cacheError = error instanceof Error ? error.message : 'Cache write failed' }
       return { url, state: 'fresh', data, fetchedAt: doc.fetchedAt, ...extra() }
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Source fetch failed'
+      this.failures.set(key, message)
       return { url, state: previousData ? 'stale' : 'error', data: previousData ?? null,
         ...(previous ? { fetchedAt: previous.fetchedAt } : {}),
-        error: error instanceof Error ? error.message : 'Source fetch failed', ...extra() }
+        error: message, ...extra() }
     }
   }
 }

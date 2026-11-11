@@ -21,7 +21,7 @@ async function setup(t) {
     return fixture(url, init)
   } })
   const cache = new SourceCache(dir, http, now)
-  return { dir, cache, count: () => calls, tick: ms => { at += ms }, fail: () => { fail = true }, bad: () => { bad = true } }
+  return { dir, cache, count: () => calls, tick: ms => { at += ms }, fail: (value = true) => { fail = value }, bad: () => { bad = true } }
 }
 const parse = doc => parseAdvisories('kafka', doc)
 
@@ -65,6 +65,24 @@ test('fetch timeout and malformed fresh payload preserve last good bytes and evi
     assert.match(result.error, failure === 'fail' ? /fixture deadline/ : /truncated/)
     assert.equal(await readFile(path.join(s.dir, name), 'utf8'), before)
   }
+})
+
+test('a failed forced refresh remains stale during a valid TTL until a successful fetch', async t => {
+  const s = await setup(t)
+  const first = await s.cache.load(SOURCES.kafka, parse, 1000)
+  s.fail()
+  const failed = await s.cache.load(SOURCES.kafka, parse, 1000, true)
+  const cached = await s.cache.load(SOURCES.kafka, parse, 1000)
+  assert.equal(cached.state, 'stale')
+  assert.equal(cached.error, failed.error)
+  assert.deepEqual(cached.data, first.data)
+  assert.equal(cached.fetchedAt, first.fetchedAt)
+  assert.equal(s.count(), 2, 'report/view reads reuse the cache without hiding the latest failure')
+  s.fail(false)
+  assert.equal((await s.cache.load(SOURCES.kafka, parse, 1000, true)).state, 'fresh')
+  const recovered = await s.cache.load(SOURCES.kafka, parse, 1000)
+  assert.equal(recovered.state, 'cached')
+  assert.equal(recovered.error, undefined)
 })
 
 test('no last-good payload yields explicit failure with null data, never an empty inventory', async t => {

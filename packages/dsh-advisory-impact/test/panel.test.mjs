@@ -402,6 +402,23 @@ test('fixed official versions render not affected; total source failure renders 
   assert.ok(fixedCard.findAllByType('a').some(a => a.props.href.endsWith('#CVE-2024-31141')))
 })
 
+test('changing the watch list clears the previous verdicts and report before the next evaluation', async t => {
+  const { tree } = await mount(t)
+  await interaction(tree, () => button(tree, '核对 / 刷新').props.onClick())
+  await interaction(tree, () => button(tree, '查看报告').props.onClick())
+  assert.ok(tree.root.findAllByType('textarea').length)
+  act(() => tree.root.findAllByType('input')[1].props.onChange({ target: { value: 'flink' } }))
+  await interaction(tree, () => tree.root.findAllByType('form')[1].props.onSubmit({ preventDefault() {} }))
+  assert.equal(tree.root.findAllByType('textarea').length, 0)
+  assert.equal(tree.root.findAll(n => n.type === 'article' && n.props.className?.includes('ai-verdict')).length, 0)
+  await interaction(tree, () => button(tree, '核对 / 刷新').props.onClick())
+  const output = textOf(tree.toJSON())
+  assert.match(output, /Flink 官方公告/)
+  assert.match(output, /未填写运行版本，无法判断/)
+  assert.ok(!output.includes('Kafka 官方公告'))
+  assert.ok(!output.includes('扫描器报了，但官方说明不适用'))
+})
+
 test('panel does not present unavailable inventories as zero or not affected', async t => {
   const h = await mount(t)
   h.f.failAll()

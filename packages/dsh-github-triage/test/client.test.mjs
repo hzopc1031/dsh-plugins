@@ -63,7 +63,7 @@ test('lazy client registers exact session-header action and opens Chinese dialog
   assert.equal(options.id,'dsh-github-triage')
   await f.render('TriageButton',{sessionId:'s'})
   assert.equal(document.querySelector('[role=dialog]'),null)
-  await f.click('GitHub 仓库研判');assert.ok(document.querySelector('[role=dialog]'));assert.match(document.body.textContent,/仓库列表（1）/);assert.ok(Component)
+  await f.click('GitHub 哨兵');assert.ok(document.querySelector('[role=dialog]'));assert.match(document.body.textContent,/仓库列表（1）/);assert.ok(Component)
   await f.click('关闭面板');assert.equal(document.querySelector('[role=dialog]'),null)
 })
 test('dashboard renders repositories, schedule, business, local path and model state',async t=>{

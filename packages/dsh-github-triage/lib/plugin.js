@@ -175,7 +175,7 @@ export async function apply(ctx, input = {}) {
             return output.join('\n\n');
         });
     });
-    command('triage-report', '查看最近 GitHub 仓库研判结果', async (i) => {
+    command('triage-report', '查看最近 GitHub 哨兵结果', async (i) => {
         const raw = i.rawInput.trim();
         if (raw.startsWith('--brief ')) {
             const token = raw.slice(8), brief = briefs.get(token);
@@ -211,7 +211,7 @@ export async function apply(ctx, input = {}) {
         model: () => ({ enabled: config.modelEnabled, provider: config.provider, model: config.model, available: !modelWarning(ctx, config), warning: modelWarning(ctx, config) }),
         models: () => listModels(ctx),
     });
-    command('triage-ui', 'GitHub 仓库研判界面数据接口（JSON）', async (i) => {
+    command('triage-ui', 'GitHub 哨兵界面数据接口（JSON）', async (i) => {
         if (i.rawInput.length > 150000)
             return JSON.stringify({ ok: false, error: '请求过大' });
         try {

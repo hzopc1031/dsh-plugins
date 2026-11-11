@@ -118,7 +118,7 @@ export async function run(source:Source,repo:Repo,state:State,options:Scan&{limi
 }
 export function render(report:Report):string {
   let group=''
-  return [report.modelStatus?'**'+report.modelStatus+'**':undefined,'## GitHub 仓库研判 · '+report.repo,
+  return [report.modelStatus?'**'+report.modelStatus+'**':undefined,'## GitHub 哨兵 · '+report.repo,
     report.localStatus,report.rulesStatus,'业务说明：'+md(report.businessStatus),new Date(report.at).toLocaleString()+' · 本轮处理 '+report.analyzed+' / 缓存 '+report.reused,
     ...report.warnings,...sorted(report.results).map(r=>{
       const j=r.judgment

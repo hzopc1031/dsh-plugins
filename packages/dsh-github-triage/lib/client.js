@@ -15169,7 +15169,7 @@ function Dashboard({ call }) {
         ] }),
         !snapshot.model.available && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { role: "alert", style: { color: "var(--dsw-alias-error, #c33)" }, children: [
           snapshot.model.warning,
-          " \u8BF7\u5230 DSH \u63D2\u4EF6\u8BBE\u7F6E \u2192 GitHub \u4ED3\u5E93\u7814\u5224\uFF0C\u5206\u522B\u586B\u5199 provider / model\uFF0C\u5E76\u542F\u7528 modelEnabled\u3002"
+          " \u8BF7\u5230 DSH \u63D2\u4EF6\u8BBE\u7F6E \u2192 GitHub \u54E8\u5175\uFF0C\u5206\u522B\u586B\u5199 provider / model\uFF0C\u5E76\u542F\u7528 modelEnabled\u3002"
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => void call({ action: "models" }).then(setModels).catch((e) => setError(message(e))), children: "\u67E5\u770B\u53EF\u590D\u5236\u7684\u6A21\u578B ID" }),
         models && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("pre", { style: { whiteSpace: "pre-wrap", userSelect: "text" }, children: models })
@@ -15262,8 +15262,8 @@ function TriageButton({ call, sessionId }) {
   const [open, setOpen] = (0, import_react.useState)(false);
   (0, import_react.useEffect)(() => setOpen(false), [sessionId]);
   return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { title: "\u914D\u7F6E\u4ED3\u5E93\u3001\u4E1A\u52A1\u4E0E\u672C\u5730\u4EE3\u7801\uFF0C\u67E5\u770B GitHub \u7814\u5224", onClick: () => setOpen(true), children: "GitHub \u4ED3\u5E93\u7814\u5224" }),
-    /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_dsh_client_ui_primitives.Modal, { open, onClose: () => setOpen(false), title: "GitHub \u4ED3\u5E93\u7814\u5224", closeLabel: "\u5173\u95ED\u7814\u5224\u9762\u677F", children: open && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Dashboard, { call }) })
+    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { title: "\u6253\u5F00 GitHub \u54E8\u5175\uFF0C\u914D\u7F6E\u4ED3\u5E93\u3001\u4E1A\u52A1\u4E0E\u672C\u5730\u4EE3\u7801", onClick: () => setOpen(true), children: "GitHub \u54E8\u5175" }),
+    /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_dsh_client_ui_primitives.Modal, { open, onClose: () => setOpen(false), title: "GitHub \u54E8\u5175", closeLabel: "\u5173\u95ED GitHub \u54E8\u5175\u9762\u677F", children: open && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Dashboard, { call }) })
   ] });
 }
 function apply(ctx) {

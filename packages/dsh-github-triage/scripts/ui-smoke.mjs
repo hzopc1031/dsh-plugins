@@ -159,19 +159,19 @@ try{
 
   let found=false
   for(let n=0;n<120;n++){
-    found=await evaluate("Array.from(document.querySelectorAll('button')).some(b=>b.textContent.trim()==='GitHub 仓库研判')")
+    found=await evaluate("Array.from(document.querySelectorAll('button')).some(b=>b.textContent.trim()==='GitHub 哨兵')")
     if(found)break
     await evaluate("(()=>{const row=document.querySelector('[data-row-key^=\"session:\"]');if(row){row.click();return}const g=Array.from(document.querySelectorAll('*')).find(e=>e.children.length===0&&e.textContent.trim()==='未分组');g?.click()})()")
     await pause(500)
   }
   if(found){
-    await evaluate("Array.from(document.querySelectorAll('button')).find(b=>b.textContent.trim()==='GitHub 仓库研判').click()")
+    await evaluate("Array.from(document.querySelectorAll('button')).find(b=>b.textContent.trim()==='GitHub 哨兵').click()")
     for(let n=0;n<40;n++){
       if(await evaluate("!!document.querySelector('[aria-label=\"仓库列表\"]')"))break
       await pause(250)
     }
   }
-  const state=await evaluate("({title:document.title,entry:Array.from(document.querySelectorAll('button')).some(b=>b.textContent.trim()==='GitHub 仓库研判'),dialog:!!document.querySelector('[role=\"dialog\"][aria-label=\"GitHub 仓库研判\"]'),list:!!document.querySelector('[aria-label=\"仓库列表\"]'),modelPrompt:document.body.textContent.includes('modelEnabled'),text:document.body.innerText.slice(0,12000),rows:Array.from(document.querySelectorAll('[data-row-key]')).map(e=>e.getAttribute('data-row-key')).slice(0,20)})")
+  const state=await evaluate("({title:document.title,entry:Array.from(document.querySelectorAll('button')).some(b=>b.textContent.trim()==='GitHub 哨兵'),dialog:!!document.querySelector('[role=\"dialog\"][aria-label=\"GitHub 哨兵\"]'),list:!!document.querySelector('[aria-label=\"仓库列表\"]'),modelPrompt:document.body.textContent.includes('modelEnabled'),text:document.body.innerText.slice(0,12000),rows:Array.from(document.querySelectorAll('[data-row-key]')).map(e=>e.getAttribute('data-row-key')).slice(0,20)})")
   await writeFile(path.join(artifacts,'result.json'),scrub(JSON.stringify({...state,cliVersion:version},null,2)))
   const screenshot=await cdp('Page.captureScreenshot',{format:'png',captureBeyondViewport:false})
   const screenshotPath=path.join(artifacts,'ui.png')
@@ -180,7 +180,7 @@ try{
   assert.ok(found&&state.dialog,'会话顶部入口按钮或弹窗未出现；检查 result.json 和 ui.png')
   // The seeded session is created without a live agent, so remote command calls may fail here (gateway/internal); data loading is covered by tests, not by this smoke.
   const status=(state.text.split('\n').find(l=>/界面接口|加载仓库/.test(l))??'').slice(0,120)
-  console.log('PASS：官方临时 web profile 的会话顶部按钮「GitHub 仓库研判」与共享 Modal 真实出现'+(state.list&&state.modelPrompt?'；仓库列表与未配模型提示也已出现':'；数据加载未验证（种子会话无活动 agent）：'+status))
+  console.log('PASS：官方临时 web profile 的会话顶部按钮「GitHub 哨兵」与共享 Modal 真实出现'+(state.list&&state.modelPrompt?'；仓库列表与未配模型提示也已出现':'；数据加载未验证（种子会话无活动 agent）：'+status))
 }catch(error){
   exitCode=1;console.error('UI smoke 未通过：'+scrub(error.message)+'\n产物目录：'+artifacts)
 }finally{

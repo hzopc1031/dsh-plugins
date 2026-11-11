@@ -1,5 +1,9 @@
 # 更新记录
 
+## 0.3.1 · 2026-11-11
+
+- 中文用户可见名称统一为「GitHub 哨兵」，同步会话顶部按钮、弹窗、插件设置、命令描述、报告标题与文档；包名、命令名和功能逻辑保持不变。
+
 ## 0.3.0 · 2026-11-11
 
 - 新增中文界面：会话顶部「GitHub 仓库研判」按钮，通过 rc.5 conversation.session.header.actions 插槽打开共享 Modal。遵循既有 UI 包的 dsh.client/platform:web/inject 与 lazy-CJS factory 协议，React/primitives 外部共享。

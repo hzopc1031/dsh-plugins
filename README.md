@@ -17,7 +17,7 @@
 | 桌面截图附件 | `dsh-snip-attach`（尚未发布到 npm / not published to npm） | Windows 框选截图后加入待发送附件，针对桌面 rc.5（`/screenshot`）/ Windows snip to pending attachments | [README](packages/dsh-snip-attach/README.md) |
 | 文件占用程序查询 | `dsh-file-holder`（未发布 npm / not published to npm） | 查询 Windows 项目内文件的占用程序、PID 与观察时间（`/file-holder`）；仅支持 rc.5 / Windows project file holder lookup | [README](packages/dsh-file-holder/README.md) |
 | DLL 诊断 | `dsh-dll-doctor`（未发布 npm / not published to npm） | 只读检查 Windows EXE/DLL 的缺失依赖与架构不匹配（`/dll-check`）/ Static Windows DLL diagnostics | [README](packages/dsh-dll-doctor/README.md) |
-| GitHub issue/PR 研判 | `dsh-github-triage`（未发布 npm / not published to npm） | 点击已打开会话顶部的文字按钮「GitHub 仓库研判」，配置仓库、业务说明、本地代码和定时；AI 判断问题是否适用、PR 是否值得合入，三档结果可查看证据、纠正并导出规则；保留命令操作。 | [README](packages/dsh-github-triage/README.md) |
+| GitHub 哨兵 | `dsh-github-triage`（未发布 npm / not published to npm） | 点击已打开会话顶部的文字按钮「GitHub 哨兵」，配置仓库、业务说明、本地代码和定时；AI 判断问题是否适用、PR 是否值得合入，三档结果可查看证据、纠正并导出规则；保留命令操作。 | [README](packages/dsh-github-triage/README.md) |
 | 本地票据核对 | `dsh-invoice-gate`（未发布 npm / not published to npm） | 本地票据与台账核对、差异及证据包；不做 OCR／验真，模型不改金额（`/invoice-gate`）/ Local invoice reconciliation and evidence packs | [README](packages/dsh-invoice-gate/README.md) |
 | HTML 演示稿导出 | `dsh-html-deck-export`（未发布 npm / not published to npm） | 本地 HTML → 16:9 图片版 PPTX、讲稿备注与逐页报告；HTML 保留为源文件，不自动上传（`/html-deck-export`）/ Local image PPTX export with notes and per-page reports | [README](packages/dsh-html-deck-export/README.md) |
 | 内容证据工作台 | `dsh-content-evidence`（未发布 npm / not published to npm） | 材料与证据追踪、四平台草稿、复核、本地导出；不自动发布 / Evidence tracing, four-platform drafts, review and local export; never auto-publishes | [README](packages/dsh-content-evidence/README.md) |

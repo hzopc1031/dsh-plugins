@@ -1,6 +1,6 @@
-# dsh-github-triage
+# GitHub 哨兵
 
-打开会话顶部的「GitHub 仓库研判」，配置仓库、业务说明和本地代码位置，让 AI 判断哪些问题值得修、哪些 PR 适合合入或回迁。
+打开会话顶部的「GitHub 哨兵」，配置仓库、业务说明和本地代码位置，让 AI 判断哪些问题值得修、哪些 PR 适合合入或回迁。
 
 - **在一个界面里管理仓库：** 添加、编辑、删除仓库，设置本地路径、分支和定时；只修改你编辑的字段，其他设置继续保留。
 - **按自己的业务看问题：** 相比逐条翻 GitHub，集中查看“在我这里是否存在、值不值得修、是否符合业务方向”，附本地对照和证据。
@@ -9,12 +9,12 @@
 
 ## 打开界面后的示例
 
-入口在**已打开会话的顶部操作区**，按钮名称为 **GitHub 仓库研判**，显示文字，没有独立图标。点击打开面板，点击「添加仓库」，填写业务和本地路径后「保存仓库」，再点「立即分析」。
+入口在**已打开会话的顶部操作区**，按钮名称为 **GitHub 哨兵**，显示文字，没有独立图标。点击打开面板，点击「添加仓库」，填写业务和本地路径后「保存仓库」，再点「立即分析」。
 
 以下是虚构内容的**示意输出**，不是桌面截图或真实 AI 研判：
 
 ```text
-GitHub 仓库研判
+GitHub 哨兵
 模型：已配置 · provider：my-route · model：my-model
 
 example-team/plugin-kit · 两者 · 每天 09:30
@@ -47,7 +47,7 @@ example-team/plugin-kit · 两者 · 每天 09:30
    & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-github-triage"
    ```
 
-3. **重开 DSH，配置后得到第一份结果。** 在插件设置找到 **GitHub 仓库研判（dsh-github-triage）** 并启用。先在 DSH 模型设置配置服务商，再打开或新建一个会话，点击顶部 **GitHub 仓库研判** → **查看可复制的模型 ID**，将 `provider`、`model` 分别填入插件设置同名字段，并启用 `modelEnabled`。这里填准确 ID，不填 API key；目录为空时去 DSH 模型设置查 ID。面板会显示启用情况、当前路由和未配置提示。
+3. **重开 DSH，配置后得到第一份结果。** 在插件设置找到 **GitHub 哨兵（dsh-github-triage）** 并启用。先在 DSH 模型设置配置服务商，再打开或新建一个会话，点击顶部 **GitHub 哨兵** → **查看可复制的模型 ID**，将 `provider`、`model` 分别填入插件设置同名字段，并启用 `modelEnabled`。这里填准确 ID，不填 API key；目录为空时去 DSH 模型设置查 ID。面板会显示启用情况、当前路由和未配置提示。
 
    在面板点 **添加仓库**，填 `owner/repo`、分析类型和业务说明；按需填写本地 Git 仓库绝对路径和 ref（空为 HEAD）、业务文件、定时和单次上限。点 **保存仓库**，先用小上限（例如 6）点 **立即分析**；按钮会显示排队/进行中，完成后在三档结果中展开 **查看详情与纠正**。
 
@@ -156,7 +156,7 @@ repositories:
 
 ### 版本与兼容
 
-当前版本 **0.3.0**，尚未发布 npm，面向 **DeepSeek Harness 0.2.1-rc.5**，要求 Node.js 22 或以上；本地对照需要 PATH 中可用的 Git。开发验证环境为 Windows / Node.js 24，其他平台与 Node.js 22 实机尚未验证。未发布改动合入 main 前，上面的 main 安装地址仍指向现有 main 内容。
+当前版本 **0.3.1**，尚未发布 npm，面向 **DeepSeek Harness 0.2.1-rc.5**，要求 Node.js 22 或以上；本地对照需要 PATH 中可用的 Git。开发验证环境为 Windows / Node.js 24，其他平台与 Node.js 22 实机尚未验证。未发布改动合入 main 前，上面的 main 安装地址仍指向现有 main 内容。
 
 ### 只读边界与证据局限
 

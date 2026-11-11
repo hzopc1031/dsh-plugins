@@ -1,6 +1,6 @@
 {
   "name": "dsh-github-triage",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "在界面配置仓库、业务与本地代码，结合 AI 判断 issue 是否值得修、PR 是否值得合入",
   "type": "module",
   "main": "index.js",

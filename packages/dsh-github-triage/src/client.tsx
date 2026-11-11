@@ -205,7 +205,7 @@ export function Dashboard({call}:{call:UiCall}){
       <section style={box} aria-label="模型状态">
         <strong>模型：{snapshot.model.available?'已配置':'尚不可研判'}</strong>
         <p>启用：{snapshot.model.enabled?'是':'否'} · provider：{snapshot.model.provider||'未填写'} · model：{snapshot.model.model||'未填写'}</p>
-        {!snapshot.model.available&&<p role="alert" style={{color:'var(--dsw-alias-error, #c33)'}}>{snapshot.model.warning} 请到 DSH 插件设置 → GitHub 仓库研判，分别填写 provider / model，并启用 modelEnabled。</p>}
+        {!snapshot.model.available&&<p role="alert" style={{color:'var(--dsw-alias-error, #c33)'}}>{snapshot.model.warning} 请到 DSH 插件设置 → GitHub 哨兵，分别填写 provider / model，并启用 modelEnabled。</p>}
         <button onClick={()=>void call<string>({action:'models'}).then(setModels).catch(e=>setError(message(e)))}>查看可复制的模型 ID</button>
         {models&&<pre style={{whiteSpace:'pre-wrap',userSelect:'text'}}>{models}</pre>}
       </section>
@@ -233,8 +233,8 @@ export function Dashboard({call}:{call:UiCall}){
 export function TriageButton({call,sessionId}:{call:UiCall;sessionId:string}){
   const [open,setOpen]=useState(false)
   useEffect(()=>setOpen(false),[sessionId])
-  return <><button title="配置仓库、业务与本地代码，查看 GitHub 研判" onClick={()=>setOpen(true)}>GitHub 仓库研判</button>
-    <Modal open={open} onClose={()=>setOpen(false)} title="GitHub 仓库研判" closeLabel="关闭研判面板">{open&&<Dashboard call={call}/>}</Modal>
+  return <><button title="打开 GitHub 哨兵，配置仓库、业务与本地代码" onClick={()=>setOpen(true)}>GitHub 哨兵</button>
+    <Modal open={open} onClose={()=>setOpen(false)} title="GitHub 哨兵" closeLabel="关闭 GitHub 哨兵面板">{open&&<Dashboard call={call}/>}</Modal>
   </>
 }
 export function apply(ctx:Context):void{

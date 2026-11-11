@@ -1,4 +1,31 @@
-# 开发状态 · dsh-github-triage 0.3.0
+# 开发状态 · GitHub 哨兵（dsh-github-triage）0.3.1
+
+日期：2026-11-11。本次基于 origin/main `8df6a00`，在 `feat/github-triage` 更新中文名称与版本。会话入口、弹窗、插件设置、命令描述、报告标题、README 和测试断言同步；包名、命令名和功能逻辑不变。系统提示改用中性的“只读 GitHub 仓库分析员”。
+
+## 0.3.1 验证与 README 自检
+
+`npm run typecheck` 通过。从包目录执行 `npm test` 在构建写入 lib 时遇 EPERM；从 worktree 根目录执行 `npm --prefix packages/dsh-github-triage test` 成功，内含 `npm run build`，lib 由构建重新生成，391/391 测试通过，0 失败、0 跳过。`npm --prefix packages/dsh-github-triage run verify-pack` 通过：0.3.1、42 文件白名单。未安装依赖，也未运行真实 UI smoke、安装到用户 DSH 或发布。
+
+旧名称检索仅命中 CHANGELOG 的 0.3.0 历史条目；旧更新记录未修改。`git diff --check` 通过。
+
+按 `C:\Users\Mayn\.dsh\skills\dsh-plugin-readme\SKILL.md` 权威版本逐项核对，保留既有收益、示例、三步上手与能力边界，仅同步本次名称和版本。
+
+- [x] 第一屏紧接标题的一句话说明了用户能得到什么，未先讲实现细节。
+- [x] 有 3–4 条各不重复的亮点，每条以具体用户收益表达。
+- [x] 与同类插件或现有做法的差异清楚，比较有依据且没有夸大。沿用集中查看与逐条翻 GitHub 的比较。
+- [x] 亮点后有示例输入与输出，或真实截图/演示；示意内容已标注。使用虚构仓库与条目演示。
+- [x] 图片、链接和锚点有效，没有失效素材或未替换的占位符。无图片；本地链接存在，外部链接沿用既有正式仓库及固定官方版本地址。
+- [x] 快速上手恰好三步，明确先完全退出桌面 DSH（含托盘）再安装，随后重开使用。
+- [x] Git 地址严格采用 `github:hzopc1031/dsh-plugins#main&path:/packages/<pkg>` 格式，已换成真实目录名，整段地址加引号。
+- [x] 首次使用入口、必填配置、最小操作及可见结果足够具体，profile 如有要求已核实。desktop、顶部“GitHub 哨兵”、provider/model/modelEnabled 和首次分析步骤明确。
+- [x] 术语先用大白话解释，命令和配置键准确，没有空泛宣传语。
+- [x] 版本、详细限制、实现机制和测试说明集中在最后；必要操作提醒在步骤旁可见。
+- [x] 开头没有测试数、typecheck、未实测、commit hash 或验收日志。
+- [x] 所有能力及兼容性承诺都有依据，安装、运行和界面验证的结论没有混淆。未增加兼容性承诺，保留真实界面未验证说明。
+- [x] 名称、描述、入口与插件实际情况一致，示例和素材没有凭据或私人信息。
+- [x] 只改授权文档，未因写作而执行安装、发布或未授权的 Git 写操作。本任务另明确授权源码、测试、版本与构建产物更新。
+
+## 以下为 0.3.0 开发与验证记录（入口名称已同步）
 
 日期：2026-11-11。仅在指定 worktree（feat/github-triage，任务基线 origin/main 0703303）改动。没有 git add/commit/push、npm 发布、安装到用户 DSH、修改 D:\AIInfra\DSHarness、访问 _private / _tools 或 GitHub 写操作。下方 0.2.0 记录为历史基线，不代表本次验证结果。
 
@@ -9,7 +36,7 @@
 - [ui-slots/src/index.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-slots/src/index.ts)：SlotCore、SlotMap、kind/scope、register 的 children 声明及释放；不能自行取个 slot 名称就假定宿主有出口。
 - [ui-renderer/src/client/registry.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-renderer/src/client/registry.ts) 与 [client/index.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-renderer/src/client/index.ts)：SlotRegistry、slots.inject、register、installScope 与真实 React 渲染。root 是 single，不应覆盖；整应用叠层应向 shell.overlay 贡献（[ui-layout 声明](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-layout/src/client/index.ts)），不是抢 root。
 - [ui-sidebar/src/client/index.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-sidebar/src/client/index.ts) 与 [contract/slots.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-sidebar/src/client/contract/slots.ts)：真实侧栏扩展有 sidebar.panellist / sidebar.panellist.actions / sidebar.footer.action（list/root）。sidebar.settings 是 single，替换它会影响原设置入口。panellist id 对应 main 面板，需要配套布局与导航注册。
-- [ui-conversation/src/client/apply.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-conversation/src/client/apply.ts) 与 [contract/slots.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-conversation/src/client/contract/slots.ts)：真实 **conversation.session.header.actions（list/session）**、header.utilities（list/session）、header.views.actions（list/root）、conversation.view、conversation.input.left/right/dock/overlay。当前采用 actions，在已打开会话顶部显示「GitHub 仓库研判」按钮。它有会话 ID，可直接调用现成的会话命令 remote；本仓库 draft-rescue 已用相同入口。
+- [ui-conversation/src/client/apply.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-conversation/src/client/apply.ts) 与 [contract/slots.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-conversation/src/client/contract/slots.ts)：真实 **conversation.session.header.actions（list/session）**、header.utilities（list/session）、header.views.actions（list/root）、conversation.view、conversation.input.left/right/dock/overlay。当前采用 actions，在已打开会话顶部显示「GitHub 哨兵」按钮。它有会话 ID，可直接调用现成的会话命令 remote；本仓库 draft-rescue 已用相同入口。
 - [ui-session/src/client/index.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-session/src/client/index.ts)：会话域标准 props/Hook、session scope 适配，不是任意业务远程方法。
 - [ui-settings/src/client/contract/slots.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-settings/src/client/contract/slots.ts)：有 settings.section、settings.plugins.tab、settings.action、settings.general.item；可扩展设置，但本插件需要当前会话的 remote commands，选择顶部面板更直接，模型配置继续用原插件设置的 provider/model/modelEnabled。
 - [ui-primitives/src/Modal.tsx](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-primitives/src/Modal.tsx)：真实共享 Modal，open/onClose/title/closeLabel；portal 到 document.body，自带关闭、Escape 和焦点层。使用宿主共享包，不复制实现、不打包私有 React。
@@ -87,7 +114,7 @@ node scripts/ui-smoke.mjs --dsh "$env:LOCALAPPDATA\Programs\DeepSeek Harness\res
 - [x] 无空图片或占位符；相对 README/STATUS/LICENSE/NOTICE 路径存在；官方链接固定 rc.5。
 - [x] 快速上手恰好三步：完全退出桌面/托盘、使用桌面自带 CLI 安装、重开配置并得到首份结果。
 - [x] 安装命令准确使用桌面 runtime 的 dsh.cmd、desktop profile、加引号的 Git main 子目录地址。
-- [x] 明确已打开会话顶部「GitHub 仓库研判」、provider/model/modelEnabled、添加与首次分析、可见结果。
+- [x] 明确已打开会话顶部「GitHub 哨兵」、provider/model/modelEnabled、添加与首次分析、可见结果。
 - [x] 用大白话解释问题与代码改动、三档和本地适用性；命令、字段准确。
 - [x] 版本、边界、机制、验证集中在补充说明；模型外发、费用、定时、导出不覆盖放在操作旁。
 - [x] 开头无测试数/typecheck/commit/验收日志。

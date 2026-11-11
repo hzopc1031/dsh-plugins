@@ -1,0 +1,50 @@
+[
+  {
+    "file": "kafka.html",
+    "url": "https://kafka.apache.org/community/cve-list/",
+    "originalFile": "kafka.apache.org_community_cve-list_",
+    "originalFetchTime": "2026-11-11T12:57:34.106+08:00",
+    "timeBasis": "Original research artifact mtime (capture completion); HTTP request start time was not recorded.",
+    "sha256": "79a474b7ac3ba4963fea1e7bf1d34f903f0565cc02f8d7f9ee6aad4ee416a932"
+  },
+  {
+    "file": "hadoop.html",
+    "url": "https://hadoop.apache.org/cve_list.html",
+    "originalFile": "hadoop.apache.org_cve_list.html",
+    "originalFetchTime": "2026-11-11T12:57:34.246+08:00",
+    "timeBasis": "Original research artifact mtime (capture completion); HTTP request start time was not recorded.",
+    "sha256": "74770935a9f33b9367ddf9cda2b26817001a8db7c066ce72ee08dece1b22875e"
+  },
+  {
+    "file": "flink-pointer.html",
+    "url": "https://flink.apache.org/what-is-flink/security/",
+    "originalFile": "flink.apache.org_what-is-flink_security_",
+    "originalFetchTime": "2026-11-11T12:59:43.530+08:00",
+    "timeBasis": "Original research artifact mtime (capture completion); HTTP request start time was not recorded.",
+    "sha256": "687766bb2b56e028a2adcf8fe7e54593ec1f751c24ee42e36c47bcbd394bc01b"
+  },
+  {
+    "file": "flink.html",
+    "url": "https://security.apache.org/projects/flink/",
+    "originalFile": "security.apache.org_projects_flink_",
+    "originalFetchTime": "2026-11-11T13:00:38.838+08:00",
+    "timeBasis": "Original research artifact mtime (capture completion); HTTP request start time was not recorded.",
+    "sha256": "1ed68dcca1091c43713e4c5743fdc203386428cb6ea120c7c946cdbd59728c7b"
+  },
+  {
+    "file": "kafka-suppressions.xml",
+    "url": "https://raw.githubusercontent.com/apache/kafka/trunk/gradle/resources/dependencycheck-suppressions.xml",
+    "originalFile": "raw.githubusercontent.com_apache_kafka_trunk_gradle_resources_dependencycheck-suppressions.xml",
+    "originalFetchTime": "2026-11-11T13:00:34.294+08:00",
+    "timeBasis": "Original research artifact mtime (capture completion); HTTP request start time was not recorded.",
+    "sha256": "a45115d71fd70772d03edb7296fc7fad3e360de9f8f045a97bef370ad9042b5a"
+  },
+  {
+    "file": "report-dependency.html",
+    "url": "https://security.apache.org/report-dependency/",
+    "originalFile": "security.apache.org_report-dependency_",
+    "originalFetchTime": "2026-11-11T13:00:33.550+08:00",
+    "timeBasis": "Original research artifact mtime (capture completion); HTTP request start time was not recorded.",
+    "sha256": "f44f94e91b57dc62805787164d0fef4a2c7c7c67874771c0494bf17d51c8d1dc"
+  }
+]

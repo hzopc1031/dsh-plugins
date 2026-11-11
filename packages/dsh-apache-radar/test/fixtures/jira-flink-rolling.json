@@ -1,0 +1,2011 @@
+{
+  "startAt": 0,
+  "maxResults": 100,
+  "total": 300,
+  "issues": [
+    {
+      "key": "FLINK-40804",
+      "fields": {
+        "summary": "UnalignedCheckpointRescaleWithMixedExchangesITCase.testRescaleFromUnalignedCheckpoint fails with \"Exceeded checkpoint tolerable failure threshold\"",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-09-25T10:04:44.000+0000",
+        "updated": "2026-11-11T04:08:15.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41426",
+      "fields": {
+        "summary": "Python Table API thread mode fails to convert null ROW fields",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-11T04:04:56.000+0000",
+        "updated": "2026-11-11T04:04:56.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41376",
+      "fields": {
+        "summary": "Connectors/Elasticsearch: Upgrade Testcontainers so ITCases run on ubuntu-26.04 runners",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "elasticsearch-4.1.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-11-07T14:02:24.000+0000",
+        "updated": "2026-11-11T03:52:52.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-40185",
+      "fields": {
+        "summary": "Introduce DataFrame API in PyFlink",
+        "issuetype": {
+          "name": "New Feature"
+        },
+        "fixVersions": [
+          {
+            "name": "2.4.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-07-20T01:46:43.000+0000",
+        "updated": "2026-11-11T03:39:38.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-34985",
+      "fields": {
+        "summary": "It doesn't support to access fields by name for map function in thread mode",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "2.2.2"
+          },
+          {
+            "name": "1.20.6"
+          },
+          {
+            "name": "2.3.1"
+          },
+          {
+            "name": "2.4.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2024-04-02T02:12:52.000+0000",
+        "updated": "2026-11-11T03:38:20.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-40883",
+      "fields": {
+        "summary": "Accumulator corruption in NonTimeRowsUnboundedPrecedingFunction",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "2.2.2"
+          },
+          {
+            "name": "2.3.1"
+          },
+          {
+            "name": "2.4.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-10-02T04:47:34.000+0000",
+        "updated": "2026-11-11T03:30:06.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41066",
+      "fields": {
+        "summary": "MultiJoin produces wrong results when an upsert input replaces a record without UPDATE_BEFORE",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [
+          {
+            "name": "2.3.1"
+          }
+        ],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-21T14:53:31.000+0000",
+        "updated": "2026-11-11T03:30:05.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-40327",
+      "fields": {
+        "summary": "ForSt async multiGet leaks a native ReadOptions per read batch",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "2.2.2"
+          },
+          {
+            "name": "2.3.1"
+          },
+          {
+            "name": "2.4.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-08-04T12:14:58.000+0000",
+        "updated": "2026-11-11T03:20:43.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-40931",
+      "fields": {
+        "summary": "ForSt restore with object-store in restore mode fails when scaling in",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "2.2.2"
+          },
+          {
+            "name": "2.3.1"
+          },
+          {
+            "name": "2.4.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-10-07T05:50:13.000+0000",
+        "updated": "2026-11-11T03:05:37.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41425",
+      "fields": {
+        "summary": "Drop Azure cron build from nightly",
+        "issuetype": {
+          "name": "Technical Debt"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-11T00:00:38.000+0000",
+        "updated": "2026-11-11T00:07:30.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41294",
+      "fields": {
+        "summary": "PyFlink batch: pandas UDAF over a RANGE frame with CURRENT ROW or n PRECEDING / FOLLOWING reads the ORDER BY key as TIMESTAMP(3) and gets wrong frames for INT and DECIMAL keys",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-02T01:08:30.000+0000",
+        "updated": "2026-11-10T22:44:18.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-39624",
+      "fields": {
+        "summary": "`TtlListState.asyncGet()` returns a non-null wrapper around a null inner iterator, causing NPE in `onNext`/`isEmpty` when the state is empty",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "2.4.1"
+          },
+          {
+            "name": "2.5.0"
+          },
+          {
+            "name": "2.3.2"
+          }
+        ],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-05-07T18:36:23.000+0000",
+        "updated": "2026-11-10T20:38:36.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41413",
+      "fields": {
+        "summary": "Connectors / MongoDB: Bump MongoDB 8.0 to 8.0.37, mongo-driver to 5.14.0, and add MongoDB 9.0",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-10T09:53:58.000+0000",
+        "updated": "2026-11-10T20:28:44.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41424",
+      "fields": {
+        "summary": "ForSt: support dropping keyed state for removed state descriptors",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-10T18:00:39.000+0000",
+        "updated": "2026-11-10T18:02:34.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-37686",
+      "fields": {
+        "summary": "ForSt consecutive failed checkpoint due to check deleted file status when enableFileDeletions",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "2.4.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2025-04-16T06:59:13.000+0000",
+        "updated": "2026-11-10T18:02:34.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-10121",
+      "fields": {
+        "summary": "Introduce methods to remove registered operator states",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2018-08-10T11:25:22.000+0000",
+        "updated": "2026-11-10T18:02:34.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-32658",
+      "fields": {
+        "summary": "State should not be silently removed when ignore-unclaimed-state is false",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2023-07-24T11:10:08.000+0000",
+        "updated": "2026-11-10T18:02:34.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41423",
+      "fields": {
+        "summary": "SinkUpsertMaterializer compares upsert keys with SQL equality instead of bytes and drops rows",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-10T17:23:40.000+0000",
+        "updated": "2026-11-10T17:51:54.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-38753",
+      "fields": {
+        "summary": "Enrich more upsert keys by equiv expressions",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2025-12-01T11:16:48.000+0000",
+        "updated": "2026-11-10T17:24:10.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-40927",
+      "fields": {
+        "summary": " Inconsistent NaN semantics for FLOAT/DOUBLE across planner and runtime",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-07T01:33:12.000+0000",
+        "updated": "2026-11-10T17:24:10.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41328",
+      "fields": {
+        "summary": "GROUP BY, DISTINCT, UNION and a join on a MAP column split one value into several in streaming mode",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-04T06:58:51.000+0000",
+        "updated": "2026-11-10T17:24:10.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41422",
+      "fields": {
+        "summary": "Remove the built-in DEDUPLICATE_KEEP_FIRST process table function",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-10T15:46:57.000+0000",
+        "updated": "2026-11-10T16:16:30.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-40963",
+      "fields": {
+        "summary": "Add support for DATE and TIME conversion to JSON",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [
+          {
+            "name": "2.5.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-10-08T18:34:00.000+0000",
+        "updated": "2026-11-10T15:51:02.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41055",
+      "fields": {
+        "summary": "StreamingMultiJoinOperator stores rows with a NULL join key in state, even though they can never match",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-20T18:28:33.000+0000",
+        "updated": "2026-11-10T15:24:21.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41315",
+      "fields": {
+        "summary": "Add the page structure for built-in function docs",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [
+          {
+            "name": "2.5.0"
+          }
+        ],
+        "status": {
+          "name": "Closed"
+        },
+        "created": "2026-11-03T08:57:21.000+0000",
+        "updated": "2026-11-10T15:22:37.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-40874",
+      "fields": {
+        "summary": "Mini-batch streaming join evaluates non-equi conditions on key-only deletes of folded pairs",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-01T13:03:35.000+0000",
+        "updated": "2026-11-10T15:21:55.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41280",
+      "fields": {
+        "summary": "CAST of a TIMESTAMP before 1970 to DATE, TIME or a lower precision returns a wrong value",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "2.2.2"
+          },
+          {
+            "name": "1.20.6"
+          },
+          {
+            "name": "2.3.1"
+          },
+          {
+            "name": "2.5.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-10-30T12:00:47.000+0000",
+        "updated": "2026-11-10T15:07:53.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41421",
+      "fields": {
+        "summary": "StateCatalog database names can resolve outside the configured snapshot directories",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "2.4.0"
+          }
+        ],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-10T14:54:31.000+0000",
+        "updated": "2026-11-10T14:54:31.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41273",
+      "fields": {
+        "summary": "Allow UNION, INTERSECT and EXCEPT on unbounded tables in the Table API",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [
+          {
+            "name": "2.5.0"
+          }
+        ],
+        "status": {
+          "name": "Closed"
+        },
+        "created": "2026-10-29T16:09:17.000+0000",
+        "updated": "2026-11-10T14:43:29.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41414",
+      "fields": {
+        "summary": "Add AGENTS.md guidance for adding a built-in function",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [
+          {
+            "name": "2.5.0"
+          }
+        ],
+        "status": {
+          "name": "Closed"
+        },
+        "created": "2026-11-10T11:14:33.000+0000",
+        "updated": "2026-11-10T14:26:35.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41309",
+      "fields": {
+        "summary": "Expose the JobManager deployment status and the resource age as kubectl printer columns",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [
+          {
+            "name": "kubernetes-operator-1.17.0"
+          }
+        ],
+        "status": {
+          "name": "Closed"
+        },
+        "created": "2026-11-02T19:14:18.000+0000",
+        "updated": "2026-11-10T14:02:44.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-36694",
+      "fields": {
+        "summary": "Update Hadoop to 3.4.3 for the Azure, OSS and GCS filesystems",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [
+          {
+            "name": "2.5.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2024-11-12T13:13:09.000+0000",
+        "updated": "2026-11-10T14:02:40.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41378",
+      "fields": {
+        "summary": "Raise the minimum supported Hadoop version to 3.4.3",
+        "issuetype": {
+          "name": "Technical Debt"
+        },
+        "fixVersions": [
+          {
+            "name": "2.5.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-11-08T15:36:47.000+0000",
+        "updated": "2026-11-10T14:00:54.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-40129",
+      "fields": {
+        "summary": "Implement Topic integrity checks in Kafka Connector - Dynamic source",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [
+          {
+            "name": "kafka-5.1.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-07-12T17:09:55.000+0000",
+        "updated": "2026-11-10T13:37:57.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41417",
+      "fields": {
+        "summary": "TtlMapState async iterators always report isEmpty() as false",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-10T13:08:39.000+0000",
+        "updated": "2026-11-10T13:12:43.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41416",
+      "fields": {
+        "summary": "StateFutureUtils#toIterable throws ClassCastException for list and map state with TTL",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-10T13:08:06.000+0000",
+        "updated": "2026-11-10T13:12:32.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-33165",
+      "fields": {
+        "summary": "Flink UI stack trace popup continually displayed when a job is deleted",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "2.5.0"
+          }
+        ],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2023-09-27T13:43:18.000+0000",
+        "updated": "2026-11-10T13:10:53.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41419",
+      "fields": {
+        "summary": "FLIP-622: Add built-in DEDUPLICATE, DEDUPLICATE_WINDOW PTF",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-10T13:09:59.000+0000",
+        "updated": "2026-11-10T13:10:52.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41282",
+      "fields": {
+        "summary": "Multi-join upsert key inference reports keys that are not unique",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "2.5.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-10-30T14:46:16.000+0000",
+        "updated": "2026-11-10T13:10:50.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41420",
+      "fields": {
+        "summary": "\"Job failed during initialization of JobManager\" alert can no longer appear",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-10T13:10:11.000+0000",
+        "updated": "2026-11-10T13:10:28.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-39490",
+      "fields": {
+        "summary": "[web dashboard] Improve feedback when cluster is unreachable",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [
+          {
+            "name": "2.4.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-04-19T21:23:31.000+0000",
+        "updated": "2026-11-10T13:10:21.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41418",
+      "fields": {
+        "summary": "TaskManager page keeps showing \"no longer registered\" after switching to another TaskManager",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-10T13:09:20.000+0000",
+        "updated": "2026-11-10T13:09:39.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-31931",
+      "fields": {
+        "summary": "Exception history page should not link to a non-existent TM log page.",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "2.4.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2023-04-25T04:08:07.000+0000",
+        "updated": "2026-11-10T13:09:29.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41079",
+      "fields": {
+        "summary": "Web dashboard: Update Angular to v22 and ng-zorro-antd to v22",
+        "issuetype": {
+          "name": "Technical Debt"
+        },
+        "fixVersions": [
+          {
+            "name": "2.5.0"
+          }
+        ],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-21T19:28:25.000+0000",
+        "updated": "2026-11-10T13:06:00.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-30644",
+      "fields": {
+        "summary": "ChangelogCompatibilityITCase.testRestore fails due to CheckpointCoordinator being shutdown",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "1.20.6"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2023-01-12T08:55:07.000+0000",
+        "updated": "2026-11-10T13:05:33.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41415",
+      "fields": {
+        "summary": "CommonTestUtils.getLatestCompletedCheckpointPath can return a subsumed checkpoint",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-10T13:05:11.000+0000",
+        "updated": "2026-11-10T13:05:33.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-39884",
+      "fields": {
+        "summary": "Free up additional disk space for CI runs",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [
+          {
+            "name": "2.3.0"
+          },
+          {
+            "name": "1.20.6"
+          },
+          {
+            "name": "2.4.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-06-08T08:06:22.000+0000",
+        "updated": "2026-11-10T12:44:09.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-40724",
+      "fields": {
+        "summary": "Add maven wrapper to connectors",
+        "issuetype": {
+          "name": "Technical Debt"
+        },
+        "fixVersions": [
+          {
+            "name": "opensearch-2.1.0"
+          },
+          {
+            "name": "jdbc-5.0.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-09-20T19:59:22.000+0000",
+        "updated": "2026-11-10T12:42:23.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41216",
+      "fields": {
+        "summary": "Retracting ROW_NUMBER Top-N emits +U before -U for rows moving up, so operators keyed by the input upsert key lose rows",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-26T15:05:57.000+0000",
+        "updated": "2026-11-10T12:37:53.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-40663",
+      "fields": {
+        "summary": "WindowDistinctAggregateStressITCase.testCumulateWindowRollupUnderBackpressure times out after 600s ",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "1.20.7"
+          }
+        ],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-09-15T06:39:46.000+0000",
+        "updated": "2026-11-10T12:37:53.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-40648",
+      "fields": {
+        "summary": "PrometheusReporter drops all metrics of a process when two metric group variables sanitise to the same label name",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "2.4.1"
+          },
+          {
+            "name": "2.5.0"
+          },
+          {
+            "name": "1.20.7"
+          },
+          {
+            "name": "2.2.3"
+          }
+        ],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-09-14T07:17:22.000+0000",
+        "updated": "2026-11-10T12:37:53.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-39912",
+      "fields": {
+        "summary": "Change the annotation from 'RepeatTest' to 'Test' in ForwardEdgesAdapterTest to reduce the time cost",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "2.3.0"
+          },
+          {
+            "name": "2.2.2"
+          },
+          {
+            "name": "1.20.6"
+          },
+          {
+            "name": "2.4.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-06-11T11:01:12.000+0000",
+        "updated": "2026-11-10T12:37:00.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-33123",
+      "fields": {
+        "summary": "Wrong dynamic replacement of partitioner from FORWARD to REBALANCE for autoscaler and adaptive scheduler",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "2.3.0"
+          },
+          {
+            "name": "2.2.2"
+          },
+          {
+            "name": "1.20.6"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2023-09-20T07:06:57.000+0000",
+        "updated": "2026-11-10T12:36:59.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-39929",
+      "fields": {
+        "summary": "Fix the flaky test case ExecutionTimeBasedSlowTaskDetectorTest due to unexepected ComponentMainThreadExecutor setting.",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "2.2.2"
+          },
+          {
+            "name": "2.3.1"
+          },
+          {
+            "name": "2.4.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-06-14T01:58:42.000+0000",
+        "updated": "2026-11-10T12:36:57.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-39921",
+      "fields": {
+        "summary": "Fix the flaky test case ExecutionVertexCancelTest.testSendCancelAndReceiveFail",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "2.2.2"
+          },
+          {
+            "name": "2.3.1"
+          },
+          {
+            "name": "2.4.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-06-12T12:13:28.000+0000",
+        "updated": "2026-11-10T12:36:56.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-39914",
+      "fields": {
+        "summary": "Fix flaky TaskDeploymentDescriptorFactoryTest#testHybridVertexFinish caused by async TDD creation",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "2.3.0"
+          },
+          {
+            "name": "2.2.2"
+          },
+          {
+            "name": "2.4.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-06-11T16:59:21.000+0000",
+        "updated": "2026-11-10T12:36:56.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-39922",
+      "fields": {
+        "summary": "Fix the flaky test case AbstractAsyncRunnableStreamOperatorTest#testCheckpointDrain",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "2.3.0"
+          },
+          {
+            "name": "2.2.2"
+          },
+          {
+            "name": "2.4.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-06-12T12:18:42.000+0000",
+        "updated": "2026-11-10T12:36:55.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-40548",
+      "fields": {
+        "summary": "Bump ubuntu to 24.04 in flink-ci-docker",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "2.2.2"
+          },
+          {
+            "name": "1.20.6"
+          },
+          {
+            "name": "2.3.1"
+          },
+          {
+            "name": "2.4.0"
+          },
+          {
+            "name": "2.1.4"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-09-03T15:30:30.000+0000",
+        "updated": "2026-11-10T12:36:54.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-40310",
+      "fields": {
+        "summary": "Rename CsvBulkWriterIT to CsvBulkWriterTest as it is not executed in CI",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "2.2.2"
+          },
+          {
+            "name": "2.3.1"
+          },
+          {
+            "name": "2.4.0"
+          },
+          {
+            "name": "2.1.4"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-08-03T10:25:57.000+0000",
+        "updated": "2026-11-10T12:36:53.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-39595",
+      "fields": {
+        "summary": "Use GHA cache per branch",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [
+          {
+            "name": "2.3.0"
+          },
+          {
+            "name": "1.20.5"
+          },
+          {
+            "name": "2.0.3"
+          },
+          {
+            "name": "2.1.3"
+          },
+          {
+            "name": "2.2.2"
+          },
+          {
+            "name": "2.4.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-05-03T18:28:27.000+0000",
+        "updated": "2026-11-10T12:36:52.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-39818",
+      "fields": {
+        "summary": "Filter org.eclipse.parsson:parsson false positive for Elasticsearch connector",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [
+          {
+            "name": "2.2.2"
+          },
+          {
+            "name": "2.3.1"
+          },
+          {
+            "name": "2.4.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-06-02T07:16:16.000+0000",
+        "updated": "2026-11-10T12:36:50.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-39146",
+      "fields": {
+        "summary": "Update log4j to 2.25.3",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [
+          {
+            "name": "2.3.0"
+          },
+          {
+            "name": "2.2.2"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-02-24T11:31:12.000+0000",
+        "updated": "2026-11-10T12:36:49.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-40118",
+      "fields": {
+        "summary": "Web dashboard: SubTask TimeLine shows \"N - undefined\" instead of the task endpoint",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "2.2.2"
+          },
+          {
+            "name": "2.3.1"
+          },
+          {
+            "name": "2.4.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-07-10T15:21:15.000+0000",
+        "updated": "2026-11-10T12:36:47.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-40451",
+      "fields": {
+        "summary": "E2E test timeout keeps CI running until the timeout ends, even after the test passes",
+        "issuetype": {
+          "name": "Technical Debt"
+        },
+        "fixVersions": [
+          {
+            "name": "2.2.2"
+          },
+          {
+            "name": "1.20.6"
+          },
+          {
+            "name": "2.3.1"
+          },
+          {
+            "name": "2.4.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-08-21T05:23:12.000+0000",
+        "updated": "2026-11-10T12:36:45.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-39136",
+      "fields": {
+        "summary": "GS file system fails to retry on certain 503's due to old GCS lib dependency",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "2.3.0"
+          },
+          {
+            "name": "1.20.5"
+          },
+          {
+            "name": "2.0.3"
+          },
+          {
+            "name": "2.1.3"
+          },
+          {
+            "name": "2.2.2"
+          }
+        ],
+        "status": {
+          "name": "Closed"
+        },
+        "created": "2026-02-22T20:12:38.000+0000",
+        "updated": "2026-11-10T12:33:46.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-39865",
+      "fields": {
+        "summary": "Nightly S3 artifact upload consistently fails: travis-ci artifacts uploader is unavailable",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "2.3.0"
+          },
+          {
+            "name": "1.20.5"
+          },
+          {
+            "name": "2.0.3"
+          },
+          {
+            "name": "2.2.2"
+          },
+          {
+            "name": "2.4.0"
+          },
+          {
+            "name": "2.1.4"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-06-05T11:18:38.000+0000",
+        "updated": "2026-11-10T12:33:45.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-39761",
+      "fields": {
+        "summary": "Missing 'Connection: close' header on '304 Not Modified' responses causes proxy connection pool poisoning",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "2.3.0"
+          },
+          {
+            "name": "1.20.5"
+          },
+          {
+            "name": "2.1.3"
+          },
+          {
+            "name": "2.2.2"
+          },
+          {
+            "name": "2.4.0"
+          }
+        ],
+        "status": {
+          "name": "Closed"
+        },
+        "created": "2026-05-26T07:49:42.000+0000",
+        "updated": "2026-11-10T12:33:45.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-40003",
+      "fields": {
+        "summary": "IOMetrics not visible to ExecutionStateUpdateListeners during FINISHED/FAILED transitions",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "2.2.2"
+          },
+          {
+            "name": "1.20.6"
+          },
+          {
+            "name": "2.3.1"
+          },
+          {
+            "name": "2.4.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-06-26T18:07:01.000+0000",
+        "updated": "2026-11-10T12:33:45.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-39720",
+      "fields": {
+        "summary": "SubQueryDecorrelator produces incorrect plans for correlated EXISTS with HAVING on aggregate outputs",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "2.3.0"
+          },
+          {
+            "name": "2.2.2"
+          },
+          {
+            "name": "1.20.6"
+          },
+          {
+            "name": "2.4.0"
+          }
+        ],
+        "status": {
+          "name": "Closed"
+        },
+        "created": "2026-05-21T06:25:48.000+0000",
+        "updated": "2026-11-10T12:33:45.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-37663",
+      "fields": {
+        "summary": "Thread Synchronization Issue in FutureCompletingBlockingQueue <> Connector Split Fetching",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "2.0.3"
+          },
+          {
+            "name": "2.2.2"
+          },
+          {
+            "name": "1.20.6"
+          },
+          {
+            "name": "2.3.1"
+          },
+          {
+            "name": "2.4.0"
+          },
+          {
+            "name": "2.1.4"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2025-04-11T15:48:15.000+0000",
+        "updated": "2026-11-10T12:33:45.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-39672",
+      "fields": {
+        "summary": "Update doc about Java Records",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [
+          {
+            "name": "2.1.2"
+          },
+          {
+            "name": "2.0.2"
+          },
+          {
+            "name": "2.3.0"
+          },
+          {
+            "name": "1.20.5"
+          },
+          {
+            "name": "2.2.2"
+          },
+          {
+            "name": "2.4.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-05-12T23:09:03.000+0000",
+        "updated": "2026-11-10T12:33:45.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41212",
+      "fields": {
+        "summary": "Reject FULL refresh mode from a plain TableEnvironment",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-26T14:54:30.000+0000",
+        "updated": "2026-11-10T10:52:24.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41390",
+      "fields": {
+        "summary": "Cancel materialized table refresh jobs the catalog could not record",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "In Progress"
+        },
+        "created": "2026-11-09T09:48:33.000+0000",
+        "updated": "2026-11-10T10:49:57.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-40789",
+      "fields": {
+        "summary": "RescaleTimelineITCase.testRecordRescaleForNewAvailableResource records three rescales instead of two",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-09-24T10:15:48.000+0000",
+        "updated": "2026-11-10T10:28:43.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-40717",
+      "fields": {
+        "summary": "Create AGENTS.md for Flink MongoDB connector and update the PR description to track AI usage",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [
+          {
+            "name": "mongodb-3.0.0"
+          }
+        ],
+        "status": {
+          "name": "Closed"
+        },
+        "created": "2026-09-19T11:19:58.000+0000",
+        "updated": "2026-11-10T09:46:34.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-40749",
+      "fields": {
+        "summary": "Add or update PR templates with AI disclosure across Flink repositories",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-09-22T12:45:37.000+0000",
+        "updated": "2026-11-10T09:45:40.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41103",
+      "fields": {
+        "summary": "ValueState.update(None) attempts to serialize None instead of clearing the state",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "2.2.2"
+          },
+          {
+            "name": "1.20.6"
+          },
+          {
+            "name": "2.3.1"
+          },
+          {
+            "name": "2.4.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-10-23T07:59:07.000+0000",
+        "updated": "2026-11-10T07:21:49.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41108",
+      "fields": {
+        "summary": "PyFlink namespace merges leave stale cached values for TTL-enabled ListState",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "2.2.2"
+          },
+          {
+            "name": "1.20.6"
+          },
+          {
+            "name": "2.3.1"
+          },
+          {
+            "name": "2.4.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-10-23T09:49:49.000+0000",
+        "updated": "2026-11-10T07:21:35.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-40887",
+      "fields": {
+        "summary": "TaskFailureITCase.testJobWithoutObjectReuse fails with \"Expecting Optional to contain a value but it was empty\"",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-02T08:48:29.000+0000",
+        "updated": "2026-11-10T05:38:34.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-40918",
+      "fields": {
+        "summary": "SIGTERM during application-mode HA recovery permanently fails the suspended jobs of a PyFlink application",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-05T19:48:07.000+0000",
+        "updated": "2026-11-09T20:26:40.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41264",
+      "fields": {
+        "summary": "FileSinkAvroWritersTests.test_avro_basic_write fails with AssertionError: False != True",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-29T08:00:14.000+0000",
+        "updated": "2026-11-09T20:07:26.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41307",
+      "fields": {
+        "summary": "PyFlink TableResult.collect() changes TIMESTAMP values in a DST gap or before 1902 (converted through the JVM and Python local time zones)",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-02T18:35:56.000+0000",
+        "updated": "2026-11-09T20:07:12.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41365",
+      "fields": {
+        "summary": "Remove queue based polling from DDB Connector",
+        "issuetype": {
+          "name": "New Feature"
+        },
+        "fixVersions": [
+          {
+            "name": "aws-connector-6.1.0"
+          }
+        ],
+        "status": {
+          "name": "Closed"
+        },
+        "created": "2026-11-05T21:11:17.000+0000",
+        "updated": "2026-11-09T18:51:46.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-40776",
+      "fields": {
+        "summary": "PARSE_URL compiles the query-parameter pattern on every row",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [
+          {
+            "name": "2.5.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-09-22T21:25:42.000+0000",
+        "updated": "2026-11-09T18:24:37.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41380",
+      "fields": {
+        "summary": "Make generated code in case of CASE ... WHEN friendlier to code splitter",
+        "issuetype": {
+          "name": "Technical Debt"
+        },
+        "fixVersions": [
+          {
+            "name": "2.5.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-11-08T19:34:40.000+0000",
+        "updated": "2026-11-09T18:19:13.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-24493",
+      "fields": {
+        "summary": "Introduce DemultiplexingSink to Support Dynamic Sink Routing",
+        "issuetype": {
+          "name": "New Feature"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Closed"
+        },
+        "created": "2021-10-09T19:25:37.000+0000",
+        "updated": "2026-11-09T18:08:17.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41363",
+      "fields": {
+        "summary": "Support IF NOT EXISTS for ALTER TABLE ADD COLUMN",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-05T13:34:51.000+0000",
+        "updated": "2026-11-09T18:03:07.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41412",
+      "fields": {
+        "summary": "Support IF EXISTS for ALTER VIEW, DATABASE, CATALOG and MATERIALIZED TABLE",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-09T18:02:35.000+0000",
+        "updated": "2026-11-09T18:03:07.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41333",
+      "fields": {
+        "summary": "MIN, MAX and streaming COUNT(DISTINCT) reject the UUID type",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [
+          {
+            "name": "2.4.0"
+          }
+        ],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-04T10:39:47.000+0000",
+        "updated": "2026-11-09T17:05:13.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41411",
+      "fields": {
+        "summary": "GROUP BY, DISTINCT and COUNT(DISTINCT) on a BITMAP column are rejected in batch but work in streaming",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-09T16:53:41.000+0000",
+        "updated": "2026-11-09T16:54:51.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41214",
+      "fields": {
+        "summary": "Declare a materialized table with Table#materializeInto",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "In Progress"
+        },
+        "created": "2026-10-26T14:59:28.000+0000",
+        "updated": "2026-11-09T16:37:31.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41410",
+      "fields": {
+        "summary": "Push nested field accesses below joins to reduce join shuffle and state size",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-09T15:42:55.000+0000",
+        "updated": "2026-11-09T15:42:55.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-39804",
+      "fields": {
+        "summary": "Nested projection fields not pushed down to source",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-05-29T21:20:40.000+0000",
+        "updated": "2026-11-09T15:38:02.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41408",
+      "fields": {
+        "summary": "Watermark on a computed column inherited through CREATE TABLE LIKE fails validation",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-09T15:29:44.000+0000",
+        "updated": "2026-11-09T15:30:22.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41409",
+      "fields": {
+        "summary": "A view that selects CURRENT_DATE or LOCALTIME without an alias cannot be queried",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-09T15:30:15.000+0000",
+        "updated": "2026-11-09T15:30:15.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41383",
+      "fields": {
+        "summary": " REGEXP, REGEXP_EXTRACT and REGEXP_REPLACE look up a constant pattern for every row",
+        "issuetype": {
+          "name": "Technical Debt"
+        },
+        "fixVersions": [
+          {
+            "name": "2.5.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-11-08T23:03:06.000+0000",
+        "updated": "2026-11-09T14:37:57.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41407",
+      "fields": {
+        "summary": "Fix code examples in the documentation that don't work on master",
+        "issuetype": {
+          "name": "Technical Debt"
+        },
+        "fixVersions": [
+          {
+            "name": "2.5.0"
+          }
+        ],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-09T14:10:32.000+0000",
+        "updated": "2026-11-09T14:36:23.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41381",
+      "fields": {
+        "summary": "Use indexed seq for generation the digest of a Calc",
+        "issuetype": {
+          "name": "Technical Debt"
+        },
+        "fixVersions": [
+          {
+            "name": "2.5.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-11-08T20:37:31.000+0000",
+        "updated": "2026-11-09T13:33:46.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41406",
+      "fields": {
+        "summary": "VARIANT mixed with another type in UNION ALL, CASE or VALUES is cast implicitly",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-09T13:15:33.000+0000",
+        "updated": "2026-11-09T13:18:45.000+0000"
+      }
+    },
+    {
+      "key": "FLINK-41375",
+      "fields": {
+        "summary": "JobManager crash loops are detected only in the back-off phase and reported without the termination reason",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "kubernetes-operator-1.17.0"
+          }
+        ],
+        "status": {
+          "name": "Closed"
+        },
+        "created": "2026-11-07T10:19:25.000+0000",
+        "updated": "2026-11-09T12:46:48.000+0000"
+      }
+    }
+  ]
+}

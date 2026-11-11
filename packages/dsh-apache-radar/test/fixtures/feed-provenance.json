@@ -1,0 +1,37 @@
+{
+  "description": "Historical recorded research responses, not live updates. Times are completed fetch times from round18/evidence/fetch-log.txt. This research set has no Hadoop/Flink JIRA search recordings; see jira-provenance.json for additional final-smoke recordings.",
+  "sources": [
+    {
+      "file": "kip-index.html",
+      "url": "https://cwiki.apache.org/confluence/display/KAFKA/Kafka+Improvement+Proposals",
+      "fetchedAt": "2026-11-11T10:51:04+08:00",
+      "originalSha256": "0e12daa85260b03e9314992bdf978ce8bca059d399ab0b2165327a2250006213",
+      "fixtureSha256": "11f0299769a7e314bf99737f861489b67aedc55b25e67d5199791dcd3f30ac9f",
+      "transformation": "Keep recorded proposal section headings and first two table columns (original title/link and release/status text); omit page chrome, tokens, scripts and JIRA/user columns. No titles, dates or statuses invented."
+    },
+    {
+      "file": "flip-index.html",
+      "url": "https://cwiki.apache.org/confluence/display/FLINK/Flink+Improvement+Proposals",
+      "fetchedAt": "2026-11-11T10:52:55+08:00",
+      "originalSha256": "199ea4d4512672a6dff066781df71bc9fdddc48826bf7eac4a164619e2a4c8df",
+      "fixtureSha256": "97ba01b7d4c1f3f7c65e6cb332389120e46e225c4a2357a6acaf821ae77835ab",
+      "transformation": "Keep recorded proposal section headings and first two table columns (original title/link and release/status text); omit page chrome, tokens, scripts and JIRA/user columns. No titles, dates or statuses invented."
+    },
+    {
+      "file": "kafka-downloads.html",
+      "url": "https://kafka.apache.org/community/downloads/",
+      "fetchedAt": "2026-11-11T10:51:53+08:00",
+      "originalSha256": "2f3706fff51ab010e350afc5829123d681ce6030ddc7f2963698d0d0323c92ad",
+      "fixtureSha256": "f7ca277a79d9d34fddf2d1e785e15236f8f55ff3387ba48e37b06ebf7a06c77c",
+      "transformation": "Keep recorded version headings and Release Notes anchors only; no changelog extraction or invented links."
+    },
+    {
+      "file": "jira-kafka-newfeature.json",
+      "url": "https://issues.apache.org/jira/rest/api/2/search?jql=project%3DKAFKA%20AND%20type%3D%22New%20Feature%22%20AND%20fixVersion%3D4.0.0&maxResults=5&fields=summary,issuetype,fixVersions,status,resolution",
+      "fetchedAt": "2026-11-11T10:50:50+08:00",
+      "originalSha256": "9279b48a71449d42fb6b72e570d7632cf48629b034b8338c56355c29de998965",
+      "fixtureSha256": "93a6f817404f9bf2175e1b3c6a23e171af20054c48c896a42c74ab06511d7490",
+      "transformation": "Keep recorded pagination, issue keys, summaries, types, fix-version names and status names. Omit unrelated API metadata; original search did not request created/updated dates. Historical version query, not a recorded rolling-window query."
+    }
+  ]
+}

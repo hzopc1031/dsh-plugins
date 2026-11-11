@@ -1,0 +1,781 @@
+{
+  "last_updated": "2026-10-01 19:17:46 +0000",
+  "retired_count": 96,
+  "retired": {
+    "abdera": {
+      "display_name": "Abdera",
+      "retired": "2017-02",
+      "retired_date": "2017-02-27",
+      "established": "2008-11",
+      "established_date": "2008-11-19",
+      "description": "Atom Publishing Protocol Implementation"
+    },
+    "ace": {
+      "display_name": "ACE",
+      "retired": "2017-12",
+      "retired_date": "2017-12-20",
+      "established": "2011-12",
+      "established_date": "2011-12-21",
+      "description": "Centralized life cycle management and deployment of OSGi based and related modular software artifacts for distribution"
+    },
+    "any23": {
+      "display_name": "Any23",
+      "retired": "2023-06",
+      "retired_date": "2023-06-21",
+      "established": "2012-08",
+      "established_date": "2012-08-28",
+      "description": "Anything to Triples"
+    },
+    "apex": {
+      "display_name": "Apex",
+      "retired": "2019-09",
+      "retired_date": "2019-09-18",
+      "established": "2016-04",
+      "established_date": "2016-04-20",
+      "description": "Enterprise-grade unified stream and batch processing engine"
+    },
+    "archiva": {
+      "display_name": "Archiva",
+      "retired": "2024-02",
+      "retired_date": "2024-02-21",
+      "established": "2008-03",
+      "established_date": "2008-03-19",
+      "description": "Build Artifact Repository Manager"
+    },
+    "aurora": {
+      "display_name": "Aurora",
+      "retired": "2020-02",
+      "retired_date": "2020-02-19",
+      "established": "2015-03",
+      "established_date": "2015-03-18",
+      "description": "Mesos framework for long-running services and cron jobs"
+    },
+    "avalon": {
+      "display_name": "Avalon",
+      "retired": "2004-11",
+      "retired_date": "2004-11-14",
+      "established": "2002-11",
+      "established_date": "2002-11-18",
+      "description": "Java software for component and container programming"
+    },
+    "bahir": {
+      "display_name": "Bahir",
+      "retired": "2024-01",
+      "retired_date": "2024-01-17",
+      "established": "2016-05",
+      "established_date": "2016-05-18",
+      "description": "Extensions to distributed analytic platforms such as Apache Spark"
+    },
+    "beehive": {
+      "display_name": "Beehive",
+      "retired": "2009-11",
+      "retired_date": "2009-11-18",
+      "established": "2005-07",
+      "established_date": "2005-07-28",
+      "description": "Simple object model on J2EE and Struts using JSR-175 annotations"
+    },
+    "bloodhound": {
+      "display_name": "Bloodhound",
+      "retired": "2024-07",
+      "retired_date": "2024-07-17",
+      "established": "2013-03",
+      "established_date": "2013-03-20",
+      "description": "Issue tracking, wiki and repository browser"
+    },
+    "buildr": {
+      "display_name": "Buildr",
+      "retired": "2022-07",
+      "retired_date": "2022-07-20",
+      "established": "2008-11",
+      "established_date": "2008-11-19",
+      "description": "Simple and intuitive build system for Java applications"
+    },
+    "chemistry": {
+      "display_name": "Chemistry",
+      "retired": "2022-02",
+      "retired_date": "2022-02-16",
+      "established": "2011-02",
+      "established_date": "2011-02-16",
+      "description": "CMIS (Content Managment Interoperability Services) Clients and Servers"
+    },
+    "chukwa": {
+      "display_name": "Chukwa",
+      "retired": "2020-05",
+      "retired_date": "2020-05-20",
+      "established": "2013-10",
+      "established_date": "2013-10-16",
+      "description": "Open source data collection system for monitoring large distributed systems."
+    },
+    "clerezza": {
+      "display_name": "Clerezza",
+      "retired": "2022-06",
+      "retired_date": "2022-06-15",
+      "established": "2013-02",
+      "established_date": "2013-02-20",
+      "description": "Semantically linked data for OSGi"
+    },
+    "click": {
+      "display_name": "Click",
+      "retired": "2014-05",
+      "retired_date": "2014-05-21",
+      "established": "2009-11",
+      "established_date": "2009-11-18",
+      "description": "JEE web application framework"
+    },
+    "climate": {
+      "display_name": "Open Climate Workbench",
+      "retired": "2020-10",
+      "retired_date": "2020-10-21",
+      "established": "2014-02",
+      "established_date": "2014-02-19",
+      "description": "Climate model evaluation"
+    },
+    "cocoon": {
+      "display_name": "Cocoon",
+      "retired": "2025-01",
+      "retired_date": "2025-01-15",
+      "established": "2003-01",
+      "established_date": "2003-01-22",
+      "description": "Web development framework: separation of concerns, component-based"
+    },
+    "continuum": {
+      "display_name": "Continuum",
+      "retired": "2016-05",
+      "retired_date": "2016-05-18",
+      "established": "2008-02",
+      "established_date": "2008-02-20",
+      "description": "Continuous Integration and Build Server"
+    },
+    "crunch": {
+      "display_name": "Crunch",
+      "retired": "2020-06",
+      "retired_date": "2020-06-17",
+      "established": "2013-02",
+      "established_date": "2013-02-20",
+      "description": "Simple and Efficient MapReduce Pipelines"
+    },
+    "deltacloud": {
+      "display_name": "DeltaCloud",
+      "retired": "2015-07",
+      "retired_date": "2015-07-15",
+      "established": "2011-10",
+      "established_date": "2011-10-26",
+      "description": "API server and drivers necessary for connecting to cloud providers."
+    },
+    "devicemap": {
+      "display_name": "DeviceMap",
+      "retired": "2016-12",
+      "retired_date": "2016-12-21",
+      "established": "2014-11",
+      "established_date": "2014-11-19",
+      "description": "Data repository containing device information, images and other relevant information for all sorts of mobile devices, e.g. smartphones and tablets."
+    },
+    "directmemory": {
+      "display_name": "DirectMemory",
+      "retired": "2015-07",
+      "retired_date": "2015-07-15",
+      "established": "2012-08",
+      "established_date": "2012-08-15",
+      "description": "Off-heap cache for the Java Virtual Machine"
+    },
+    "drat": {
+      "display_name": "DRAT",
+      "retired": "2020-08",
+      "retired_date": "2020-08-19",
+      "established": "2017-09",
+      "established_date": "2017-09-20",
+      "description": "large scale code license analysis, auditing and reporting"
+    },
+    "eagle": {
+      "display_name": "Eagle",
+      "retired": "2020-11",
+      "retired_date": "2020-11-18",
+      "established": "2016-12",
+      "established_date": "2016-12-21",
+      "description": "open source analytics solution for identifying security and performance issues instantly on big data platforms"
+    },
+    "esme": {
+      "display_name": "ESME",
+      "retired": "2013-06",
+      "retired_date": "2013-06-19",
+      "established": "2010-12",
+      "established_date": "2010-12-15",
+      "description": "Enterprise Social Messaging Environment"
+    },
+    "etch": {
+      "display_name": "Etch",
+      "retired": "2016-06",
+      "retired_date": "2016-06-15",
+      "established": "2013-01",
+      "established_date": "2013-01-16",
+      "description": "Cross-platform, language- and transport-independent RPC-like messaging framework"
+    },
+    "excalibur": {
+      "display_name": "Excalibur",
+      "retired": "2010-12",
+      "retired_date": "2010-12-15",
+      "established": "2004-05",
+      "established_date": "2004-05-26",
+      "description": "Inversion-of-control-style container development"
+    },
+    "falcon": {
+      "display_name": "Falcon",
+      "retired": "2019-09",
+      "retired_date": "2019-09-18",
+      "established": "2014-12",
+      "established_date": "2014-12-17",
+      "description": "Data management and processing platform."
+    },
+    "flume": {
+      "display_name": "Flume",
+      "retired": "2023-11",
+      "retired_date": "2023-11-15",
+      "established": "2012-06",
+      "established_date": "2012-06-20",
+      "description": "A reliable service for efficiently collecting, aggregating, and moving large amounts of log data"
+    },
+    "fluo": {
+      "display_name": "Fluo",
+      "retired": "2025-04",
+      "retired_date": "2025-04-16",
+      "established": "2017-07",
+      "established_date": "2017-07-19",
+      "description": "Storage and incremental processing of large data sets. Merged into Accumulo."
+    },
+    "forrest": {
+      "display_name": "Forrest",
+      "retired": "2020-02",
+      "retired_date": "2020-02-19",
+      "established": "2004-05",
+      "established_date": "2004-05-26",
+      "description": "Aggregated multi-channel documentation, separation of concerns"
+    },
+    "giraph": {
+      "display_name": "Giraph",
+      "retired": "2023-09",
+      "retired_date": "2023-09-20",
+      "established": "2012-05",
+      "established_date": "2012-05-16",
+      "description": "Iterative graph processing system built for high scalability"
+    },
+    "gora": {
+      "display_name": "Gora",
+      "retired": "2025-03",
+      "retired_date": "2025-03-19",
+      "established": "2012-01",
+      "established_date": "2012-01-24",
+      "description": "ORM framework for column stores such as Apache HBase and Apache Cassandra with a specific focus on Hadoop"
+    },
+    "griffin": {
+      "display_name": "Griffin",
+      "retired": "2025-09",
+      "retired_date": "2025-09-24",
+      "established": "2018-11",
+      "established_date": "2018-11-21",
+      "description": "a data quality solution for big data, including both streaming and batch mode. It offers an unified process to measure data quality from different perspectives."
+    },
+    "hama": {
+      "display_name": "Hama",
+      "retired": "2020-04",
+      "retired_date": "2020-04-15",
+      "established": "2012-05",
+      "established_date": "2012-05-16",
+      "description": "a Bulk Synchronous Parallel computing framework on top of Apache Hadoop"
+    },
+    "harmony": {
+      "display_name": "Harmony",
+      "retired": "2011-11",
+      "retired_date": "2011-11-16",
+      "established": "2006-10",
+      "established_date": "2006-10-25",
+      "description": "Modular Java runtime with class libraries and associated tools"
+    },
+    "hawq": {
+      "display_name": "HAWQ",
+      "retired": "2024-07",
+      "retired_date": "2024-07-17",
+      "established": "2018-08",
+      "established_date": "2018-08-15",
+      "description": "a Hadoop native SQL query engine that combines the key technological advantages of an MPP database with the scalability and convenience of Hadoop"
+    },
+    "hivemind": {
+      "display_name": "HiveMind",
+      "retired": "2009-04",
+      "retired_date": "2009-04-15",
+      "established": "2006-04",
+      "established_date": "2006-04-26",
+      "description": "Services and configuration microkernel"
+    },
+    "ibatis": {
+      "display_name": "iBATIS",
+      "retired": "2010-06",
+      "retired_date": "2010-06-16",
+      "established": "2005-05",
+      "established_date": "2005-05-18",
+      "description": "Data mapper framework to make it easier to use a relational database with object-oriented applications."
+    },
+    "jakarta": {
+      "display_name": "Jakarta",
+      "retired": "2011-12",
+      "retired_date": "2011-12-21",
+      "established": "1999-09",
+      "established_date": "1999-09-16",
+      "description": "Diverse set of popular open source Java solutions"
+    },
+    "jclouds": {
+      "display_name": "jclouds",
+      "retired": "2025-06",
+      "retired_date": "2025-06-18",
+      "established": "2013-10",
+      "established_date": "2013-10-16",
+      "description": "Java cloud APIs and abstractions"
+    },
+    "joshua": {
+      "display_name": "Joshua",
+      "retired": "2021-11",
+      "retired_date": "2021-11-17",
+      "established": "2018-10",
+      "established_date": "2018-10-17",
+      "description": "statistical and other forms of machine translation."
+    },
+    "juddi": {
+      "display_name": "jUDDI",
+      "retired": "2023-02",
+      "retired_date": "2023-02-15",
+      "established": "2010-08",
+      "established_date": "2010-08-18",
+      "description": "Java implementation of the Universal Description, Discovery, and Integration specification"
+    },
+    "kibble": {
+      "display_name": "Kibble",
+      "retired": "2025-10",
+      "retired_date": "2025-10-15",
+      "established": "2017-10",
+      "established_date": "2017-10-18",
+      "description": "an interactive project activity analyzer and aggregator"
+    },
+    "labs": {
+      "display_name": "Labs",
+      "retired": "2020-08",
+      "retired_date": "2020-08-19",
+      "established": "2006-11",
+      "established_date": "2006-11-15",
+      "description": "A place for innovation where committers of the foundation can experiment with new ideas"
+    },
+    "lens": {
+      "display_name": "Lens",
+      "retired": "2020-08",
+      "retired_date": "2020-08-19",
+      "established": "2015-08",
+      "established_date": "2015-08-19",
+      "description": "Unified analytics platform"
+    },
+    "lenya": {
+      "display_name": "Lenya",
+      "retired": "2015-04",
+      "retired_date": "2015-04-22",
+      "established": "2004-09",
+      "established_date": "2004-09-22",
+      "description": "an Open Source Java/XML Content Management System that came with revision control, multi-site management, scheduling, search, WYSIWYG editors, and workflow."
+    },
+    "logodev": {
+      "display_name": "Logo Development",
+      "retired": "2025-08",
+      "retired_date": "2025-08-20",
+      "established": "2024-08",
+      "established_date": "2024-08-21",
+      "description": "Creation and development of a brand and logo for the Foundation"
+    },
+    "lucy": {
+      "display_name": "Lucy",
+      "retired": "2018-06",
+      "retired_date": "2018-06-20",
+      "established": "2012-03",
+      "established_date": "2012-03-21",
+      "description": "Search engine library for dynamic languages"
+    },
+    "madlib": {
+      "display_name": "MADlib",
+      "retired": "2026-09",
+      "retired_date": "2026-09-16",
+      "established": "2017-07",
+      "established_date": "2017-07-19",
+      "description": "Scalable, Big Data, SQL-driven machine learning framework for Data Scientists",
+      "mlists": [
+        "commits",
+        "dev",
+        "issues",
+        "private",
+        "user"
+      ]
+    },
+    "marmotta": {
+      "display_name": "Marmotta",
+      "retired": "2020-11",
+      "retired_date": "2020-11-18",
+      "established": "2013-11",
+      "established_date": "2013-11-20",
+      "description": "An Open Platform for Linked Data"
+    },
+    "mesos": {
+      "display_name": "Mesos",
+      "retired": "2025-08",
+      "retired_date": "2025-08-20",
+      "established": "2013-06",
+      "established_date": "2013-06-19",
+      "description": "a cluster manager that provides efficient resource isolation and sharing across distributed applications"
+    },
+    "metamodel": {
+      "display_name": "MetaModel",
+      "retired": "2021-06",
+      "retired_date": "2021-06-16",
+      "established": "2014-11",
+      "established_date": "2014-11-19",
+      "description": "common interface for discovery, exploration of metadata and querying of different types of data sources"
+    },
+    "metron": {
+      "display_name": "Metron",
+      "retired": "2020-12",
+      "retired_date": "2020-12-16",
+      "established": "2017-04",
+      "established_date": "2017-04-19",
+      "description": "Real-time big data security"
+    },
+    "mnemonic": {
+      "display_name": "Mnemonic",
+      "retired": "2025-02",
+      "retired_date": "2025-02-19",
+      "established": "2020-12",
+      "established_date": "2020-12-16",
+      "description": "a transparent nonvolatile hybrid memory oriented library for Big data, High-performance computing, and Analytics"
+    },
+    "mrunit": {
+      "display_name": "MRUnit",
+      "retired": "2016-04",
+      "retired_date": "2016-04-20",
+      "established": "2012-05",
+      "established_date": "2012-05-16",
+      "description": "Java library that helps developers unit test Apache Hadoop map reduce jobs"
+    },
+    "mxnet": {
+      "display_name": "MXNet",
+      "retired": "2023-09",
+      "retired_date": "2023-09-20",
+      "established": "2022-09",
+      "established_date": "2022-09-21",
+      "description": "a flexible and efficient library for Deep Learning"
+    },
+    "ode": {
+      "display_name": "ODE",
+      "retired": "2019-08",
+      "retired_date": "2019-08-21",
+      "established": "2007-07",
+      "established_date": "2007-07-18",
+      "description": "Business Process Management (BPM), Process Orchestration and Workflow through service composition"
+    },
+    "olingo": {
+      "display_name": "Olingo",
+      "retired": "2025-12",
+      "retired_date": "2025-12-17",
+      "established": "2014-03",
+      "established_date": "2014-03-19",
+      "description": "OASIS OData protocol libraries"
+    },
+    "oltu": {
+      "display_name": "Oltu",
+      "retired": "2018-03",
+      "retired_date": "2018-03-21",
+      "established": "2013-01",
+      "established_date": "2013-01-16",
+      "description": "OAuth protocol implementation in Java"
+    },
+    "onami": {
+      "display_name": "Onami",
+      "retired": "2016-01",
+      "retired_date": "2016-01-20",
+      "established": "2013-04",
+      "established_date": "2013-04-17",
+      "description": "Development and maintenance of a set of Google Guice extensions"
+    },
+    "oodt": {
+      "display_name": "OODT",
+      "retired": "2023-04",
+      "retired_date": "2023-04-19",
+      "established": "2010-11",
+      "established_date": "2010-11-17",
+      "description": "Object Oriented Data Technology (middleware metadata)"
+    },
+    "oozie": {
+      "display_name": "Oozie",
+      "retired": "2025-02",
+      "retired_date": "2025-02-19",
+      "established": "2012-08",
+      "established_date": "2012-08-28",
+      "description": "A workflow scheduler system to manage Apache Hadoop jobs."
+    },
+    "petri": {
+      "display_name": "Petri",
+      "retired": "2026-06",
+      "retired_date": "2026-06-17",
+      "established": "2019-11",
+      "established_date": "2019-11-20",
+      "description": "assessment of, education in, and adoption of the Foundation's policies and procedures for collaborative development and the pros and cons of joining the Foundation"
+    },
+    "pivot": {
+      "display_name": "Pivot",
+      "retired": "2025-01",
+      "retired_date": "2025-01-15",
+      "established": "2009-12",
+      "established_date": "2009-12-16",
+      "description": "Rich Internet applications in Java"
+    },
+    "polygene": {
+      "display_name": "Polygene",
+      "retired": "2018-12",
+      "retired_date": "2018-12-19",
+      "established": "2015-03",
+      "established_date": "2015-03-18",
+      "description": "Composite Oriented Programming for domain centric application development."
+    },
+    "portals": {
+      "display_name": "Portals",
+      "retired": "2025-09",
+      "retired_date": "2025-09-24",
+      "established": "2004-02",
+      "established_date": "2004-02-18",
+      "description": "Portal technology"
+    },
+    "predictionio": {
+      "display_name": "PredictionIO",
+      "retired": "2020-09",
+      "retired_date": "2020-09-16",
+      "established": "2017-10",
+      "established_date": "2017-10-18",
+      "description": "a machine learning server built on top of state-of-the-art open source stack, that enables developers to manage and deploy production-ready predictive services for various kinds of machine learning tasks"
+    },
+    "quetz": {
+      "display_name": "Quetzalcoatl",
+      "retired": "2010-06",
+      "retired_date": "2010-06-16",
+      "established": "2007-06",
+      "established_date": "2007-06-20",
+      "description": "a project charged with the creation and maintenance of open-source software related to mod_python and the Python programming language"
+    },
+    "rave": {
+      "display_name": "Rave",
+      "retired": "2016-01",
+      "retired_date": "2016-01-20",
+      "established": "2012-03",
+      "established_date": "2012-03-21",
+      "description": "Web and social mashup engine"
+    },
+    "reef": {
+      "display_name": "REEF",
+      "retired": "2022-07",
+      "retired_date": "2022-07-20",
+      "established": "2015-11",
+      "established_date": "2015-11-18",
+      "description": "Retainable Evaluator Execution Framework"
+    },
+    "river": {
+      "display_name": "River",
+      "retired": "2022-02",
+      "retired_date": "2022-02-16",
+      "established": "2011-01",
+      "established_date": "2011-01-19",
+      "description": "Jini service oriented architecture"
+    },
+    "sentry": {
+      "display_name": "Sentry",
+      "retired": "2020-12",
+      "retired_date": "2020-12-16",
+      "established": "2016-03",
+      "established_date": "2016-03-16",
+      "description": "Fine grained authorization to data and metadata in Apache Hadoop"
+    },
+    "servicemix": {
+      "display_name": "ServiceMix",
+      "retired": "2026-03",
+      "retired_date": "2026-03-18",
+      "established": "2007-09",
+      "established_date": "2007-09-19",
+      "description": "Enterprise Service Bus"
+    },
+    "shale": {
+      "display_name": "Shale",
+      "retired": "2009-05",
+      "retired_date": "2009-05-20",
+      "established": "2006-06",
+      "established_date": "2006-06-27",
+      "description": "Web application framework, fundamentally based on JavaServer Faces"
+    },
+    "shindig": {
+      "display_name": "Shindig",
+      "retired": "2015-10",
+      "retired_date": "2015-10-21",
+      "established": "2010-01",
+      "established_date": "2010-01-20",
+      "description": "Opensocial Reference Implementation"
+    },
+    "sqoop": {
+      "display_name": "Sqoop",
+      "retired": "2021-06",
+      "retired_date": "2021-06-16",
+      "established": "2012-03",
+      "established_date": "2012-03-21",
+      "description": "Bulk Data Transfer for Apache Hadoop and Structured Datastores"
+    },
+    "stanbol": {
+      "display_name": "Stanbol",
+      "retired": "2020-04",
+      "retired_date": "2020-04-15",
+      "established": "2012-09",
+      "established_date": "2012-09-19",
+      "description": "Reusable components for semantic content management"
+    },
+    "stdcxx": {
+      "display_name": "C++ Standard Library",
+      "retired": "2013-07",
+      "retired_date": "2013-07-17",
+      "established": "2007-11",
+      "established_date": "2007-11-14",
+      "description": "C++ classes, templates, and functions essential for writing C++ programs"
+    },
+    "stratos": {
+      "display_name": "Stratos",
+      "retired": "2017-01",
+      "retired_date": "2017-01-18",
+      "established": "2014-05",
+      "established_date": "2014-05-21",
+      "description": "Highly-extensible Platform-as-a-Service (PaaS) framework"
+    },
+    "streams": {
+      "display_name": "Streams",
+      "retired": "2024-10",
+      "retired_date": "2024-10-16",
+      "established": "2017-07",
+      "established_date": "2017-07-19",
+      "description": "interoperability of online profiles and activity feeds"
+    },
+    "submarine": {
+      "display_name": "Submarine",
+      "retired": "2024-05",
+      "retired_date": "2024-05-15",
+      "established": "2019-10",
+      "established_date": "2019-10-16",
+      "description": "allowing infrastructure engineers and data scientists to build deep learning applications (TensorFlow, PyTorch, etc.) end to end on cluster management platforms (like YARN/K8s)"
+    },
+    "tajo": {
+      "display_name": "Tajo",
+      "retired": "2020-09",
+      "retired_date": "2020-09-16",
+      "established": "2014-03",
+      "established_date": "2014-03-19",
+      "description": "Big data warehouse system on Apache Hadoop"
+    },
+    "tiles": {
+      "display_name": "Tiles",
+      "retired": "2018-12",
+      "retired_date": "2018-12-19",
+      "established": "2006-12",
+      "established_date": "2006-12-20",
+      "description": "A templating framework for web application user interfaces"
+    },
+    "trafficcontrol": {
+      "display_name": "TrafficControl",
+      "retired": "2025-10",
+      "retired_date": "2025-10-15",
+      "established": "2018-05",
+      "established_date": "2018-05-16",
+      "description": "building, monitoring, configuring, and provisioning a large scale content delivery network (CDN)"
+    },
+    "trafodion": {
+      "display_name": "Trafodion",
+      "retired": "2021-04",
+      "retired_date": "2021-04-21",
+      "established": "2017-12",
+      "established_date": "2017-12-20",
+      "description": "webscale SQL-on-Hadoop solution enabling transactional or operational workloads."
+    },
+    "tuscany": {
+      "display_name": "Tuscany",
+      "retired": "2016-05",
+      "retired_date": "2016-05-18",
+      "established": "2008-05",
+      "established_date": "2008-05-21",
+      "description": "An SCA based Service Composition Framework"
+    },
+    "twill": {
+      "display_name": "Twill",
+      "retired": "2020-05",
+      "retired_date": "2020-05-20",
+      "established": "2016-06",
+      "established_date": "2016-06-15",
+      "description": "Use Apache Hadoop YARN's distributed capabilities with a programming model that is similar to running threads"
+    },
+    "usergrid": {
+      "display_name": "Usergrid",
+      "retired": "2021-12",
+      "retired_date": "2021-12-15",
+      "established": "2015-08",
+      "established_date": "2015-08-19",
+      "description": "The BaaS Framework you run"
+    },
+    "vxquery": {
+      "display_name": "VXQuery",
+      "retired": "2020-01",
+      "retired_date": "2020-01-15",
+      "established": "2014-07",
+      "established_date": "2014-07-16",
+      "description": "A parallel XQuery processor"
+    },
+    "whirr": {
+      "display_name": "Whirr",
+      "retired": "2015-03",
+      "retired_date": "2015-03-18",
+      "established": "2011-08",
+      "established_date": "2011-08-17",
+      "description": "Libraries for running Cloud Services"
+    },
+    "wink": {
+      "display_name": "Wink",
+      "retired": "2017-04",
+      "retired_date": "2017-04-19",
+      "established": "2012-12",
+      "established_date": "2012-12-19",
+      "description": "RESTful Web services Framework"
+    },
+    "wookie": {
+      "display_name": "Wookie",
+      "retired": "2016-03",
+      "retired_date": "2016-03-16",
+      "established": "2012-11",
+      "established_date": "2012-11-21",
+      "description": "Widgets for Applications"
+    },
+    "xml": {
+      "display_name": "XML",
+      "retired": "2012-04",
+      "retired_date": "2012-04-18",
+      "established": "1999-09",
+      "established_date": "1999-09-16",
+      "description": "Diverse set of popular open source XML solutions."
+    },
+    "xmlbeans": {
+      "display_name": "XMLBeans",
+      "retired": "2013-07",
+      "retired_date": "2013-07-17",
+      "established": "2004-06",
+      "established_date": "2004-06-23",
+      "description": "XML-Java binding tool"
+    },
+    "zest": {
+      "display_name": "Zest",
+      "retired": "2018-12",
+      "retired_date": "2018-12-19",
+      "established": "2015-03",
+      "established_date": "2015-03-18",
+      "description": "See Polygene"
+    }
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "description": "Recorded research snapshots, not live official counts. Completion times from round18/evidence/fetch-log.txt; CST there is UTC+8. Full snapshots except the explicitly reduced committee-info fixture.",
+  "sources": [
+    {
+      "file": "chooser.json",
+      "url": "https://projects.apache.org/json/foundation/chooser.json",
+      "fetchedAt": "2026-11-11T10:50:50+08:00",
+      "originalSha256": "18bffbdc5317e2170835d84df39a315f1d94d41af4ae8e102076a4757b79f5f3",
+      "fixtureSha256": "18bffbdc5317e2170835d84df39a315f1d94d41af4ae8e102076a4757b79f5f3",
+      "transformation": null
+    },
+    {
+      "file": "committee-info.json",
+      "url": "https://whimsy.apache.org/public/committee-info.json",
+      "fetchedAt": "2026-11-11T10:48:33+08:00",
+      "originalSha256": "fa57817b8f6c0d17ace5a11027d4636f85ad521bf19909704c9cb66d56e1ad35",
+      "fixtureSha256": "e9c152a08e34f3b1723e35026665d26cfe65fc076ff3c2b61950d341534a142a",
+      "transformation": "Keep metadata counts and all committee ids/display_name/pmc; omit public personal rosters and unrelated fields."
+    },
+    {
+      "file": "committee-retired.json",
+      "url": "https://whimsy.apache.org/public/committee-retired.json",
+      "fetchedAt": "2026-11-11T10:49:09+08:00",
+      "originalSha256": "c9b0c4bcbb88992202baf070fd848eb0ec1aa8ed418f78138a953883bf71cc70",
+      "fixtureSha256": "c9b0c4bcbb88992202baf070fd848eb0ec1aa8ed418f78138a953883bf71cc70",
+      "transformation": null
+    },
+    {
+      "file": "committees-retired.json",
+      "url": "https://projects.apache.org/json/foundation/committees-retired.json",
+      "fetchedAt": "2026-11-11T10:50:50+08:00",
+      "originalSha256": "4433a860178f212c98125315626b7ab3aac05e0b709d027dc469f92268e7d176",
+      "fixtureSha256": "4433a860178f212c98125315626b7ab3aac05e0b709d027dc469f92268e7d176",
+      "transformation": null
+    },
+    {
+      "file": "podlings.json",
+      "url": "https://projects.apache.org/json/foundation/podlings.json",
+      "fetchedAt": "2026-11-11T10:48:33+08:00",
+      "originalSha256": "af8a9b46c0b11843bde70ed8cd3cbfc9f3be0529783d1998cb783668c2df388b",
+      "fixtureSha256": "af8a9b46c0b11843bde70ed8cd3cbfc9f3be0529783d1998cb783668c2df388b",
+      "transformation": null
+    },
+    {
+      "file": "public_podlings.json",
+      "url": "https://whimsy.apache.org/public/public_podlings.json",
+      "fetchedAt": "2026-11-11T10:48:33+08:00",
+      "originalSha256": "c6d6cb082881e78b325104396a794970395cb7dd07bce512ed4d0b8cf1ba07eb",
+      "fixtureSha256": "c6d6cb082881e78b325104396a794970395cb7dd07bce512ed4d0b8cf1ba07eb",
+      "transformation": null
+    },
+    {
+      "file": "releases.json",
+      "url": "https://projects.apache.org/json/foundation/releases.json",
+      "fetchedAt": "2026-11-11T10:50:50+08:00",
+      "originalSha256": "9dd62005f193555379c4d53aa339249a7cbafd2cb44e2680cb4afe92c2067ab5",
+      "fixtureSha256": "9dd62005f193555379c4d53aa339249a7cbafd2cb44e2680cb4afe92c2067ab5",
+      "transformation": null
+    },
+    {
+      "file": "attic-projects.html",
+      "url": "https://attic.apache.org/projects.html",
+      "fetchedAt": "2026-11-11T10:48:33+08:00",
+      "originalSha256": "04caf3ea1c7c0bd45db8435e44944d880912ba2760a3a8284695afdf8511d304",
+      "fixtureSha256": "04caf3ea1c7c0bd45db8435e44944d880912ba2760a3a8284695afdf8511d304",
+      "transformation": null
+    }
+  ]
+}

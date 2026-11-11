@@ -1,0 +1,95 @@
+{
+  "startAt": 0,
+  "maxResults": 5,
+  "total": 6,
+  "issues": [
+    {
+      "key": "KAFKA-18026",
+      "fields": {
+        "summary": "Allow custom processor wrapping",
+        "issuetype": {
+          "name": "New Feature"
+        },
+        "fixVersions": [
+          {
+            "name": "4.0.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        }
+      }
+    },
+    {
+      "key": "KAFKA-17885",
+      "fields": {
+        "summary": "Enable clients to rebootstrap based on timeout or error code",
+        "issuetype": {
+          "name": "New Feature"
+        },
+        "fixVersions": [
+          {
+            "name": "4.0.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        }
+      }
+    },
+    {
+      "key": "KAFKA-17693",
+      "fields": {
+        "summary": "Remove testCheckEarliestLocalTimestampVersion and testCheckLatestTieredTimestampVersion",
+        "issuetype": {
+          "name": "New Feature"
+        },
+        "fixVersions": [
+          {
+            "name": "4.0.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        }
+      }
+    },
+    {
+      "key": "KAFKA-17248",
+      "fields": {
+        "summary": "Extend KIP-714 to allow for registering additional metrics with clients",
+        "issuetype": {
+          "name": "New Feature"
+        },
+        "fixVersions": [
+          {
+            "name": "4.0.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        }
+      }
+    },
+    {
+      "key": "KAFKA-16658",
+      "fields": {
+        "summary": "Drop `offsets.commit.required.acks` config in 4.0 (deprecate in 3.8)",
+        "issuetype": {
+          "name": "New Feature"
+        },
+        "fixVersions": [
+          {
+            "name": "4.0.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        }
+      }
+    }
+  ],
+  "warningMessages": null,
+  "names": null,
+  "schema": null
+}

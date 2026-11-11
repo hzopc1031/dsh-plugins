@@ -20,6 +20,9 @@ export interface ExportReport {
     /** Null for PNG or when Chrome's JPEG default was used. */
     quality: number | null;
     browserVersion: string;
+    launchArgs: DeckCapture['launchArgs'];
+    sandboxMode: DeckCapture['sandboxMode'];
+    sandboxFallbackReason?: string;
     networkMode: 'blocked' | 'allowed';
     warnings: string[];
     actualFontFamilies: string[];
@@ -37,5 +40,7 @@ export interface ExportReport {
 export declare function exportCapturedDeck(capture: DeckCapture, directory: string, options?: ExportOptions): Promise<{
     pptxPath: string;
     reportPath: string;
+    markdownReportPath: string;
+    summary: string;
     report: ExportReport;
 }>;

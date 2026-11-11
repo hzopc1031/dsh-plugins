@@ -22,6 +22,10 @@ export interface CaptureResult {
     warnings: string[];
     computedFontFamilies: string[];
     actualFontFamilies: string[];
+    fontFallbacks: {
+        requestedFamily: string;
+        actualFamilies: string[];
+    }[];
     elapsedMs: number;
 }
 export declare const CHROME_ARGS: string[];
@@ -38,6 +42,9 @@ export declare function createCaptureEngine(directory: string, options?: Capture
     allowNetwork: boolean;
     browserVersion: string;
     browserPid: number | undefined;
+    launchArgs: string[];
+    sandboxMode: "disabled-fallback" | "enabled";
+    sandboxFallbackReason: string | undefined;
     close: () => Promise<void>;
     capture(input: string, prepare?: (page: Page) => Promise<void>, finalize?: (page: Page) => Promise<void>): Promise<CaptureResult>;
 }>;

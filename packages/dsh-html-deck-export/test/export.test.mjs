@@ -26,7 +26,7 @@ test('PPTX is valid OOXML with exactly one full-bleed image per page and multili
   try {
     const run = structuredClone(await sample())
     run.pages[0].notes = '第一行：中文 & <讲稿>\n\n第二行：你好，世界！\n第三行 🎤'
-    run.pages[0].warnings.push('Requested primary font not observed: missing-test-font')
+    run.pages[0].warnings.push('字体回退：请求字体「missing-test-font」；实际使用「Noto Sans CJK SC」；字体排版可能不同。')
     run.pages[0].renderState.preview = { lowPower: true, backgroundCanvases: 2, hiddenBackgroundCanvases: 1, differences: ['Synthetic preview difference for serialization test'] }
     const result = await exportCapturedDeck(run, directory, { fileName: '演示稿.pptx' })
     const report = await readReport(directory)
@@ -40,6 +40,9 @@ test('PPTX is valid OOXML with exactly one full-bleed image per page and multili
     assert.equal(report.quality, null)
     assert.equal(report.networkMode, 'blocked')
     assert.equal(report.browserVersion, run.browserVersion)
+    assert.deepEqual(report.launchArgs, run.launchArgs)
+    assert.equal(report.sandboxMode, run.sandboxMode)
+    assert.equal(report.sandboxFallbackReason, run.sandboxFallbackReason)
     assert.equal(report.totalBytes, run.pages.reduce((sum, page) => sum + page.image.byteLength, 0))
     assert.equal(report.pptxBytes, (await stat(result.pptxPath)).size)
     assert.ok(report.elapsedMs >= report.captureElapsedMs)
@@ -48,6 +51,8 @@ test('PPTX is valid OOXML with exactly one full-bleed image per page and multili
     assert.ok(report.pages[0].fontWarnings.some(warning => warning.includes('missing-test-font')))
     assert.deepEqual(report.pages[0].renderState.preview, run.pages[0].renderState.preview)
     assert.ok(report.pages.every(page => !('image' in page)))
+    assert.equal(await readFile(result.markdownReportPath, 'utf8'), result.summary)
+    for (const pattern of [/导出完成：共 2 页/, /第 1 页字体回退/, /请求字体「missing-test-font」/, /实际使用「Noto Sans CJK SC」/, /字体排版可能不同/, /Chrome 沙箱/, /export-report.json/, /export-report.md/]) assert.match(result.summary, pattern)
     const pptx = inspect(result.pptxPath)
     assert.equal(Number(pptx.size.cx) * 9, Number(pptx.size.cy) * 16)
     assert.equal(pptx.slides.length, run.pages.length)
@@ -58,8 +63,9 @@ test('PPTX is valid OOXML with exactly one full-bleed image per page and multili
       assert.equal(slide.imageSha256, digest(run.pages[i].image), 'preserve image bytes and DOM order')
       assert.equal(slide.notes, run.pages[i].notes)
     }
-    assert.deepEqual((await readdir(directory)).sort(), ['export-report.json', '演示稿.pptx'])
+    assert.deepEqual((await readdir(directory)).sort(), ['export-report.json', 'export-report.md', '演示稿.pptx'])
     assert.equal((await stat(result.pptxPath)).mode & 0o777, 0o600)
+    assert.equal((await stat(result.markdownReportPath)).mode & 0o777, 0o600)
   } finally { await rm(directory, { recursive: true, force: true }) }
 })
 
@@ -96,7 +102,15 @@ test('failed pages remain in the report with evidence and never replace a good P
     const previous = await readFile(result.pptxPath)
     const failed = structuredClone(good)
     Object.assign(failed.pages[0], { status: 'failed', bytes: 0, error: 'Required font unavailable' })
-    await assert.rejects(exportCapturedDeck(failed, directory), /refusing a partial PPTX/)
+    let failureText
+    await assert.rejects(exportCapturedDeck(failed, directory), error => {
+      failureText = error.message
+      assert.match(failureText, /refusing a partial PPTX/)
+      assert.match(failureText, /第 1 页失败：Required font unavailable/)
+      assert.match(failureText, /证据截图.*page-1-failed.png/)
+      return true
+    })
+    assert.equal(await readFile(result.markdownReportPath, 'utf8'), failureText)
     assert.deepEqual(await readFile(result.pptxPath), previous)
     const report = await readReport(directory)
     assert.equal(report.status, 'failed')
@@ -114,6 +128,8 @@ test('failed pages remain in the report with evidence and never replace a good P
     failed.pages[0].image = undefined
     await assert.rejects(exportCapturedDeck(failed, directory), /partial PPTX/)
     assert.equal((await readReport(directory)).failedPages[0].evidencePath, undefined, 'reason remains when screenshot evidence is unavailable')
+    const noScreenshot = await readFile(result.markdownReportPath, 'utf8')
+    assert.match(noScreenshot, /第 1 页失败：Required font unavailable；无截图/)
   } finally { await rm(directory, { recursive: true, force: true }) }
 })
 
@@ -138,7 +154,7 @@ test('assembly rejection and abort after serialization preserve the completed PP
     await assert.rejects(exportCapturedDeck(run, directory, { signal: controller.signal }), /Cancelled before publication/)
     assert.deepEqual(await readFile(result.pptxPath), previous)
     assert.equal((await readReport(directory)).pptxBytes, 0)
-    assert.deepEqual((await readdir(directory)).sort(), ['deck.pptx', 'export-report.json'])
+    assert.deepEqual((await readdir(directory)).sort(), ['deck.pptx', 'export-report.json', 'export-report.md'])
     await assert.rejects(exportCapturedDeck(run, directory, { signal: controller.signal }), /Cancelled before publication/)
   } finally { await rm(directory, { recursive: true, force: true }) }
 })
@@ -155,13 +171,17 @@ test('output names reject traversal and absolute paths; existing output symlinks
     assert.deepEqual(await readdir(output), [])
     const sentinel = join(directory, 'outside.pptx')
     const reportSentinel = join(directory, 'outside.json')
+    const markdownSentinel = join(directory, 'outside.md')
     await writeFile(sentinel, 'previous outside PPTX')
     await writeFile(reportSentinel, 'outside report')
+    await writeFile(markdownSentinel, 'outside markdown')
     await symlink(sentinel, join(output, 'deck.pptx'))
     await symlink(reportSentinel, join(output, 'export-report.json'))
+    await symlink(markdownSentinel, join(output, 'export-report.md'))
     await exportCapturedDeck(run, output)
     assert.equal(await readFile(sentinel, 'utf8'), 'previous outside PPTX')
     assert.equal(await readFile(reportSentinel, 'utf8'), 'outside report')
+    assert.equal(await readFile(markdownSentinel, 'utf8'), 'outside markdown')
     inspect(join(output, 'deck.pptx'))
     await assert.rejects(exportCapturedDeck(run, sentinel), /existing directory/)
   } finally { await rm(directory, { recursive: true, force: true }) }
@@ -180,7 +200,7 @@ test('missing/reordered captures and incomplete images cannot publish a partial 
     const invalidNotes = structuredClone(run)
     invalidNotes.pages[0].notes = '中文\u0000无效 XML'
     await assert.rejects(exportCapturedDeck(invalidNotes, directory), /characters forbidden in XML/)
-    assert.deepEqual(await readdir(directory), ['export-report.json'])
+    assert.deepEqual((await readdir(directory)).sort(), ['export-report.json', 'export-report.md'])
   } finally { await rm(directory, { recursive: true, force: true }) }
 })
 
@@ -198,6 +218,30 @@ test('an unwritable report target prevents PPTX replacement and surfaces both er
       return true
     })
     assert.deepEqual(await readFile(result.pptxPath), previous)
-    assert.deepEqual((await readdir(directory)).sort(), ['deck.pptx', 'export-report.json'])
+    assert.deepEqual((await readdir(directory)).sort(), ['deck.pptx', 'export-report.json', 'export-report.md'])
+  } finally { await rm(directory, { recursive: true, force: true }) }
+})
+
+test('an unwritable Markdown sidecar also prevents PPTX replacement and preserves failure details', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'deck-markdown-write-'))
+  try {
+    const run = await sample()
+    const result = await exportCapturedDeck(run, directory)
+    const previous = await readFile(result.pptxPath)
+    await rm(result.markdownReportPath)
+    await mkdir(result.markdownReportPath)
+    const failed = structuredClone(run)
+    Object.assign(failed.pages[1], { status: 'failed', bytes: 0, error: 'Image not loaded: missing.png', image: undefined })
+    await assert.rejects(exportCapturedDeck(failed, directory), error => {
+      assert.ok(error instanceof AggregateError)
+      assert.match(error.message, /第 2 页失败：Image not loaded: missing.png；无截图/)
+      assert.match(error.message, /报告写入失败/)
+      return true
+    })
+    assert.equal((await readReport(directory)).status, 'failed')
+    assert.deepEqual(await readFile(result.pptxPath), previous)
+    await assert.rejects(exportCapturedDeck(run, directory), AggregateError)
+    assert.deepEqual(await readFile(result.pptxPath), previous)
+    assert.deepEqual((await readdir(directory)).sort(), ['deck.pptx', 'export-report.json', 'export-report.md'])
   } finally { await rm(directory, { recursive: true, force: true }) }
 })

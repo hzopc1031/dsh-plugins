@@ -44,6 +44,9 @@ export interface DeckCapture {
     quality?: number;
     allowNetwork: boolean;
     browserVersion: string;
+    launchArgs: string[];
+    sandboxMode: 'enabled' | 'disabled-fallback';
+    sandboxFallbackReason?: string;
     pages: SlideCapture[];
     totalBytes: number;
     elapsedMs: number;

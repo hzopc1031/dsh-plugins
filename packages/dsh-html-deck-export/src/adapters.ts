@@ -31,6 +31,9 @@ export interface DeckCapture {
   quality?: number
   allowNetwork: boolean
   browserVersion: string
+  launchArgs: string[]
+  sandboxMode: 'enabled' | 'disabled-fallback'
+  sandboxFallbackReason?: string
   pages: SlideCapture[]
   totalBytes: number
   elapsedMs: number
@@ -101,12 +104,12 @@ export async function captureDeck(input: string, options: DeckCaptureOptions = {
             Array.from(target.querySelectorAll('*')).some(node => /HanziPen SC/i.test(getComputedStyle(node).fontFamily))
           if (marker !== undefined || handwritten) {
             if (innerWidth !== 1920 || innerHeight !== 1080) throw new Error('王虹 requires a 1920×1080 viewport')
-            if (marker !== undefined && marker !== 'true') throw new Error('Required 王虹 handwritten font is not ready')
+            if (marker !== undefined && marker !== 'true') throw new Error('王虹必需的手写字体尚未就绪，已拒绝导出。')
             if (handwritten) {
               const embedded = Array.from(document.fonts).find(font => font.family.replace(/["']/g, '') === 'HanziPen SC' && font.status === 'loaded')
               if (!embedded) {
                 try { await new FontFace('__deck_font_probe__', 'local("HanziPen SC")').load() }
-                catch { throw new Error('Required 王虹 handwritten font HanziPen SC is unavailable') }
+                catch { throw new Error('缺少王虹必需的手写字体 HanziPen SC，已拒绝导出。') }
               }
             }
           }
@@ -202,6 +205,7 @@ export async function captureDeck(input: string, options: DeckCaptureOptions = {
     return {
       deck, viewport: engine.viewport, scale: engine.scale, format: engine.format, quality: engine.quality,
       allowNetwork: engine.allowNetwork, browserVersion: engine.browserVersion, pages,
+      launchArgs: engine.launchArgs, sandboxMode: engine.sandboxMode, sandboxFallbackReason: engine.sandboxFallbackReason,
       totalBytes: pages.reduce((sum, page) => sum + page.bytes, 0), elapsedMs: Math.round(performance.now() - started),
     }
   } finally { await engine.close() }

@@ -3,7 +3,7 @@ import { isAbsolute, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import puppeteer from 'puppeteer-core';
 export const CHROME_ARGS = [
-    '--no-sandbox', '--disable-gpu', '--force-color-profile=srgb',
+    '--disable-gpu', '--force-color-profile=srgb',
     '--disable-background-networking', '--disable-extensions', '--disable-sync',
     '--force-webrtc-ip-handling-policy=disable_non_proxied_udp',
 ];
@@ -45,15 +45,30 @@ export async function createCaptureEngine(directory, options = {}) {
         return canonical;
     }
     options.signal?.throwIfAborted();
-    const browser = await puppeteer.launch({
+    const args = [...CHROME_ARGS, ...(!options.allowNetwork ? [
+            // Block sockets outside request interception too, including WebSocket and loopback traffic.
+            '--proxy-server=http://127.0.0.1:9', '--proxy-bypass-list=<-loopback>',
+        ] : [])];
+    const launch = () => puppeteer.launch({
         executablePath: process.env.CHROME_PATH || '/usr/bin/google-chrome', headless: true,
         defaultViewport: { ...viewport, deviceScaleFactor: scale }, timeout: timeoutMs,
         protocolTimeout: Math.max(timeoutMs, 5000),
-        args: [...CHROME_ARGS, ...(!options.allowNetwork ? [
-                // Block sockets outside request interception too, including WebSocket and loopback traffic.
-                '--proxy-server=http://127.0.0.1:9', '--proxy-bypass-list=<-loopback>',
-            ] : [])],
+        args: [...args],
     });
+    let browser;
+    let sandboxFallbackReason;
+    try {
+        browser = await launch();
+    }
+    catch (error) {
+        options.signal?.throwIfAborted();
+        const message = error instanceof Error ? error.message : String(error);
+        if (!/Running as root without --no-sandbox|No usable sandbox|Failed to move to new namespace|Failed to (?:initialize|engage) (?:the )?sandbox|sandbox_init\.mac.*(?:fail|error)/i.test(message))
+            throw error;
+        sandboxFallbackReason = message;
+        args.push('--no-sandbox');
+        browser = await launch();
+    }
     let closing;
     const close = () => closing ??= browser.close();
     const onAbort = () => { void close().catch(() => browser.process()?.kill('SIGKILL')); };
@@ -68,6 +83,9 @@ export async function createCaptureEngine(directory, options = {}) {
         return {
             root, viewport, scale, format, quality: options.quality,
             allowNetwork: options.allowNetwork ?? false, browserVersion, browserPid: browser.process()?.pid,
+            launchArgs: browser.process()?.spawnargs.slice(1) ?? [...args],
+            sandboxMode: sandboxFallbackReason ? 'disabled-fallback' : 'enabled',
+            sandboxFallbackReason,
             close: dispose,
             async capture(input, prepare, finalize) {
                 options.signal?.throwIfAborted();
@@ -76,7 +94,7 @@ export async function createCaptureEngine(directory, options = {}) {
                 const started = performance.now();
                 const warnings = new Set();
                 const result = {
-                    url: input, status: 'failed', bytes: 0, warnings: [], computedFontFamilies: [], actualFontFamilies: [], elapsedMs: 0,
+                    url: input, status: 'failed', bytes: 0, warnings: [], computedFontFamilies: [], actualFontFamilies: [], fontFallbacks: [], elapsedMs: 0,
                 };
                 let page;
                 let timer;
@@ -172,9 +190,8 @@ export async function createCaptureEngine(directory, options = {}) {
                                 ? `${selector(element.parentElement)} > :nth-child(${Array.from(element.parentElement.children).indexOf(element) + 1})` : 'html';
                             return {
                                 families: [...new Set(visible.map(element => getComputedStyle(element).fontFamily))],
-                                selectors: visible.map(selector),
+                                nodes: visible.map(element => ({ selector: selector(element), stack: getComputedStyle(element).fontFamily })),
                                 errors: Array.from(document.fonts).filter(font => font.status === 'error').map(font => font.family),
-                                loaded: Array.from(document.fonts).filter(font => font.status === 'loaded').map(font => font.family.replace(/["']/g, '').toLowerCase()),
                                 overflow: document.documentElement.scrollWidth > innerWidth || document.documentElement.scrollHeight > innerHeight,
                             };
                         });
@@ -188,16 +205,19 @@ export async function createCaptureEngine(directory, options = {}) {
                             await session.send('DOM.enable');
                             await session.send('CSS.enable');
                             const { root: dom } = await session.send('DOM.getDocument', { depth: -1, pierce: true });
-                            const { nodeIds } = fontInfo.selectors.length
-                                ? await session.send('DOM.querySelectorAll', { nodeId: dom.nodeId, selector: fontInfo.selectors.join(',') }) : { nodeIds: [] };
-                            const fonts = await Promise.all(nodeIds.map(nodeId => session.send('CSS.getPlatformFontsForNode', { nodeId })));
-                            result.actualFontFamilies = [...new Set(fonts.flatMap(item => item.fonts.filter(font => font.glyphCount > 0).map(font => font.familyName)))].sort();
+                            const fonts = await Promise.all(fontInfo.nodes.map(async (node) => {
+                                const { nodeId } = await session.send('DOM.querySelector', { nodeId: dom.nodeId, selector: node.selector });
+                                const { fonts } = await session.send('CSS.getPlatformFontsForNode', { nodeId });
+                                return { stack: node.stack, families: fonts.filter(font => font.glyphCount > 0).map(font => font.familyName) };
+                            }));
+                            result.actualFontFamilies = [...new Set(fonts.flatMap(item => item.families))].sort();
                             for (const stack of fontInfo.families) {
                                 const primary = stack.split(',')[0].trim().replace(/["']/g, '');
+                                const actualFamilies = [...new Set(fonts.filter(item => item.stack === stack).flatMap(item => item.families))].sort();
                                 if (!/^(serif|sans-serif|monospace|cursive|fantasy|system-ui|ui-.+)$/i.test(primary) &&
-                                    !fontInfo.loaded.includes(primary.toLowerCase()) &&
-                                    !result.actualFontFamilies.some(family => family.toLowerCase() === primary.toLowerCase())) {
-                                    warnings.add(`Requested primary font not observed: ${primary}; rendered: ${result.actualFontFamilies.join(', ')}`);
+                                    (!actualFamilies.length || actualFamilies.some(family => family.toLowerCase() !== primary.toLowerCase()))) {
+                                    result.fontFallbacks.push({ requestedFamily: primary, actualFamilies });
+                                    warnings.add(`字体回退：请求字体「${primary}」；实际使用「${actualFamilies.join('、') || '未能识别'}」；字体排版可能不同。`);
                                 }
                             }
                             if (fontInfo.families.length && !result.actualFontFamilies.length)

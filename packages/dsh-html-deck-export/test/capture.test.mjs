@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { createServer } from 'node:http'
+import puppeteer from 'puppeteer-core'
 import { createCaptureEngine, CHROME_ARGS } from '../lib/capture.js'
 
 const fixtures = fileURLToPath(new URL('./fixtures/', import.meta.url))
@@ -13,10 +14,15 @@ before(async () => { engine = await createCaptureEngine(fixtures) })
 after(async () => { await engine?.close() })
 const pngSize = image => [Buffer.from(image).readUInt32BE(16), Buffer.from(image).readUInt32BE(20)]
 
-test('isolated Chrome uses sandbox flags, sRGB, default viewport and full-viewport background', async () => {
-  for (const arg of ['--no-sandbox', '--disable-gpu', '--force-color-profile=srgb']) assert.ok(CHROME_ARGS.includes(arg))
+test('isolated Chrome records actual sandbox mode, sRGB, default viewport and full-viewport background', async () => {
+  assert.ok(!CHROME_ARGS.includes('--no-sandbox'))
+  for (const arg of ['--disable-gpu', '--force-color-profile=srgb']) assert.ok(CHROME_ARGS.includes(arg))
   const command = (await readFile(`/proc/${engine.browserPid}/cmdline`, 'utf8')).split(/[\s\0]+/)
   for (const arg of CHROME_ARGS) assert.ok(command.includes(arg))
+  assert.equal(command.includes('--no-sandbox'), engine.sandboxMode === 'disabled-fallback')
+  assert.equal(engine.launchArgs.includes('--no-sandbox'), engine.sandboxMode === 'disabled-fallback')
+  for (const arg of engine.launchArgs) assert.ok(command.includes(arg), arg)
+  if (engine.sandboxMode === 'disabled-fallback') assert.match(engine.sandboxFallbackReason, /sandbox|namespace/i)
   assert.ok(command.some(arg => arg.startsWith('--user-data-dir=') && arg.includes('puppeteer_dev_chrome_profile-')))
   assert.equal(engine.scale, 2)
   assert.deepEqual(engine.viewport, { width: 1920, height: 1080 })
@@ -37,6 +43,81 @@ test('isolated Chrome uses sandbox flags, sRGB, default viewport and full-viewpo
     }, `data:image/png;base64,${Buffer.from(result.image).toString('base64')}`)
   })
   assert.ok(pixel[0] >= 16 && pixel[0] <= 22 && pixel[2] > 70, `background pixel ${pixel}`)
+})
+
+test('real Chrome keeps sandbox enabled when supported on this host', t => {
+  if (engine.sandboxMode !== 'enabled') return t.skip(`Host requires fallback: ${engine.sandboxFallbackReason}`)
+  assert.ok(!engine.launchArgs.includes('--no-sandbox'))
+})
+
+test('successful sandbox launch makes only one attempt (simulated)', async t => {
+  const launch = t.mock.method(puppeteer, 'launch', async options => {
+    assert.ok(!options.args.includes('--no-sandbox'))
+    assert.equal(options.userDataDir, undefined, 'Puppeteer must allocate a fresh profile')
+    return { version: async () => 'Chrome/test', process: () => null, close: async () => {} }
+  })
+  const sandboxed = await createCaptureEngine(fixtures)
+  try {
+    assert.equal(launch.mock.callCount(), 1)
+    assert.equal(sandboxed.sandboxMode, 'enabled')
+    assert.equal(sandboxed.sandboxFallbackReason, undefined)
+    assert.ok(!sandboxed.launchArgs.includes('--no-sandbox'))
+  } finally { await sandboxed.close() }
+})
+
+test('sandbox-specific launch failure retries once and records the fallback', async t => {
+  const attempts = []
+  const launch = puppeteer.launch.bind(puppeteer)
+  const controller = new AbortController()
+  t.mock.method(puppeteer, 'launch', async options => {
+    attempts.push(options)
+    if (attempts.length === 1) throw new Error('Failed to launch the browser process: No usable sandbox!')
+    return launch(options)
+  })
+  const fallback = await createCaptureEngine(fixtures, { signal: controller.signal })
+  try {
+    assert.equal(attempts.length, 2)
+    assert.ok(!attempts[0].args.includes('--no-sandbox'))
+    assert.deepEqual(attempts[1].args, [...attempts[0].args, '--no-sandbox'])
+    assert.equal(fallback.sandboxMode, 'disabled-fallback')
+    assert.match(fallback.sandboxFallbackReason, /No usable sandbox/)
+    for (const arg of attempts[1].args) assert.ok(fallback.launchArgs.includes(arg))
+    assert.equal((await fallback.capture('capture.html')).status, 'captured')
+    controller.abort(new Error('cancel fallback browser'))
+    await fallback.close()
+    assert.throws(() => process.kill(fallback.browserPid, 0), { code: 'ESRCH' })
+  } finally { await fallback.close() }
+})
+
+test('other launch errors never disable sandbox; failed fallback is not retried again', async t => {
+  const launch = t.mock.method(puppeteer, 'launch', async () => { throw new Error('Browser was not found: /tmp/sandbox/chrome') })
+  await assert.rejects(createCaptureEngine(fixtures), /Browser was not found/)
+  assert.equal(launch.mock.callCount(), 1)
+  launch.mock.restore()
+  const failing = t.mock.method(puppeteer, 'launch', async () => { throw new Error('No usable sandbox!') })
+  await assert.rejects(createCaptureEngine(fixtures), /No usable sandbox/)
+  assert.equal(failing.mock.callCount(), 2)
+})
+
+test('cancellation during initial launch prevents fallback; cancellation during retry closes Chrome', async t => {
+  const initial = new AbortController()
+  const launch = t.mock.method(puppeteer, 'launch', async () => {
+    initial.abort(new Error('cancel initial launch'))
+    throw new Error('No usable sandbox!')
+  })
+  await assert.rejects(createCaptureEngine(fixtures, { signal: initial.signal }), /cancel initial launch/)
+  assert.equal(launch.mock.callCount(), 1)
+  launch.mock.restore()
+  const retry = new AbortController()
+  let attempts = 0, closed = false
+  t.mock.method(puppeteer, 'launch', async () => {
+    if (++attempts === 1) throw new Error('No usable sandbox!')
+    retry.abort(new Error('cancel fallback launch'))
+    return { process: () => null, close: async () => { closed = true } }
+  })
+  await assert.rejects(createCaptureEngine(fixtures, { signal: retry.signal }), /cancel fallback launch/)
+  assert.equal(attempts, 2)
+  assert.ok(closed)
 })
 
 test('visibility hides chrome without flex reflow; display:none demonstrates the regression', async () => {
@@ -163,8 +244,16 @@ test('missing images fail; unavailable fonts explicitly warn and report actual f
     await page.addStyleTag({ content: 'body { font-family: "Deliberately Missing Test Font", sans-serif }' })
   })
   assert.equal(fonts.status, 'captured', fonts.error)
-  assert.ok(fonts.warnings.some(w => w.includes('Requested primary font not observed: Deliberately Missing Test Font')))
+  assert.ok(fonts.warnings.some(w => w.includes('字体回退：请求字体「Deliberately Missing Test Font」') && w.includes('字体排版可能不同')))
+  const fallback = fonts.fontFallbacks.find(item => item.requestedFamily === 'Deliberately Missing Test Font')
+  assert.ok(fallback.actualFamilies.length)
+  assert.deepEqual(fallback.actualFamilies, fonts.actualFontFamilies)
   assert.ok(fonts.actualFontFamilies.length)
+  const heading = await engine.capture('capture.html', async page => {
+    await page.addStyleTag({ content: 'h1 { font-family: "Missing Heading Font", "Noto Serif CJK SC" }' })
+  })
+  assert.equal(heading.status, 'captured', heading.error)
+  assert.deepEqual(heading.fontFallbacks.find(item => item.requestedFamily === 'Missing Heading Font').actualFamilies, ['Noto Serif CJK SC'])
 })
 
 test('scale/format change bytes, preserve viewport and fixed canvas, and report overflow', async () => {

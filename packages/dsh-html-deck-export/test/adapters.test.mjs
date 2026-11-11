@@ -59,11 +59,18 @@ for (const [name, ids] of [
     try {
       const result = await exportCapturedDeck(run, output)
       const report = JSON.parse(await readFile(result.reportPath, 'utf8'))
+      const markdown = await readFile(result.markdownReportPath, 'utf8')
+      assert.equal(markdown, result.summary)
       const pptx = JSON.parse(execFileSync('python3', [fileURLToPath(new URL('./inspect-pptx.py', import.meta.url)), result.pptxPath], { encoding: 'utf8' }))
       assert.equal(pptx.slides.length, 8)
       for (const [i, page] of run.pages.entries()) {
         assert.equal(report.pages[i].id, ids[i])
         assert.deepEqual(report.pages[i].renderState.preview, page.renderState.preview)
+        assert.deepEqual(report.pages[i].fontFallbacks, page.fontFallbacks)
+        for (const fallback of page.fontFallbacks) {
+          assert.ok(markdown.includes(`第 ${page.index} 页字体回退：请求字体「${fallback.requestedFamily}」`))
+          assert.ok(markdown.includes(`实际使用「${fallback.actualFamilies.join('、')}」`))
+        }
         assert.equal(pptx.slides[i].notes, page.notes, 'official notes survive OOXML in page order')
       }
     } finally { await rm(output, { recursive: true, force: true }) }
@@ -107,11 +114,25 @@ test('王虹 official template refuses missing HanziPen rather than capturing fa
   assert.equal(run.totalBytes, 0)
   for (const page of run.pages) {
     assert.equal(page.status, 'failed')
-    assert.match(page.error, /Required 王虹 handwritten font HanziPen SC is unavailable/)
+    assert.match(page.error, /缺少王虹必需的手写字体 HanziPen SC，已拒绝导出/)
     assert.equal(page.bytes, 0)
     assert.ok(page.image, 'retain failure evidence')
     assert.equal(page.notesSource, 'aside.notes')
   }
+  const output = await mkdtemp(join(tmpdir(), 'deck-wanghong-refused-'))
+  try {
+    await assert.rejects(exportCapturedDeck(run, output), error => {
+      for (const page of run.pages) assert.ok(error.message.includes(`第 ${page.index} 页失败：缺少王虹必需的手写字体 HanziPen SC，已拒绝导出`))
+      assert.match(error.message, /page-6-failed.png/)
+      return true
+    })
+    const markdown = await readFile(join(output, 'export-report.md'), 'utf8')
+    assert.match(markdown, /缺少王虹必需的手写字体 HanziPen SC，已拒绝导出/)
+    const report = JSON.parse(await readFile(join(output, 'export-report.json'), 'utf8'))
+    assert.equal(report.failedPages.length, 6)
+    for (const page of report.failedPages) assert.ok((await readFile(join(output, page.evidencePath))).byteLength)
+    await assert.rejects(readFile(join(output, 'deck.pptx')), { code: 'ENOENT' })
+  } finally { await rm(output, { recursive: true, force: true }) }
 })
 
 test('synthetic 王虹 readiness gate succeeds at 1920×1080 and rejects false readiness / smaller viewport', async () => {
@@ -128,7 +149,7 @@ test('synthetic 王虹 readiness gate succeeds at 1920×1080 and rejects false r
     await writeFile(join(directory, 'index.html'), html.replace('font-ready="true"', 'font-ready="false"'))
     const failed = await captureDeck(directory, { scale: 1 })
     assert.equal(failed.pages[0].status, 'failed')
-    assert.match(failed.pages[0].error, /font is not ready/)
+    assert.match(failed.pages[0].error, /王虹必需的手写字体尚未就绪，已拒绝导出/)
   } finally { await rm(directory, { recursive: true, force: true }) }
 })
 
@@ -146,6 +167,8 @@ test('required-font loaded branch accepts a synthetic local alias and retains 10
     assert.match(run.pages[0].notes, /合成夹具/)
     assert.ok(run.pages[0].computedFontFamilies.some(family => family.includes('HanziPen SC')))
     assert.ok(run.pages[0].actualFontFamilies.some(family => family.includes('Noto Sans CJK')))
+    assert.ok(run.pages[0].fontFallbacks.some(item => item.requestedFamily === 'HanziPen SC' && item.actualFamilies.includes('Noto Sans CJK SC')))
+    assert.ok(run.pages[0].warnings.some(warning => warning.includes('字体排版可能不同')))
   } finally { await rm(directory, { recursive: true, force: true }) }
 })
 

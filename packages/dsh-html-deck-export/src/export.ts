@@ -29,6 +29,9 @@ export interface ExportReport {
   /** Null for PNG or when Chrome's JPEG default was used. */
   quality: number | null
   browserVersion: string
+  launchArgs: DeckCapture['launchArgs']
+  sandboxMode: DeckCapture['sandboxMode']
+  sandboxFallbackReason?: string
   networkMode: 'blocked' | 'allowed'
   warnings: string[]
   actualFontFamilies: string[]
@@ -49,6 +52,27 @@ async function syncedWrite(path: string, data: string | Uint8Array) {
   finally { await file.close() }
 }
 
+const markdownText = (value: string) => value.replace(/([\\`*_{}\[\]<>()!#|])/g, '\\$1').replace(/[\r\n]+/g, ' ')
+
+function formatReport(report: ExportReport, reportPath: string, markdownReportPath: string): string {
+  const lines = [
+    '# HTML 演示稿导出报告', '',
+    report.status === 'completed' ? `导出完成：共 ${report.pageCount} 页，图片版 PPTX。`
+      : '导出失败：未生成本次 PPTX；已有 PPTX 不会被本次失败覆盖。',
+    ...(report.error ? [`原因：${markdownText(report.error)}`] : []),
+    `Chrome 沙箱：${report.sandboxMode === 'enabled' ? '保留（未添加 --no-sandbox）' : '沙箱启动失败，已重试一次并使用 --no-sandbox；仅处理可信本地 HTML'}。`,
+    `PPTX：${markdownText(report.pptxPath)}`, '',
+  ]
+  for (const page of report.pages) {
+    for (const warning of page.fontWarnings.filter(warning => warning.startsWith('字体回退：'))) {
+      lines.push(`- 第 ${page.index} 页${markdownText(warning)}`)
+    }
+    if (page.status === 'failed') lines.push(`- 第 ${page.index} 页失败：${markdownText(page.error ?? '未提供原因')}；${page.evidencePath ? `证据截图（相对报告目录）：${markdownText(page.evidencePath)}` : '无截图（未能保存截图证据）'}。`)
+  }
+  lines.push('', `详细报告：${markdownText(reportPath)}`, `中文报告：${markdownText(markdownReportPath)}`)
+  return lines.join('\n') + '\n'
+}
+
 /** Assemble only captured HTML images; a failed attempt preserves any previous PPTX. */
 export async function exportCapturedDeck(capture: DeckCapture, directory: string, options: ExportOptions = {}) {
   const started = performance.now()
@@ -62,9 +86,11 @@ export async function exportCapturedDeck(capture: DeckCapture, directory: string
   if (!(await stat(root)).isDirectory()) throw new Error('Export directory must be an existing directory')
   const pptxPath = join(root, fileName)
   const reportPath = join(root, 'export-report.json')
+  const markdownReportPath = join(root, 'export-report.md')
   const staging = await mkdtemp(join(root, '.html-deck-export-'))
   const stagedPptx = join(staging, 'deck.pptx')
   const stagedReport = join(staging, 'export-report.json')
+  const stagedMarkdown = join(staging, 'export-report.md')
   const pages: ReportPage[] = capture.pages.map(({ image: _image, ...page }) => ({
     ...page, fontWarnings: page.warnings.filter(warning => /font|字体/i.test(warning)),
   }))
@@ -72,6 +98,7 @@ export async function exportCapturedDeck(capture: DeckCapture, directory: string
     status: 'failed', inputPath: capture.deck.inputPath, detectedFormat: capture.deck.format,
     pageCount: capture.deck.slides.length, viewport: capture.viewport, scale: capture.scale,
     format: capture.format, quality: capture.quality ?? null, browserVersion: capture.browserVersion,
+    launchArgs: capture.launchArgs, sandboxMode: capture.sandboxMode, sandboxFallbackReason: capture.sandboxFallbackReason,
     networkMode: capture.allowNetwork ? 'allowed' : 'blocked', warnings: capture.deck.warnings,
     actualFontFamilies: [...new Set(pages.flatMap(page => page.actualFontFamilies))].sort(),
     pages, failedPages: pages.filter(page => page.status === 'failed'),
@@ -82,7 +109,9 @@ export async function exportCapturedDeck(capture: DeckCapture, directory: string
   async function publishReport() {
     report.elapsedMs = capture.elapsedMs + Math.round(performance.now() - started)
     await syncedWrite(stagedReport, JSON.stringify(report, null, 2) + '\n')
+    await syncedWrite(stagedMarkdown, formatReport(report, reportPath, markdownReportPath))
     await rename(stagedReport, reportPath)
+    await rename(stagedMarkdown, markdownReportPath)
   }
   try {
     options.signal?.throwIfAborted()
@@ -131,16 +160,18 @@ export async function exportCapturedDeck(capture: DeckCapture, directory: string
     options.signal?.throwIfAborted()
     // Commit the PPTX last: no fallible work after this rename may turn success into failure.
     await rename(stagedPptx, pptxPath)
-    return { pptxPath, reportPath, report }
+    return { pptxPath, reportPath, markdownReportPath, summary: formatReport(report, reportPath, markdownReportPath), report }
   } catch (error) {
     report.status = 'failed'
     report.pptxBytes = 0
     report.error = error instanceof Error ? error.message : String(error)
-    try { await rm(stagedReport, { force: true }); await publishReport() }
-    catch (reportError) { throw new AggregateError([error, reportError], 'Export failed and its report could not be published') }
-    throw new Error(`Export failed: ${report.error}. Report: ${reportPath}`, { cause: error })
+    try { await rm(stagedReport, { force: true }); await rm(stagedMarkdown, { force: true }); await publishReport() }
+    catch (reportError) { throw new AggregateError([error, reportError], formatReport(report, reportPath, markdownReportPath) + `报告写入失败：${(reportError as Error).message}`) }
+    throw new Error(formatReport(report, reportPath, markdownReportPath), { cause: error })
   } finally {
     await rm(stagedPptx, { force: true }).catch(() => {})
+    await rm(stagedReport, { force: true }).catch(() => {})
+    await rm(stagedMarkdown, { force: true }).catch(() => {})
     if (!hasEvidence) await rm(staging, { recursive: true, force: true }).catch(() => {})
   }
 }

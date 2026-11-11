@@ -19,6 +19,7 @@ function fakeCtx() {
         return { commandId: 'x', result }
       },
     },
+    agents: { list: () => [] },
   }
   return { ctx, listeners, disposers, executed, warnings, get command() { return command } }
 }
@@ -80,3 +81,23 @@ test('subagent sessions are skipped by default', async () => {
 test('invalid config throws at apply time', () => {
   assert.throws(() => apply(fakeCtx().ctx, { repeatThreshold: 0 }), /repeatThreshold/)
 })
+
+for (const failure of ['missing', 'shadowed', 'throw']) {
+  test(`delivery failure is diagnosed with session and alert kind: ${failure}`, async () => {
+    const f = fakeCtx(), a = agent('delivery-session')
+    apply(f.ctx, {})
+    f.ctx.commands.execute = async () => {
+      if (failure === 'throw') throw new Error('append denied token=SECRET')
+      if (failure === 'shadowed') return { result: { kind: 'success', text: 'another command' } }
+      return undefined
+    }
+    f.listeners.get('agent/status')({ agent: a, status: 'running' })
+    for (const callId of ['1', '2', '3']) f.listeners.get('session/event')(a.session, { type: 'tool/call', data: { callId, name: 'bash', arguments: '{}' } })
+    await f.listeners.get('session/flush')(a.session)
+    assert.equal(f.warnings.length, 1)
+    assert.match(f.warnings[0], /delivery-session，repeat-tool/)
+    assert.match(f.warnings[0], failure === 'throw' ? /append denied/ : /未找到或被其他命令覆盖/)
+    assert.equal(f.warnings[0].includes('SECRET'), false)
+    for (const dispose of f.disposers) await dispose?.()
+  })
+}

@@ -1,6 +1,6 @@
 {
   "name": "dsh-heartbeat-monitor",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Timed progress cards and stall/repeat warnings for long DeepSeek Harness turns",
   "type": "module",
   "main": "index.js",

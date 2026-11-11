@@ -4,7 +4,7 @@ import z from '@deepseek-ai/schemastery'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 import type { Session, SessionEvent } from '@deepseek-ai/dsh-session'
 import { CommandDefinitionId } from '@deepseek-ai/dsh-commands'
-import { defaults, resolveSettings, type Alert, type Settings } from './core.js'
+import { clip, defaults, resolveSettings, type Alert, type Settings } from './core.js'
 import { HeartbeatController } from './controller.js'
 import { systemNotify } from './notify.js'
 import { bashFailure } from './bash.js'
@@ -63,9 +63,12 @@ export function apply(ctx: Context, input: Partial<Settings> = {}): void {
     const previous = queues.get(sessionId) ?? Promise.resolve()
     const job = previous.then(() => new Promise<void>(resolve => setTimeout(resolve, 0))).then(async () => {
       if (disposed) return
-      await ctx.commands.execute(agent, `/${COMMAND} ${token}`, [], new AbortController().signal)
-    }).catch(() => {
-      ctx.logger.warn('心跳卡片发送失败（已忽略，不影响任务）')
+      const execution = await ctx.commands.execute(agent, `/${COMMAND} ${token}`, [], new AbortController().signal)
+      // An admission miss returns undefined; a scoped command shadow can run a
+      // different handler. Neither consumes our token or delivers this alert.
+      if (!execution || pending.has(token)) throw new Error('/heartbeat 未找到或被其他命令覆盖')
+    }).catch((error: unknown) => {
+      ctx.logger.warn(`心跳卡片发送失败（会话 ${clip(sessionId, 80)}，${alert.kind}）：${clip(error instanceof Error ? error.message : String(error), 160)}`)
     }).finally(() => {
       pending.delete(token)
       if (queues.get(sessionId) === job) queues.delete(sessionId)
@@ -112,13 +115,14 @@ export function apply(ctx: Context, input: Partial<Settings> = {}): void {
     },
   }))
 
-  ctx.on('agent/status', ({ agent, status }) => {
+  const observeStatus = (agent: Agent, status: 'running' | 'idle') => {
     if (disposed) return
     if (!settings.includeSubagents && agent.session.header.origin === 'subagent') return
     if (status === 'running') agents.set(agent.id, agent)
     controller.status(agent.id, status)
     syncTimer()
-  })
+  }
+  ctx.on('agent/status', ({ agent, status }) => observeStatus(agent, status))
 
   ctx.on('session/event', (session: Session, event: SessionEvent) => {
     if (disposed || !controller.isTracking(session.id)) return
@@ -141,5 +145,15 @@ export function apply(ctx: Context, input: Partial<Settings> = {}): void {
     await Promise.allSettled([...queues.values()])
     agents.clear()
     pending.clear()
+  })
+
+  // Status is an edge notification, not a replayable snapshot. Installation,
+  // config reload, or late commands-service availability can happen after the
+  // sole running edge. Adopt live runs even if they never publish another event.
+  // Observe from attachment time; do not replay historical activity as new work.
+  ctx.inject(['agents'], child => {
+    for (const agent of child.agents.list()) {
+      if (agent.status === 'running') observeStatus(agent, agent.status)
+    }
   })
 }

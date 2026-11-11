@@ -240,7 +240,7 @@ test('effective cwd changes fail closed and agent/plugin disposal clears run and
 
 test('invalid manifests and malformed private errors stay redacted; abort and overlapping calls settle safely', async t => {
   const f = await fixture(t)
-  for (const data of ['{SAMPLE-PRIVATE 999.00', JSON.stringify({ ...manifest, amount: '999.00' }), JSON.stringify({ ...manifest, inputs: [] }), JSON.stringify({ ...manifest, rules: { amount: '999.00' } }), JSON.stringify({ ...manifest, rules: null })]) {
+  for (const data of ['{SAMPLE-PRIVATE 999.00', JSON.stringify({ ...manifest, amount: '999.00' }), JSON.stringify({ ...manifest, inputs: [] }), JSON.stringify({ ...manifest, rules: { amount: '999.00' } }), JSON.stringify({ ...manifest, rules: null }), Buffer.from(JSON.stringify({ ...manifest, inputs: [{ ...input, path: 'SAMPLE\xff.json' }] }), 'latin1')]) {
     await writeFile(f.project + '/bad.json', data)
     const result = await f.call('start bad.json')
     assert.equal(result.kind, 'error'); assert.ok(!result.text.includes('999.00'))

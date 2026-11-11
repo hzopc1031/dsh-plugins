@@ -31,12 +31,12 @@ async function workbook(path) {
 const hash = data => createHash('sha256').update(data).digest('hex')
 
 test('clean Chinese CSV and XLSX ledgers reconcile with an XML ticket and export without changing sources', async t => {
-  const root = await project(t, ['clean.csv', 'invoice.xml'])
+  const root = await project(t, ['clean.csv', 'gbk.csv', 'gb18030.csv', 'invoice.xml'])
   const book = new ExcelJS.Workbook()
   const sheet = book.addWorksheet('SAMPLE 示例台账')
   for (const row of (await readFile(`${root}/clean.csv`, 'utf8')).replace(/^\uFEFF/, '').trim().split(/\r?\n/)) sheet.addRow(row.split(','))
   await book.xlsx.writeFile(`${root}/SAMPLE-clean.xlsx`)
-  for (const path of ['clean.csv', 'SAMPLE-clean.xlsx']) {
+  for (const path of ['clean.csv', 'gbk.csv', 'gb18030.csv', 'SAMPLE-clean.xlsx']) {
     const paths = ['invoice.xml', path]
     const before = await Promise.all(paths.map(name => readFile(`${root}/${name}`)))
     const data = await ingest(root, [{ path: paths[0], kind: 'ticket' }, { path, kind: 'ledger', mapping }])
@@ -50,6 +50,12 @@ test('clean Chinese CSV and XLSX ledgers reconcile with an XML ticket and export
     assert.equal(report.status, 'draft')
     assert.ok(report.records.every(record => record.fields.number.normalized.value === number))
     const exported = await workbook(`${root}/${pack.files.xlsx}`)
+    if (path.endsWith('.csv')) {
+      const encoding = path === 'clean.csv' ? 'utf-8' : 'gb18030'
+      assert.equal(report.extracted.inventory.find(entry => entry.fileId === 'file-2' && entry.unit === 'file').encoding, encoding)
+      assert.equal(cells(exported.getWorksheet('Inventory')).find(row => row[0] === 'file-2' && row[1] === 'file')[7], encoding)
+      assert.ok((await readFile(`${root}/${pack.files.markdown}`, 'utf8')).includes(encoding))
+    }
     const identifiers = exported.getWorksheet('Fields').getRows(2, exported.getWorksheet('Fields').rowCount - 1).filter(row => row.getCell(5).value === 'number' && row.getCell(4).value === '')
     assert.equal(identifiers.length, 2)
     for (const row of identifiers) assert.equal(row.getCell(6).value, number)

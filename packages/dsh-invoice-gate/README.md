@@ -42,7 +42,7 @@ dsh plugin --profile invoice-gate-demo add ./packages/dsh-invoice-gate
 
 ## 输入与拒绝范围
 
-- 接受本地 UTF-8 CSV、XLSX、[文档定义的 JSON / 用户自备 OCR 字段 JSON](docs/inputs.md)、带标签的 PDF 文本层、文档定义的 `Invoice schemaVersion="1"` XML。XML 只支持已记录且有合成样例的结构，不承诺兼容任意电子发票 XML。
+- 接受本地 UTF-8（可带 BOM）、GBK / GB18030 CSV、XLSX、[文档定义的 JSON / 用户自备 OCR 字段 JSON](docs/inputs.md)、带标签的 PDF 文本层、文档定义的 `Invoice schemaVersion="1"` XML。CSV 编码按严格解码记录在文件清单；JSON 清单仍用 UTF-8。XML 只支持已记录且有合成样例的结构，不承诺兼容任意电子发票 XML。
 - CSV/XLSX 必须明确映射列名；没有微信、支付宝专用模板。`amount` 是未税金额，`total` 是价税合计，不能互换猜测。
 - 拒绝 OFD；图片和无文本层扫描 PDF 需用户提供 OCR JSON。内置 OCR、云识别、邮箱采集、平台登录与抓取均未实现。
 - 不执行宏、外链、公式或脚本；只读存储的单元格值。公式无缓存值则记为 `unchecked`，不重算、不猜数。数值类型的票号拒绝视为可靠标识；20 位票号始终按文本处理。
@@ -68,7 +68,7 @@ dsh plugin --profile invoice-gate-demo add ./packages/dsh-invoice-gate
 
 Select a project, prepare the local manifest with explicit table mappings, then run `/invoice-gate start`, `ingest`, `check`, `export`, `status`, and `stop`. Commands need no model call. The three prefixed tools return counts, ids, status and paths only. The owning agent is restricted during a run; arbitrary PTC code is blocked. See [tools.md](docs/tools.md) for exact arguments and the manifest example.
 
-Inputs are CSV/XLSX, documented structured or user-supplied OCR JSON, labelled PDF text layers and the documented XML dialect. OFD and scans/images without OCR JSON are refused. No OCR engine, login, scraping or tax-bureau verification is included. Originals are read-only and hashed; every failure/skip is inventoried. Formulas, macros and external links are not executed. Missing cached formula results stay unchecked. Identifiers remain strings, including 20-digit invoice numbers.
+Inputs are UTF-8 (optional BOM), GBK/GB18030 CSV, XLSX, documented structured or user-supplied OCR JSON, labelled PDF text layers and the documented XML dialect. CSV encoding is recorded in the file inventory; JSON manifests remain UTF-8. OFD and scans/images without OCR JSON are refused. No OCR engine, login, scraping or tax-bureau verification is included. Originals are read-only and hashed; every failure/skip is inventoried. Formulas, macros and external links are not executed. Missing cached formula results stay unchecked. Identifiers remain strings, including 20-digit invoice numbers.
 
 **The model must never invent or change amounts, tax, totals or identifiers.** There is no rewrite tool. Integer-fen rules check arithmetic, line totals, duplicates, optional buyer/date constraints and invoice-number ledger matching. Blank is not zero; ambiguous money/currency is unchecked. Extracted, normalized and human-confirmed values stay separate. Human corrections carry before/after provenance and trigger fresh checks without changing originals; no tool accepts corrections or model-authored replacement values.
 

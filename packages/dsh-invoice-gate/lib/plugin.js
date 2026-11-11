@@ -177,7 +177,7 @@ export function apply(ctx) {
                             fail('Only one run is allowed. Stop the current run first.');
                         path(arg);
                         const root = await realpath(directory(agent));
-                        const manifest = JSON.parse((await readOriginal(root, arg)).toString('utf8'));
+                        const manifest = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(await readOriginal(root, arg)));
                         keys(manifest, ['schemaVersion', 'inputs', 'rules', 'corrections']);
                         if (manifest.schemaVersion !== 1 || !Array.isArray(manifest.inputs) || !manifest.inputs.length)
                             fail('Manifest requires schemaVersion 1 and a nonempty inputs array.');
@@ -201,7 +201,7 @@ export function apply(ctx) {
                         let corrections;
                         if (manifest.corrections !== undefined) {
                             path(manifest.corrections);
-                            corrections = JSON.parse((await readOriginal(root, manifest.corrections)).toString('utf8'));
+                            corrections = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(await readOriginal(root, manifest.corrections)));
                         }
                         control.throwIfAborted();
                         const restore = agent.ctx.tools.restrict({ allow: toolNames });

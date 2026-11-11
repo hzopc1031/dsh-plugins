@@ -1,7 +1,11 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
+import childProcess from 'node:child_process'
+import fs from 'node:fs'
+import fsPromises from 'node:fs/promises'
 import { chmod, copyFile, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises'
+import { syncBuiltinESMExports } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import http from 'node:http'
 import https from 'node:https'
@@ -19,6 +23,16 @@ async function temp(t) {
   return root
 }
 const hash = data => createHash('sha256').update(data).digest('hex')
+function readerHook(t, script) {
+  const spawn = childProcess.spawn
+  return t.mock.method(childProcess, 'spawn', (command, args, options) => {
+    const injected = [...args]
+    const index = injected.indexOf('--eval') + 1
+    assert.ok(index > 0)
+    injected[index] = script + '\n' + injected[index]
+    return spawn(command, injected, options)
+  })
+}
 
 test('Chinese CSV mapping, blank amounts, strings and logical row inventory', async t => {
   const result = await ingest(fixtures, [input('clean.csv', { mapping, kind: 'ledger' })])
@@ -52,6 +66,51 @@ test('mapping is mandatory and ambiguous/missing columns refuse every row', asyn
   await writeFile(root + '/duplicate.csv', '金额,金额\n100,100\n')
   const result = await ingest(root, [input('duplicate.csv', { mapping: { amount: '金额' } })])
   assert.ok(result.inventory.some(e => e.reason === 'missing-or-ambiguous-mapped-header'))
+})
+
+test('UTF-8 with/without BOM, GBK and four-byte GB18030 preserve Chinese fields, quoted CSV and text ids', async t => {
+  const root = await temp(t)
+  const utf8 = (await readFile(fixtures + 'clean.csv', 'utf8')).replace(/^\uFEFF/, '')
+  await writeFile(root + '/utf8.csv', utf8)
+  await writeFile(root + '/utf8-bom.csv', '\uFEFF' + utf8)
+  await writeFile(root + '/utf8-four-byte.csv', utf8.replace('SAMPLE 示例买方', 'SAMPLE 示例买方𠮷'))
+  for (const name of ['gbk.csv', 'gb18030.csv']) await copyFile(fixtures + name, root + '/' + name)
+  await writeFile(root + '/ascii.csv', 'Number,Amount,Tax,Total,Label\n12345678901234567890,,0.00,0.00,"SAMPLE, non-real invoice"\n')
+  const names = ['utf8.csv', 'utf8-bom.csv', 'gbk.csv', 'utf8-four-byte.csv', 'gb18030.csv', 'ascii.csv']
+  const before = await Promise.all(names.map(name => readFile(root + '/' + name)))
+  const result = await ingest(root, names.map(name => input(name, { mapping: name === 'ascii.csv'
+    ? { number: 'Number', amount: 'Amount', tax: 'Tax', total: 'Total', materialType: 'Label' } : mapping })))
+  assert.ok(result.files.every(file => file.status === 'parsed'))
+  assert.deepEqual(result.inventory.filter(e => e.unit === 'file').map(e => e.encoding), ['utf-8', 'utf-8', 'gb18030', 'utf-8', 'gb18030', 'utf-8'])
+  const values = record => Object.fromEntries(fieldNames.map(name => [name, record.fields[name].raw]))
+  assert.deepEqual(values(result.records[1]), values(result.records[0]))
+  assert.deepEqual(values(result.records[2]), values(result.records[0]))
+  assert.deepEqual(values(result.records[4]), values(result.records[3]))
+  assert.equal(result.records[4].fields.buyer.raw, 'SAMPLE 示例买方𠮷')
+  for (const record of result.records) assert.equal(record.fields.number.raw, number)
+  assert.equal(result.records[5].fields.amount.raw, '')
+  assert.equal(result.records[5].fields.materialType.raw, 'SAMPLE, non-real invoice')
+  for (const [i, name] of names.entries()) {
+    assert.equal(result.files[i].sha256, hash(before[i]))
+    assert.deepEqual(await readFile(root + '/' + name), before[i])
+  }
+})
+
+test('invalid mixed CSV bytes and invalid UTF-8 after a BOM are refused, hashed and inventoried', async t => {
+  const root = await temp(t)
+  const valid = Buffer.from('Number,Label\n12345678901234567890,SAMPLE 示例 非真实票据')
+  await writeFile(root + '/mixed.csv', Buffer.concat([valid, Buffer.from([0xff, 0x81])]))
+  await writeFile(root + '/bom-gbk.csv', Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), await readFile(fixtures + 'gbk.csv')]))
+  await writeFile(root + '/gbk.json', Buffer.concat([Buffer.from('{"SAMPLE":"'), Buffer.from([0xca, 0xbe, 0xc0, 0xfd]), Buffer.from('"}')] ))
+  const result = await ingest(root, ['mixed.csv', 'bom-gbk.csv', 'gbk.json'].map(name => input(name, { mapping })))
+  assert.equal(result.records.length, 0)
+  assert.equal(result.files.length, 3)
+  assert.ok(result.files.every(file => file.sha256))
+  assert.deepEqual(result.inventory.slice(0, 2).map(e => [e.unit, e.status, e.reason, e.encoding]), [
+    ['file', 'refused', 'csv-encoding-invalid-utf8-or-gb18030', undefined],
+    ['file', 'refused', 'csv-encoding-invalid-utf8-or-gb18030', undefined],
+  ])
+  assert.equal(result.files[2].status, 'failed')
 })
 
 test('XLSX preserves text identifiers, cached values and formula-only fields; inventories blank and unselected rows', async () => {
@@ -216,6 +275,93 @@ test('path traversal, absolute paths, file/directory symlink escapes and sidecar
     assert.equal(file.reason, 'path-outside-project')
   }
   assert.equal(result.files.find(f => f.path === 'scan.png').reason, 'ocr-sidecar-failed')
+})
+
+test('with both fd-path filesystems unavailable, nested reads stay confined, hashed and read-only', async t => {
+  const root = await temp(t)
+  await mkdir(root + '/project/nested', { recursive: true })
+  const before = await readFile(fixtures + 'clean.csv')
+  await writeFile(root + '/project/nested/SAMPLE.csv', before)
+  await writeFile(root + '/outside.csv', before)
+  await symlink(root, root + '/project/escape')
+  await symlink(root + '/outside.csv', root + '/project/link.csv')
+  await symlink('nested', root + '/project/local')
+  const denyFdPath = path => /^\/(?:proc\/self\/fd|dev\/fd)(?:\/|$)/.test(String(path))
+  const mocks = []
+  for (const object of [fs, fsPromises]) for (const name of ['realpath', 'readlink', 'open', 'realpathSync', 'readlinkSync', 'openSync']) {
+    if (typeof object[name] !== 'function') continue
+    const original = object[name]
+    mocks.push(t.mock.method(object, name, function (path, ...args) {
+      if (denyFdPath(path)) throw Object.assign(new Error('fd paths unavailable'), { code: 'ENOENT' })
+      return original.call(this, path, ...args)
+    }))
+  }
+  syncBuiltinESMExports()
+  t.after(() => { for (const mock of mocks) mock.mock.restore(); syncBuiltinESMExports() })
+  assert.throws(() => fs.realpathSync('/proc/self/fd/0'), /unavailable/)
+  assert.throws(() => fs.realpathSync('/dev/fd/0'), /unavailable/)
+  readerHook(t, `(() => {
+    const fs = require('node:fs')
+    for (const name of ['realpathSync', 'readlinkSync', 'openSync']) {
+      const original = fs[name]
+      fs[name] = (path, ...args) => {
+        if (/^\\/(?:proc\\/self\\/fd|dev\\/fd)(?:\\/|$)/.test(String(path))) throw Object.assign(new Error('fd paths unavailable'), { code: 'ENOENT' })
+        return original(path, ...args)
+      }
+    }
+    require('node:assert/strict').throws(() => fs.realpathSync('/proc/self/fd/3'))
+    require('node:assert/strict').throws(() => fs.realpathSync('/dev/fd/3'))
+  })()`)
+  const cwd = process.cwd()
+  const result = await ingest(root + '/project', [
+    input('nested/SAMPLE.csv', { mapping }), input('local/SAMPLE.csv', { mapping }),
+    ...['../outside.csv', root + '/outside.csv', 'escape/outside.csv', 'link.csv', 'nested/../../outside.csv'].map(path => input(path, { mapping })),
+  ])
+  assert.equal(process.cwd(), cwd)
+  assert.equal(result.records.length, 2)
+  assert.ok(result.records.every(record => record.fields.number.raw === number))
+  assert.ok(result.files.slice(0, 2).every(file => file.sha256 === hash(before) && file.status === 'parsed'))
+  assert.ok(result.files.slice(2).every(file => file.sha256 === null && file.reason === 'path-outside-project'))
+  assert.equal(result.inventory.filter(e => e.unit === 'file').length, 7)
+  assert.deepEqual(await readFile(root + '/project/nested/SAMPLE.csv'), before)
+  assert.deepEqual(await readFile(root + '/outside.csv'), before)
+})
+
+test('ancestor replacement before chdir is refused; replacement after chdir cannot redirect a read', async t => {
+  const root = await temp(t)
+  await mkdir(root + '/outside')
+  await writeFile(root + '/outside/SAMPLE.csv', 'Number,Label\nSAMPLE-OUTSIDE,非真实票据\n')
+  for (const when of ['before', 'after']) {
+    const project = root + '/' + when
+    await mkdir(project + '/nested', { recursive: true })
+    const before = await readFile(fixtures + 'clean.csv')
+    await writeFile(project + '/nested/SAMPLE.csv', before)
+    const hook = readerHook(t, `(() => {
+      const fs = require('node:fs')
+      const path = require('node:path')
+      const chdir = process.chdir.bind(process)
+      process.chdir = part => {
+        if (part !== 'nested') return chdir(part)
+        const parent = process.cwd()
+        if (${JSON.stringify(when)} === 'after') chdir(part)
+        fs.renameSync(path.join(parent, part), path.join(parent, 'pinned'))
+        fs.symlinkSync(path.join(parent, '../outside'), path.join(parent, part))
+        if (${JSON.stringify(when)} === 'before') chdir(part)
+      }
+    })()`)
+    const result = await ingest(project, [input('nested/SAMPLE.csv', { mapping })])
+    hook.mock.restore()
+    if (when === 'before') {
+      assert.equal(result.records.length, 0)
+      assert.equal(result.files[0].sha256, null)
+      assert.equal(result.files[0].status, 'refused')
+    } else {
+      assert.equal(result.files[0].status, 'parsed')
+      assert.equal(result.files[0].sha256, hash(before))
+      assert.equal(result.records[0].fields.number.raw, number)
+    }
+    assert.deepEqual(await readFile(project + '/pinned/SAMPLE.csv'), before)
+  }
 })
 
 test('missing, unreadable, malformed and truncated inputs are inventoried without exposing contents', async t => {

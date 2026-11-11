@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
-import { constants } from 'node:fs';
-import { open, realpath, stat } from 'node:fs/promises';
-import { extname, isAbsolute, relative, resolve, sep } from 'node:path';
+import childProcess from 'node:child_process';
+import { realpath, stat } from 'node:fs/promises';
+import { basename, dirname, extname, isAbsolute, parse, relative, resolve, sep } from 'node:path';
 import ExcelJS from 'exceljs';
 import { XMLParser, XMLValidator } from 'fast-xml-parser';
 export const fieldNames = ['date', 'number', 'buyer', 'seller', 'amount', 'tax', 'total', 'currency', 'materialType'];
@@ -10,24 +10,53 @@ class Refusal extends Error {
 function refuse(message) { throw new Refusal(message); }
 const object = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
 const inside = (root, path) => { const rel = relative(root, path); return rel !== '..' && !rel.startsWith('..' + sep) && !isAbsolute(rel); };
-// Validate the opened descriptor too: a parent symlink can change between realpath and open.
+// Walk from the filesystem root in a private cwd so ancestor replacement cannot redirect a read.
+const confinedReader = `
+const fs = require('node:fs')
+const path = require('node:path')
+const same = (a, b) => a.dev === b.dev && a.ino === b.ino
+try {
+  const parts = process.argv[1].split(path.sep)
+  for (const part of parts.slice(0, -1)) {
+    const directory = fs.openSync(part, fs.constants.O_RDONLY | fs.constants.O_DIRECTORY | fs.constants.O_NOFOLLOW)
+    try {
+      const expected = fs.fstatSync(directory, { bigint: true })
+      process.chdir(part)
+      if (!same(expected, fs.statSync('.', { bigint: true }))) process.exit(2)
+    } finally { fs.closeSync(directory) }
+  }
+  const fd = fs.openSync(parts.at(-1), fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW | fs.constants.O_NONBLOCK)
+  try {
+    if (!fs.fstatSync(fd).isFile()) process.exit(3)
+    fs.writeFileSync(1, fs.readFileSync(fd))
+  } finally { fs.closeSync(fd) }
+} catch (error) { process.exitCode = error.code === 'ELOOP' ? 2 : 1 }
+`;
 export async function readOriginal(root, path) {
     if (typeof path !== 'string' || !path || isAbsolute(path) || path.split(/[\\/]/).includes('..') || path.includes('\0'))
         refuse('path-outside-project');
     const target = resolve(root, path);
-    if (!inside(root, await realpath(target)))
+    const parent = await realpath(dirname(target));
+    if (!inside(root, parent))
         refuse('path-outside-project');
-    const handle = await open(target, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
-    try {
-        if (!(await handle.stat()).isFile())
-            refuse('not-a-regular-file');
-        if (!inside(root, await realpath(`/proc/self/fd/${handle.fd}`)))
-            refuse('path-outside-project');
-        return await handle.readFile();
-    }
-    finally {
-        await handle.close();
-    }
+    const anchor = parse(root).root;
+    return await new Promise((accept, reject) => {
+        const child = childProcess.spawn(process.execPath, ['--input-type=commonjs', '--eval', confinedReader, '--', relative(anchor, resolve(parent, basename(target)))], {
+            cwd: anchor, stdio: ['ignore', 'pipe', 'ignore'], env: { ...process.env, NODE_OPTIONS: '' },
+        });
+        const chunks = [];
+        child.stdout.on('data', (chunk) => chunks.push(chunk));
+        child.stdout.on('error', reject);
+        child.on('error', reject);
+        child.on('close', code => {
+            if (code === 0)
+                accept(Buffer.concat(chunks));
+            else if (code === 2 || code === 3)
+                reject(new Refusal(code === 2 ? 'path-outside-project' : 'not-a-regular-file'));
+            else
+                reject(new Error('input-read-or-parse-failed'));
+        });
+    });
 }
 function field(raw, source) {
     if (raw !== null && typeof raw !== 'string')
@@ -345,6 +374,21 @@ async function parsePdf(data, file, result, sidecar) {
     }
 }
 function decode(data) { return new TextDecoder('utf-8', { fatal: true }).decode(data).replace(/^\uFEFF/, ''); }
+function decodeCsv(data) {
+    const bom = data.subarray(0, 3).equals(Buffer.from([0xef, 0xbb, 0xbf]));
+    try {
+        return { text: decode(data), encoding: 'utf-8' };
+    }
+    catch {
+        if (!bom) {
+            try {
+                return { text: new TextDecoder('gb18030', { fatal: true }).decode(data), encoding: 'gb18030' };
+            }
+            catch { /* Never replace financial evidence with guessed characters. */ }
+        }
+        refuse('csv-encoding-invalid-utf8-or-gb18030');
+    }
+}
 /** Local library result contains raw evidence; never return it directly to the host model. */
 export async function ingest(projectDir, inputs) {
     if (typeof projectDir !== 'string' || !Array.isArray(inputs))
@@ -357,6 +401,7 @@ export async function ingest(projectDir, inputs) {
         const file = { id, path: object(input) && typeof input.path === 'string' ? input.path : '', sha256: null, status: 'parsed', ...(originalFileId ? { originalFileId } : {}) };
         result.files.push(file);
         const start = result.inventory.length;
+        let encoding;
         try {
             if (!object(input))
                 refuse('invalid-input');
@@ -373,7 +418,9 @@ export async function ingest(projectDir, inputs) {
             if ((input.ocrJson !== undefined || originalFileId) && !['.pdf', '.png', '.jpg', '.jpeg', '.tif', '.tiff', '.bmp', '.webp'].includes(extname(original.path).toLowerCase()))
                 refuse('ocr-sidecar-only-for-pdf-or-images');
             if (ext === '.csv') {
-                const rows = csvRows(decode(data));
+                const decoded = decodeCsv(data);
+                encoding = decoded.encoding;
+                const rows = csvRows(decoded.text);
                 parseTable(rows.map(row => row.cells), file, input, result, undefined, new Map(rows.flatMap((row, i) => row.issue ? [[i + 1, row.issue]] : [])));
             }
             else if (ext === '.xlsx') {
@@ -417,7 +464,7 @@ export async function ingest(projectDir, inputs) {
             file.status = result.records.some(record => record.fileId === id) ? 'partial' : entries.some(entry => entry.status === 'failed') ? 'failed' : 'refused';
             file.reason = 'see-unit-inventory';
         }
-        result.inventory.push({ fileId: id, unit: 'file', status: file.status, ...(file.reason ? { reason: file.reason } : {}) });
+        result.inventory.push({ fileId: id, unit: 'file', status: file.status, ...(file.reason ? { reason: file.reason } : {}), ...(encoding ? { encoding } : {}) });
         if (object(input) && typeof input.ocrJson === 'string') {
             await load({ path: input.ocrJson, kind: 'ticket' }, `${id}:ocr`, id);
             const sidecar = result.files.at(-1);

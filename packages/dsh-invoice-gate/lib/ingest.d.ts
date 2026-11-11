@@ -41,6 +41,7 @@ export interface InventoryEntry {
     unit: 'file' | 'sheet' | 'page' | 'row';
     status: Status;
     reason?: string;
+    encoding?: 'utf-8' | 'gb18030';
     sheet?: string;
     row?: number;
     page?: number;

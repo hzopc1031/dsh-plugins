@@ -54,10 +54,10 @@ GitHub 仓库研判 · example-team/plugin-kit
 
 1. **完全退出桌面 DSH。** 关闭所有窗口，并从系统托盘退出 DSH，确认已完全关闭后再安装或更新。
 
-2. **在终端安装插件。** 需要 DSH 命令行可用，包内已带编译文件，安装时无需构建。
+2. **在终端安装插件。** 用桌面版自带的命令行（PowerShell），包内已带编译文件，安装时无需构建。
 
    ```powershell
-   dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-github-triage"
+   & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-github-triage"
    ```
 
 3. **重开 DSH，配置并运行一次。** 在插件设置找到 **GitHub 仓库研判（dsh-github-triage）** 并启用；先在 DSH 模型设置配置服务商，再在会话运行 `/triage-models`，把输出的 `provider`、`model` 分别填入插件同名字段，启用 `modelEnabled`。这里填准确 ID，不填 API key，也不把 `provider/model` 整串填入 `model`。目录为空时到 DSH 模型设置查 ID。

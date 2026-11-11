@@ -1,19 +1,20 @@
 import { constants } from 'node:fs';
 import { lstat, mkdtemp, open, realpath, rename, rm, writeFile } from 'node:fs/promises';
 import { isAbsolute, join, resolve } from 'node:path';
+import { message } from './messages.js';
 export function validDirectory(directory) {
     return typeof directory === 'string' && isAbsolute(directory) && !directory.split(/[\\/]/).includes('..');
 }
 export async function localPath(directory, filename) {
     if (!validDirectory(directory) || !/^\.apache-radar-[a-z-]+\.(json|md)$/.test(filename))
-        throw new Error('Local directory traversal or filename rejected');
+        throw new Error(message('errors.localTraversal'));
     const root = resolve(directory);
     if (await realpath(root) !== root || !(await lstat(root)).isDirectory())
-        throw new Error('Local directory symlink or invalid directory rejected');
+        throw new Error(message('errors.localDirectory'));
     const path = join(root, filename);
     try {
         if (!(await lstat(path)).isFile())
-            throw new Error('Local target symlink or non-file rejected');
+            throw new Error(message('errors.localTarget'));
     }
     catch (error) {
         if (error.code !== 'ENOENT')

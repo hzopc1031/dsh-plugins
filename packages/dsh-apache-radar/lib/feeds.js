@@ -1,3 +1,4 @@
+import { message } from './messages.js';
 import { parse } from 'parse5';
 import { clean, elements, fetchReleases, link, object, SOURCES, text } from './fetchers.js';
 import { singaporeTime } from './counts.js';
@@ -17,7 +18,7 @@ export function rollingWindow(now = new Date(), days = 7) {
     const start = new Date(now.getTime() - days * 86_400_000).toISOString();
     const end = now.toISOString();
     return { start, end, days, timezone: 'Asia/Singapore', mode: 'rolling',
-        label: `滚动最近 ${days} 天：${singaporeTime(start)} 至 ${singaporeTime(end)}（含两端）；仅日期按 UTC+8 当日零时筛选，日期未知项另列，不计作窗口内动态。` };
+        label: message('feed.window', { days, start: singaporeTime(start), end: singaporeTime(end) }) };
 }
 export function isSecurityItem(item) {
     return /\bCVE-\d{4}-\d+\b|\bsecurity\b|安全公告|漏洞/i.test(`${item.title} ${item.issueType ?? ''}`);
@@ -64,10 +65,10 @@ export function parseJira(payload, project, url) {
     }
     if (root.total < root.startAt + issues.length || issues.length > root.maxResults)
         throw new Error('Inconsistent JIRA pagination');
-    const warnings = ['JIRA 工单及 fixVersion / New Feature 不代表完整已发布特性列表。'];
+    const warnings = [message('feed.jiraWarning')];
     // shortcut: one capped JIRA page per watched project; add polite pagination if complete history is required.
     if (root.startAt !== 0 || root.total > issues.length)
-        warnings.push('JIRA 响应仅含部分结果；未扫描其他页，不能视为完整时间窗。');
+        warnings.push(message('feed.partialJira'));
     const data = issues.map(value => {
         const issue = object(value);
         const key = text(issue.key);
@@ -83,7 +84,7 @@ export function parseJira(payload, project, url) {
         };
     });
     if (data.some(item => !item.date))
-        warnings.push('部分 JIRA 工单缺少日期，另列为日期未知参考项。');
+        warnings.push(message('feed.undatedJira'));
     return { data, sourceTimestamp: sourceTime(root), warnings };
 }
 function html(payload) {
@@ -120,12 +121,12 @@ export function parseProposals(payload, project) {
                     throw new Error('Invalid proposal row');
                 const a = elements(cells[0], 'a').find(a => prefix.test(clean(a)));
                 if (!a) {
-                    warnings.push('提案行缺少原文链接，已跳过。');
+                    warnings.push(message('feed.skippedProposal'));
                     continue;
                 }
                 const href = a.attrs.find(attr => attr.name === 'href')?.value;
                 if (!href) {
-                    warnings.push('提案行缺少原文链接，已跳过。');
+                    warnings.push(message('feed.skippedProposal'));
                     continue;
                 }
                 const url = link(new URL(href, PROPOSAL_SOURCES[project]).href);
@@ -147,7 +148,7 @@ export function parseProposals(payload, project) {
     if (!tables)
         throw new Error('Missing proposal index tables');
     if (data.some(item => !item.date))
-        warnings.push('索引未提供条目日期；日期未知项为参考提案，不是本周新增。');
+        warnings.push(message('feed.undatedProposals'));
     return { data, warnings: [...new Set(warnings)] };
 }
 export function parseKafkaNotes(payload) {
@@ -220,7 +221,7 @@ export async function collectWatchFeeds(http, options = {}) {
             ...item, kind: 'release', title: item.version, sourceUrl: SOURCES.releases, dateBasis: 'catalogue-day', status: 'catalogued',
             notesUrl: notes?.get(item.version), notesStatus: notes?.has(item.version) ? 'found'
                 : notesSource?.status === 'failed' || notesSource?.status === 'stale' ? 'failed' : 'missing',
-            statusText: notes?.has(item.version) ? '目录已收录；附项目原文链接。' : '目录已收录；未找到版本说明，不推断变更内容。',
+            statusText: notes?.has(item.version) ? message('feed.notesFound') : message('feed.notesMissing'),
         })));
         if (Object.hasOwn(jiraProjects, project)) {
             const url = jiraSearchUrl(project, window);
@@ -229,7 +230,7 @@ export async function collectWatchFeeds(http, options = {}) {
                 add(items);
         }
         else
-            report.sources.push({ project, kind: 'jira', status: 'unavailable', warnings: ['此项目尚无已验证的匿名 JIRA 适配器。'] });
+            report.sources.push({ project, kind: 'jira', status: 'unavailable', warnings: [message('feed.noJira')] });
         if (project === 'kafka' || project === 'flink') {
             const items = await read('proposal', PROPOSAL_SOURCES[project], payload => parseProposals(payload, project), project);
             if (items)
@@ -237,8 +238,8 @@ export async function collectWatchFeeds(http, options = {}) {
         }
         else
             report.sources.push({ project, kind: 'proposal', status: 'unavailable', warnings: [project === 'hadoop'
-                        ? 'Hadoop 没有已验证的通用 HIP 索引；研究中的候选地址返回 404，不抓取或虚构 HIP 表。'
-                        : '此项目尚无已验证的提案索引。'] });
+                        ? message('feed.noHip')
+                        : message('feed.noProposal')] });
     }
     return report;
 }

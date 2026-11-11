@@ -5,6 +5,7 @@ import { writeWeeklyBrief } from './brief.js'
 import { createHttpClient, type HttpClient } from './http.js'
 import { localPath, readLocal, writeLocal } from './local-files.js'
 import { resolveWatchList } from './watch.js'
+import { message } from './messages.js'
 
 interface State { watchList?: string[]; collectedAt?: string }
 const stateFile = '.apache-radar-state.json'
@@ -25,7 +26,7 @@ function countsSummary(report: CountsReport) {
 }
 // Explicit projection keeps future upstream issue bodies out of model-visible lookup results.
 export function itemSummary(item: FeedItem) {
-  return { project: item.project, kind: item.kind, security: isSecurityItem(item), id: item.key ?? item.version ?? item.url,
+  return { project: item.project, kind: item.kind, security: isSecurityItem(item), id: item.key ?? item.version ?? item.url, version: item.version,
     title: item.title, url: item.url, sourceUrl: item.sourceUrl, date: item.date, dateBasis: item.dateBasis,
     status: item.status, statusText: item.statusText, issueType: item.issueType, fixVersions: item.fixVersions, notesUrl: item.notesUrl }
 }
@@ -52,29 +53,29 @@ export async function runRadar(directory: string, action: RadarAction, args: Rad
   }
   if (action === 'open') {
     const content = await readLocal(directory, '.apache-radar-brief.md')
-    if (content === undefined) throw new Error('尚无本地周报，请先生成 brief。')
+    if (content === undefined) throw new Error(message('errors.noBrief'))
     return JSON.stringify({ path: await localPath(directory, '.apache-radar-brief.md'), ...(args.includeMarkdown === true ? { markdown: content } : {}) })
   }
   const cache = await loadFeedCache(directory)
   const now = options.now?.() ?? new Date()
   if (action === 'lookup') {
-    if (!state.collectedAt) throw new Error('尚无已采集动态，请先 refresh 或 brief。')
-    if (args.project && !watchList.includes(args.project)) throw new Error('查询项目不在关注列表中。')
-    const feeds = await collectWatchFeeds(async () => { throw new Error('仅查询已采集数据；此来源需另行刷新。') }, {
+    if (!state.collectedAt) throw new Error(message('errors.noCollection'))
+    if (args.project && !watchList.includes(args.project)) throw new Error(message('errors.unwatched'))
+    const feeds = await collectWatchFeeds(async () => { throw new Error(message('lookup.offline')) }, {
       watchList, now: new Date(state.collectedAt), cache, ttlMs: Number.MAX_SAFE_INTEGER,
     })
     for (const source of feeds.sources) {
       if (source.fetchedAt && now.getTime() - Date.parse(source.fetchedAt) >= (options.ttlMs ?? 3_600_000)) {
         source.status = 'stale'
-        source.error = '缓存已过期；仅查询已采集数据，未发起刷新。'
+        source.error = message('lookup.expired')
       }
     }
     const query = (args.query ?? '').trim().toLowerCase()
-    if (!query) throw new Error('请输入条目 id、版本或标题关键词。')
+    if (!query) throw new Error(message('errors.query'))
     const matches = [...feeds.items, ...feeds.undatedItems].filter(item => (!args.project || item.project === args.project)
       && `${item.key ?? ''} ${item.version ?? ''} ${item.title} ${item.statusText ?? ''} ${(item.fixVersions ?? []).join(' ')}`.toLowerCase().includes(query))
     return JSON.stringify({ collectedAt: state.collectedAt, window: feeds.window, items: matches.slice(0, 20).map(itemSummary),
-      hasMore: matches.length > 20, sources: feeds.sources, note: '仅查找已采集的带链接条目；日期未知项不是本周新增。未匹配不表示没有更新；不作兼容性或生产升级判断。' })
+      hasMore: matches.length > 20, sources: feeds.sources, note: message('lookup.note') })
   }
   const http = options.http ?? createHttpClient({ now: options.now })
   const counts = await fetchCountsReport(http, { cache, now, ttlMs: options.ttlMs })
@@ -88,5 +89,5 @@ export async function runRadar(directory: string, action: RadarAction, args: Rad
   const path = action === 'brief' ? await writeWeeklyBrief(directory, counts, feeds, now.toISOString()) : undefined
   return JSON.stringify({ watchList, window: feeds.window, generatedAt: now.toISOString(), path,
     counts: countsSummary(counts), sources: feeds.sources,
-    note: '保留各来源失败与旧缓存时间；日期未知提案不计作本周新增。使用 lookup 查找已采集条目，open 查看周报。' })
+    note: message('collection.note') })
 }

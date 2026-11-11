@@ -59,7 +59,7 @@ export type Categories = Evidence & ({
     official: true;
     multiLabel: true;
     rows: (CountRow & {
-        members: Member[];
+        members?: Member[];
     })[];
 } | {
     status: 'error';

@@ -29,7 +29,7 @@ test('bundle exports prefixed typed tools, commands and honest help; unload disp
   for (const rawInput of ['', ' help ']) {
     const result = await host.command.handler({ rawInput })
     assert.equal(result.kind, 'success')
-    for (const phrase of ['本地', '多来源', 'URL', 'Asia/Singapore', 'Kafka / Hadoop / Flink', 'reporter.apache.org', '无需模型', 'refresh', 'brief', 'lookup']) assert.ok(result.text.includes(phrase))
+    for (const phrase of ['本地', '多来源', 'URL', 'Asia/Singapore', 'Kafka / Hadoop / Flink', 'reporter.apache.org', '无需模型 API key', 'GitHub Releases 不作为权威来源', '退休口径也并列', 'refresh', 'brief', 'lookup']) assert.ok(result.text.includes(phrase))
   }
   assert.equal((await host.command.handler({ rawInput: 'unknown' })).kind, 'error')
   assert.equal((await host.command.handler({ rawInput: 'watch add' })).kind, 'error')
@@ -88,7 +88,8 @@ test('tools and commands persist watch edits, serialize shared-directory operati
     assert.deepEqual(listed.watchList, ['kafka', 'hadoop', 'flink', 'spark', 'beam'])
     const removed = await host.command.handler({ rawInput: 'watch remove spark', agent })
     assert.equal(removed.kind, 'success')
-    assert.deepEqual(JSON.parse(removed.text).watchList, ['kafka', 'hadoop', 'flink', 'beam'])
+    assert.match(removed.text, /关注项目：kafka \/ hadoop \/ flink \/ beam/)
+    assert.deepEqual(JSON.parse(await tool.execute({}, { agent })).watchList, ['kafka', 'hadoop', 'flink', 'beam'])
     const opened = await host.command.handler({ rawInput: 'open', agent })
     assert.equal(opened.kind, 'error')
     assert.match(opened.text, /尚无本地周报/)

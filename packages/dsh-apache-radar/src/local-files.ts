@@ -1,17 +1,18 @@
 import { constants } from 'node:fs'
 import { lstat, mkdtemp, open, realpath, rename, rm, writeFile } from 'node:fs/promises'
 import { isAbsolute, join, resolve } from 'node:path'
+import { message } from './messages.js'
 
 export function validDirectory(directory: unknown): directory is string {
   return typeof directory === 'string' && isAbsolute(directory) && !directory.split(/[\\/]/).includes('..')
 }
 export async function localPath(directory: string, filename: string): Promise<string> {
-  if (!validDirectory(directory) || !/^\.apache-radar-[a-z-]+\.(json|md)$/.test(filename)) throw new Error('Local directory traversal or filename rejected')
+  if (!validDirectory(directory) || !/^\.apache-radar-[a-z-]+\.(json|md)$/.test(filename)) throw new Error(message('errors.localTraversal'))
   const root = resolve(directory)
-  if (await realpath(root) !== root || !(await lstat(root)).isDirectory()) throw new Error('Local directory symlink or invalid directory rejected')
+  if (await realpath(root) !== root || !(await lstat(root)).isDirectory()) throw new Error(message('errors.localDirectory'))
   const path = join(root, filename)
   try {
-    if (!(await lstat(path)).isFile()) throw new Error('Local target symlink or non-file rejected')
+    if (!(await lstat(path)).isFile()) throw new Error(message('errors.localTarget'))
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
   }

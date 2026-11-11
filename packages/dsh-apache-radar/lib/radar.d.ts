@@ -5,6 +5,7 @@ export declare function itemSummary(item: FeedItem): {
     kind: "release" | "jira" | "proposal";
     security: boolean;
     id: string;
+    version: string | undefined;
     title: string;
     url: string;
     sourceUrl: string;

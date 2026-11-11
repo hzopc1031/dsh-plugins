@@ -123,7 +123,7 @@ test('missing sources are explicit errors without fabricated values or success t
       assert.equal(source.fetchedAtDisplay, null)
     }
   }
-  assert.match(renderCountsMarkdown(report), /错误：来源缺失/)
+  assert.match(renderCountsMarkdown(report), /错误：来源请求或数据解析失败：来源缺失/)
 })
 
 test('HTTP errors, timeouts, missing fixtures and invalid payloads remain source errors while other rows survive', async () => {

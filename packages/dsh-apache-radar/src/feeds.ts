@@ -198,12 +198,14 @@ export async function collectWatchFeeds(http: HttpClient, options: {
   watchList?: readonly string[]
   now?: Date
   days?: number
+  // Keep a saved collection window independent of the cache age clock.
+  windowEnd?: Date
   ttlMs?: number
   cache?: FeedCache
 } = {}): Promise<FeedReport> {
   const watchList = resolveWatchList(options.watchList)
   const now = options.now ?? new Date()
-  const window = rollingWindow(now, options.days)
+  const window = rollingWindow(options.windowEnd ?? now, options.days)
   const ttlMs = options.ttlMs ?? 3_600_000
   if (!Number.isSafeInteger(ttlMs) || ttlMs < 0) throw new Error('Invalid feed cache TTL')
   const cache = options.cache ?? new Map<string, FeedCacheEntry>()

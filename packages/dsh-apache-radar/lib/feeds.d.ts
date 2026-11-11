@@ -65,6 +65,7 @@ export declare function collectWatchFeeds(http: HttpClient, options?: {
     watchList?: readonly string[];
     now?: Date;
     days?: number;
+    windowEnd?: Date;
     ttlMs?: number;
     cache?: FeedCache;
 }): Promise<FeedReport>;

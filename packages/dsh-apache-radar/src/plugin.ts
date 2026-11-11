@@ -8,6 +8,7 @@ import { createHttpClient } from './http.js'
 import { validDirectory } from './local-files.js'
 import { runRadar, type RadarAction, type RadarArgs } from './radar.js'
 import { message } from './messages.js'
+import { registerDashboard } from './dashboard.js'
 import { renderCommandResult } from './command.js'
 
 export const name = 'apache-radar'
@@ -36,6 +37,7 @@ export function apply(ctx: Context, config: Config = {}): void {
     queue = result.catch(() => {})
     return result
   }
+  registerDashboard(ctx, run, () => [...new Set(ctx.agents.list().map(directoryOf).filter(validDirectory))])
   for (const action of actions) {
     const parameters: ParameterSchemaSpec = action === 'watch' ? {
       operation: { type: 'string' as const, enum: ['get', 'add', 'remove'] as const }, project: { type: 'string' as const },

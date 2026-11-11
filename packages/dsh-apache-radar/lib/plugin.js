@@ -5,6 +5,7 @@ import { createHttpClient } from './http.js';
 import { validDirectory } from './local-files.js';
 import { runRadar } from './radar.js';
 import { message } from './messages.js';
+import { registerDashboard } from './dashboard.js';
 import { renderCommandResult } from './command.js';
 export const name = 'apache-radar';
 export const inject = ['commands', 'tools', 'agents'];
@@ -32,6 +33,7 @@ export function apply(ctx, config = {}) {
         queue = result.catch(() => { });
         return result;
     };
+    registerDashboard(ctx, run, () => [...new Set(ctx.agents.list().map(directoryOf).filter(validDirectory))]);
     for (const action of actions) {
         const parameters = action === 'watch' ? {
             operation: { type: 'string', enum: ['get', 'add', 'remove'] }, project: { type: 'string' },

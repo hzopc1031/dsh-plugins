@@ -7,7 +7,9 @@
   "exports": {
     ".": "./index.js",
     "./locale/*.json": "./locale/*.json",
-    "./icon": "./icon.svg"
+    "./icon": "./icon.svg",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
   },
   "files": [
     "index.js",
@@ -19,15 +21,24 @@
     "README.md",
     "LICENSE",
     "CHANGELOG.md",
-    "docs/decisions.md"
+    "docs/decisions.md",
+    "docs/images/*.png"
   ],
   "engines": {
     "node": ">=22",
-    "dsh": ">=0.2.1-rc.5 <0.3.0"
+    "dsh": ">=0.2.2-rc.1 <0.3.0"
   },
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-renderer",
+        "@deepseek-ai/dsh-client-ui-layout",
+        "@deepseek-ai/dsh-client-ui-sidebar"
+      ]
     }
   },
   "license": "MIT",
@@ -37,7 +48,7 @@
     "deepseek-harness"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node scripts/build-client.mjs",
     "typecheck": "tsc --noEmit",
     "test": "npm run build && node --test --test-isolation=none test/*.test.mjs",
     "verify-pack": "node scripts/verify-pack.mjs"
@@ -50,7 +61,9 @@
     "@deepseek-ai/dsh-commands": ">=0.2.1-rc.5 <0.3.0",
     "@deepseek-ai/schemastery": ">=3.18.5 <3.20.0",
     "@deepseek-ai/dsh-tools": ">=0.2.1-rc.5 <0.3.0",
-    "@deepseek-ai/dsh-agent": ">=0.2.1-rc.5 <0.3.0"
+    "@deepseek-ai/dsh-agent": ">=0.2.1-rc.5 <0.3.0",
+    "react": "^18.3.1",
+    "@deepseek-ai/dsh-client-ui-primitives": ">=0.2.2-rc.1 <0.3.0"
   },
   "peerDependenciesMeta": {
     "@deepseek-ai/cordis": {
@@ -67,6 +80,12 @@
     },
     "@deepseek-ai/dsh-agent": {
       "optional": true
+    },
+    "react": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-client-ui-primitives": {
+      "optional": true
     }
   },
   "devDependencies": {
@@ -76,7 +95,12 @@
     "@types/node": "22.19.0",
     "typescript": "5.9.3",
     "@deepseek-ai/dsh-tools": "0.2.2-rc.1",
-    "@deepseek-ai/dsh-agent": "0.2.2-rc.1"
+    "@deepseek-ai/dsh-agent": "0.2.2-rc.1",
+    "react": "18.3.1",
+    "@deepseek-ai/dsh-client-ui-primitives": "0.2.2-rc.1",
+    "@types/react": "18.3.31",
+    "react-dom": "18.3.1",
+    "@types/react-dom": "18.3.7"
   },
   "repository": {
     "type": "git",

@@ -17,12 +17,14 @@ export declare function itemSummary(item: FeedItem): {
     fixVersions: string[] | undefined;
     notesUrl: string | undefined;
 };
-export type RadarAction = 'refresh' | 'counts' | 'watch' | 'brief' | 'open' | 'lookup';
+export type RadarAction = 'refresh' | 'counts' | 'watch' | 'brief' | 'open' | 'lookup' | 'dashboard';
 export interface RadarArgs {
     operation?: 'get' | 'add' | 'remove';
     project?: string;
     query?: string;
     includeMarkdown?: boolean;
+    refresh?: boolean;
+    saveBrief?: boolean;
 }
 export declare function runRadar(directory: string, action: RadarAction, args?: RadarArgs, options?: {
     http?: HttpClient;

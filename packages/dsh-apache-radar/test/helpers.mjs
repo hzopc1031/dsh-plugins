@@ -31,6 +31,7 @@ export function pluginContext(agents = []) {
   const disposers = []
   let command, guard
   const ctx = {
+    inject: () => {},
     effect: setup => { const dispose = setup(); disposers.push(dispose); return dispose },
     commands: { register: value => { command = value; return () => { command = undefined } } },
     tools: {

@@ -176,7 +176,7 @@ export function parseKafkaNotes(payload) {
 export async function collectWatchFeeds(http, options = {}) {
     const watchList = resolveWatchList(options.watchList);
     const now = options.now ?? new Date();
-    const window = rollingWindow(now, options.days);
+    const window = rollingWindow(options.windowEnd ?? now, options.days);
     const ttlMs = options.ttlMs ?? 3_600_000;
     if (!Number.isSafeInteger(ttlMs) || ttlMs < 0)
         throw new Error('Invalid feed cache TTL');

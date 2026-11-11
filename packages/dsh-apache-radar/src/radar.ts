@@ -30,8 +30,8 @@ export function itemSummary(item: FeedItem) {
     title: item.title, url: item.url, sourceUrl: item.sourceUrl, date: item.date, dateBasis: item.dateBasis,
     status: item.status, statusText: item.statusText, issueType: item.issueType, fixVersions: item.fixVersions, notesUrl: item.notesUrl }
 }
-export type RadarAction = 'refresh' | 'counts' | 'watch' | 'brief' | 'open' | 'lookup'
-export interface RadarArgs { operation?: 'get' | 'add' | 'remove'; project?: string; query?: string; includeMarkdown?: boolean }
+export type RadarAction = 'refresh' | 'counts' | 'watch' | 'brief' | 'open' | 'lookup' | 'dashboard'
+export interface RadarArgs { operation?: 'get' | 'add' | 'remove'; project?: string; query?: string; includeMarkdown?: boolean; refresh?: boolean; saveBrief?: boolean }
 export async function runRadar(directory: string, action: RadarAction, args: RadarArgs = {}, options: {
   http?: HttpClient; now?: () => Date; watchList?: string[]; ttlMs?: number
 } = {}): Promise<string> {
@@ -62,7 +62,7 @@ export async function runRadar(directory: string, action: RadarAction, args: Rad
     if (!state.collectedAt) throw new Error(message('errors.noCollection'))
     if (args.project && !watchList.includes(args.project)) throw new Error(message('errors.unwatched'))
     const feeds = await collectWatchFeeds(async () => { throw new Error(message('lookup.offline')) }, {
-      watchList, now: new Date(state.collectedAt), cache, ttlMs: Number.MAX_SAFE_INTEGER,
+      watchList, now, windowEnd: new Date(state.collectedAt), cache, ttlMs: Number.MAX_SAFE_INTEGER,
     })
     for (const source of feeds.sources) {
       if (source.fetchedAt && now.getTime() - Date.parse(source.fetchedAt) >= (options.ttlMs ?? 3_600_000)) {
@@ -77,13 +77,30 @@ export async function runRadar(directory: string, action: RadarAction, args: Rad
     return JSON.stringify({ collectedAt: state.collectedAt, window: feeds.window, items: matches.slice(0, 20).map(itemSummary),
       hasMore: matches.length > 20, sources: feeds.sources, note: message('lookup.note') })
   }
-  const http = options.http ?? createHttpClient({ now: options.now })
-  const counts = await fetchCountsReport(http, { cache, now, ttlMs: options.ttlMs })
+  const dashboard = action === 'dashboard'
+  const offline = dashboard && !args.refresh && !args.saveBrief
+  const brief = dashboard ? await readLocal(directory, '.apache-radar-brief.md') : undefined
+  if (offline && !cache.size) return JSON.stringify({ watchList, empty: true, markdown: brief })
+  const http = offline ? async () => { throw new Error('缓存已过期；点击刷新重试。') }
+    : options.http ?? createHttpClient({ now: options.now })
+  const ttlMs = dashboard && args.refresh ? 0 : options.ttlMs
+  const counts = await fetchCountsReport(http, { cache, now, ttlMs })
   if (action === 'counts') {
     await saveFeedCache(directory, cache)
     return JSON.stringify(countsSummary(counts))
   }
-  const feeds = await collectWatchFeeds(http, { watchList, now, cache, ttlMs: options.ttlMs })
+  const feeds = await collectWatchFeeds(http, { watchList, now, windowEnd: offline && state.collectedAt ? new Date(state.collectedAt) : undefined, cache, ttlMs })
+  if (dashboard) {
+    if (!offline) {
+      await saveFeedCache(directory, cache)
+      await writeLocal(directory, stateFile, JSON.stringify({ ...state, collectedAt: now.toISOString() }))
+    }
+    const path = args.saveBrief ? await writeWeeklyBrief(directory, counts, feeds, now.toISOString()) : undefined
+    return JSON.stringify({ watchList, counts, sources: feeds.sources, window: feeds.window,
+      collectedAt: offline ? state.collectedAt : now.toISOString(), items: feeds.items.map(itemSummary),
+      undatedItems: feeds.undatedItems.map(itemSummary), path,
+      markdown: args.saveBrief ? await readLocal(directory, '.apache-radar-brief.md') : brief })
+  }
   await saveFeedCache(directory, cache)
   await writeLocal(directory, stateFile, JSON.stringify({ ...state, collectedAt: now.toISOString() }))
   const path = action === 'brief' ? await writeWeeklyBrief(directory, counts, feeds, now.toISOString()) : undefined

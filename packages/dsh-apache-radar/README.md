@@ -2,32 +2,31 @@
 
 把你关注的 Apache 项目动态整理成一份带原文链接的中文周报，同时看清“项目数量”在不同官方来源中的含义。
 
-- **少翻多个页面：** 默认集中查看 Kafka / Hadoop / Flink 的发布、JIRA 工单和 Kafka KIP / Flink FLIP 提案，也能增删关注项目。
-- **看清数字为何不同：** 当前列示、项目管理委员会（PMC）、全部委员会和孵化项目分行展示；退休委员会与 Attic 的 PMC／子项目并列，保留名单差异。
-- **随时复制和追问：** 生成本地中文 Markdown 周报，再按版本号、工单号或关键词查已采集的原文；数量、来源状态和链接一起保留。
-- **失败时仍有依据：** 一小时内复用本地缓存；刷新失败时显示错误和上次成功时间，无需模型 API key。
+- **不发消息也能查看：** 从 DSH 侧栏打开「Apache 雷达」，概览、关注动态和每周简报随宿主切换明暗主题，无需模型 API key。
+- **看清数字为何不同：** 当前列示、顶级项目（TLP）、项目管理委员会（PMC）、全部委员会和孵化项目并列展示；退休委员会与 Attic 的 PMC／子项目保留各自口径和名单差异。
+- **少翻多个页面：** 默认关注 Kafka / Hadoop / Flink，按项目查看发布、JIRA 工单和 KIP / FLIP 提案；安全条目醒目标注，每项可打开原文，也能直接增删关注项目。
+- **把一周留成简报：** 生成可阅读、复制和打开的本地中文 Markdown；来源失败时显示错误与上次成功缓存，保留出处和时间。
 
-例如输入 `/apache-radar watch`，默认结果为：
+## 界面预览
 
-```text
-关注项目：kafka、hadoop、flink
-```
+以下均为 **DSH 0.2.2-rc.1 内的真实面板截图**，使用历史录制数据演示，**不是实时官方数量**。画面中的「录制回放（非实时）」标明演示项目；抓取时间为此次回放读取时间，原始录制时间与 URL 保存在[测试夹具来源记录](test/fixtures/provenance.json)及 [JIRA 来源记录](test/fixtures/jira-provenance.json)。实际使用时显示公开来源的真实抓取时间与可用的源文件时间。
 
-再输入 `/apache-radar brief` 和 `/apache-radar open`。以下为**结构示意，省略实际数量**；运行结果中每个数量都会带来源 URL 和抓取时间：
+从侧栏「Apache 雷达」进入概览：不同统计口径各有来源与时间，退休名单差异可展开查看。
 
-```text
-Apache 社区周报
-窗口：滚动最近 7 天，Asia/Singapore（UTC+8）
-官方数量口径：当前列示（TLP + 当前 podlings）、PMC、全部委员会……
-退休口径：Whimsy 退休委员会 / projects.apache.org 退休委员会 / Attic PMC / Attic 子项目
-关注动态：发布版本与日期 / JIRA 状态与原文 / KIP、FLIP 状态与原文
-来源状态：成功、缓存、刷新失败沿用旧缓存，或无可用来源
-```
+![DSH 内的 Apache 雷达浅色概览，历史数据回放](docs/images/overview-light.png)
+
+深色模式跟随 DSH 的主题设置，保留相同的层级与语义颜色。
+
+![DSH 内的 Apache 雷达深色概览，历史数据回放](docs/images/overview-dark.png)
+
+「关注动态」按项目切换；JIRA 的安全条目、类型、状态和目标版本分开展示，长列表可以展开或收起。
+
+![Kafka 关注页及安全 JIRA 标签，历史数据回放](docs/images/watch-kafka.png)
 
 ## 三步快速上手
 
-1. **完全退出桌面 DSH。** 关闭所有窗口，并从系统托盘退出 DSH，确认已完全关闭后再安装或更新。需要 Node.js 22 及以上；DSH 版本范围见文末。
-2. **在终端安装开发分支。** `0.1.0` 尚未发布到 npm，也未合入 main；包内已有编译文件，无需允许安装脚本。
+1. **完全退出桌面 DSH。** 关闭所有窗口，并从系统托盘退出 DSH，确认已完全关闭后再安装或更新。需要 Node.js 22 及以上和 DSH 0.2.2-rc.1 及以上（小于 0.3.0）。
+2. **在终端安装开发分支。** `0.1.0` 尚未发布到 npm，也未合入 main；包内已有界面和后台编译文件，无需允许安装脚本。
 
    ```powershell
    dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#feat/apache-radar&path:/packages/dsh-apache-radar"
@@ -39,9 +38,15 @@ Apache 社区周报
    & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" plugin --profile desktop add "github:hzopc1031/dsh-plugins#feat/apache-radar&path:/packages/dsh-apache-radar"
    ```
 
-3. **重开 DSH，在项目会话中生成第一份周报。** 确认“Apache 社区雷达”已启用，选择本地项目目录，在已有会话输入 `/apache-radar help`，然后运行 `/apache-radar brief`。看到带来源状态和保存路径的结果后，用 `/apache-radar open` 查看、复制全文。插件无需填写账号、令牌或模型配置；首次采集需要访问公开 ASF 网站。DSH 新会话入口与模型选择的限制见文末。
+3. **重开 DSH，从侧栏打开「Apache 雷达」。** 确认“Apache 社区雷达”已启用，选择或输入已有本地项目的绝对目录，点击「打开」，再点击「刷新数据」。概览出现带来源和时间的卡片后，切到「每周简报」生成、复制或打开周报。无需创建聊天或填写账号、令牌、模型配置；首次采集需要访问公开 ASF 网站。原有 `/apache-radar help` 等命令仍可在项目会话使用。
 
 ## 日常使用
+
+面板的「概览」对照当前列示、TLP、孵化项目、PMC 和委员会，保留退休口径差异与官方多标签分类。「关注动态」切换项目、增删关注，展开日期未知条目及来源状态。「每周简报」先显示项目阅读卡片，将详细统计和来源明细折叠；「复制 Markdown」和「打开已保存文件」始终使用已保存的完整周报。打开文件会在浏览器新标签显示保存内容；本地原文件位于所选项目目录。
+
+打开面板只读本地缓存，不自动请求 ASF；「刷新数据」会立即重新请求公开来源。生成周报和原有命令沿用一小时缓存。过期和刷新失败会显示提示，错误不会记为零更新。项目目录选择只在当前浏览器保存；面板、命令和工具共用该目录下的关注列表、缓存和周报。命令仍按所在会话的当前目录工作。
+
+已有命令保持可用：
 
 | 你要做什么 | 命令 |
 | --- | --- |
@@ -60,19 +65,19 @@ Apache 社区周报
 
 Keep a linked Chinese weekly brief for your watched Apache projects, and compare official count scopes without treating them as one universal total. Kafka, Hadoop and Flink are watched by default. Releases, JIRA issues and KIP/FLIP proposals retain their original links and source statuses.
 
-This is **unreleased, Git-branch installation only**. Fully quit DSH Desktop, install using the quoted `feat/apache-radar` command above, reopen DSH and run `/apache-radar help` in a project session, then `brief` and `open`. No model key or model call is required by the plugin. English metadata is shipped; command output and briefs are Chinese.
+This is **unreleased, Git-branch installation only**. Fully quit DSH Desktop, install using the quoted `feat/apache-radar` command above, reopen DSH and select **Apache 雷达** in the sidebar. Choose an existing local project directory, refresh, and generate or copy the brief. Slash commands remain available in project sessions. No model key or model call is required by the plugin. English metadata is shipped; panel copy, command output and briefs are Chinese.
 
 Every displayed count includes its source URL and fetch time in Asia/Singapore (UTC+8), plus a source timestamp when available. Retired committees and Attic PMC/subproject scopes stay side by side, including mismatches. GitHub Releases is not the release authority. reporter.apache.org is never used. Nothing is uploaded or automatically published.
 
-The one-hour cache preserves the last good response on failure. JIRA is a capped first page per watched project, not a complete shipped-feature list; fixVersion and accepted proposals do not prove release. Hadoop has no verified general HIP feed. There is no production-upgrade verdict, foundation-wide daily sweep, automatic schedule or dedicated dashboard.
+The one-hour cache preserves the last good response on failure. JIRA is a capped first page per watched project, not a complete shipped-feature list; fixVersion and accepted proposals do not prove release. Hadoop has no verified general HIP feed. The native panel supports light/dark themes and needs no chat session or model key. There is no production-upgrade verdict, foundation-wide daily sweep or automatic schedule.
 
 ## 补充说明
 
 ### 版本与验证范围
 
-版本 `0.1.0`（未发布），Node.js `>=22`，声明 DSH `>=0.2.1-rc.5 <0.3.0`。接口对照只读源码 `fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159`；本机实际加载验证版本为 **DSH 0.2.2-rc.1**。声明范围不代表逐版本测试，也不代表已验证 Electron 桌面安装。
+版本 `0.1.0`（未发布），Node.js `>=22`，声明 DSH `>=0.2.2-rc.1 <0.3.0`。周报阅读使用该版本的 `MarkdownText.omitHtml` 禁用原始 HTML；对照旧版 0.2.1-rc.5 源码，该属性尚不存在，因此收紧最低版本，不承诺旧版界面兼容。接口对照只读源码 `fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159`；本机实际加载验证版本为 **DSH 0.2.2-rc.1**。声明范围不代表逐版本测试，也不代表已验证 Electron 桌面安装。
 
-Linux 烟测在隔离 profile 启动 Web 服务，通过实际宿主命令注册表回放记录夹具；公开计数源与三个默认项目的匿名 JIRA 请求也单独验证成功。Web 空白新会话提交未通过，未声称完成桌面界面验收。测试夹具保留原 URL、抓取时间、完整性摘要和裁剪说明。历史快照不表示当前官方数量。
+Linux 烟测在隔离 profile 中加载真实 DSH Web，使用录制数据验证侧栏入口、无模型且无会话时的直接使用、明暗主题、项目切换、关注编辑、周报复制与打开、窄屏和失败回退。未验证 Electron 桌面安装；前次任务的公开计数与匿名 JIRA 请求记录仍作为历史证据。本次界面验证不请求实时 ASF 来源。测试夹具保留原 URL、抓取时间、完整性摘要和裁剪说明，历史快照不表示当前官方数量。
 
 ### 来源、时间与边界
 
@@ -81,14 +86,14 @@ Linux 烟测在隔离 profile 启动 Web 服务，通过实际宿主命令注册
 - 发布以 [官方发布目录](https://projects.apache.org/json/foundation/releases.json)为依据，Kafka 还匹配官方下载安装页中的版本说明链接；Hadoop／Flink 没有自动提取版本说明全文。GitHub Releases 不作为权威来源，不使用 reporter.apache.org，不登录或绕过限流。
 - 默认窗口为 **Asia/Singapore（UTC+8）滚动最近 7 天**，不是自然周。目录仅有日期时按该时区零点筛选。JIRA 使用最后更新时间，本地再筛选时间边界；每项目只取首个最多 100 条的响应页，有更多结果就提示采集不完整。
 - 提案保留讨论、接受、实现、发布等来源状态和限制用语；日期未知的条目单列为参考，不能称为本周新增。JIRA `New Feature`、`fixVersion` 和已接受提案均不证明已经发布；安全公告单独标注。输出不作兼容性或“可安全上生产”的判断。
-- 本插件通过宿主命令注册表直接执行，不发起模型请求。DSH 0.2.2-rc.1 的空白新会话界面在未配置模型时可能无法提交命令；应在已有项目会话使用。烟测用宿主配置创建空闲项目会话验证，没有配置密钥或发起模型调用。
-- 无专用面板、自动周报定时器、全基金会每日功能扫描、自动上传、发帖或发布。完整边界见[绑定 MVP 决策](docs/decisions.md)。
+- 本插件通过宿主命令注册表直接执行，不发起模型请求。DSH 0.2.2-rc.1 的空白新会话界面在未配置模型时可能无法提交命令；命令可在已有项目会话使用；现在也可直接从侧栏面板操作，不受聊天提交入口影响。界面烟测没有创建会话、配置密钥或发起模型调用。
+- 无自动周报定时器、全基金会每日功能扫描、自动上传、发帖或发布。完整边界见[绑定 MVP 决策](docs/decisions.md)。
 
 ### 本地文件与缓存
 
-会话当前项目目录保存 `.apache-radar-feed-cache.json`（URL、抓取时间、响应及来源时间）、`.apache-radar-state.json`（关注覆盖值／采集时间）和 `.apache-radar-brief.md`（最新周报）。文件不自动加入 Git；可自行加入项目忽略规则。只保留最新周报，重复生成会替换它；需要留档时先复制。
+面板选定目录或会话当前项目目录保存 `.apache-radar-feed-cache.json`（URL、抓取时间、响应及来源时间）、`.apache-radar-state.json`（关注覆盖值／采集时间）和 `.apache-radar-brief.md`（最新周报）。文件不自动加入 Git；可自行加入项目忽略规则。只保留最新周报，重复生成会替换它；需要留档时先复制。
 
-缓存有效期一小时；`refresh` 和 `brief` 在有效期内复用，过期才抓取。失败保留上次成功数据和时间，并显示错误；没有成功缓存时显示失败，不写成“本周零更新”。公开请求串行执行，带插件 User-Agent、超时和 429 退避。路径必须是本地绝对目录，拒绝 `..` 逃逸和符号链接。
+缓存有效期一小时；命令 `refresh` 和 `brief` 在有效期内复用，过期才抓取；面板的「刷新数据」主动跳过有效期重新抓取。失败保留上次成功数据和时间，并显示错误；没有成功缓存时显示失败，不写成“本周零更新”。公开请求串行执行，带插件 User-Agent、超时和 429 退避。路径必须是本地绝对目录，拒绝 `..` 逃逸和符号链接。
 
 ### 开发验证
 

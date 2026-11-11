@@ -11,6 +11,10 @@ for (const peer of Object.keys(pkg.peerDependencies)) {
   assert.ok(pkg.devDependencies[peer])
 }
 assert.equal(pkg.dsh.bundle.patch, './cordis.patch.yml')
+assert.equal(pkg.exports['./client'], './lib/client.js')
+assert.equal(pkg.dsh.client.platform, 'web')
+assert.match(await readFile('lib/client.js', 'utf8'), /window\.__ModuleLoader__\.load/)
+assert.ok(!/require\(["']\./.test(await readFile('lib/client.js', 'utf8')))
 assert.equal(await readFile('index.js', 'utf8'), "export * from './lib/plugin.js'\n")
 for (const lang of ['en', 'zh']) {
   const locale = JSON.parse(await readFile(`locale/${lang}.json`, 'utf8'))
@@ -21,6 +25,7 @@ const [pack] = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json', '-
 }))
 const expected = ['package.json', 'index.js', 'cordis.patch.yml', 'locale/en.json', 'locale/zh.json',
   'icon.svg', 'README.md', 'LICENSE', 'CHANGELOG.md', 'docs/decisions.md',
-  ...['plugin', 'http', 'fetchers', 'counts', 'watch', 'feeds', 'feed-cache', 'local-files', 'brief', 'radar', 'messages', 'command'].flatMap(name => [`lib/${name}.js`, `lib/${name}.d.ts`])]
+  'docs/images/overview-light.png', 'docs/images/overview-dark.png', 'docs/images/watch-kafka.png',
+  ...['plugin', 'http', 'fetchers', 'counts', 'watch', 'feeds', 'feed-cache', 'local-files', 'brief', 'radar', 'messages', 'command', 'dashboard', 'client'].flatMap(name => [`lib/${name}.js`, `lib/${name}.d.ts`])]
 assert.deepEqual(pack.files.map(f => f.path).sort(), expected.sort())
 console.log(`PASS: ${pack.filename}, ${pack.entryCount} files, prebuilt lib, no lifecycle hooks or internal fixtures`)

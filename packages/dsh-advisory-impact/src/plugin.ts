@@ -2,6 +2,9 @@ import type { Context } from '@deepseek-ai/cordis'
 import { CommandDefinitionId } from '@deepseek-ai/dsh-commands'
 import z from '@deepseek-ai/schemastery'
 
+export { evaluateProject, parseAffectedRanges } from './verdicts.js'
+export type { VersionPin, VersionRange, Verdict, PinVerdict, OfficialVerdict, ProjectVerdicts, SuppressionSection } from './types.js'
+
 export const name = 'advisory-impact'
 export const inject = ['commands']
 export const Config = z.object({})

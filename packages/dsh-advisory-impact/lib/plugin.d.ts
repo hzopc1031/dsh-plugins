@@ -1,5 +1,7 @@
 import type { Context } from '@deepseek-ai/cordis';
 import z from '@deepseek-ai/schemastery';
+export { evaluateProject, parseAffectedRanges } from './verdicts.js';
+export type { VersionPin, VersionRange, Verdict, PinVerdict, OfficialVerdict, ProjectVerdicts, SuppressionSection } from './types.js';
 export declare const name = "advisory-impact";
 export declare const inject: string[];
 export declare const Config: z<Schemastery.ObjectS<{}>, Schemastery.ObjectT<{}>, "plain">;

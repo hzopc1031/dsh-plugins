@@ -46,3 +46,46 @@ export interface ReferencePage extends SourceMetadata {
   text: string
   links: string[]
 }
+
+export type Verdict = 'affected' | 'not_affected' | 'unknown'
+
+export interface VersionPin {
+  version: string
+  component?: string
+  maven?: string // groupId:artifactId; version is always the field above.
+}
+
+export interface VersionRange {
+  product: string
+  lower: string
+  lowerInclusive: boolean
+  upper: string
+  upperInclusive: boolean
+}
+
+export interface PinVerdict {
+  pin: VersionPin
+  verdict: Verdict
+  reason: string
+}
+
+export interface OfficialVerdict extends Advisory {
+  verdict: Verdict
+  reason: string
+  ranges: VersionRange[] | null
+  fixedVersions: string[] | null
+  pins: PinVerdict[]
+  suppressions: Suppression[]
+}
+
+export interface SuppressionSection extends SuppressionPage {
+  title: '扫描器报了，但官方说明不适用'
+  project: 'kafka'
+}
+
+export interface ProjectVerdicts extends SourceMetadata {
+  project: ProjectId
+  notices: string[]
+  advisories: OfficialVerdict[]
+  suppressions: SuppressionSection | null
+}

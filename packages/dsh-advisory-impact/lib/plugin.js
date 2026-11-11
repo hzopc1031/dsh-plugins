@@ -1,5 +1,6 @@
 import { CommandDefinitionId } from '@deepseek-ai/dsh-commands';
 import z from '@deepseek-ai/schemastery';
+export { evaluateProject, parseAffectedRanges } from './verdicts.js';
 export const name = 'advisory-impact';
 export const inject = ['commands'];
 export const Config = z.object({});

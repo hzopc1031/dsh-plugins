@@ -1,5 +1,5 @@
 {
-  "description": "Historical recorded research responses, not live updates. Times are completed fetch times from round18/evidence/fetch-log.txt. No recorded Hadoop/Flink JIRA searches are available.",
+  "description": "Historical recorded research responses, not live updates. Times are completed fetch times from round18/evidence/fetch-log.txt. This research set has no Hadoop/Flink JIRA search recordings; see jira-provenance.json for additional final-smoke recordings.",
   "sources": [
     {
       "file": "kip-index.html",

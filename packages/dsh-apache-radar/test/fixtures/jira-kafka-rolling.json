@@ -1,0 +1,1665 @@
+{
+  "startAt": 0,
+  "maxResults": 100,
+  "total": 121,
+  "issues": [
+    {
+      "key": "KAFKA-12481",
+      "fields": {
+        "summary": "Coalesce small TCP segments of a send on Linux to reduce number of packets",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Patch Available"
+        },
+        "created": "2021-03-16T18:16:10.000+0000",
+        "updated": "2026-11-11T03:43:11.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21417",
+      "fields": {
+        "summary": "Backport fix for CVE-2026-114349",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [
+          {
+            "name": "3.9.3"
+          }
+        ],
+        "status": {
+          "name": "Patch Available"
+        },
+        "created": "2026-11-02T13:07:25.000+0000",
+        "updated": "2026-11-11T03:01:52.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21386",
+      "fields": {
+        "summary": "Backport fix for CVE-2026-111073",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [
+          {
+            "name": "3.9.3"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-10-29T08:08:10.000+0000",
+        "updated": "2026-11-11T03:00:35.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21458",
+      "fields": {
+        "summary": "Classic heartbeat to a consumer group does not refresh metadata",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-09T22:55:24.000+0000",
+        "updated": "2026-11-10T22:54:39.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21465",
+      "fields": {
+        "summary": " Upgrade Gradle to 9.9.1 on trunk (three security fixes, including one critical)",
+        "issuetype": {
+          "name": "Task"
+        },
+        "fixVersions": [
+          {
+            "name": "4.5.0"
+          }
+        ],
+        "status": {
+          "name": "Patch Available"
+        },
+        "created": "2026-11-10T22:21:29.000+0000",
+        "updated": "2026-11-10T22:50:57.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21466",
+      "fields": {
+        "summary": "Handle producer commit timeouts under EOS without wiping state stores (KIP-892)",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [
+          {
+            "name": "4.5.0"
+          }
+        ],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-10T22:44:39.000+0000",
+        "updated": "2026-11-10T22:46:43.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21338",
+      "fields": {
+        "summary": "Use exponential backoff with jitter for internal topic retries in InternalTopicManager",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "4.5.0"
+          }
+        ],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-22T21:01:26.000+0000",
+        "updated": "2026-11-10T21:10:25.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21372",
+      "fields": {
+        "summary": "PartitionGroup#readyToProcess formats log messages on every call, and most of these messages are discarded",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "4.5.0"
+          },
+          {
+            "name": "4.4.1"
+          },
+          {
+            "name": "4.3.3"
+          },
+          {
+            "name": "4.2.3"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-10-27T15:41:55.000+0000",
+        "updated": "2026-11-10T20:37:24.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-20920",
+      "fields": {
+        "summary": "Document new group coordinator executor metrics",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [
+          {
+            "name": "4.5.0"
+          },
+          {
+            "name": "4.4.1"
+          },
+          {
+            "name": "4.3.3"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-08-11T05:45:35.000+0000",
+        "updated": "2026-11-10T19:34:03.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21363",
+      "fields": {
+        "summary": "Streams EOS: member cut off from the group coordinator keeps committing punctuator writes unfenced, and its store diverges from the changelog after a clean restart",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-26T18:55:16.000+0000",
+        "updated": "2026-11-10T18:22:12.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-20186",
+      "fields": {
+        "summary": "Cluster Mirroring",
+        "issuetype": {
+          "name": "New Feature"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "In Progress"
+        },
+        "created": "2026-02-13T16:41:42.000+0000",
+        "updated": "2026-11-10T17:33:36.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-17218",
+      "fields": {
+        "summary": "kafka-consumer-groups fails to describe all group if one group has been consuming from a deleted topic",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "In Progress"
+        },
+        "created": "2024-07-30T11:45:49.000+0000",
+        "updated": "2026-11-10T16:23:28.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-20859",
+      "fields": {
+        "summary": "Reduce per-append record sizing cost in the producer incremental strategy",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-07-29T19:40:20.000+0000",
+        "updated": "2026-11-10T16:19:30.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21378",
+      "fields": {
+        "summary": "Add \"leaderEpoch\" field in PartitionChangeRecord",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-28T03:53:58.000+0000",
+        "updated": "2026-11-10T16:04:05.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21464",
+      "fields": {
+        "summary": "Add mirror.version feature flag",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-10T16:01:13.000+0000",
+        "updated": "2026-11-10T16:04:05.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21453",
+      "fields": {
+        "summary": "Async consumer poll may throw UnknownMemberIdException/StaleMemberEpochException if fenced while OffsetFetch in-flight",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "4.5.0"
+          }
+        ],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-09T17:56:14.000+0000",
+        "updated": "2026-11-10T15:50:49.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21197",
+      "fields": {
+        "summary": "Preserve original record headers if record copy enabled.",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "In Progress"
+        },
+        "created": "2026-10-01T10:20:28.000+0000",
+        "updated": "2026-11-10T15:26:35.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21356",
+      "fields": {
+        "summary": "Performance issue in share fetch with share group DLQ enabled.",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-26T11:26:11.000+0000",
+        "updated": "2026-11-10T14:05:57.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21220",
+      "fields": {
+        "summary": "Consumer group dynamic member close can stall with REMAIN_IN_GROUP after poll timeout",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "4.5.0"
+          }
+        ],
+        "status": {
+          "name": "In Progress"
+        },
+        "created": "2026-10-05T12:52:58.000+0000",
+        "updated": "2026-11-10T11:39:05.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-6270",
+      "fields": {
+        "summary": "ProducerPerformance doesn't support setting sasl.jaas.config as a --producer-props",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Patch Available"
+        },
+        "created": "2017-11-26T11:32:09.000+0000",
+        "updated": "2026-11-10T10:28:28.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21463",
+      "fields": {
+        "summary": "Share group ignores share.auto.offset.reset=latest when the initialization of a new topic is retried",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-10T10:22:34.000+0000",
+        "updated": "2026-11-10T10:27:09.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21462",
+      "fields": {
+        "summary": "Adaptive partitioner sends records to empty partitions on a broker that partitioner.availability.timeout.ms marked unavailable",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-10T10:00:30.000+0000",
+        "updated": "2026-11-10T10:20:20.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21111",
+      "fields": {
+        "summary": "Ensure refiner backward compatibility",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "In Progress"
+        },
+        "created": "2026-09-16T23:40:04.000+0000",
+        "updated": "2026-11-10T10:08:19.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21461",
+      "fields": {
+        "summary": "[POC] build Kafka with Gradle 10 milestone snapshots (build Gradle 10 from a source code)",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "In Progress"
+        },
+        "created": "2026-11-10T09:29:37.000+0000",
+        "updated": "2026-11-10T09:29:48.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21064",
+      "fields": {
+        "summary": "Apache RAT Gradle plugin version upgrade: 0.8.1 --> 0.11.0",
+        "issuetype": {
+          "name": "Task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Patch Available"
+        },
+        "created": "2026-09-10T15:28:03.000+0000",
+        "updated": "2026-11-10T09:05:25.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21188",
+      "fields": {
+        "summary": "Merging topics with different partition counts leaves some records unprocessed under the Streams Rebalance Protocol",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-09-30T13:42:03.000+0000",
+        "updated": "2026-11-10T08:40:04.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21460",
+      "fields": {
+        "summary": "Docker root log level overrides discard existing Log4j2 appender references",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-10T07:36:22.000+0000",
+        "updated": "2026-11-10T07:37:11.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21457",
+      "fields": {
+        "summary": "kafka-streams-groups.sh --describe fails when a group's assigned topic was deleted.",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-09T22:39:24.000+0000",
+        "updated": "2026-11-10T01:24:44.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21447",
+      "fields": {
+        "summary": "Streams consumer can make newly assigned partitions fetchable by applying a pending assignment after fencing",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "4.5.0"
+          }
+        ],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-09T00:58:37.000+0000",
+        "updated": "2026-11-10T01:21:41.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21454",
+      "fields": {
+        "summary": "DescribeShareGroupOffsetsRequest could leverage mapKey to avoid creating extra collection",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-09T18:11:55.000+0000",
+        "updated": "2026-11-09T23:22:09.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21459",
+      "fields": {
+        "summary": "Issues if the buffer.memory is not divisible by 16384(the chunk size)",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-09T23:12:54.000+0000",
+        "updated": "2026-11-09T23:12:54.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21456",
+      "fields": {
+        "summary": "Review consumer app thread groupAssignmentSnapshot usage/value",
+        "issuetype": {
+          "name": "Task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-09T21:49:46.000+0000",
+        "updated": "2026-11-09T21:49:46.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21455",
+      "fields": {
+        "summary": "Async consumer close after unsubscribe should not trigger onPartitionsLost",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "4.5.0"
+          }
+        ],
+        "status": {
+          "name": "Patch Available"
+        },
+        "created": "2026-11-09T20:43:49.000+0000",
+        "updated": "2026-11-09T21:13:22.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-20357",
+      "fields": {
+        "summary": "lastProducerEpoch fields never persisted to transaction log",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "4.5.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-03-26T13:24:22.000+0000",
+        "updated": "2026-11-09T17:52:05.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21349",
+      "fields": {
+        "summary": "Transaction coordinator loads uncommitted records from __transaction_state and can act on state that is later truncated",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "4.5.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-10-23T21:35:52.000+0000",
+        "updated": "2026-11-09T17:51:56.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21422",
+      "fields": {
+        "summary": "One failing entry in a WriteTxnMarkers response shouldn't block the rest",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "4.5.0"
+          },
+          {
+            "name": "4.4.1"
+          },
+          {
+            "name": "4.3.3"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-11-03T17:48:29.000+0000",
+        "updated": "2026-11-09T17:51:48.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21033",
+      "fields": {
+        "summary": "Regression in backoff algorithm during streams internal topic create",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "4.5.0"
+          },
+          {
+            "name": "4.4.1"
+          },
+          {
+            "name": "4.3.3"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-09-04T23:05:44.000+0000",
+        "updated": "2026-11-09T17:49:56.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-20516",
+      "fields": {
+        "summary": "close(REMAIN_IN_GROUP) does not work for async consumer",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-04-22T02:18:56.000+0000",
+        "updated": "2026-11-09T17:35:40.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21452",
+      "fields": {
+        "summary": "Async consumer can invoke onPartitionsRevoked/Lost twice if assignment races with close/unsubscribe ",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "4.5.0"
+          }
+        ],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-09T17:17:06.000+0000",
+        "updated": "2026-11-09T17:17:17.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21451",
+      "fields": {
+        "summary": "Reported CVEs  of 3.9.2 ",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "3.9.3"
+          }
+        ],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-09T16:27:39.000+0000",
+        "updated": "2026-11-09T16:27:39.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21449",
+      "fields": {
+        "summary": "Reported CVEs  of 3.9.2 ",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "3.9.3"
+          }
+        ],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-09T05:48:51.000+0000",
+        "updated": "2026-11-09T16:27:39.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21439",
+      "fields": {
+        "summary": "Share group skips records written after an unclean leader election when their offsets were already acknowledged",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-08T02:02:51.000+0000",
+        "updated": "2026-11-09T12:24:14.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21450",
+      "fields": {
+        "summary": " Iterating a TimelineHashMap at a snapshot returns duplicate or missing entries after a revert",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-09T10:14:32.000+0000",
+        "updated": "2026-11-09T10:56:17.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21384",
+      "fields": {
+        "summary": "Backport fix for CVE-2026-115644",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [
+          {
+            "name": "3.9.3"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-10-29T08:02:52.000+0000",
+        "updated": "2026-11-09T10:32:52.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21387",
+      "fields": {
+        "summary": "Backport fix for CVE-2026-116593",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-10-29T08:26:12.000+0000",
+        "updated": "2026-11-09T10:32:30.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21302",
+      "fields": {
+        "summary": "Streams group joins rejected due to copartition topic ordering differences",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "4.5.0"
+          },
+          {
+            "name": "4.4.1"
+          },
+          {
+            "name": "4.3.3"
+          },
+          {
+            "name": "4.2.3"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-10-18T03:18:58.000+0000",
+        "updated": "2026-11-09T09:20:13.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21435",
+      "fields": {
+        "summary": "MirrorCheckpointTask.stop() closes its stores while the scheduler is still starting them",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-06T14:35:15.000+0000",
+        "updated": "2026-11-09T08:31:52.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21241",
+      "fields": {
+        "summary": "Increase the number of consumers in the share consumer group",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-07T20:47:04.000+0000",
+        "updated": "2026-11-09T06:55:55.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21362",
+      "fields": {
+        "summary": "Classic group waits for the rebalance timeout after a member is rejected with GROUP_MAX_SIZE_REACHED",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-26T18:49:05.000+0000",
+        "updated": "2026-11-09T04:09:02.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21448",
+      "fields": {
+        "summary": "Speedup testArrayLengthAboveDefaultMaxIsAcceptedWhenRaised",
+        "issuetype": {
+          "name": "Test"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-09T02:25:19.000+0000",
+        "updated": "2026-11-09T04:06:08.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21443",
+      "fields": {
+        "summary": "`lock()` should be called before the `try` block whose `finally` calls `unlock()`.",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-08T14:38:34.000+0000",
+        "updated": "2026-11-08T20:51:47.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21444",
+      "fields": {
+        "summary": "Document or clarify acks=1 durability during planned leader transitions (kafka-site)",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-08T16:43:31.000+0000",
+        "updated": "2026-11-08T20:51:42.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21445",
+      "fields": {
+        "summary": "Add tests to verify the behavior of controlled.shutdown.enable",
+        "issuetype": {
+          "name": "Test"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-08T16:53:52.000+0000",
+        "updated": "2026-11-08T20:51:35.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-19992",
+      "fields": {
+        "summary": "Allow to configure max memory for restore path",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [
+          {
+            "name": "4.5.0"
+          }
+        ],
+        "status": {
+          "name": "In Progress"
+        },
+        "created": "2025-12-13T00:38:57.000+0000",
+        "updated": "2026-11-08T20:07:31.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21446",
+      "fields": {
+        "summary": "Replace Apache HttpClient with Jetty Client in Connect runtime tests",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-08T17:51:43.000+0000",
+        "updated": "2026-11-08T18:08:03.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-16266",
+      "fields": {
+        "summary": " Introduce TransactionLastUpdateTimeMs tagged field to DescribeTransactionsResponse",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2024-02-16T17:08:33.000+0000",
+        "updated": "2026-11-08T17:45:59.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21427",
+      "fields": {
+        "summary": "Expose per-task metrics to group coordinator executor completion callback",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-04T18:20:29.000+0000",
+        "updated": "2026-11-08T17:22:35.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-20554",
+      "fields": {
+        "summary": "Document or clarify acks=1 durability during planned leader transitions",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "4.5.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-05-06T13:54:22.000+0000",
+        "updated": "2026-11-08T16:50:57.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-19022",
+      "fields": {
+        "summary": "Display cluster IDs being compared when encountering INCONSISTENT_CLUSTER_ID error",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2025-03-20T15:16:37.000+0000",
+        "updated": "2026-11-08T15:44:06.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21441",
+      "fields": {
+        "summary": "Use extra string field to represent the byte field in formatter",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-08T13:06:45.000+0000",
+        "updated": "2026-11-08T15:14:41.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-17103",
+      "fields": {
+        "summary": "MockClient tight loops when no metadata is present in KafkaProducerTest",
+        "issuetype": {
+          "name": "Test"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2024-07-09T20:33:40.000+0000",
+        "updated": "2026-11-08T14:50:01.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21442",
+      "fields": {
+        "summary": "Remove build-docker-image.yml from kafka-site",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-11-08T13:37:13.000+0000",
+        "updated": "2026-11-08T14:34:31.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21440",
+      "fields": {
+        "summary": "Share consumer keeps fetching from the old leader after KAFKA_STORAGE_ERROR",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-08T07:48:25.000+0000",
+        "updated": "2026-11-08T13:35:07.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-20118",
+      "fields": {
+        "summary": "Improve the error message caused by normally moving replica",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [
+          {
+            "name": "4.5.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-02-03T21:45:33.000+0000",
+        "updated": "2026-11-08T13:22:38.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21434",
+      "fields": {
+        "summary": "Docker images are not able to run Streams app with RocksDB",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-06T08:02:20.000+0000",
+        "updated": "2026-11-08T11:02:04.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21415",
+      "fields": {
+        "summary": "Backport fix for CVE-2026-112375",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [
+          {
+            "name": "3.9.3"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-11-02T12:37:44.000+0000",
+        "updated": "2026-11-08T08:36:03.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21322",
+      "fields": {
+        "summary": "LogConfig cleanup",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-20T23:08:36.000+0000",
+        "updated": "2026-11-08T00:44:31.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21327",
+      "fields": {
+        "summary": "Replace JGit calls in build.gradle with the git CLI via providers.exec",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Patch Available"
+        },
+        "created": "2026-10-21T18:36:22.000+0000",
+        "updated": "2026-11-07T17:29:03.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21326",
+      "fields": {
+        "summary": "Enable Gradle configuration cache",
+        "issuetype": {
+          "name": "Task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-21T18:24:51.000+0000",
+        "updated": "2026-11-07T14:25:15.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-20734",
+      "fields": {
+        "summary": "Offline partition can cause loss of transaction markers",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "4.5.0"
+          },
+          {
+            "name": "4.4.1"
+          },
+          {
+            "name": "4.3.3"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-06-24T00:02:35.000+0000",
+        "updated": "2026-11-07T03:12:23.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21425",
+      "fields": {
+        "summary": "MAX_TIMESTAMP can return an offset below the log start offset",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-04T06:26:49.000+0000",
+        "updated": "2026-11-07T03:12:06.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-20665",
+      "fields": {
+        "summary": "Add warmup task support to reconciler ",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "In Progress"
+        },
+        "created": "2026-06-05T01:07:41.000+0000",
+        "updated": "2026-11-06T23:11:50.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21438",
+      "fields": {
+        "summary": "Reuse cached HMAC in DelegationTokenManager.getTokens",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-06T19:04:37.000+0000",
+        "updated": "2026-11-06T19:05:31.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21418",
+      "fields": {
+        "summary": "Cleanup DelegationTokenCache and CredentialCache",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "In Progress"
+        },
+        "created": "2026-11-02T14:16:23.000+0000",
+        "updated": "2026-11-06T19:05:22.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21437",
+      "fields": {
+        "summary": "CoordinatorContext#unload should cancel the running load to release the thread slot",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-06T18:26:47.000+0000",
+        "updated": "2026-11-06T19:05:10.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21436",
+      "fields": {
+        "summary": "CoordinatorContext#load could complete the wrong context if the leader is lost and regained during loading",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-06T18:18:18.000+0000",
+        "updated": "2026-11-06T18:31:51.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21388",
+      "fields": {
+        "summary": "Doc doesn't have upgrading steps",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Patch Available"
+        },
+        "created": "2026-10-29T10:31:50.000+0000",
+        "updated": "2026-11-06T09:56:27.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21381",
+      "fields": {
+        "summary": "Backport CVE fixes to 3.9",
+        "issuetype": {
+          "name": "Task"
+        },
+        "fixVersions": [
+          {
+            "name": "3.9.3"
+          }
+        ],
+        "status": {
+          "name": "In Progress"
+        },
+        "created": "2026-10-29T07:50:49.000+0000",
+        "updated": "2026-11-06T07:16:28.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-20835",
+      "fields": {
+        "summary": "Group-level alter-config RPC fails, if single group config is invalid",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Patch Available"
+        },
+        "created": "2026-07-24T23:22:34.000+0000",
+        "updated": "2026-11-06T01:07:42.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21433",
+      "fields": {
+        "summary": "Group config overrides are validated against the controller's group bounds but clamped against the broker's",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-06T01:03:10.000+0000",
+        "updated": "2026-11-06T01:07:42.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-20162",
+      "fields": {
+        "summary": "Validation and enforcement of group configurations",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [
+          {
+            "name": "4.3.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-02-09T17:57:13.000+0000",
+        "updated": "2026-11-06T01:07:42.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-20848",
+      "fields": {
+        "summary": "Consider to surface group-level misconfigurations client side",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-07-28T05:31:58.000+0000",
+        "updated": "2026-11-06T01:07:42.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21224",
+      "fields": {
+        "summary": "Add mirror-level configs",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-10-06T06:47:42.000+0000",
+        "updated": "2026-11-06T00:53:11.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21304",
+      "fields": {
+        "summary": "Add mirror.state.topic.min.isr and related configs",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-10-19T06:27:43.000+0000",
+        "updated": "2026-11-06T00:52:55.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21421",
+      "fields": {
+        "summary": "ConfigDef.parse trims whitespace but raw config usage doesn't",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-03T13:24:50.000+0000",
+        "updated": "2026-11-05T21:06:30.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21408",
+      "fields": {
+        "summary": "Admin client metadata refresh uses a flat retry.backoff.ms when the response lacks the node a pending call needs",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "In Progress"
+        },
+        "created": "2026-10-31T21:55:20.000+0000",
+        "updated": "2026-11-05T18:27:43.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21432",
+      "fields": {
+        "summary": "RemotePartitionMetadataStore#getRemoteLogMetadataCache should throw RemoteStorageNotReadyException instead of ReplicaNotAvailableException",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-05T18:12:43.000+0000",
+        "updated": "2026-11-05T18:20:30.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-19726",
+      "fields": {
+        "summary": "Throw an exception if client tries to override topic replication factor with a value that it < min.insync.replicas",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2025-09-19T16:04:59.000+0000",
+        "updated": "2026-11-05T18:05:49.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21409",
+      "fields": {
+        "summary": "Switching to a subscription regex that matches no topic doesn't trigger rebalance",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-01T08:49:49.000+0000",
+        "updated": "2026-11-05T16:27:54.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21099",
+      "fields": {
+        "summary": "CVE-2026-90559 snappy-java vulnerability",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "4.3.2"
+          }
+        ],
+        "status": {
+          "name": "Reopened"
+        },
+        "created": "2026-09-15T15:49:12.000+0000",
+        "updated": "2026-11-05T15:15:32.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21404",
+      "fields": {
+        "summary": "Add MirrorStateMessageFormatter",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-10-30T12:57:40.000+0000",
+        "updated": "2026-11-05T13:18:46.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21426",
+      "fields": {
+        "summary": "kafka-features.sh upgrade --release-version upgrades kraft.version and converts static quorums to dynamic",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-04T10:59:31.000+0000",
+        "updated": "2026-11-05T07:26:24.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21403",
+      "fields": {
+        "summary": "Add --mirror-state-decoder support to kafka-dump-log.sh",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-10-30T12:56:44.000+0000",
+        "updated": "2026-11-05T05:06:26.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21431",
+      "fields": {
+        "summary": "Update assignment in classic group heartbeat to consumer group",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-05T03:23:15.000+0000",
+        "updated": "2026-11-05T04:06:17.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21430",
+      "fields": {
+        "summary": "Include metadata offset in Metadata responses to help clients detect stale metadata",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-05T00:53:55.000+0000",
+        "updated": "2026-11-05T00:53:55.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21410",
+      "fields": {
+        "summary": "Log cleaner ignores a committed tombstone after an earlier aborted transaction of the same producer; the deleted key comes back",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "4.5.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-11-02T04:08:03.000+0000",
+        "updated": "2026-11-05T00:20:20.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21429",
+      "fields": {
+        "summary": "Add assignment failure rate metric",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-04T19:08:10.000+0000",
+        "updated": "2026-11-04T19:08:10.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21428",
+      "fields": {
+        "summary": "Add assignment build time metric",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-04T19:06:08.000+0000",
+        "updated": "2026-11-04T19:06:08.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-21308",
+      "fields": {
+        "summary": " StickyTaskAssignor: a full previous member hides other previous members that have room ",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-19T16:37:34.000+0000",
+        "updated": "2026-11-04T16:07:25.000+0000"
+      }
+    },
+    {
+      "key": "KAFKA-13489",
+      "fields": {
+        "summary": "Support different compression type for snapshots",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2021-11-30T19:00:46.000+0000",
+        "updated": "2026-11-04T15:53:01.000+0000"
+      }
+    }
+  ]
+}

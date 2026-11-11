@@ -1,0 +1,1680 @@
+{
+  "startAt": 0,
+  "maxResults": 100,
+  "total": 136,
+  "issues": [
+    {
+      "key": "YARN-12059",
+      "fields": {
+        "summary": "Fix equality checks in ContainerSignalContext",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-06T03:21:00.000+0000",
+        "updated": "2026-11-11T03:14:50.000+0000"
+      }
+    },
+    {
+      "key": "YARN-12039",
+      "fields": {
+        "summary": "Fix container report lookup for containers retained across application attempts",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-22T08:20:26.000+0000",
+        "updated": "2026-11-11T02:58:16.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-20067",
+      "fields": {
+        "summary": "RawLocalFileSystem: broken double-checked locking in LocalFSFileInputStream#getAsyncChannel() can leak AsynchronousFileChannels",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "3.6.0"
+          }
+        ],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-05T02:54:18.000+0000",
+        "updated": "2026-11-11T02:40:27.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-20056",
+      "fields": {
+        "summary": "Replace the pull_request_target \"Build\" check bridge with ASF fork-ci",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "3.5.0"
+          }
+        ],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-02T17:08:09.000+0000",
+        "updated": "2026-11-10T21:44:45.000+0000"
+      }
+    },
+    {
+      "key": "HDFS-18027",
+      "fields": {
+        "summary": "Reduce DIR lock logging in FsDatasetImpl",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [
+          {
+            "name": "3.6.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-11-10T03:56:32.000+0000",
+        "updated": "2026-11-10T19:39:19.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-20079",
+      "fields": {
+        "summary": "SFTPInputStream reads one byte per call: override read(byte[], int, int)",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-10T08:25:09.000+0000",
+        "updated": "2026-11-10T18:19:26.000+0000"
+      }
+    },
+    {
+      "key": "YARN-12017",
+      "fields": {
+        "summary": "Add a structured Capacity Scheduler validation engine and the scheduler-conf validate/v2 REST endpoint",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-07T09:05:29.000+0000",
+        "updated": "2026-11-10T16:19:57.000+0000"
+      }
+    },
+    {
+      "key": "HDFS-18026",
+      "fields": {
+        "summary": "Stop excluding slow disks after dfs.datanode.max.slowdisks.to.exclude is reconfigured to 0",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-10T00:58:27.000+0000",
+        "updated": "2026-11-10T13:58:20.000+0000"
+      }
+    },
+    {
+      "key": "YARN-10932",
+      "fields": {
+        "summary": "Capacity Scheduler Deadlock - GuaranteedOrZeroCapacityOverTimePolicy",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Patch Available"
+        },
+        "created": "2021-09-01T16:30:55.000+0000",
+        "updated": "2026-11-10T13:37:37.000+0000"
+      }
+    },
+    {
+      "key": "YARN-12016",
+      "fields": {
+        "summary": "Build Capacity Scheduler queues from resolved configuration",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [
+          {
+            "name": "3.6.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-10-07T09:04:50.000+0000",
+        "updated": "2026-11-10T10:51:53.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-19946",
+      "fields": {
+        "summary": "ABFS: Enable data locality aware reads for Azure Blob Storage",
+        "issuetype": {
+          "name": "New Feature"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-07-23T08:02:10.000+0000",
+        "updated": "2026-11-10T10:42:30.000+0000"
+      }
+    },
+    {
+      "key": "HDFS-17995",
+      "fields": {
+        "summary": "DirectoryScanner should schedule scans with a fixed delay and log scan duration",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-15T08:27:29.000+0000",
+        "updated": "2026-11-10T10:06:03.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-14632",
+      "fields": {
+        "summary": "add buffer to SFTPFileSystem#create and SFTPFileSystem#open method, which can improve the  transfer speed.",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Patch Available"
+        },
+        "created": "2017-07-07T14:59:35.000+0000",
+        "updated": "2026-11-10T08:26:41.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-14566",
+      "fields": {
+        "summary": "Add seek support for SFTP FileSystem",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [
+          {
+            "name": "3.3.1"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2017-06-21T22:09:41.000+0000",
+        "updated": "2026-11-10T08:26:03.000+0000"
+      }
+    },
+    {
+      "key": "YARN-12034",
+      "fields": {
+        "summary": "WebAppUtils.getResolvedAddress and RM standby redirect drop IPv6 brackets",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Patch Available"
+        },
+        "created": "2026-10-19T01:39:23.000+0000",
+        "updated": "2026-11-10T04:10:51.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-20013",
+      "fields": {
+        "summary": "HADOOP - Remove the duplicate javax.annotation-api from the classpath",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "In Progress"
+        },
+        "created": "2026-10-10T20:48:50.000+0000",
+        "updated": "2026-11-10T03:51:53.000+0000"
+      }
+    },
+    {
+      "key": "YARN-12033",
+      "fields": {
+        "summary": "NodeId.fromString cannot parse an IPv6 NodeId, breaking aggregated log pages and node APIs",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Patch Available"
+        },
+        "created": "2026-10-19T01:39:22.000+0000",
+        "updated": "2026-11-10T02:52:38.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-20078",
+      "fields": {
+        "summary": "Generate the binary distribution's license files from the built archive and verify them as part of the release build",
+        "issuetype": {
+          "name": "New Feature"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-09T22:07:45.000+0000",
+        "updated": "2026-11-09T22:08:04.000+0000"
+      }
+    },
+    {
+      "key": "HDFS-18025",
+      "fields": {
+        "summary": "FsDatasetImpl#getStoredBlock should return null for non-existent replica",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-09T07:48:14.000+0000",
+        "updated": "2026-11-09T15:40:39.000+0000"
+      }
+    },
+    {
+      "key": "HDFS-18021",
+      "fields": {
+        "summary": "DirectoryScanner notify count limit does not apply to new blocks",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-05T12:59:36.000+0000",
+        "updated": "2026-11-09T14:44:31.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-19468",
+      "fields": {
+        "summary": "S3A: use blockchain datasets for parquet data",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2025-02-21T20:09:31.000+0000",
+        "updated": "2026-11-09T13:35:30.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-20077",
+      "fields": {
+        "summary": " Make curl downloads in docker pkg-resolver scripts fail on HTTP errors and retry",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-09T08:25:03.000+0000",
+        "updated": "2026-11-09T11:33:19.000+0000"
+      }
+    },
+    {
+      "key": "YARN-11992",
+      "fields": {
+        "summary": "Multi-node allocation discards an earlier reservation after later nodes are skipped",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-09-24T10:40:46.000+0000",
+        "updated": "2026-11-09T11:14:30.000+0000"
+      }
+    },
+    {
+      "key": "YARN-12056",
+      "fields": {
+        "summary": "Reorder application filters to avoid unnecessary locking",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-03T04:10:09.000+0000",
+        "updated": "2026-11-09T11:10:53.000+0000"
+      }
+    },
+    {
+      "key": "YARN-12057",
+      "fields": {
+        "summary": "Log the correct Registry application count in the GPG cleaner",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-11-03T04:16:16.000+0000",
+        "updated": "2026-11-09T10:57:08.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-20016",
+      "fields": {
+        "summary": "Declare the Jetty artifacts each module imports directly",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "In Progress"
+        },
+        "created": "2026-10-10T21:52:38.000+0000",
+        "updated": "2026-11-09T10:49:40.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-20076",
+      "fields": {
+        "summary": "TestRegistryDNS#testMissingReverseLookup fails when the host's DNS servers answer the PTR query",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-09T08:22:35.000+0000",
+        "updated": "2026-11-09T10:23:55.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-19966",
+      "fields": {
+        "summary": "ZKDelegationTokenSecretManager startup cache load races with CuratorCache initialization",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-08-17T13:44:40.000+0000",
+        "updated": "2026-11-09T07:55:45.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-20000",
+      "fields": {
+        "summary": "Remove the JAX-RS 1.1 API from hadoop-yarn-server-timelineservice-hbase-tests",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [
+          {
+            "name": "3.5.1"
+          },
+          {
+            "name": "3.6.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-10-04T16:44:04.000+0000",
+        "updated": "2026-11-09T07:41:08.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-20015",
+      "fields": {
+        "summary": "Stop using Jetty 9.4 APIs that Jetty 12 removes or the code does not need",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [
+          {
+            "name": "3.6.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-10-10T21:52:08.000+0000",
+        "updated": "2026-11-09T03:40:18.000+0000"
+      }
+    },
+    {
+      "key": "HDFS-18019",
+      "fields": {
+        "summary": "BlockPlacementPolicyRackFaultTolerant throws NoSuchElementException when no node can be chosen",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "3.4.4"
+          },
+          {
+            "name": "3.5.1"
+          },
+          {
+            "name": "3.6.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-11-02T12:37:42.000+0000",
+        "updated": "2026-11-09T03:12:52.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-20012",
+      "fields": {
+        "summary": "YARN - Exclude third-party Jetty and servlet API from the catalog-webapp and timelineservice-hbase tests",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "In Progress"
+        },
+        "created": "2026-10-10T20:47:36.000+0000",
+        "updated": "2026-11-08T18:08:15.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-20075",
+      "fields": {
+        "summary": "Backport selected fixes to branch-3.5 for Hadoop 3.5.1",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-08T08:36:45.000+0000",
+        "updated": "2026-11-08T09:46:11.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-20074",
+      "fields": {
+        "summary": "Release Apache Hadoop 3.5.1",
+        "issuetype": {
+          "name": "Task"
+        },
+        "fixVersions": [
+          {
+            "name": "3.5.1"
+          }
+        ],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-08T08:21:11.000+0000",
+        "updated": "2026-11-08T08:21:11.000+0000"
+      }
+    },
+    {
+      "key": "HDFS-18018",
+      "fields": {
+        "summary": "Shut down FsVolumeImpl when adding a DataNode volume fails",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-29T09:24:54.000+0000",
+        "updated": "2026-11-08T07:56:21.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-19801",
+      "fields": {
+        "summary": "Allow to skip recursive file deletion for non-empty directory",
+        "issuetype": {
+          "name": "New Feature"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-02-03T12:02:55.000+0000",
+        "updated": "2026-11-08T06:27:49.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-20065",
+      "fields": {
+        "summary": "HarFileSystem#createFile and #appendFile return builders of the underlying file system and bypass its read-only checks",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-05T02:54:13.000+0000",
+        "updated": "2026-11-08T02:55:08.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-20068",
+      "fields": {
+        "summary": "RawLocalFileSystem#getFileLinkStatus and #getLinkTarget miss symlinks when given a qualified file: path",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-05T02:54:20.000+0000",
+        "updated": "2026-11-08T02:19:54.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-20069",
+      "fields": {
+        "summary": "TrashPolicyDefault#moveToTrash compares paths as strings, so ~/.Trash_old is deleted without the trash and a prefix of the home directory cannot be moved to it",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-05T02:54:22.000+0000",
+        "updated": "2026-11-08T02:15:20.000+0000"
+      }
+    },
+    {
+      "key": "HDFS-18012",
+      "fields": {
+        "summary": "Block pool ID generated on an IPv6 NameNode contains colons",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Patch Available"
+        },
+        "created": "2026-10-19T00:49:21.000+0000",
+        "updated": "2026-11-07T11:55:41.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-20072",
+      "fields": {
+        "summary": "TableMapping never matches IPv6 entries written in compressed form",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Patch Available"
+        },
+        "created": "2026-11-06T17:48:07.000+0000",
+        "updated": "2026-11-07T07:58:03.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-20018",
+      "fields": {
+        "summary": "ZKFC exits with a NullPointerException that hides the BindException when its RPC port is in use",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-13T05:00:12.000+0000",
+        "updated": "2026-11-07T05:26:52.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-20037",
+      "fields": {
+        "summary": "Fix typos in Common documentation and configuration descriptions",
+        "issuetype": {
+          "name": "Task"
+        },
+        "fixVersions": [
+          {
+            "name": "3.6.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-10-26T02:22:07.000+0000",
+        "updated": "2026-11-07T03:18:26.000+0000"
+      }
+    },
+    {
+      "key": "YARN-12032",
+      "fields": {
+        "summary": "RM builds node HTTP and RPC addresses without brackets for IPv6 NodeId hosts",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "3.4.4"
+          },
+          {
+            "name": "3.5.1"
+          },
+          {
+            "name": "3.6.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-10-19T01:39:21.000+0000",
+        "updated": "2026-11-07T02:15:57.000+0000"
+      }
+    },
+    {
+      "key": "HDFS-17999",
+      "fields": {
+        "summary": "NameNode fails to parse IPv6 DataNode addresses in WebHDFS excludedatanodes and favored nodes",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "3.4.4"
+          },
+          {
+            "name": "3.5.1"
+          },
+          {
+            "name": "3.6.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-10-19T01:25:27.000+0000",
+        "updated": "2026-11-07T02:15:56.000+0000"
+      }
+    },
+    {
+      "key": "HDFS-18011",
+      "fields": {
+        "summary": "DataTransferSaslUtil.getPeerAddress fails on IPv6 peer addresses",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "3.4.4"
+          },
+          {
+            "name": "3.5.1"
+          },
+          {
+            "name": "3.6.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-10-19T00:49:20.000+0000",
+        "updated": "2026-11-07T02:15:55.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-20028",
+      "fields": {
+        "summary": "SecurityUtil.getByName rejects bracketed IPv6 literals when token service use_ip is false",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [
+          {
+            "name": "3.4.4"
+          },
+          {
+            "name": "3.5.1"
+          },
+          {
+            "name": "3.6.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-10-19T01:03:47.000+0000",
+        "updated": "2026-11-07T02:15:54.000+0000"
+      }
+    },
+    {
+      "key": "HDFS-18010",
+      "fields": {
+        "summary": "DatanodeID builds unbracketed IPv6 host:port strings",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "3.4.4"
+          },
+          {
+            "name": "3.5.1"
+          },
+          {
+            "name": "3.6.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-10-19T00:55:00.000+0000",
+        "updated": "2026-11-07T02:15:53.000+0000"
+      }
+    },
+    {
+      "key": "HDFS-18014",
+      "fields": {
+        "summary": "Slow peer lookup in DatanodeManager fails for IPv6 DataNodes",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "3.4.4"
+          },
+          {
+            "name": "3.5.1"
+          },
+          {
+            "name": "3.6.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-10-21T19:33:56.000+0000",
+        "updated": "2026-11-07T02:15:52.000+0000"
+      }
+    },
+    {
+      "key": "HDFS-17998",
+      "fields": {
+        "summary": "MiniDFSCluster: allow binding to an IPv6 loopback address",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [
+          {
+            "name": "3.4.4"
+          },
+          {
+            "name": "3.5.1"
+          },
+          {
+            "name": "3.6.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-10-19T01:22:16.000+0000",
+        "updated": "2026-11-07T02:15:51.000+0000"
+      }
+    },
+    {
+      "key": "HDFS-18000",
+      "fields": {
+        "summary": "HDFS builds NameNode URIs and host:port strings from IPv6 addresses without brackets",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "3.4.4"
+          },
+          {
+            "name": "3.5.1"
+          },
+          {
+            "name": "3.6.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-10-19T01:32:48.000+0000",
+        "updated": "2026-11-07T02:15:50.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-19935",
+      "fields": {
+        "summary": "Windows: make preferIPv4Stack overridable, matching hadoop-functions.sh",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [
+          {
+            "name": "3.4.4"
+          },
+          {
+            "name": "3.5.1"
+          },
+          {
+            "name": "3.6.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-07-08T20:53:32.000+0000",
+        "updated": "2026-11-07T02:15:49.000+0000"
+      }
+    },
+    {
+      "key": "MAPREDUCE-7552",
+      "fields": {
+        "summary": "Document how to stop pinning MapReduce task JVMs to IPv4",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Patch Available"
+        },
+        "created": "2026-10-19T00:49:22.000+0000",
+        "updated": "2026-11-07T02:07:33.000+0000"
+      }
+    },
+    {
+      "key": "HDFS-18024",
+      "fields": {
+        "summary": "Preserve copy-truncate source during last-snapshot deletion on standby",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-06T18:53:26.000+0000",
+        "updated": "2026-11-07T02:00:27.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-20008",
+      "fields": {
+        "summary": "Give the YARN application catalog its own Jetty version; drop the unused solr-test-framework",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-05T19:38:47.000+0000",
+        "updated": "2026-11-07T00:11:59.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-20073",
+      "fields": {
+        "summary": "Bind the secure RPC client to a local address of the server's address family",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-06T23:11:53.000+0000",
+        "updated": "2026-11-06T23:11:58.000+0000"
+      }
+    },
+    {
+      "key": "MAPREDUCE-7551",
+      "fields": {
+        "summary": "Uber-JIRA: MapReduce IPv6 support",
+        "issuetype": {
+          "name": "New Feature"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-06T23:00:18.000+0000",
+        "updated": "2026-11-06T23:10:13.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-17800",
+      "fields": {
+        "summary": "CLONE - Uber-JIRA: Hadoop should support IPv6",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2021-07-14T04:27:05.000+0000",
+        "updated": "2026-11-06T23:04:11.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-11890",
+      "fields": {
+        "summary": "Uber-JIRA: Hadoop should support IPv6",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2015-04-29T17:46:23.000+0000",
+        "updated": "2026-11-06T23:04:02.000+0000"
+      }
+    },
+    {
+      "key": "HDFS-9266",
+      "fields": {
+        "summary": "Avoid unsafe split and append on fields that might be IPv6 literals",
+        "issuetype": {
+          "name": "Task"
+        },
+        "fixVersions": [
+          {
+            "name": "HADOOP-17800"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2015-10-19T17:48:23.000+0000",
+        "updated": "2026-11-06T23:02:14.000+0000"
+      }
+    },
+    {
+      "key": "HDFS-18009",
+      "fields": {
+        "summary": "Uber-JIRA: HDFS IPv6 support",
+        "issuetype": {
+          "name": "New Feature"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-21T18:46:03.000+0000",
+        "updated": "2026-11-06T23:02:06.000+0000"
+      }
+    },
+    {
+      "key": "MAPREDUCE-6523",
+      "fields": {
+        "summary": "hadoop-yarn Avoid unsafe split and append on fields that might be IPv6 literals",
+        "issuetype": {
+          "name": "Task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2015-10-23T19:20:41.000+0000",
+        "updated": "2026-11-06T23:00:38.000+0000"
+      }
+    },
+    {
+      "key": "MAPREDUCE-6519",
+      "fields": {
+        "summary": "Avoid unsafe split and append on fields that might be IPv6 literals",
+        "issuetype": {
+          "name": "Task"
+        },
+        "fixVersions": [
+          {
+            "name": "HADOOP-17800"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2015-10-21T17:46:52.000+0000",
+        "updated": "2026-11-06T23:00:37.000+0000"
+      }
+    },
+    {
+      "key": "MAPREDUCE-7549",
+      "fields": {
+        "summary": "TaskAttemptImpl.isIP ignores IPv6 literals, so IPv6 split hosts lose data locality",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "3.4.4"
+          },
+          {
+            "name": "3.5.1"
+          },
+          {
+            "name": "3.6.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-10-19T01:39:28.000+0000",
+        "updated": "2026-11-06T23:00:36.000+0000"
+      }
+    },
+    {
+      "key": "YARN-4283",
+      "fields": {
+        "summary": "Avoid unsafe split and append on fields that might be IPv6 literals",
+        "issuetype": {
+          "name": "Task"
+        },
+        "fixVersions": [
+          {
+            "name": "HADOOP-17800"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2015-10-21T03:27:26.000+0000",
+        "updated": "2026-11-06T22:59:15.000+0000"
+      }
+    },
+    {
+      "key": "YARN-8604",
+      "fields": {
+        "summary": "Modify WebApps.Builder<T>#at to parse IPv6 address",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Patch Available"
+        },
+        "created": "2018-07-30T11:32:34.000+0000",
+        "updated": "2026-11-06T22:59:14.000+0000"
+      }
+    },
+    {
+      "key": "YARN-1226",
+      "fields": {
+        "summary": "Inconsistent hostname leads to low data locality on IPv6 hosts",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2013-09-23T14:48:04.000+0000",
+        "updated": "2026-11-06T22:59:13.000+0000"
+      }
+    },
+    {
+      "key": "YARN-12038",
+      "fields": {
+        "summary": "YARN service AM forces java.net.preferIPv4Stack=true",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-19T01:39:27.000+0000",
+        "updated": "2026-11-06T22:59:12.000+0000"
+      }
+    },
+    {
+      "key": "YARN-12037",
+      "fields": {
+        "summary": "NodeManager web port parsed with split(\":\")[1] breaks for a bracketed IPv6 address",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-19T01:39:26.000+0000",
+        "updated": "2026-11-06T22:59:10.000+0000"
+      }
+    },
+    {
+      "key": "YARN-12036",
+      "fields": {
+        "summary": "NodeManager fails with NPE when bind-host is set and yarn.nodemanager.address is IPv6",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-19T01:39:25.000+0000",
+        "updated": "2026-11-06T22:59:09.000+0000"
+      }
+    },
+    {
+      "key": "YARN-12035",
+      "fields": {
+        "summary": "Federation registers IPv6 sub-cluster addresses without brackets",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-19T01:39:24.000+0000",
+        "updated": "2026-11-06T22:59:08.000+0000"
+      }
+    },
+    {
+      "key": "YARN-12060",
+      "fields": {
+        "summary": "Uber-JIRA: YARN IPv6 support",
+        "issuetype": {
+          "name": "New Feature"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-06T22:58:34.000+0000",
+        "updated": "2026-11-06T22:58:52.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-19970",
+      "fields": {
+        "summary": "HADOOP - Move the servlet API to javax.servlet-api 4.0.1",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "In Progress"
+        },
+        "created": "2026-08-21T17:47:02.000+0000",
+        "updated": "2026-11-06T22:56:24.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-20052",
+      "fields": {
+        "summary": "Download page should link to mirrors",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-01T19:43:09.000+0000",
+        "updated": "2026-11-06T21:16:17.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-19972",
+      "fields": {
+        "summary": "Upgrade to Jetty 12 ee8",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-08-24T23:52:23.000+0000",
+        "updated": "2026-11-06T20:44:42.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-19999",
+      "fields": {
+        "summary": "Upgrade Guice from 5.1.0 to 6.0.0, which accepts both javax.inject and jakarta.inject",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-04T16:43:09.000+0000",
+        "updated": "2026-11-06T20:39:47.000+0000"
+      }
+    },
+    {
+      "key": "HDFS-18022",
+      "fields": {
+        "summary": "JournalNode serves discarded edits from RPC cache after rolling-upgrade rollback",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-05T16:11:25.000+0000",
+        "updated": "2026-11-06T19:29:01.000+0000"
+      }
+    },
+    {
+      "key": "HDFS-7903",
+      "fields": {
+        "summary": "Cannot recover block after truncate and delete snapshot",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [
+          {
+            "name": "2.7.0"
+          }
+        ],
+        "status": {
+          "name": "Closed"
+        },
+        "created": "2015-03-08T18:49:40.000+0000",
+        "updated": "2026-11-06T18:54:52.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-20030",
+      "fields": {
+        "summary": "Add an opt-in Maven profile and CI job that run tests with IPv6 enabled",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Patch Available"
+        },
+        "created": "2026-10-19T01:22:15.000+0000",
+        "updated": "2026-11-06T17:29:50.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-19728",
+      "fields": {
+        "summary": "S3A: add ipv6 support",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2025-10-15T13:16:53.000+0000",
+        "updated": "2026-11-06T17:28:12.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-19534",
+      "fields": {
+        "summary": "S3A : Add option fs.s3a.dual-stack.enabled to enable Amazon S3 dual-stack endpoints",
+        "issuetype": {
+          "name": "Improvement"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2025-04-10T14:22:48.000+0000",
+        "updated": "2026-11-06T17:28:12.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-3257",
+      "fields": {
+        "summary": "Path should handle all characters",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2008-04-15T01:40:18.000+0000",
+        "updated": "2026-11-06T17:25:53.000+0000"
+      }
+    },
+    {
+      "key": "HDFS-14762",
+      "fields": {
+        "summary": "\"Path(Path/String parent, String child)\" will fail when \"child\" contains \":\"",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2019-08-21T22:09:46.000+0000",
+        "updated": "2026-11-06T17:25:53.000+0000"
+      }
+    },
+    {
+      "key": "HDFS-18004",
+      "fields": {
+        "summary": "NameNode RPC servers bind to the reverse DNS name of a configured IP literal instead of the literal",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [
+          {
+            "name": "3.6.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-10-19T02:15:57.000+0000",
+        "updated": "2026-11-06T17:19:14.000+0000"
+      }
+    },
+    {
+      "key": "HDFS-18003",
+      "fields": {
+        "summary": "RBF: federation rename journal path fails to parse for an IPv6 listener address",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-19T01:32:51.000+0000",
+        "updated": "2026-11-06T17:10:15.000+0000"
+      }
+    },
+    {
+      "key": "HDFS-18002",
+      "fields": {
+        "summary": "RBF: Router builds unbracketed IPv6 host:port strings for heartbeats and the State Store",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-19T01:32:50.000+0000",
+        "updated": "2026-11-06T17:10:13.000+0000"
+      }
+    },
+    {
+      "key": "HDFS-18001",
+      "fields": {
+        "summary": "RBF: FederationUtil.getJmx cannot parse a bracketed IPv6 NameNode web address",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-19T01:32:49.000+0000",
+        "updated": "2026-11-06T17:10:11.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-20070",
+      "fields": {
+        "summary": "upgrade to netty 4.2.20",
+        "issuetype": {
+          "name": "Task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-05T19:50:24.000+0000",
+        "updated": "2026-11-06T16:39:12.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-19990",
+      "fields": {
+        "summary": "Upgrade to BouncyCastle 1.86 due to CVEs",
+        "issuetype": {
+          "name": "Task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-09-17T12:17:04.000+0000",
+        "updated": "2026-11-06T14:30:10.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-20006",
+      "fields": {
+        "summary": "Clear the response charset along with the content type",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-05T19:36:20.000+0000",
+        "updated": "2026-11-06T14:04:44.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-20005",
+      "fields": {
+        "summary": "Write a refused fsimage transfer's reason into the response body",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-05T19:34:21.000+0000",
+        "updated": "2026-11-06T10:36:56.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-20039",
+      "fields": {
+        "summary": "Fix spelling mistakes in S3A retry throttle documentation",
+        "issuetype": {
+          "name": "Task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-26T02:25:22.000+0000",
+        "updated": "2026-11-06T08:14:12.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-20014",
+      "fields": {
+        "summary": "HADOOP - Run the Jersey tests on the JDK HTTP server instead of Jetty",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [
+          {
+            "name": "3.6.0"
+          }
+        ],
+        "status": {
+          "name": "Resolved"
+        },
+        "created": "2026-10-10T20:49:53.000+0000",
+        "updated": "2026-11-06T06:07:54.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-20049",
+      "fields": {
+        "summary": "Keep slf4j-api at the managed version for consumers once Jetty 12 is in",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-31T12:15:43.000+0000",
+        "updated": "2026-11-06T05:26:16.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-20003",
+      "fields": {
+        "summary": "Clients shall read an HTTP refusal's reason from the response body",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-05T19:31:51.000+0000",
+        "updated": "2026-11-06T04:47:08.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-20048",
+      "fields": {
+        "summary": "Fix race in TestHttpServer#testHttpServer2Metrics",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-31T09:29:11.000+0000",
+        "updated": "2026-11-06T04:23:38.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-20004",
+      "fields": {
+        "summary": "Send a filter's refusal reason in the response body for every HTTP method",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-05T19:32:59.000+0000",
+        "updated": "2026-11-06T02:34:12.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-20007",
+      "fields": {
+        "summary": "Add tests for the javax.servlet contract and HTTP behaviour offered to downstream projects",
+        "issuetype": {
+          "name": "Sub-task"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-05T19:37:14.000+0000",
+        "updated": "2026-11-06T02:23:47.000+0000"
+      }
+    },
+    {
+      "key": "HADOOP-20051",
+      "fields": {
+        "summary": "Fix race in TestRPC#testRpcMetrics",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-11-01T19:25:41.000+0000",
+        "updated": "2026-11-06T02:22:01.000+0000"
+      }
+    },
+    {
+      "key": "YARN-12052",
+      "fields": {
+        "summary": "Timeline v1 REST calls do not use the documented field names, and POST and putDomain reject them",
+        "issuetype": {
+          "name": "Bug"
+        },
+        "fixVersions": [],
+        "status": {
+          "name": "Open"
+        },
+        "created": "2026-10-30T21:21:59.000+0000",
+        "updated": "2026-11-06T01:26:40.000+0000"
+      }
+    }
+  ]
+}

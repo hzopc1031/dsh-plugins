@@ -1,0 +1,40 @@
+{
+  "description": "Public anonymous GETs during final smoke; historical recordings, not live counts. One capped page per default watched project.",
+  "window": {
+    "start": "2026-11-04T04:32:43.712Z",
+    "end": "2026-11-11T04:32:43.712Z",
+    "days": 7,
+    "timezone": "Asia/Singapore",
+    "mode": "rolling",
+    "label": "滚动最近 7 天：2026-11-04 12:32:43 Asia/Singapore (UTC+8) 至 2026-11-11 12:32:43 Asia/Singapore (UTC+8)（含两端）；仅日期按 UTC+8 当日零时筛选，日期未知项另列，不计作窗口内动态。"
+  },
+  "sources": [
+    {
+      "project": "kafka",
+      "file": "jira-kafka-rolling.json",
+      "url": "https://issues.apache.org/jira/rest/api/2/search?jql=project+in+%28KAFKA%29+AND+updated+%3E%3D+%222026-11-03%22+AND+updated+%3C+%222026-11-13%22+ORDER+BY+updated+DESC%2C+key+ASC&maxResults=100&startAt=0&fields=summary%2Cissuetype%2CfixVersions%2Cstatus%2Ccreated%2Cupdated",
+      "fetchedAt": "2026-11-11T04:32:44.386Z",
+      "originalSha256": "65d6181228c94baefb8afb285b297bcf7b47519d3598ab3e4078f1d31775c0cb",
+      "fixtureSha256": "dfd9c09268f5334631ec717e3973c37bdaec5889e323e109f54428b19850f18c",
+      "transformation": "Keep recorded pagination, every returned issue key, summary, type, fix-version names, status, created and updated timestamps. Omit API metadata and personal fields. No invented rows or dates."
+    },
+    {
+      "project": "hadoop",
+      "file": "jira-hadoop-rolling.json",
+      "url": "https://issues.apache.org/jira/rest/api/2/search?jql=project+in+%28HADOOP%2CHDFS%2CMAPREDUCE%2CYARN%29+AND+updated+%3E%3D+%222026-11-03%22+AND+updated+%3C+%222026-11-13%22+ORDER+BY+updated+DESC%2C+key+ASC&maxResults=100&startAt=0&fields=summary%2Cissuetype%2CfixVersions%2Cstatus%2Ccreated%2Cupdated",
+      "fetchedAt": "2026-11-11T04:32:44.586Z",
+      "originalSha256": "38004f409f4ed16592982897ed8289448cefd597799fffd750a2ca617d016d62",
+      "fixtureSha256": "593d82910ae67eaad0f29fa8c77af69cf8d5586395312158067e1cdef7574257",
+      "transformation": "Keep recorded pagination, every returned issue key, summary, type, fix-version names, status, created and updated timestamps. Omit API metadata and personal fields. No invented rows or dates."
+    },
+    {
+      "project": "flink",
+      "file": "jira-flink-rolling.json",
+      "url": "https://issues.apache.org/jira/rest/api/2/search?jql=project+in+%28FLINK%29+AND+updated+%3E%3D+%222026-11-03%22+AND+updated+%3C+%222026-11-13%22+ORDER+BY+updated+DESC%2C+key+ASC&maxResults=100&startAt=0&fields=summary%2Cissuetype%2CfixVersions%2Cstatus%2Ccreated%2Cupdated",
+      "fetchedAt": "2026-11-11T04:32:44.786Z",
+      "originalSha256": "0d6d00d9922237651337bf3691b8e3e7951355a608bf243433fcced6c729e95d",
+      "fixtureSha256": "8ca20628559be63a3ff700d8062737eef04008cd803206c991abf91fbd82806d",
+      "transformation": "Keep recorded pagination, every returned issue key, summary, type, fix-version names, status, created and updated timestamps. Omit API metadata and personal fields. No invented rows or dates."
+    }
+  ]
+}

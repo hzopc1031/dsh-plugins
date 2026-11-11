@@ -2,6 +2,12 @@
 
 ## 0.1.0 — unreleased
 
+- Decode CSV strictly as UTF-8 then GB18030 (including GBK), preserve encoding in inventories and exports, and keep JSON manifests UTF-8.
+- Read confined originals/manifests/confirmations without procfs/fd paths; test forced fd-path failures and ancestor replacement on Linux. Native macOS/Windows were not run; export and status writers still require Linux procfs.
+- Write an atomic Chinese per-run status Markdown file and matching command recap; keep model-tool results compact. Explain refusals with actual source locations, safe Chinese messages and next steps.
+- Keep ExcelJS 4.4.0 and override its uuid to 11.1.1. Package-root production audit on 2026-11-11 reports zero findings; document the separate consumer-root override requirement. Verify CommonJS v4 compatibility, XLSX text identifiers and preservation of previous packs on failure.
+- Recheck all 71 tests and package contents, and run GBK, mismatch and OFD-refusal samples in disposable Linux DSH 0.2.2-rc.1 without a model. Command-only result cards remain absent; local status files and packs carry the results.
+
 - Add a local CNY invoice/ledger verification gate and evidence packs, available from the `feat/invoice-gate` git branch; not published to npm.
 - Read explicitly mapped CSV/XLSX, documented structured/OCR JSON, labelled PDF text and the documented XML dialect. Inventory failures/skips and refuse OFD and scans without OCR JSON.
 - Keep originals read-only with SHA-256, identifiers as strings, blanks distinct from zero and formula-only fields unchecked; execute no macros, links or formulas.

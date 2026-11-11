@@ -73,7 +73,7 @@ dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packag
 dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#feat/invoice-gate&path:/packages/dsh-invoice-gate"
 ```
 
-`dsh-invoice-gate` 的 0.1.0 尚未发布到 npm、未合并到 main，须保留上面的 `feat/invoice-gate` ref；它声明 DSH `>=0.2.1-rc.5 <0.3.0`，本机加载检查使用 `0.2.2-rc.1`。/ Invoice Gate is unreleased and requires the branch ref above; live loading was checked with `0.2.2-rc.1`.
+`dsh-invoice-gate` 的 0.1.0 尚未发布到 npm、未合并到 main，须保留上面的 `feat/invoice-gate` ref；它声明 DSH `>=0.2.1-rc.5 <0.3.0`，本机加载检查使用 `0.2.2-rc.1`。/ Invoice Gate is unreleased and requires the branch ref above; live loading was checked with `0.2.2-rc.1`. ExcelJS/uuid 的修复需在消费端 profile 根级应用 override，见 [依赖审计与安装限制](packages/dsh-invoice-gate/README.md#安装后的依赖审计--consumer-override-limit)；本包根目录的零发现不代表整个宿主依赖图无发现。
 
 同样的 `github:...` 地址也可以填进界面的「添加插件」。把 `main` 换成某个提交哈希即可固定版本。
 

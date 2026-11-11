@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
 
 const pkg = JSON.parse(readFileSync('package.json', 'utf8'))
 const [pack] = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], {
@@ -23,6 +24,10 @@ for (const hook of ['preinstall', 'install', 'postinstall', 'prepare', 'prepack'
   assert.equal(pkg.scripts[hook], undefined, 'unexpected lifecycle hook: ' + hook)
 }
 assert.deepEqual(pkg.dependencies, { exceljs: '4.4.0', 'fast-xml-parser': '5.12.0', 'pdfjs-dist': '4.10.38' })
+assert.deepEqual(pkg.overrides, { exceljs: { uuid: '11.1.1' } })
+const excelRequire = createRequire(import.meta.resolve('exceljs'))
+assert.equal(excelRequire('uuid/package.json').version, '11.1.1')
+assert.match(excelRequire('uuid').v4(), /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/)
 for (const name of Object.keys(pkg.peerDependencies)) {
   assert.equal(pkg.peerDependenciesMeta[name].optional, true)
   assert.ok(pkg.devDependencies[name], 'missing development peer: ' + name)

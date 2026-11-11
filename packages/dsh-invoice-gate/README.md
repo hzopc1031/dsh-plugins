@@ -38,13 +38,15 @@ dsh plugin --profile invoice-gate-demo add ./packages/dsh-invoice-gate
 
 `/invoice-gate help` 显示帮助。命令界面就是 MVP 的薄界面，没有额外网页面板或插件 Remote API。模型工具只有 `invoice_gate_ingest`、`invoice_gate_check`、`invoice_gate_export`，默认返回数量、run id、状态和文件路径，不把原文、金额表或完整报告送入模型上下文。PTC `run_code` 在运行期间被阻止；模型工具需用 native executor，命令不需要模型或凭据。
 
-本次 rc.1 的新建纯命令会话中，网页主区域仍显示起始页，未显示命令结果卡片；命令已执行并写入 DSH 会话事件，三个样例的报告也正常生成。请在本机打开报告核对结果；此处不声称该宿主界面的结果展示已通过。
+每次 `start`、`ingest`、`check`、`export`、`status`、`stop` 都会原子更新项目内的 `invoice-gate-<run UUID>-status.md`，命令回执与文件内容一致。文件包含中文计数、异常原因与处理建议、草稿状态及报告路径，不含金额表或原文。工具仅额外返回 `statusFile` 路径。停止后文件保留；运行本身不能续跑。详见 [状态文件说明](docs/tools.md#中文状态文件与命令回执)。
+
+本次 Linux DSH 0.2.2-rc.1 新建纯命令会话仍停留在起始页，没有显示结果卡片。GBK 台账、金额差异、OFD 拒绝三个合成样例的命令事件、状态文件和证据包均已核对。请在本机打开状态文件与报告；不需要添加模型回合。
 
 ## 输入与拒绝范围
 
 - 接受本地 UTF-8（可带 BOM）、GBK / GB18030 CSV、XLSX、[文档定义的 JSON / 用户自备 OCR 字段 JSON](docs/inputs.md)、带标签的 PDF 文本层、文档定义的 `Invoice schemaVersion="1"` XML。CSV 编码按严格解码记录在文件清单；JSON 清单仍用 UTF-8。XML 只支持已记录且有合成样例的结构，不承诺兼容任意电子发票 XML。
 - CSV/XLSX 必须明确映射列名；没有微信、支付宝专用模板。`amount` 是未税金额，`total` 是价税合计，不能互换猜测。
-- 拒绝 OFD；图片和无文本层扫描 PDF 需用户提供 OCR JSON。内置 OCR、云识别、邮箱采集、平台登录与抓取均未实现。
+- 拒绝项会显示文件及实际页／行／单元格位置（适用时）、中文原因和下一步建议，并保留机器可读原因码。例如 OFD 会建议另行提供受支持格式，公式无缓存会建议核对原件后提供存储值；不会自动修复。拒绝 OFD；图片和无文本层扫描 PDF 需用户提供 OCR JSON。内置 OCR、云识别、邮箱采集、平台登录与抓取均未实现。
 - 不执行宏、外链、公式或脚本；只读存储的单元格值。公式无缓存值则记为 `unchecked`，不重算、不猜数。数值类型的票号拒绝视为可靠标识；20 位票号始终按文本处理。
 - 每个文件、页、表格行、跳过项和失败都有清单记录。缺失、截断、不可读或拒绝的输入不会静默消失。
 
@@ -57,6 +59,8 @@ dsh plugin --profile invoice-gate-demo add ./packages/dsh-invoice-gate
 导出新目录，内含 `report.md`、`report.xlsx`、`export-report.json`；可选 `includeOriginals: true` 在工具导出时附上经哈希检查的原件副本，默认只导出摘要。票号在 XLSX 中为文本。差异以文字列出 rule id、expected / actual / difference，来源保留真实页码、单元格、XML/JSON 路径或明确标为“无来源／待核”。报告包含导入清单、未执行规则、人工确认历史和草稿标记。详见 [导出说明](docs/exports.md)。
 
 读写限制在启动时选定的项目目录，拒绝绝对路径、`..` 和逃逸符号链接。导出父目录必须存在，目标必须是新目录；通过临时目录写完后原子发布，失败不覆盖已有证据包。只支持单操作者，不承诺并发写入协调或断电持久性。运行状态只在内存，停止或会话释放后不会续跑，已导出文件保留。工具限制不是操作系统沙箱。
+
+**平台边界：** 导入原件、清单及确认 JSON 的只读路径不依赖 `/proc/self/fd` 或 `/dev/fd`；Linux 测试已强制这两类路径失败，仍能安全读取并拒绝越界及祖先目录替换。这里没有执行原生 macOS／Windows。导出、附带原件读取和状态文件写入仍依赖 Linux `/proc/self/fd`，不能据此声称整个命令流程可在 Mac／Windows 使用。
 
 **本包不证明票据真实、已付款或可报销，不是会计档案合规认证。** 不做多币种换算、拆合付款、红蓝票专门流程、多人审批、付款、记账、报税或抵扣判断；完整约定见 [绑定决策](docs/decisions.md)。
 
@@ -72,7 +76,9 @@ Inputs are UTF-8 (optional BOM), GBK/GB18030 CSV, XLSX, documented structured or
 
 **The model must never invent or change amounts, tax, totals or identifiers.** There is no rewrite tool. Integer-fen rules check arithmetic, line totals, duplicates, optional buyer/date constraints and invoice-number ledger matching. Blank is not zero; ambiguous money/currency is unchecked. Extracted, normalized and human-confirmed values stay separate. Human corrections carry before/after provenance and trigger fresh checks without changing originals; no tool accepts corrections or model-authored replacement values.
 
-Exports contain Markdown, XLSX text cells and JSON, with optional hash-checked originals and relative paths. Reports show textual expected/actual/difference/rule-id evidence, unexecuted rules and draft status while mismatches or key reviews remain. External verification is always `not-checked`. New destinations are published atomically; previous packs are never overwritten. Reads and writes reject project escapes, including symlinks. Single-run in-memory state has no resume or concurrent-writer protocol.
+Exports contain Markdown, XLSX text cells and JSON, with optional hash-checked originals and relative paths. Reports show textual expected/actual/difference/rule-id evidence, unexecuted rules and draft status while mismatches or key reviews remain. External verification is always `not-checked`. New destinations are published atomically; previous packs are never overwritten. Reads and writes reject project escapes, including symlinks. Single-run in-memory state has no resume or concurrent-writer protocol. Each successful run command also atomically refreshes `invoice-gate-<run UUID>-status.md` in the project, with Chinese counts, refusal guidance and report paths. The command text equals this file; tools return its `statusFile` path without amount tables. Files survive stop.
+
+The confined ingest/manifest/confirmation reader works without `/proc/self/fd` or `/dev/fd`, exercised by forcing both to fail on Linux. Native macOS and Windows were not run. Export, copied-original reads and status writes still require Linux `/proc/self/fd`; full Mac/Windows operation is not established.
 
 The plugin makes no outbound network requests, model calls, automatic uploads or financial telemetry. DSH's own session recording/sharing settings remain host-owned. This pack **does not prove authenticity, payment or reimbursability and is not accounting-archive certification**. SHA-256 is not proof of a genuine ticket. Multi-currency, payment workflows, approval, booking and filing are outside this MVP.
 
@@ -87,8 +93,19 @@ npm run verify-pack
 
 The suite uses labelled synthetic documents only. It checks ingest/refusal, exact money and identifiers, immutable sources, path confinement, corrections/drafts, atomic exports and real native-tool scope/guard behavior with network entrypoints blocked. A live isolated DSH web load and synthetic command run complement the tests; they do not establish a full host-version matrix or Microsoft Office compatibility.
 
-In the fresh command-only web session, the main view stayed on its landing screen instead of showing command-result cards. Durable `command/done` events and all three exported sample packs confirmed execution. LibreOffice Calc opened the mismatch XLSX read-only and displayed the difference and complete text identifier; Microsoft Excel was not tested.
+In the fresh command-only web session, the main view stayed on its landing screen instead of showing command-result cards. Durable `command/done` events, status files and GBK/mismatch/OFD-refusal packs confirmed execution without a model turn. Earlier Linux evidence includes LibreOffice Calc opening the mismatch XLSX read-only; this polish run checks XLSX with ExcelJS. Microsoft Excel, PowerPoint and WPS were not used.
 
-Optional PDF rendering dependencies are unnecessary for text extraction and were omitted in testing. PDF.js may print missing-canvas/polyfill warnings; the plugin does not render PDFs. The 2026-11-11 audit still reports two moderate production entries through ExcelJS/UUID and 14 high entries in the development host dependency graph. No breaking audit fix was forced; review these before a release.
+Optional PDF rendering dependencies are unnecessary for text extraction and were omitted in testing. PDF.js may print missing-canvas/polyfill warnings; the plugin does not render PDFs. The 2026-11-11 package-root `npm audit --omit=dev` reports **0 vulnerabilities** (info/low/moderate/high/critical all zero), after a clean `npm ci --omit=optional --ignore-scripts`. ExcelJS stays pinned to 4.4.0; the scoped override pins its CommonJS-compatible uuid to 11.1.1, patched for [GHSA-w5hq-g745-h8pq](https://github.com/uuidjs/uuid/security/advisories/GHSA-w5hq-g745-h8pq). XLSX ingest/export, complete text identifiers and failed-export preservation pass. This is a dated dependency audit, not a security certification; development-only host findings remain outside this fix.
+
+### 安装后的依赖审计 / Consumer override limit
+
+上述零发现只适用于本包作为根项目、使用提交锁文件的安装。本包作为依赖安装时，[npm 不继承依赖里的 overrides](https://docs.npmjs.com/cli/v11/configuring-npm/package-json/#overrides)。DSH 使用 pnpm；Git 分支安装不能自动保证 uuid 已修复。停止目标 profile 的 DSH，在其 `pnpm-workspace.yaml` 中合并下列 [根级 overrides](https://pnpm.io/settings#overrides)（保留已有设置），再运行 `dsh plugin --profile <name> install --ignore-scripts`，并用 `dsh plugin --profile <name> why uuid` 检查解析结果：
+
+```yaml
+overrides:
+  "exceljs@4.4.0>uuid": "11.1.1"
+```
+
+A consuming DSH profile must apply the override at its own pnpm root and audit that resolved graph. The package-root result does not claim every host/profile is audit-clean. The live check here used a local link to the clean npm-installed package tree; no existing profile was changed.
 
 Prebuilt `lib/` and declarations are committed; installation has no lifecycle hooks. MIT © 2026 hzopc1031.

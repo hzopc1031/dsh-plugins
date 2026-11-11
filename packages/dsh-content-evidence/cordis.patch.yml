@@ -1,0 +1,4 @@
+- insert:
+    - id: content-evidence
+      name: dsh-content-evidence
+      config: {}

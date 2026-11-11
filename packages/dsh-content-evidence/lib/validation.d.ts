@@ -1,0 +1,10 @@
+import { type Platform, type Workspace } from './model.js';
+export declare function invalid(field: string): never;
+export declare function text(value: unknown, field: string, max?: number, empty?: boolean): string;
+export declare function id(value: unknown): string;
+export declare function url(value: unknown): string;
+export declare function platform(value: unknown): Platform;
+export declare function record(value: unknown): Record<string, unknown>;
+export declare function hash(value: string | Uint8Array): string;
+export declare function fileName(value: unknown): string;
+export declare function parseWorkspace(value: unknown): Workspace;

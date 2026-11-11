@@ -1,0 +1,141 @@
+{
+  "name": "dsh-content-evidence",
+  "version": "0.1.0",
+  "description": "Evidence-based content workbench for DeepSeek Harness (in development)",
+  "type": "module",
+  "main": "index.js",
+  "types": "lib/plugin.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/plugin.d.ts",
+      "default": "./index.js"
+    },
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg",
+    "./typert": {
+      "types": "./lib/typert.host.d.ts",
+      "default": "./lib/typert.host.js"
+    },
+    "./remote": {
+      "types": "./lib/typert.remote-client.d.ts",
+      "default": "./lib/typert.remote-client.js"
+    },
+    "./types": {
+      "types": "./lib/model.d.ts",
+      "default": "./lib/model.js"
+    },
+    "./client": "./dist/client.js"
+  },
+  "files": [
+    "index.js",
+    "lib/*.js",
+    "lib/*.d.ts",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "lib/typert.host.js",
+    "lib/typert.host.d.ts",
+    "lib/typert.remote-client.js",
+    "lib/typert.remote-client.d.ts",
+    "dist/client.js"
+  ],
+  "engines": {
+    "node": ">=22",
+    "dsh": ">=0.2.1-rc.5 <0.3.0"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime"
+      ]
+    }
+  },
+  "license": "MIT",
+  "keywords": ["dsh-plugin", "deepseek-harness", "content-evidence"],
+  "scripts": {
+    "build": "tsc && node scripts/generate-remote.mjs && npm run build:client",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.client.json",
+    "test": "npm run build && node --test --test-isolation=none test/*.test.mjs",
+    "verify-pack": "node scripts/verify-pack.mjs",
+    "build:client": "tsc -p tsconfig.client.json && node scripts/build-client.mjs"
+  },
+  "optionalDependencies": {
+    "@koromix/koffi-linux-x64": "3.3.7",
+    "@koromix/koffi-linux-arm64": "3.3.7",
+    "@koromix/koffi-darwin-x64": "3.3.7",
+    "@koromix/koffi-darwin-arm64": "3.3.7"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": ">=4.0.5 <4.2.0",
+    "@deepseek-ai/dsh-commands": ">=0.2.1-rc.5 <0.3.0",
+    "@deepseek-ai/schemastery": ">=3.18.5 <3.20.0",
+    "@deepseek-ai/dsh-typert-protocol": ">=0.2.1-rc.5 <0.3.0",
+    "zod": "^4.4.3",
+    "@deepseek-ai/dsh-tools": ">=0.2.1-rc.5 <0.3.0",
+    "@deepseek-ai/dsh-agent": ">=0.2.1-rc.5 <0.3.0",
+    "@deepseek-ai/dsh-scope": ">=0.2.1-rc.5 <0.3.0",
+    "@deepseek-ai/dsh-system-prompt": ">=0.2.1-rc.5 <0.3.0",
+    "@deepseek-ai/dsh-api-gateway": ">=0.2.1-rc.5 <0.3.0",
+    "@deepseek-ai/dsh-client-ui-renderer": ">=0.2.1-rc.5 <0.3.0",
+    "@deepseek-ai/dsh-client-ui-slots": ">=0.2.1-rc.5 <0.3.0",
+    "@deepseek-ai/dsh-client-ui-layout": ">=0.2.1-rc.5 <0.3.0",
+    "@deepseek-ai/dsh-client-ui-sidebar": ">=0.2.1-rc.5 <0.3.0",
+    "react": "^18.2.0"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/cordis": { "optional": true },
+    "@deepseek-ai/dsh-commands": { "optional": true },
+    "@deepseek-ai/schemastery": { "optional": true },
+    "@deepseek-ai/dsh-typert-protocol": { "optional": true },
+    "zod": { "optional": true },
+    "@deepseek-ai/dsh-tools": { "optional": true },
+    "@deepseek-ai/dsh-agent": { "optional": true },
+    "@deepseek-ai/dsh-scope": { "optional": true },
+    "@deepseek-ai/dsh-system-prompt": { "optional": true },
+    "@deepseek-ai/dsh-api-gateway": { "optional": true },
+    "@deepseek-ai/dsh-client-ui-renderer": { "optional": true },
+    "@deepseek-ai/dsh-client-ui-slots": { "optional": true },
+    "@deepseek-ai/dsh-client-ui-layout": { "optional": true },
+    "@deepseek-ai/dsh-client-ui-sidebar": { "optional": true },
+    "react": { "optional": true }
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "~4.0.5",
+    "@deepseek-ai/dsh-commands": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-typert-generator": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-typert-protocol": "0.2.1-rc.5",
+    "@deepseek-ai/schemastery": "~3.18.5",
+    "@types/node": "^22.0.0",
+    "typescript": "~5.9.3",
+    "zod": "4.4.3",
+    "@deepseek-ai/dsh-tools": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-agent": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-scope": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-system-prompt": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-api-gateway": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-client-ui-renderer": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-client-ui-slots": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-client-ui-layout": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-client-ui-sidebar": "0.2.1-rc.5",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "@types/react": "^18.3.0",
+    "react-test-renderer": "18.3.1",
+    "esbuild": "~0.25.10"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hzopc1031/dsh-plugins.git",
+    "directory": "packages/dsh-content-evidence"
+  },
+  "homepage": "https://github.com/hzopc1031/dsh-plugins/tree/feat/content-evidence/packages/dsh-content-evidence#readme",
+  "bugs": { "url": "https://github.com/hzopc1031/dsh-plugins/issues" },
+  "author": "hzopc1031"
+}

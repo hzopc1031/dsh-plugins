@@ -1,0 +1,14 @@
+import type { Claim, ComplianceFinding, Draft, DraftBody, DraftInput, Platform, Topic } from './model.js';
+export declare function evidenceHash(topic: Topic): string;
+export declare function stringList(value: unknown, field: string, max?: number): string[];
+export declare function parseBody(value: unknown, target: Platform): DraftBody;
+export declare function parseDraftInput(value: unknown, target: Platform): DraftInput;
+export declare function revision(value: unknown): void;
+export declare function digest(value: unknown): void;
+export declare function bodyFields(body: DraftBody): [string, string][];
+export declare function selectedClaims(topic: Topic, claimIds: string[]): Claim[];
+export declare function renderDraft(body: DraftBody, topic: Topic, claimIds: string[]): string;
+export declare function draftHash(draft: Pick<Draft, 'content' | 'body' | 'claimIds' | 'evidenceHash'>): string;
+export declare function validateFacts(body: DraftBody, topic: Topic, claimIds: string[]): void;
+export declare function rulesHash(extraTerms: readonly string[]): string;
+export declare function checkCompliance(topic: Topic, draft: Draft, extraTerms: readonly string[]): ComplianceFinding[];

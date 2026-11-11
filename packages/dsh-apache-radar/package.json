@@ -1,6 +1,6 @@
 {
   "name": "dsh-apache-radar",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Local Apache community radar with explicit official source scopes",
   "type": "module",
   "main": "index.js",
@@ -25,7 +25,7 @@
   ],
   "engines": {
     "node": ">=22",
-    "dsh": ">=0.2.2-rc.1 <0.3.0"
+    "dsh": ">=0.2.2-rc.1 <0.3.0-0"
   },
   "dsh": {
     "bundle": {
@@ -59,10 +59,10 @@
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": ">=4.0.5 <4.2.0",
-    "@deepseek-ai/dsh-agent": ">=0.2.1-rc.5 <0.3.0",
-    "@deepseek-ai/dsh-client-ui-primitives": ">=0.2.2-rc.1 <0.3.0",
-    "@deepseek-ai/dsh-commands": ">=0.2.1-rc.5 <0.3.0",
-    "@deepseek-ai/dsh-tools": ">=0.2.1-rc.5 <0.3.0",
+    "@deepseek-ai/dsh-agent": ">=0.2.2-rc.1 <0.3.0-0",
+    "@deepseek-ai/dsh-client-ui-primitives": ">=0.2.2-rc.1 <0.3.0-0",
+    "@deepseek-ai/dsh-commands": ">=0.2.2-rc.1 <0.3.0-0",
+    "@deepseek-ai/dsh-tools": ">=0.2.2-rc.1 <0.3.0-0",
     "@deepseek-ai/schemastery": ">=3.18.5 <3.20.0",
     "react": "^18.3.1"
   },

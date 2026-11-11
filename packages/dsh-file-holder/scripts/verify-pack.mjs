@@ -13,9 +13,9 @@ const expected = [
 ]
 assert.deepEqual(pack.files.map(file => file.path).sort(), expected.sort(), 'Package contents must exactly match the allowlist')
 assert.equal(pkg.name, 'dsh-file-holder')
-assert.equal(pkg.version, '0.1.0')
+assert.equal(pkg.version, '0.1.1')
 assert.equal(pkg.license, 'MIT')
-assert.equal(pkg.engines.dsh, '0.2.1-rc.5')
+assert.equal(pkg.engines.dsh, '>=0.2.1-rc.5 <0.3.0-0')
 assert.equal(pkg.dsh.bundle.patch, './cordis.patch.yml')
 assert.equal(pkg.dsh.client, undefined)
 assert.equal(pkg.repository.directory, 'packages/' + pkg.name)

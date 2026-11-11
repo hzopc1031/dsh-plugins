@@ -1,6 +1,6 @@
 # 权限拒绝诊断台
 
-当前源码版本 **0.2.0**（尚未发布本次版本到 npm）。调用时权限快照仅折叠新增日志；审批请求与 live 观察按精确 ID 建索引。重复 list/show 可复用同一不可变日志与同一观察下的解析结果；新的工具/权限/审批事件、日志替换或缩短、live 观察变化均使缓存失效，跨会话隔离，缓存仅在内存。保留 20 条列表分页与手动 show 明细，错误文字仍只作线索，缺失证据仍给未知；不会改权限或补造历史事实。snapshotEvents 与 Session Query 仍可能读取完整日志，未宣称整个查询为 O(1)。
+当前源码版本 **0.2.1**（尚未发布本次版本到 npm）。调用时权限快照仅折叠新增日志；审批请求与 live 观察按精确 ID 建索引。重复 list/show 可复用同一不可变日志与同一观察下的解析结果；新的工具/权限/审批事件、日志替换或缩短、live 观察变化均使缓存失效，跨会话隔离，缓存仅在内存。保留 20 条列表分页与手动 show 明细，错误文字仍只作线索，缺失证据仍给未知；不会改权限或补造历史事实。snapshotEvents 与 Session Query 仍可能读取完整日志，未宣称整个查询为 O(1)。
 
 本次只完成 Windows 上的 typecheck、单元/rc.5 headless 集成、browser factory 的 jsdom 检查及 verify-pack；未安装到真实 DSH、未做 Electron 目视验收。最新批次记录见仓库 [OPTIMIZE_REPORT.md](../../OPTIMIZE_REPORT.md)。
 
@@ -118,3 +118,10 @@ npm run verify-pack
 ```
 
 `npm test` 会重建需提交的 lib/。以上通过不等于 Electron 桌面通过；真实截图、剪贴板、焦点/布局及桌面安装仍需人工验收。
+
+
+### 0.2.1 兼容性声明
+
+本版声明 DSH `>=0.2.1-rc.5 <0.3.0-0`。官方版本检查使用 `semver.satisfies` 并开启 `includePrerelease`：接纳 0.2.1-rc.5、0.2.2-rc.1 及后续 0.2.x 预发布/正式版，排除 0.3.0（含预发布）。DSH peer 显式覆盖两个已知 RC，Cordis / Schemastery peer 覆盖两个官方 tag 的版本；开发依赖不变。此次没有安装到用户 DSH；准入通过不等于逐版本功能或界面验证通过。
+
+校验逻辑、源码对照与本次检查结果见[兼容性报告](../../docs/engines-compatibility.md)。

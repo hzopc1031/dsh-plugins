@@ -16,7 +16,7 @@ assert.deepEqual(files, [
   'lib/export.d.ts', 'lib/export.js', 'lib/write.d.ts', 'lib/write.js', 'docs/exports.md', 'docs/tools.md',
 ].sort(), 'package allowlist mismatch')
 assert.equal(pkg.name, 'dsh-invoice-gate')
-assert.equal(pkg.version, '0.1.0')
+assert.equal(pkg.version, '0.1.1')
 assert.equal(pkg.license, 'MIT')
 assert.equal(pkg.dsh.bundle.patch, './cordis.patch.yml')
 assert.match(readFileSync('cordis.patch.yml', 'utf8'), /id: invoice-gate\s+name: dsh-invoice-gate\s+config: \{\}/)

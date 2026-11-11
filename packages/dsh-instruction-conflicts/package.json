@@ -1,6 +1,6 @@
 ﻿{
     "name":  "dsh-instruction-conflicts",
-    "version":  "0.2.0",
+    "version":  "0.2.1",
     "description":  "指令冲突解释器：规则正文疑似冲突、注入版本及当前上下文证据",
     "type":  "module",
     "main":  "index.js",
@@ -32,7 +32,7 @@
               ],
     "engines":  {
                     "node":  "\u003e=22",
-                    "dsh":  "0.2.1-rc.5"
+                    "dsh":  ">=0.2.1-rc.5 <0.3.0-0"
                 },
     "dsh":  {
                 "bundle":  {
@@ -52,17 +52,17 @@
                     "verify-pack":  "node scripts/verify-pack.mjs"
                 },
     "peerDependencies":  {
-                             "@deepseek-ai/cordis":  "~4.0.5",
-                             "@deepseek-ai/schemastery":  "~3.18.5",
-                             "@deepseek-ai/dsh-agent":  "0.2.1-rc.5",
-                             "@deepseek-ai/dsh-commands":  "0.2.1-rc.5",
-                             "@deepseek-ai/dsh-session":  "0.2.1-rc.5",
-                             "@deepseek-ai/dsh-session-query":  "0.2.1-rc.5",
-                             "@deepseek-ai/dsh-system-prompt":  "0.2.1-rc.5",
-                             "@deepseek-ai/dsh-session-format-catalog":  "0.2.1-rc.5",
-                             "@deepseek-ai/dsh-fs":  "0.2.1-rc.5",
-                             "@deepseek-ai/dsh-home-paths":  "0.2.1-rc.5",
-                             "@deepseek-ai/dsh-llm":  "0.2.1-rc.5"
+                             "@deepseek-ai/cordis":  ">=4.0.5 <4.2.0",
+                             "@deepseek-ai/schemastery":  ">=3.18.5 <3.20.0",
+                             "@deepseek-ai/dsh-agent":  ">=0.2.1-rc.5 <0.3.0-0 || >=0.2.2-rc.1 <0.3.0-0",
+                             "@deepseek-ai/dsh-commands":  ">=0.2.1-rc.5 <0.3.0-0 || >=0.2.2-rc.1 <0.3.0-0",
+                             "@deepseek-ai/dsh-session":  ">=0.2.1-rc.5 <0.3.0-0 || >=0.2.2-rc.1 <0.3.0-0",
+                             "@deepseek-ai/dsh-session-query":  ">=0.2.1-rc.5 <0.3.0-0 || >=0.2.2-rc.1 <0.3.0-0",
+                             "@deepseek-ai/dsh-system-prompt":  ">=0.2.1-rc.5 <0.3.0-0 || >=0.2.2-rc.1 <0.3.0-0",
+                             "@deepseek-ai/dsh-session-format-catalog":  ">=0.2.1-rc.5 <0.3.0-0 || >=0.2.2-rc.1 <0.3.0-0",
+                             "@deepseek-ai/dsh-fs":  ">=0.2.1-rc.5 <0.3.0-0 || >=0.2.2-rc.1 <0.3.0-0",
+                             "@deepseek-ai/dsh-home-paths":  ">=0.2.1-rc.5 <0.3.0-0 || >=0.2.2-rc.1 <0.3.0-0",
+                             "@deepseek-ai/dsh-llm":  ">=0.2.1-rc.5 <0.3.0-0 || >=0.2.2-rc.1 <0.3.0-0"
                          },
     "peerDependenciesMeta":  {
                                  "@deepseek-ai/cordis":  {

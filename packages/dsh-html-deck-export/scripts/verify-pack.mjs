@@ -18,7 +18,7 @@ const expected = [
 ]
 assert.deepEqual(pack.files.map(file => file.path).sort(), expected.sort(), 'unexpected package contents')
 assert.equal(pkg.name, 'dsh-html-deck-export')
-assert.equal(pkg.version, '0.1.0')
+assert.equal(pkg.version, '0.1.1')
 assert.notEqual(pkg.private, true)
 assert.equal(pkg.dsh.bundle.patch, './cordis.patch.yml')
 assert.match(readFileSync('cordis.patch.yml', 'utf8'), /id: html-deck-export\s+name: dsh-html-deck-export\s+config: \{\}/)

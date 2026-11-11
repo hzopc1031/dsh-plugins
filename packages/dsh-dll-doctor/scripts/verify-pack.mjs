@@ -9,8 +9,8 @@ const expected = [
   ...['pe', 'core', 'process', 'plugin'].flatMap(n => [`lib/${n}.js`, `lib/${n}.d.ts`]),
 ]
 assert.deepEqual(pack.files.map(f => f.path).sort(), expected.sort(), 'pack whitelist must match exactly')
-assert.equal(pkg.name, 'dsh-dll-doctor'); assert.equal(pkg.version, '0.1.0'); assert.equal(pkg.license, 'MIT')
-assert.equal(pkg.engines.dsh, '0.2.1-rc.5'); assert.equal(pkg.engines.node, '>=22')
+assert.equal(pkg.name, 'dsh-dll-doctor'); assert.equal(pkg.version, '0.1.1'); assert.equal(pkg.license, 'MIT')
+assert.equal(pkg.engines.dsh, '>=0.2.1-rc.5 <0.3.0-0'); assert.equal(pkg.engines.node, '>=22')
 assert.equal(pkg.dsh.bundle.patch, './cordis.patch.yml')
 assert.equal(pkg.repository.directory, 'packages/' + pkg.name)
 assert.match(readFileSync('cordis.patch.yml', 'utf8'), /id: dll-doctor\s/)
@@ -18,7 +18,7 @@ assert.match(readFileSync('cordis.patch.yml', 'utf8'), /name: dsh-dll-doctor\s/)
 assert.equal(pkg.dependencies, undefined)
 for (const key of ['preinstall', 'install', 'postinstall', 'prepare', 'prepack', 'postpack']) assert.equal(pkg.scripts[key], undefined)
 for (const peer of ['@deepseek-ai/dsh-commands', '@deepseek-ai/dsh-subprocess', '@deepseek-ai/dsh-working-directory']) {
-  assert.equal(pkg.peerDependencies[peer], '0.2.1-rc.5'); assert.equal(pkg.devDependencies[peer], '0.2.1-rc.5')
+  assert.equal(pkg.peerDependencies[peer], '>=0.2.1-rc.5 <0.3.0-0 || >=0.2.2-rc.1 <0.3.0-0'); assert.equal(pkg.devDependencies[peer], '0.2.1-rc.5')
 }
 for (const entry of Object.values(pkg.exports)) {
   const file = typeof entry === 'string' ? entry : entry.default

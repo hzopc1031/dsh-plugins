@@ -13,7 +13,7 @@ const expected = [
 ].sort()
 assert.deepEqual(files, expected, 'unexpected package contents')
 assert.equal(pkg.name, 'dsh-source-impact')
-assert.equal(pkg.version, '0.2.0')
+assert.equal(pkg.version, '0.2.1')
 assert.equal(pkg.dsh.bundle.patch, './cordis.patch.yml')
 assert.equal(pkg.dsh.client.platform, 'web')
 assert.equal(pkg.exports['./client'].default, './lib/client.js')

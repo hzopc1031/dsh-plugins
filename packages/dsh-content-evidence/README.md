@@ -4,11 +4,11 @@
 
 Evidence-based content workbench with a web sidebar and main panel. Materials, experiments, shared facts, editable four-platform drafts, compliance reports, safe local exports and manual published-link backfill use the same Host Remote API as the four local tools and restricted workbench. **Nothing is published automatically.**
 
-Requires Node.js `>=22` and DSH `>=0.2.1-rc.5 <0.3.0`. APIs were verified against DSH `0.2.2-rc.1`, source `fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159`, and checked at the `0.2.1-rc.5` API baseline. Host libraries are optional peers supplied by DSH; development installs include them for building and testing.
+Requires Node.js `>=22` and DSH `>=0.2.1-rc.5 <0.3.0-0`. APIs were verified against DSH `0.2.2-rc.1`, source `fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159`, and checked at the `0.2.1-rc.5` API baseline. Host libraries are optional peers supplied by DSH; development installs include them for building and testing.
 
 ## 安装 / Installation
 
-`0.1.0` is unreleased and **not published to npm**. Install the committed prebuilt package from `main`, then restart the web Host. Local export supports Linux and macOS directory-relative I/O without requiring procfs or traversable `/dev/fd`. Windows still refuses before creating export files. The portable path was verified on Linux with both fd paths disabled; native macOS and Windows were not executed.
+`0.1.1` is unreleased and **not published to npm**. Install the committed prebuilt package from `main`, then restart the web Host. Local export supports Linux and macOS directory-relative I/O without requiring procfs or traversable `/dev/fd`. Windows still refuses before creating export files. The portable path was verified on Linux with both fd paths disabled; native macOS and Windows were not executed.
 
 ```sh
 dsh plugin --profile web add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-content-evidence"
@@ -163,3 +163,10 @@ DSH_TEST_HOST=/path/to/@deepseek-ai/dsh/package.json node --test --test-isolatio
 Tests cover reload, byte copies, inert content, path/symlink rejection, corrupt-state preservation, concurrent updates, review invalidation, cancelled writes, generated Remote contracts, service disposal, and simulated package uninstall/reinstall with data retained outside the package. Tool tests also exercise the real registry/executor: exact registration, inert source/material payloads, scoped visibility, scope-local and descendant guard denials despite allow policies, topic binding, failed-save preservation, leave and disposal. Draft tests cover all platform shapes, unsourced facts, rejected invented numeric/citation tokens, structured compliance findings, changed copy/evidence/rules, stale and competing saves, and legacy data. Export tests also cover all formats, manual URL backfill, legacy requests, stale review labels, path traversal, symlinks and an ancestor-replacement race, staging cleanup, forced `/dev/fd` and native fallbacks with the same containment/race/integrity checks, partial-write/rename/cancellation cleanup, source-directory replacement, mismatched probe identities, safe unsupported-host refusal before export writes, byte-for-byte material copies, and script-like material reads without execution or network calls. Client tests use the compiled module-loader artifact, real Cordis lifecycle and SlotCore, React rendering and a descriptor-checked local Remote transport to exercise capture, inert previews, all draft forms, reviews, conflicting saves, exports and backfill.
 
 MIT © 2026 hzopc1031.
+
+
+### 0.1.1 兼容性声明
+
+本版声明 DSH `>=0.2.1-rc.5 <0.3.0-0`。官方版本检查使用 `semver.satisfies` 并开启 `includePrerelease`：接纳 0.2.1-rc.5、0.2.2-rc.1 及后续 0.2.x 预发布/正式版，排除 0.3.0（含预发布）。DSH peer 显式覆盖两个已知 RC，Cordis / Schemastery peer 覆盖两个官方 tag 的版本；开发依赖不变。此次没有安装到用户 DSH；准入通过不等于逐版本功能或界面验证通过。
+
+校验逻辑、源码对照与本次检查结果见[兼容性报告](../../docs/engines-compatibility.md)。

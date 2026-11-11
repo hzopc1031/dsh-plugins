@@ -1,10 +1,10 @@
 # dsh-plugin-combo-lab · 插件组合冲突检查
 
-当前源码版本 **0.2.0**（尚未发布本次版本到 npm）。会话标题栏新增“插件组合检查”入口（conversation.session.header.actions list slot）。用表单输入两个包名/精确版本、桌面版本、机器、工作区、配置基线及可选检查模板，再逐项执行人工操作；结果默认受阻、证据为空，必须人工填写。默认仍是完整 50 步矩阵；也可只检查输入框、侧栏、会话菜单、命令入口或工具/面板。下一步只读取尚未记录的步骤，record 后继续；失败与受阻项可从面板跳回重录。受阻/不适用不算通过。无 template 字段的旧存档按完整矩阵重建。模板或模板版本不同时升级对照不可比。保留 JSON 命令、重录、snapshot/compare。/combo-lab next <ID> [步骤ID] 返回只读 JSON。成功的人工命令会写明当前执行目录或回退的 header.cwd。不会安装/启停插件、操作桌面或自动认定通过。存档使用 workingDirectory.get(session)，服务缺失回退 header.cwd；/cd 不迁移旧档案。
+当前源码版本 **0.2.1**（尚未发布本次版本到 npm）。会话标题栏新增“插件组合检查”入口（conversation.session.header.actions list slot）。用表单输入两个包名/精确版本、桌面版本、机器、工作区、配置基线及可选检查模板，再逐项执行人工操作；结果默认受阻、证据为空，必须人工填写。默认仍是完整 50 步矩阵；也可只检查输入框、侧栏、会话菜单、命令入口或工具/面板。下一步只读取尚未记录的步骤，record 后继续；失败与受阻项可从面板跳回重录。受阻/不适用不算通过。无 template 字段的旧存档按完整矩阵重建。模板或模板版本不同时升级对照不可比。保留 JSON 命令、重录、snapshot/compare。/combo-lab next <ID> [步骤ID] 返回只读 JSON。成功的人工命令会写明当前执行目录或回退的 header.cwd。不会安装/启停插件、操作桌面或自动认定通过。存档使用 workingDirectory.get(session)，服务缺失回退 header.cwd；/cd 不迁移旧档案。
 
 本次只完成 Windows 上的 typecheck、单元/rc.5 headless 集成、browser factory 的 jsdom 检查及 verify-pack；未安装到真实 DSH、未做 Electron 目视验收。
 
-版本 0.2.0，MIT。仅面向 **Windows 官方桌面 DSH**，目标版本 0.2.1-rc.5。
+版本 0.2.1，MIT。仅面向 **Windows 官方桌面 DSH**，目标版本 0.2.1-rc.5。
 
 这个插件用来协助检查**多个 DSH 插件一起安装时会不会互相冲突**，例如抢同一个命令名、占用同一个界面位置，或在提示词、工具拦截上互相干扰。它根据你记录的实际操作结果，对比单独启用和一起启用的表现，帮助指出冲突发生在哪个插件组合、检查项和启用顺序。**新装或升级插件后可以再跑一次**，确认原来的组合是否仍然正常。
 
@@ -190,3 +190,10 @@ npm run verify-pack
 `npm test` 会重建需提交的 lib/。以上通过不等于 Electron 桌面通过；真实截图、剪贴板、焦点/布局及桌面安装仍需人工验收。
 
 本次接口依据（固定 rc.5）：[packages/client/ui-conversation/src/client/contract/slots.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-conversation/src/client/contract/slots.ts)、[packages/session/working-directory/src/index.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/session/working-directory/src/index.ts)。
+
+
+### 0.2.1 兼容性声明
+
+本版声明 DSH `>=0.2.1-rc.5 <0.3.0-0`。官方版本检查使用 `semver.satisfies` 并开启 `includePrerelease`：接纳 0.2.1-rc.5、0.2.2-rc.1 及后续 0.2.x 预发布/正式版，排除 0.3.0（含预发布）。DSH peer 显式覆盖两个已知 RC，Cordis / Schemastery peer 覆盖两个官方 tag 的版本；开发依赖不变。此次没有安装到用户 DSH；准入通过不等于逐版本功能或界面验证通过。
+
+校验逻辑、源码对照与本次检查结果见[兼容性报告](../../docs/engines-compatibility.md)。

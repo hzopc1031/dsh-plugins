@@ -1,6 +1,6 @@
 {
   "name": "dsh-github-triage",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "在界面配置仓库、业务与本地代码，结合 AI 判断 issue 是否值得修、PR 是否值得合入",
   "type": "module",
   "main": "index.js",
@@ -32,7 +32,7 @@
   ],
   "engines": {
     "node": ">=22",
-    "dsh": "0.2.1-rc.5"
+    "dsh": ">=0.2.1-rc.5 <0.3.0-0"
   },
   "dsh": {
     "bundle": {
@@ -73,12 +73,12 @@
     "zod": "4.4.3"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "~4.0.5",
-    "@deepseek-ai/schemastery": "~3.18.5",
-    "@deepseek-ai/dsh-commands": "0.2.1-rc.5",
-    "@deepseek-ai/dsh-llm": "0.2.1-rc.5",
-    "@deepseek-ai/dsh-agent": "0.2.1-rc.5",
-    "@deepseek-ai/dsh-storage-domain": "0.2.1-rc.5"
+    "@deepseek-ai/cordis": ">=4.0.5 <4.2.0",
+    "@deepseek-ai/schemastery": ">=3.18.5 <3.20.0",
+    "@deepseek-ai/dsh-commands": ">=0.2.1-rc.5 <0.3.0-0 || >=0.2.2-rc.1 <0.3.0-0",
+    "@deepseek-ai/dsh-llm": ">=0.2.1-rc.5 <0.3.0-0 || >=0.2.2-rc.1 <0.3.0-0",
+    "@deepseek-ai/dsh-agent": ">=0.2.1-rc.5 <0.3.0-0 || >=0.2.2-rc.1 <0.3.0-0",
+    "@deepseek-ai/dsh-storage-domain": ">=0.2.1-rc.5 <0.3.0-0 || >=0.2.2-rc.1 <0.3.0-0"
   },
   "peerDependenciesMeta": {
     "@deepseek-ai/cordis": {

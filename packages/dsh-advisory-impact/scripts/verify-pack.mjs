@@ -16,7 +16,7 @@ for (const hook of ['preinstall', 'install', 'postinstall', 'prepare', 'prepack'
   assert.ok(!pkg.scripts?.[hook], `Lifecycle hook forbidden: ${hook}`)
 }
 assert.equal(pkg.name, 'dsh-advisory-impact')
-assert.equal(pkg.version, '0.1.0')
+assert.equal(pkg.version, '0.1.1')
 assert.equal(pkg.dsh.bundle.patch, './cordis.patch.yml')
 assert.equal(pkg.main, 'index.js')
 assert.equal(pkg.exports['./client'], './lib/client.js')

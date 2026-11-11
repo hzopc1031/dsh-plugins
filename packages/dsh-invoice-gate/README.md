@@ -2,13 +2,13 @@
 
 把本地票据和台账放在一起，找出金额勾稽、重复票号和未匹配记录，再导出一份能追溯原始文件的核对证据包。适合单人逐次核对 CNY 票据；不替你识别扫描件，不做税局验真，也不替你判断能否报销。
 
-**0.1.0 尚未发布到 npm。**
+**0.1.1 尚未发布到 npm。**
 
 模型不得编造或改写金额、税额、合计或票号；没有改金额工具。整次核对可以只用命令完成，零模型调用。插件只读原件、记录 SHA-256，不写回来源文件，不自动上传、不发起网络请求，也不采集财务遥测。SHA-256 只能帮助发现文件变化，不能证明票据真实。
 
 ## 安装与兼容
 
-需要 Node.js `>=22`、DSH `>=0.2.1-rc.5 <0.3.0`。API 对照源码 `fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159`；本 Linux 盒子的实际加载检查使用 DSH `0.2.2-rc.1`。下限宿主库通过自动化测试，不代表已验证所有宿主版本。
+需要 Node.js `>=22`、DSH `>=0.2.1-rc.5 <0.3.0-0`。API 对照源码 `fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159`；本 Linux 盒子的实际加载检查使用 DSH `0.2.2-rc.1`。下限宿主库通过自动化测试，不代表已验证所有宿主版本。
 
 从 Git 安装（先停止使用该 profile 的 DSH，再安装并重启）：
 
@@ -68,7 +68,7 @@ dsh plugin --profile invoice-gate-demo add ./packages/dsh-invoice-gate
 
 ## English
 
-**Unreleased 0.1.0; git branch installation only.** A local verification gate and evidence pack for a single operator reconciling CNY invoices against a ledger. Requires Node >=22 and DSH `>=0.2.1-rc.5 <0.3.0`; live loading was checked on Linux with `0.2.2-rc.1`, source `fcc0ad46`. Use the branch installation command above; this package is not npm-published.
+**Unreleased 0.1.1; git branch installation only.** A local verification gate and evidence pack for a single operator reconciling CNY invoices against a ledger. Requires Node >=22 and DSH `>=0.2.1-rc.5 <0.3.0-0`; live loading was checked on Linux with `0.2.2-rc.1`, source `fcc0ad46`. Use the branch installation command above; this package is not npm-published.
 
 Select a project, prepare the local manifest with explicit table mappings, then run `/invoice-gate start`, `ingest`, `check`, `export`, `status`, and `stop`. Commands need no model call. The three prefixed tools return counts, ids, status and paths only. The owning agent is restricted during a run; arbitrary PTC code is blocked. See [tools.md](docs/tools.md) for exact arguments and the manifest example.
 
@@ -109,3 +109,10 @@ overrides:
 A consuming DSH profile must apply the override at its own pnpm root and audit that resolved graph. The package-root result does not claim every host/profile is audit-clean. The live check here used a local link to the clean npm-installed package tree; no existing profile was changed.
 
 Prebuilt `lib/` and declarations are committed; installation has no lifecycle hooks. MIT © 2026 hzopc1031.
+
+
+### 0.1.1 兼容性声明
+
+本版声明 DSH `>=0.2.1-rc.5 <0.3.0-0`。官方版本检查使用 `semver.satisfies` 并开启 `includePrerelease`：接纳 0.2.1-rc.5、0.2.2-rc.1 及后续 0.2.x 预发布/正式版，排除 0.3.0（含预发布）。DSH peer 显式覆盖两个已知 RC，Cordis / Schemastery peer 覆盖两个官方 tag 的版本；开发依赖不变。此次没有安装到用户 DSH；准入通过不等于逐版本功能或界面验证通过。
+
+校验逻辑、源码对照与本次检查结果见[兼容性报告](../../docs/engines-compatibility.md)。

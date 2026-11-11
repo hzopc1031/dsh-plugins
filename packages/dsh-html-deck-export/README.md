@@ -1,6 +1,6 @@
 # dsh-html-deck-export
 
-**Unreleased 0.1.0 — feature branch only; not published to npm.**
+**Unreleased 0.1.1 — feature branch only; not published to npm.**
 
 ## 中文介绍
 
@@ -61,7 +61,7 @@
 - 目前只在 Linux 上实际测过。在 Mac 上需要指定本机 Chrome 的路径，还没有实测。导出的 PPTX 用 LibreOffice 打开过，PowerPoint 和 WPS 还没测。
 
 **当前状态**
-版本 0.1.0，尚未发布到 npm。已在 Linux DSH 0.2.2-rc.1 的隔离环境加载，验证离线导出、中文失败报告与进度文件；自动测试覆盖官方样例、沙箱重试、字体和取消清理等行为。开源协议是 MIT。
+版本 0.1.1，尚未发布到 npm。已在 Linux DSH 0.2.2-rc.1 的隔离环境加载，验证离线导出、中文失败报告与进度文件；自动测试覆盖官方样例、沙箱重试、字体和取消清理等行为。开源协议是 MIT。
 
 This DSH plugin registers `html_deck_export` and `/html-deck-export` help/workbench.
 It exports finished local HTML decks in supported formats to **image-based
@@ -72,13 +72,13 @@ It does not generate decks, produce editable shapes, preserve animations,
 or accept every HTML file.
 Feishu already previews HTML; this exporter is for cases that specifically need PPTX.
 
-**0.1.0 已提供受限 DSH 导出工具和本地 API。** 使用
+**0.1.1 已提供受限 DSH 导出工具和本地 API。** 使用
 `/html-deck-export start` 进入当前项目的导出工作台，将受支持格式的定稿 HTML 演示稿
 导出为 **16:9 图片版 PPTX**，附讲稿备注和逐页报告。
 HTML 始终是源文件，不会自动上传。不生成演示稿、不输出可编辑形状、
 不保留动画，也不承诺兼容所有 HTML。
 
-Requires Node.js >=22 and DSH `>=0.2.1-rc.5 <0.3.0`. APIs are checked against
+Requires Node.js >=22 and DSH `>=0.2.1-rc.5 <0.3.0-0`. APIs are checked against
 DSH `0.2.2-rc.1`, source revision `fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159`.
 The installed CLI successfully loaded the plugin in a disposable Linux web profile.
 Command, tool restriction and guard APIs are also exercised with rc.5 host libraries.
@@ -107,7 +107,7 @@ npm pack --ignore-scripts
 From the repository root, install that tarball into a chosen DSH profile:
 
 ```sh
-dsh plugin --profile <name> add ./packages/dsh-html-deck-export/dsh-html-deck-export-0.1.0.tgz
+dsh plugin --profile <name> add ./packages/dsh-html-deck-export/dsh-html-deck-export-0.1.1.tgz
 ```
 
 The bundle inserts Cordis id `html-deck-export` with empty configuration.
@@ -428,3 +428,10 @@ failed page and the official missing-HanziPen template. Native macOS and Windows
 were not executed.
 
 MIT © 2026 hzopc1031. No fixture themes, scripts, or assets are bundled.
+
+
+### 0.1.1 兼容性声明
+
+本版声明 DSH `>=0.2.1-rc.5 <0.3.0-0`。官方版本检查使用 `semver.satisfies` 并开启 `includePrerelease`：接纳 0.2.1-rc.5、0.2.2-rc.1 及后续 0.2.x 预发布/正式版，排除 0.3.0（含预发布）。DSH peer 显式覆盖两个已知 RC，Cordis / Schemastery peer 覆盖两个官方 tag 的版本；开发依赖不变。此次没有安装到用户 DSH；准入通过不等于逐版本功能或界面验证通过。
+
+校验逻辑、源码对照与本次检查结果见[兼容性报告](../../docs/engines-compatibility.md)。

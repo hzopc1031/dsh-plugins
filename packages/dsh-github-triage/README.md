@@ -156,7 +156,7 @@ repositories:
 
 ### 版本与兼容
 
-当前版本 **0.3.1**，尚未发布 npm，面向 **DeepSeek Harness 0.2.1-rc.5**，要求 Node.js 22 或以上；本地对照需要 PATH 中可用的 Git。开发验证环境为 Windows / Node.js 24，其他平台与 Node.js 22 实机尚未验证。未发布改动合入 main 前，上面的 main 安装地址仍指向现有 main 内容。
+当前版本 **0.3.2**，尚未发布 npm，开发基线为 **DeepSeek Harness 0.2.1-rc.5**，版本准入现覆盖 **0.2.2-rc.1**，要求 Node.js 22 或以上；本地对照需要 PATH 中可用的 Git。开发验证环境为 Windows / Node.js 24，其他平台与 Node.js 22 实机尚未验证。未发布改动合入 main 前，上面的 main 安装地址仍指向现有 main 内容。
 
 ### 只读边界与证据局限
 
@@ -189,3 +189,10 @@ repositories:
 ### 来源与许可
 
 原创实现，使用 [MIT 许可](LICENSE)。参考了 [dsh-github-flow](https://github.com/ItQianChen/dsh-github-flow)（MIT）的凭据复用与证据组织思路，以及 [dsh-github-bot](https://github.com/PerryLink/dsh-github-bot)（Apache-2.0）的有界拉取、轮询与 PR/CI 证据思路，未直接移植代码。详见 [THIRD_PARTY_NOTICES](THIRD_PARTY_NOTICES)。
+
+
+### 0.3.2 兼容性声明
+
+本版声明 DSH `>=0.2.1-rc.5 <0.3.0-0`。官方版本检查使用 `semver.satisfies` 并开启 `includePrerelease`：接纳 0.2.1-rc.5、0.2.2-rc.1 及后续 0.2.x 预发布/正式版，排除 0.3.0（含预发布）。DSH peer 显式覆盖两个已知 RC，Cordis / Schemastery peer 覆盖两个官方 tag 的版本；开发依赖不变。此次没有安装到用户 DSH；准入通过不等于逐版本功能或界面验证通过。
+
+校验逻辑、源码对照与本次检查结果见[兼容性报告](../../docs/engines-compatibility.md)。

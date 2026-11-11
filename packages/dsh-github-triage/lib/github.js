@@ -59,7 +59,7 @@ export class Github {
             throw new GithubError(429, this.#cooldown);
         const combined = AbortSignal.any([AbortSignal.timeout(this.#options.timeoutMs ?? 20000), ...(signal ? [signal] : [])]);
         await this.auth(combined);
-        const headers = { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', 'User-Agent': 'dsh-github-triage/0.3.1' };
+        const headers = { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', 'User-Agent': 'dsh-github-triage/0.3.2' };
         if (this.#token)
             headers.Authorization = 'Bearer ' + this.#token;
         if (!this.#options.fetch && !this.#dispatcher)

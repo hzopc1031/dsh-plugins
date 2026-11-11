@@ -1,10 +1,10 @@
 # 桌面截图附件 · dsh-snip-attach
 
-当前源码版本 **0.2.0**（尚未发布本次版本到 npm）。剪贴板新旧判断改用 Windows GetClipboardSequenceNumber，并在读取图片前后核对序号，替代九点像素采样；同像素的新截图也可识别。序号无法证明写入者一定是截图工具，请在等待期间避免其他程序改写剪贴板。intake 最多等待 2 秒，卸载/切换会话取消，实时检查 removed/subagent/phase。rc.5 没有公开的 File → accepted attachment ID 回执，新增 ID 也可能来自其他附件，所以只提示“已提交截图，请核对待发送图片”，不声称已确认加入；缺少变化或拒绝时提示 Ctrl+V。继续复用当前 composer 唯一的隐藏 input/change，未调用内部 createDrafts/addFiles。
+当前源码版本 **0.2.1**（尚未发布本次版本到 npm）。剪贴板新旧判断改用 Windows GetClipboardSequenceNumber，并在读取图片前后核对序号，替代九点像素采样；同像素的新截图也可识别。序号无法证明写入者一定是截图工具，请在等待期间避免其他程序改写剪贴板。intake 最多等待 2 秒，卸载/切换会话取消，实时检查 removed/subagent/phase。rc.5 没有公开的 File → accepted attachment ID 回执，新增 ID 也可能来自其他附件，所以只提示“已提交截图，请核对待发送图片”，不声称已确认加入；缺少变化或拒绝时提示 Ctrl+V。继续复用当前 composer 唯一的隐藏 input/change，未调用内部 createDrafts/addFiles。
 
 本次只完成 Windows 上的 typecheck、单元/rc.5 headless 集成、browser factory 的 jsdom 检查及 verify-pack；未安装到真实 DSH、未做 Electron 目视验收。
 
-版本 **0.2.0**，MIT。**尚未发布到 npm**。仅针对官方 **DSH Desktop 0.2.1-rc.5 + Windows**；客户端每次操作会校验 `__DSH_BOOT__.release.version` 和桌面页面地址，其他版本或网页环境禁用按钮。`dsh.client.platform: web` 表示桌面壳中的 Web Client，并不表示支持普通浏览器。
+版本 **0.2.1**，MIT。**尚未发布到 npm**。仅针对官方 **DSH Desktop 0.2.1-rc.5 + Windows**；客户端每次操作会校验 `__DSH_BOOT__.release.version` 和桌面页面地址，其他版本或网页环境禁用按钮。`dsh.client.platform: web` 表示桌面壳中的 Web Client，并不表示支持普通浏览器。
 
 在输入框底部左侧工具栏点击 **相机按钮「截图并添加附件」**，用 Windows `ms-screenclip:` 框选截图。检测到新的剪贴板图片后，先弹出预览，需点击「确认加入」才会通过 DSH 自己的文件 intake 加入当前会话的待发送附件；「取消」或切换会话不会注入。注入后只提示「已提交截图，请核对待发送图片」，不声称已确认加入，**不会自动发送**。按钮位于「+」右侧的左侧扩展区，权限/计划控件可能在两者之间。
 
@@ -132,3 +132,14 @@ npm run verify-pack
 ```
 
 `npm test` 会重建需提交的 lib/。以上通过不等于 Electron 桌面通过；真实截图、剪贴板、焦点/布局及桌面安装仍需人工验收。
+
+
+**功能限制：** 客户端仍精确检查 `0.2.1-rc.5`，会拒绝 rc.1 和后续版本的操作。此次版本准入修复没有放开这道涉及内部草稿格式 / DOM 的业务安全门禁；不能据版本检查通过声称功能可用。
+
+### 0.2.1 兼容性声明
+
+本版声明 DSH `>=0.2.1-rc.5 <0.3.0-0`。官方版本检查使用 `semver.satisfies` 并开启 `includePrerelease`：接纳 0.2.1-rc.5、0.2.2-rc.1 及后续 0.2.x 预发布/正式版，排除 0.3.0（含预发布）。DSH peer 显式覆盖两个已知 RC，Cordis / Schemastery peer 覆盖两个官方 tag 的版本；开发依赖不变。此次没有安装到用户 DSH；准入通过不等于逐版本功能或界面验证通过。
+
+**功能限制：** 本次只放宽插件页的版本准入，客户端仍有独立的 rc.5 精确门禁，会拒绝 rc.1 和后续版本的操作。内部草稿格式 / 截图 DOM 的新宿主功能适配仍未完成。
+
+校验逻辑、源码对照与本次检查结果见[兼容性报告](../../docs/engines-compatibility.md)。

@@ -15,7 +15,7 @@
 | 未发送草稿找回 | `dsh-draft-rescue`（未发布 npm / not published to npm） | 独立面板找回、复制与追加本机文字草稿；精确锁定 rc.5 / Recover local unsent text without changing navigation | [README](packages/dsh-draft-rescue/README.md) |
 | 文件引用路径复制 | `dsh-file-ref-copy`（未发布 npm / not published to npm） | 从已完成回答的原始 Markdown 复制绝对、相对与带行号路径 / Copy local file paths from a loaded completed reply | [README](packages/dsh-file-ref-copy/README.md) |
 | 桌面截图附件 | `dsh-snip-attach`（尚未发布到 npm / not published to npm） | Windows 框选截图后加入待发送附件，针对桌面 rc.5（`/screenshot`）/ Windows snip to pending attachments | [README](packages/dsh-snip-attach/README.md) |
-| 文件占用程序查询 | `dsh-file-holder`（未发布 npm / not published to npm） | 查询 Windows 项目内文件的占用程序、PID 与观察时间（`/file-holder`）；仅支持 rc.5 / Windows project file holder lookup | [README](packages/dsh-file-holder/README.md) |
+| 文件占用程序查询 | `dsh-file-holder`（未发布 npm / not published to npm） | 查询 Windows 项目内文件的占用程序、PID 与观察时间（`/file-holder`）；开发基线 rc.5 / Windows project file holder lookup | [README](packages/dsh-file-holder/README.md) |
 | DLL 诊断 | `dsh-dll-doctor`（未发布 npm / not published to npm） | 只读检查 Windows EXE/DLL 的缺失依赖与架构不匹配（`/dll-check`）/ Static Windows DLL diagnostics | [README](packages/dsh-dll-doctor/README.md) |
 | GitHub 哨兵 | `dsh-github-triage`（未发布 npm / not published to npm） | 点击已打开会话顶部的文字按钮「GitHub 哨兵」，配置仓库、业务说明、本地代码和定时；AI 判断问题是否适用、PR 是否值得合入，三档结果可查看证据、纠正并导出规则；保留命令操作。 | [README](packages/dsh-github-triage/README.md) |
 | 本地票据核对 | `dsh-invoice-gate`（未发布 npm / not published to npm） | 本地票据与台账核对、差异及证据包；不做 OCR／验真，模型不改金额（`/invoice-gate`）/ Local invoice reconciliation and evidence packs | [README](packages/dsh-invoice-gate/README.md) |
@@ -29,15 +29,15 @@
 
 ## 安装 / Installation
 
-本次优化源码版本与 npm 发布版本分开记录（2026-11-10）：`dsh-task-review` 和 `dsh-heartbeat-monitor` 的 npm 最新版本分别仍是 **0.1.1 / 0.1.0**。本 worktree 中它们及其余功能升级包为 **0.2.0**；仅修复路径投影的 `dsh-file-ref-copy` 为 **0.1.1**。本次未执行 npm publish，安装 npm 最新包不会得到这些新改动。
+本次优化源码版本与 npm 发布版本分开记录（2026-11-10）：`dsh-task-review` 和 `dsh-heartbeat-monitor` 的 npm 最新版本分别仍是 **0.1.1 / 0.1.0**。上述为历史发布记录；本 worktree 的新版本清单见[兼容性报告](docs/engines-compatibility.md)。本次未执行 npm publish，安装 npm 最新包不会得到这些新改动。
 
 本批次增加 bash 进程失败识别与 PTC 关联、有效工作目录（命令会标明当前执行目录或回退目录）、截图预览确认后再注入、组合检查模板与失败项跳转、扫描复用与精简输出、资料引用原子接受基线、诊断内存缓存以及草稿按可靠标题/工作区筛选与追加目标说明。各包 README 说明具体行为。
 
 `main` 的 Git 安装地址继续用于已有版本。本批次版本需使用包含本次提交的 ref；推送后可将以下地址中的 `main` 换成 `optimize-batch` 或固定提交 SHA。分支推送不表示已合并到 main。
 
-本批次对照官方 `dsh-v0.2.1-rc.5` 与发布类型/运行时包。草稿、文件引用、截图及指令冲突包精确声明 rc.5；其余包保留各自 engines 范围，但本次没有据此验证其他宿主版本。所有包都已预编译，没有安装脚本。装完后**完全退出桌面 DSH（含托盘）再重新打开**。
+本次对照官方 `dsh-v0.2.1-rc.5` 与 `dsh-v0.2.2-rc.1`，统一版本准入为 `>=0.2.1-rc.5 <0.3.0-0`；Apache Radar 因依赖 rc.1 新增的 `MarkdownText.omitHtml`，例外使用 `>=0.2.2-rc.1 <0.3.0-0`。草稿找回和截图附件仍有独立的 rc.5 功能门禁。范围通过不代表功能与界面均已验证，详见[兼容性报告](docs/engines-compatibility.md)。所有包都已预编译，没有安装脚本。装完后**完全退出桌面 DSH（含托盘）再重新打开**。
 
-This batch is checked against DSH `0.2.1-rc.5`. Per-package engine ranges do not imply other versions were tested. Packages are prebuilt and have no install scripts. Fully quit and reopen DSH Desktop after installing.
+Compatibility metadata is checked against official DSH `0.2.1-rc.5` and `0.2.2-rc.1` sources. Per-package engine ranges do not imply other versions were tested. Packages are prebuilt and have no install scripts. Fully quit and reopen DSH Desktop after installing.
 
 ### 1. 桌面 DSH 界面 / Desktop UI
 
@@ -83,21 +83,21 @@ dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packag
 dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-apache-radar"
 ```
 
-`dsh-invoice-gate` 的 0.1.0 尚未发布到 npm。它声明 DSH `>=0.2.1-rc.5 <0.3.0`，本机加载检查使用 `0.2.2-rc.1`。/ Invoice Gate is unreleased; live loading was checked with `0.2.2-rc.1`. ExcelJS/uuid 的修复需在消费端 profile 根级应用 override，见 [依赖审计与安装限制](packages/dsh-invoice-gate/README.md#安装后的依赖审计--consumer-override-limit)；本包根目录的零发现不代表整个宿主依赖图无发现。
+`dsh-invoice-gate` 的 0.1.1 尚未发布到 npm。它声明 DSH `>=0.2.1-rc.5 <0.3.0-0`，本机加载检查使用 `0.2.2-rc.1`。/ Invoice Gate is unreleased; live loading was checked with `0.2.2-rc.1`. ExcelJS/uuid 的修复需在消费端 profile 根级应用 override，见 [依赖审计与安装限制](packages/dsh-invoice-gate/README.md#安装后的依赖审计--consumer-override-limit)；本包根目录的零发现不代表整个宿主依赖图无发现。
 
 `dsh-content-evidence` 尚未发布到 npm。本地导出支持 Linux / macOS 的目录相对 I/O（无需 procfs）；已在 Linux 禁用两种 fd 路径验证，未实测原生 macOS。Windows 仍安全拒绝导出。也可安装到 web profile。重启 DSH 后打开侧栏「内容证据」。数据默认保存在 `$DSH_HOME/content-evidence` 或 `~/.dsh/content-evidence`，卸载保留数据；导出仅写本机目录，插件绝不自动发布。/ Unreleased. Local export supports Linux/macOS directory-relative I/O without procfs; verified on Linux with both fd paths disabled. Native macOS and Windows were not executed for export; Windows still safely refuses export. Restart DSH and open Content evidence in the sidebar. Data defaults to `$DSH_HOME/content-evidence` or `~/.dsh/content-evidence` and survives uninstall. Exports stay local; nothing is published automatically.
 
 `dsh-advisory-impact` 尚未发布到 npm。其原生面板已在 DSH 0.2.2-rc.1 Web 实测，无需模型 key。/ Unreleased. The native panel was verified on DSH 0.2.2-rc.1 Web and does not require a model key.
 
-`dsh-apache-radar` 尚未发布到 npm。兼容 DSH `>=0.2.1-rc.5 <0.3.0`，本机加载验证使用 `0.2.2-rc.1`。无需模型 key，也不会自动发布。/ Unreleased. Live loading was checked with DSH `0.2.2-rc.1`. It requires no model key and does not auto-publish.
+`dsh-apache-radar` 0.1.1 尚未发布到 npm。需要 DSH 0.2.2-rc.1 及以上（`>=0.2.2-rc.1 <0.3.0-0`，排除 0.3.0 及其预发布版本），本机加载验证使用 `0.2.2-rc.1`。无需模型 key，也不会自动发布。/ Unreleased. Requires DSH `>=0.2.2-rc.1 <0.3.0-0`. Live loading was checked with DSH `0.2.2-rc.1`. It requires no model key and does not auto-publish.
 
 同样的 `github:...` 地址也可以填进界面的「添加插件」。把 `main` 换成某个提交哈希即可固定版本。
 
 The same `github:...` address works in the Add plugin dialog. Replace `main` with a commit hash to pin a version.
 
-`dsh-html-deck-export` 的 0.1.0 尚未发布到 npm。兼容 DSH `>=0.2.1-rc.5 <0.3.0`，已在 Linux CLI `0.2.2-rc.1`（`fcc0ad46`）加载验证，需要本机 Chrome。/ Unreleased; requires local Chrome. Loaded on Linux DSH `0.2.2-rc.1`. Linux 可将 `desktop` 换成 `web` 或自己的 profile。/ On Linux, replace `desktop` with `web` or your chosen profile.
+`dsh-html-deck-export` 的 0.1.1 尚未发布到 npm。兼容 DSH `>=0.2.1-rc.5 <0.3.0-0`，已在 Linux CLI `0.2.2-rc.1`（`fcc0ad46`）加载验证，需要本机 Chrome。/ Unreleased; requires local Chrome. Loaded on Linux DSH `0.2.2-rc.1`. Linux 可将 `desktop` 换成 `web` 或自己的 profile。/ On Linux, replace `desktop` with `web` or your chosen profile.
 
-新增的草稿找回与文件引用路径复制针对 `0.2.1-rc.5`，不承诺其他版本兼容；草稿找回还会在读取本机存储前精确检查宿主版本，不匹配时拒绝读取。/ The draft and file-reference plugins target exactly `0.2.1-rc.5`; draft storage reads fail closed on other or unknown releases.
+草稿找回与文件引用路径复制以 `0.2.1-rc.5` 为开发基线，尚未进行 rc.1 界面验证；草稿找回还会在读取本机存储前精确检查宿主版本，不匹配时拒绝读取。/ The draft and file-reference plugins target exactly `0.2.1-rc.5`; draft storage reads fail closed on other or unknown releases.
 
 > **Windows 命令行提示**：如果 `dsh` 报 `profile "desktop" is managed exclusively by the Electron application`，说明 PATH 上的是独立安装的 dsh；请改用桌面版自带的 CLI（命令其余部分不变）：
 >

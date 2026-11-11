@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1 - 2026-11-11
+
+- 保留 DSH 0.2.2-rc.1 下界，仅将上界收紧为 `>=0.2.2-rc.1 <0.3.0-0`，排除 0.3.0 及其预发布版本；原范围在官方 includePrerelease 校验下已能通过 rc.1。
+- 所有 DSH peer 同步为 `>=0.2.2-rc.1 <0.3.0-0`，保留对 rc.1 新增 `MarkdownText.omitHtml` 的依赖及原有 Markdown 渲染；开发依赖保持原版本。
+- 同步锁文件自身版本、打包断言及当前版本标识；兼容性声明不等于逐版本功能验证。
+
 ## 0.1.0 — unreleased
 
 - Merge official Kafka/Hadoop/Flink advisories into each project’s version-and-security strip, with project-local version input, three-way official-range verdicts, fixed wording, original links/times and unknown reasons. No default version or production-safety conclusion.

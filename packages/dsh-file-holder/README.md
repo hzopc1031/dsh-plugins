@@ -1,6 +1,6 @@
 # dsh-file-holder
 
-**0.1.0**：指定文件占用程序查询。面向 Windows 本机 DSH 桌面版 **0.2.1-rc.5**，只提供人类命令：
+**0.1.1**：指定文件占用程序查询。面向 Windows 本机 DSH 桌面版，开发基线为 **0.2.1-rc.5**，只提供人类命令：
 
 ```text
 /file-holder src/index.ts
@@ -56,3 +56,10 @@ npm run verify-pack
 ```
 
 每包独立 lockfile，预构建产物随源码提交。自动检查与真机结论详见 [STATUS](STATUS.md)：90 项测试通过；本机独占句柄实验中助手脚本已查到占用进程 PID。未在真实桌面 DSH 中测试，也未安装到 DSH。MIT 许可。
+
+
+### 0.1.1 兼容性声明
+
+本版声明 DSH `>=0.2.1-rc.5 <0.3.0-0`。官方版本检查使用 `semver.satisfies` 并开启 `includePrerelease`：接纳 0.2.1-rc.5、0.2.2-rc.1 及后续 0.2.x 预发布/正式版，排除 0.3.0（含预发布）。DSH peer 显式覆盖两个已知 RC，Cordis / Schemastery peer 覆盖两个官方 tag 的版本；开发依赖不变。此次没有安装到用户 DSH；准入通过不等于逐版本功能或界面验证通过。
+
+校验逻辑、源码对照与本次检查结果见[兼容性报告](../../docs/engines-compatibility.md)。

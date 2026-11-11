@@ -16,7 +16,7 @@ const expected = [
 ].sort()
 assert.deepEqual(files, expected, 'unexpected package contents')
 assert.equal(pkg.name, 'dsh-content-evidence')
-assert.equal(pkg.version, '0.1.0')
+assert.equal(pkg.version, '0.1.1')
 assert.equal(pkg.dsh.bundle.patch, './cordis.patch.yml')
 assert.deepEqual(pkg.dsh.client, { platform: 'web', inject: ['@deepseek-ai/dsh-client-runtime'] })
 assert.equal(pkg.exports['./client'], './dist/client.js')

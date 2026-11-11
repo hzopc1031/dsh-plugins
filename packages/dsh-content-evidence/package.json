@@ -1,6 +1,6 @@
 {
   "name": "dsh-content-evidence",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Evidence-based content workbench for DeepSeek Harness (in development)",
   "type": "module",
   "main": "index.js",
@@ -44,7 +44,7 @@
   ],
   "engines": {
     "node": ">=22",
-    "dsh": ">=0.2.1-rc.5 <0.3.0"
+    "dsh": ">=0.2.1-rc.5 <0.3.0-0"
   },
   "dsh": {
     "bundle": {
@@ -74,19 +74,19 @@
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": ">=4.0.5 <4.2.0",
-    "@deepseek-ai/dsh-commands": ">=0.2.1-rc.5 <0.3.0",
+    "@deepseek-ai/dsh-commands": ">=0.2.1-rc.5 <0.3.0-0 || >=0.2.2-rc.1 <0.3.0-0",
     "@deepseek-ai/schemastery": ">=3.18.5 <3.20.0",
-    "@deepseek-ai/dsh-typert-protocol": ">=0.2.1-rc.5 <0.3.0",
+    "@deepseek-ai/dsh-typert-protocol": ">=0.2.1-rc.5 <0.3.0-0 || >=0.2.2-rc.1 <0.3.0-0",
     "zod": "^4.4.3",
-    "@deepseek-ai/dsh-tools": ">=0.2.1-rc.5 <0.3.0",
-    "@deepseek-ai/dsh-agent": ">=0.2.1-rc.5 <0.3.0",
-    "@deepseek-ai/dsh-scope": ">=0.2.1-rc.5 <0.3.0",
-    "@deepseek-ai/dsh-system-prompt": ">=0.2.1-rc.5 <0.3.0",
-    "@deepseek-ai/dsh-api-gateway": ">=0.2.1-rc.5 <0.3.0",
-    "@deepseek-ai/dsh-client-ui-renderer": ">=0.2.1-rc.5 <0.3.0",
-    "@deepseek-ai/dsh-client-ui-slots": ">=0.2.1-rc.5 <0.3.0",
-    "@deepseek-ai/dsh-client-ui-layout": ">=0.2.1-rc.5 <0.3.0",
-    "@deepseek-ai/dsh-client-ui-sidebar": ">=0.2.1-rc.5 <0.3.0",
+    "@deepseek-ai/dsh-tools": ">=0.2.1-rc.5 <0.3.0-0 || >=0.2.2-rc.1 <0.3.0-0",
+    "@deepseek-ai/dsh-agent": ">=0.2.1-rc.5 <0.3.0-0 || >=0.2.2-rc.1 <0.3.0-0",
+    "@deepseek-ai/dsh-scope": ">=0.2.1-rc.5 <0.3.0-0 || >=0.2.2-rc.1 <0.3.0-0",
+    "@deepseek-ai/dsh-system-prompt": ">=0.2.1-rc.5 <0.3.0-0 || >=0.2.2-rc.1 <0.3.0-0",
+    "@deepseek-ai/dsh-api-gateway": ">=0.2.1-rc.5 <0.3.0-0 || >=0.2.2-rc.1 <0.3.0-0",
+    "@deepseek-ai/dsh-client-ui-renderer": ">=0.2.1-rc.5 <0.3.0-0 || >=0.2.2-rc.1 <0.3.0-0",
+    "@deepseek-ai/dsh-client-ui-slots": ">=0.2.1-rc.5 <0.3.0-0 || >=0.2.2-rc.1 <0.3.0-0",
+    "@deepseek-ai/dsh-client-ui-layout": ">=0.2.1-rc.5 <0.3.0-0 || >=0.2.2-rc.1 <0.3.0-0",
+    "@deepseek-ai/dsh-client-ui-sidebar": ">=0.2.1-rc.5 <0.3.0-0 || >=0.2.2-rc.1 <0.3.0-0",
     "react": "^18.2.0"
   },
   "peerDependenciesMeta": {

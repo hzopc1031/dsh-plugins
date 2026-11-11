@@ -15,7 +15,7 @@ assert.equal(pkg.exports['./client'], './lib/client.js')
 assert.equal(pkg.dsh.client.platform, 'web')
 assert.match(await readFile('lib/client.js', 'utf8'), /window\.__ModuleLoader__\.load/)
 assert.ok(!/require\(["']\./.test(await readFile('lib/client.js', 'utf8')))
-assert.equal(await readFile('index.js', 'utf8'), "export * from './lib/plugin.js'\n")
+assert.equal((await readFile('index.js', 'utf8')).replace(/\r\n/g, '\n'), "export * from './lib/plugin.js'\n")
 for (const lang of ['en', 'zh']) {
   const locale = JSON.parse(await readFile(`locale/${lang}.json`, 'utf8'))
   assert.ok(locale.meta.title && locale.meta.description)

@@ -1,6 +1,6 @@
 {
   "name": "dsh-plugin-combo-lab",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "协助检查多个 DSH 插件一起安装时的命令名、界面位置、提示词或工具拦截冲突，结合人工记录定位问题，并在新装或升级后复查组合是否正常（当前每次检查两个插件）",
   "type": "module",
   "main": "index.js",
@@ -34,7 +34,7 @@
   ],
   "engines": {
     "node": ">=22",
-    "dsh": ">=0.2.1-rc.5 <0.3.0"
+    "dsh": ">=0.2.1-rc.5 <0.3.0-0"
   },
   "dsh": {
     "bundle": {
@@ -64,7 +64,7 @@
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": ">=4.0.5 <4.2.0",
-    "@deepseek-ai/dsh-commands": ">=0.2.1-rc.5 <0.3.0",
+    "@deepseek-ai/dsh-commands": ">=0.2.1-rc.5 <0.3.0-0 || >=0.2.2-rc.1 <0.3.0-0",
     "@deepseek-ai/schemastery": ">=3.18.5 <3.20.0"
   },
   "peerDependenciesMeta": {

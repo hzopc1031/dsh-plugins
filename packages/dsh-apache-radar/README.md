@@ -25,8 +25,8 @@
 
 ## 三步快速上手
 
-1. **完全退出桌面 DSH。** 关闭所有窗口，并从系统托盘退出 DSH，确认已完全关闭后再安装或更新。需要 Node.js 22 及以上和 DSH 0.2.2-rc.1 及以上（小于 0.3.0）。
-2. **从 Git 安装。** `0.1.0` 尚未发布到 npm；包内已有界面和后台编译文件，无需允许安装脚本。
+1. **完全退出桌面 DSH。** 关闭所有窗口，并从系统托盘退出 DSH，确认已完全关闭后再安装或更新。需要 Node.js 22 及以上和 DSH 0.2.2-rc.1 及以上（排除 0.3.0 及其预发布版本）。
+2. **从 Git 安装。** `0.1.1` 尚未发布到 npm；包内已有界面和后台编译文件，无需允许安装脚本。
 
    ```powershell
    dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-apache-radar"
@@ -76,7 +76,7 @@ The one-hour cache preserves the last good response on failure. JIRA is a capped
 
 ### 版本与验证范围
 
-版本 `0.1.0`（未发布），Node.js `>=22`，声明 DSH `>=0.2.2-rc.1 <0.3.0`。周报阅读使用该版本的 `MarkdownText.omitHtml` 禁用原始 HTML；对照旧版 0.2.1-rc.5 源码，该属性尚不存在，因此收紧最低版本，不承诺旧版界面兼容。接口对照只读源码 `fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159`；本机实际加载验证版本为 **DSH 0.2.2-rc.1**。声明范围不代表逐版本测试，也不代表已验证 Electron 桌面安装。
+版本 `0.1.1`（未发布），Node.js `>=22`，需要 DSH 0.2.2-rc.1 及以上（`>=0.2.2-rc.1 <0.3.0-0`，排除 0.3.0 及其预发布版本）。周报使用 rc.1 新增的 `MarkdownText.omitHtml` 禁用原始 HTML，因此保留 rc.1 下界。前次接口对照只读源码 `fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159`，历史实际加载验证版本为 **DSH 0.2.2-rc.1**。本次只验证版本准入，尚未重新进行真实界面验收，不代表逐版本功能或 Electron 桌面安装均已验证。
 
 Linux 烟测在隔离 profile 中加载真实 DSH Web，使用录制数据验证侧栏入口、无模型且无会话时的直接使用、明暗主题、项目切换、关注编辑、版本保存、公告判定、JIRA 跳转、OSV 404、周报复制、窄屏和失败回退。未验证 Electron 桌面安装；前次任务的公开计数与匿名 JIRA 请求记录仍作为历史证据。本次界面验证不请求实时 ASF 来源。测试夹具保留原 URL、抓取时间、完整性摘要和裁剪说明，历史快照不表示当前官方数量。
 
@@ -103,3 +103,12 @@ Linux 烟测在隔离 profile 中加载真实 DSH Web，使用录制数据验证
 ### 开发验证
 
 在包目录运行 `npm ci --ignore-scripts`，然后 `npm test && npm run verify-pack`。测试只使用记录夹具和注入故障，阻断实时 HTTP 与 socket；周报无需模型。`lib/` 已提交，打包检查排除夹具、测试及 `node_modules`，无安装生命周期脚本。
+
+
+### 0.1.1 兼容性声明
+
+本版声明 DSH `>=0.2.2-rc.1 <0.3.0-0`。官方版本检查使用 `semver.satisfies` 并开启 `includePrerelease`：接纳 0.2.2-rc.1 及后续 0.2.x 预发布/正式版，拒绝 0.2.1-rc.5，排除 0.3.0（含预发布）。原范围 `>=0.2.2-rc.1 <0.3.0` 已能通过 rc.1，此次仅收紧上界。所有 DSH peer 同步为 `>=0.2.2-rc.1 <0.3.0-0`；Cordis / Schemastery peer 和开发依赖保持当前设置。此次没有安装到用户 DSH；准入通过不等于逐版本功能或界面验证通过。
+
+周报保留原有带 `omitHtml` 的 Markdown 渲染，依赖 rc.1 及以上提供该安全属性。
+
+校验逻辑、源码对照与本次检查结果见[兼容性报告](../../docs/engines-compatibility.md)。

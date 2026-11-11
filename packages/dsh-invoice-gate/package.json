@@ -1,6 +1,6 @@
 {
   "name": "dsh-invoice-gate",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Local invoice verification gate and evidence pack for DeepSeek Harness",
   "type": "module",
   "main": "index.js",
@@ -14,7 +14,7 @@
     "index.js", "index.d.ts", "lib/*.js", "lib/*.d.ts", "cordis.patch.yml",
     "locale/*.json", "icon.svg", "README.md", "LICENSE", "CHANGELOG.md", "docs/decisions.md", "docs/inputs.md", "docs/reconciliation.md", "docs/exports.md", "docs/tools.md"
   ],
-  "engines": { "node": ">=22", "dsh": ">=0.2.1-rc.5 <0.3.0" },
+  "engines": { "node": ">=22", "dsh": ">=0.2.1-rc.5 <0.3.0-0" },
   "dsh": { "bundle": { "patch": "./cordis.patch.yml" } },
   "license": "MIT",
   "author": "hzopc1031",
@@ -35,8 +35,8 @@
   "peerDependencies": {
     "@deepseek-ai/cordis": ">=4.0.5 <4.2.0",
     "@deepseek-ai/schemastery": ">=3.18.5 <3.20.0",
-    "@deepseek-ai/dsh-commands": ">=0.2.1-rc.5 <0.3.0",
-    "@deepseek-ai/dsh-tools": ">=0.2.1-rc.5 <0.3.0"
+    "@deepseek-ai/dsh-commands": ">=0.2.1-rc.5 <0.3.0-0 || >=0.2.2-rc.1 <0.3.0-0",
+    "@deepseek-ai/dsh-tools": ">=0.2.1-rc.5 <0.3.0-0 || >=0.2.2-rc.1 <0.3.0-0"
   },
   "peerDependenciesMeta": {
     "@deepseek-ai/cordis": { "optional": true },

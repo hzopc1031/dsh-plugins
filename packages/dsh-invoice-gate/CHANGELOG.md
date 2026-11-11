@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1 - 2026-11-11
+
+- 修正 DSH 版本声明为 `>=0.2.1-rc.5 <0.3.0-0`，采用官方包含预发布版本的校验规则，并排除 0.3.0 预发布版本。
+- 放宽 DSH peer 范围，显式覆盖 rc.5 / rc.1 的标准 npm semver 安装校验；开发依赖保持原版本。
+- 同步锁文件自身版本、打包断言及当前版本标识；兼容性声明不等于逐版本功能验证。
+
 ## 0.1.0 — unreleased
 
 - Decode CSV strictly as UTF-8 then GB18030 (including GBK), preserve encoding in inventories and exports, and keep JSON manifests UTF-8.

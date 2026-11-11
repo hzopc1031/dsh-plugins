@@ -1,10 +1,10 @@
 # 未发送草稿 · dsh-draft-rescue
 
-当前源码版本 **0.2.0**（尚未发布本次版本到 npm）。草稿面板支持按会话 ID 或正文筛选，每页 20 条，点击“预览原文”才挂载该条正文。搜索和分页不修改 localStorage；复制/追加保留原文。追加使用最新输入状态的 draftRev 和胶囊坐标，由宿主 insertText 做 revision guard，不使用 setDraft 覆盖现有输入。会话切换关闭面板并清理预览，迟到的剪贴板结果不回填新面板。仍需枚举并读取当前源中的草稿，分页只减少 DOM/正文渲染开销。
+当前源码版本 **0.2.1**（尚未发布本次版本到 npm）。草稿面板支持按会话 ID 或正文筛选，每页 20 条，点击“预览原文”才挂载该条正文。搜索和分页不修改 localStorage；复制/追加保留原文。追加使用最新输入状态的 draftRev 和胶囊坐标，由宿主 insertText 做 revision guard，不使用 setDraft 覆盖现有输入。会话切换关闭面板并清理预览，迟到的剪贴板结果不回填新面板。仍需枚举并读取当前源中的草稿，分页只减少 DOM/正文渲染开销。
 
 本次只完成 Windows 上的 typecheck、单元/rc.5 headless 集成、browser factory 的 jsdom 检查及 verify-pack；未安装到真实 DSH、未做 Electron 目视验收。
 
-版本 **0.2.0**，MIT。适用于官方 **DSH 0.2.1-rc.5**。未发布 npm / not published to npm。
+版本 **0.2.1**，MIT。适用于官方 **DSH 0.2.1-rc.5**。未发布 npm / not published to npm。
 
 切到新会话后，在会话头部点击 **「未发送草稿」**，即可查看本机保存的非空文字草稿，包括已被侧栏隐藏的旧空会话。面板按会话 ID 排序，并显示会话列表或当前会话投影中的可靠标题和工作区（读不到则标为「未知」，不使用会回退到 id/目录名的 displayTitle）。当前会话条目标为「当前会话草稿」，顶部写明追加目标。可用标题、工作区、会话 ID 或正文筛选。展开条目预览，用「复制原文」复制完整文字，或用「追加到当前输入框」追加文字。支持手动刷新。
 
@@ -40,7 +40,7 @@ github:hzopc1031/dsh-plugins#main&path:/packages/dsh-draft-rescue
 
 rc.5 也兼容旧式 `{"draft":"文字","view":null,"viewRequest":null}`。结构草稿还可含 `command: {token}`；引用项包含 `source`、`ref`、`offset`、`length`、`label`、`clipboardText`，可选 `appearance` 和 `invalid`。本插件校验文字、命令和引用跨度后只返回文字。空串、纯空白、损坏 JSON、不符合结构的记录以及没有 Session ID 的键都不展示；单条损坏记录不影响其他条目。存储访问被拒绝时显示错误。
 
-**这些键与结构是 DSH 内部约定，不是稳定的插件持久化 API。** 包的 `engines.dsh` 精确声明 `0.2.1-rc.5`；每次扫描前还读取官方启动图 `window.__DSH_BOOT__.release.version`，必须严格等于 `0.2.1-rc.5`。缺失、其他版本或带额外自定义后缀都会显示「已拒绝读取草稿」，且在失败时不访问 localStorage。复制和追加也复查版本。不会通过猜测键名或数据结构兼容新版本；自定义构建即使沿用相同版本号，也不代表已验证兼容。
+**这些键与结构是 DSH 内部约定，不是稳定的插件持久化 API。** 包的 `engines.dsh` 已放宽（见文末），但业务层安全门禁保留：每次扫描前还读取官方启动图 `window.__DSH_BOOT__.release.version`，必须严格等于 `0.2.1-rc.5`。缺失、其他版本或带额外自定义后缀都会显示「已拒绝读取草稿」，且在失败时不访问 localStorage。复制和追加也复查版本。不会通过猜测键名或数据结构兼容新版本；自定义构建即使沿用相同版本号，也不代表已验证兼容。
 
 面板只读现有存储，不创建备份、不迁移或删除原草稿，不获取其他浏览器源、设备或桌面 profile 的数据。DSH 自身若已清理记录、尚未写入存储，或用户清空了应用数据，本插件无法找回。记录没有可依赖的更新时间，因此不声称按时间排序。
 
@@ -96,3 +96,14 @@ npm run verify-pack
 `npm test` 会重建需提交的 lib/。以上通过不等于 Electron 桌面通过；真实截图、剪贴板、焦点/布局及桌面安装仍需人工验收。
 
 本次接口依据（固定 rc.5）：[packages/client/ui-conversation/src/client/contract/input.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-conversation/src/client/contract/input.ts)。
+
+
+**功能限制：** 客户端仍精确检查 `0.2.1-rc.5`，会拒绝 rc.1 和后续版本的操作。此次版本准入修复没有放开这道涉及内部草稿格式 / DOM 的业务安全门禁；不能据版本检查通过声称功能可用。
+
+### 0.2.1 兼容性声明
+
+本版声明 DSH `>=0.2.1-rc.5 <0.3.0-0`。官方版本检查使用 `semver.satisfies` 并开启 `includePrerelease`：接纳 0.2.1-rc.5、0.2.2-rc.1 及后续 0.2.x 预发布/正式版，排除 0.3.0（含预发布）。DSH peer 显式覆盖两个已知 RC，Cordis / Schemastery peer 覆盖两个官方 tag 的版本；开发依赖不变。此次没有安装到用户 DSH；准入通过不等于逐版本功能或界面验证通过。
+
+**功能限制：** 本次只放宽插件页的版本准入，客户端仍有独立的 rc.5 精确门禁，会拒绝 rc.1 和后续版本的操作。内部草稿格式 / 截图 DOM 的新宿主功能适配仍未完成。
+
+校验逻辑、源码对照与本次检查结果见[兼容性报告](../../docs/engines-compatibility.md)。

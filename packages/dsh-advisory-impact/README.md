@@ -31,7 +31,7 @@
    dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-advisory-impact"
    ```
 
-   需要 Node.js ≥22、DSH `>=0.2.1-rc.5 <0.3.0`。Windows 若提示 desktop 环境由 Electron 管理，请使用桌面版自带的 CLI，见[仓库安装说明](../../README.md#安装--installation)。
+   需要 Node.js ≥22、DSH `>=0.2.1-rc.5 <0.3.0-0`。Windows 若提示 desktop 环境由 Electron 管理，请使用桌面版自带的 CLI，见[仓库安装说明](../../README.md#安装--installation)。
 3. **重开 DSH，点击侧栏「公告影响」。** 展开「项目与运行版本」，输入本地项目绝对路径并点击「读取项目」；填写项目 id 和实际运行版本，点击「保存版本」，再点击「核对 / 刷新」。你会看到总览、项目标签、带官方链接和 UTC+8 时间的三态卡片。没有填写版本的项目仍列出公告，理由为「未填写运行版本，无法判断」。无需添加模型 key；宿主初次出现登录/key 提示时可关闭后使用面板。
 
 ## 日常怎么用
@@ -85,8 +85,15 @@ This is unreleased: use the quoted Git install command above. Reopen DSH, select
 
 ### 版本与验证
 
-`0.1.0` 未发布 npm，仅供 Git 分支安装；没有合并 main、PR 或市场提交。声明兼容 DSH `>=0.2.1-rc.5 <0.3.0`、Node.js `>=22`；实际在 Linux 加载并验证的是 **DSH 0.2.2-rc.1 / 源码 fcc0ad46**。最低开发 peers 的类型构建通过，不据此宣称所有版本或 Electron 桌面实测通过。预编译 `lib/` 已提交，无安装生命周期脚本。
+`0.1.1` 未发布 npm，仅供 Git 分支安装；没有合并 main、PR 或市场提交。声明兼容 DSH `>=0.2.1-rc.5 <0.3.0-0`、Node.js `>=22`；实际在 Linux 加载并验证的是 **DSH 0.2.2-rc.1 / 源码 fcc0ad46**。最低开发 peers 的类型构建通过，不据此宣称所有版本或 Electron 桌面实测通过。预编译 `lib/` 已提交，无安装生命周期脚本。
 
 已在真实 DSH Web、零模型 key、无聊天轮次下验证面板导航、版本编辑、项目切换、报告、明暗主题、OSV 404/分歧和故障后的缓存回退。单元与集成测试仅用带来源的录制夹具；最终独立烟测也成功读取六个公开官方端点及一条 OSV GET，报告保留实际来源与时间。截图来自录制回放，不冒充该次实时抓取。
 
 开发校验：在包目录运行 `npm test && npm run verify-pack`。固定决策见 [decisions.md](docs/decisions.md)，DSH 接口依据见 [dsh-api.md](docs/dsh-api.md)。
+
+
+### 0.1.1 兼容性声明
+
+本版声明 DSH `>=0.2.1-rc.5 <0.3.0-0`。官方版本检查使用 `semver.satisfies` 并开启 `includePrerelease`：接纳 0.2.1-rc.5、0.2.2-rc.1 及后续 0.2.x 预发布/正式版，排除 0.3.0（含预发布）。DSH peer 显式覆盖两个已知 RC，Cordis / Schemastery peer 覆盖两个官方 tag 的版本；开发依赖不变。此次没有安装到用户 DSH；准入通过不等于逐版本功能或界面验证通过。
+
+校验逻辑、源码对照与本次检查结果见[兼容性报告](../../docs/engines-compatibility.md)。

@@ -118,7 +118,7 @@ dsh plugin --profile desktop remove dsh-heartbeat-monitor
 
 ### 版本与兼容
 
-当前源码版本 **0.2.1**（尚未发布本次版本到 npm），运行时依据固定为 DSH 0.2.1-rc.5。其他电脑是否已安装并成功加载，需要分别检查。
+当前源码版本 **0.2.2**（尚未发布本次版本到 npm），运行时依据固定为 DSH 0.2.1-rc.5。其他电脑是否已安装并成功加载，需要分别检查。
 
 ### 工作原理（用到的 DSH 接口）
 
@@ -172,3 +172,10 @@ npm run verify-pack
 `npm test` 会重建需提交的 lib/。以上通过不等于 Electron 桌面通过；真实截图、剪贴板、焦点/布局及桌面安装仍需人工验收。
 
 本次接口依据（固定 rc.5）：[packages/shell/tool-bash/src/index.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/shell/tool-bash/src/index.ts)、[docs/subsystems/tools.md](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/docs/subsystems/tools.md)。
+
+
+### 0.2.2 兼容性声明
+
+本版声明 DSH `>=0.2.1-rc.5 <0.3.0-0`。官方版本检查使用 `semver.satisfies` 并开启 `includePrerelease`：接纳 0.2.1-rc.5、0.2.2-rc.1 及后续 0.2.x 预发布/正式版，排除 0.3.0（含预发布）。DSH peer 显式覆盖两个已知 RC，Cordis / Schemastery peer 覆盖两个官方 tag 的版本；开发依赖不变。此次没有安装到用户 DSH；准入通过不等于逐版本功能或界面验证通过。
+
+校验逻辑、源码对照与本次检查结果见[兼容性报告](../../docs/engines-compatibility.md)。

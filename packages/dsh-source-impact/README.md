@@ -1,10 +1,10 @@
 # dsh-source-impact · 资料更新影响分析
 
-当前源码版本 **0.2.0**（尚未发布本次版本到 npm）。每次 scan 内按来源复用文件 SHA-256、CSV/行解析与相同定位结果；缓存不跨 scan，plan 仍重新读取全部来源并核对 scanId。scanId 的输入与完整 JSON 明细语义保持一致。/impact check 默认最多显示 20 条状态摘要；/impact check json 查看完整引用、结论、产出和摘录。模型工具 source_impact_check 默认返回最多 20 条简要状态（含 total/affectedCount/truncated），details:true 才返回完整结构。操作使用 workingDirectory.get(session)，服务缺失时回退 header.cwd；成功输出会写明当前执行目录或回退目录。/cd 后读取新目录的独立 registry，不移动原登记。可用 `/impact accept <scanId> [id...]` 在重新核验后原子接受新基线（省略 id 时只接受已变化且可重新定位的引用）；失败不改写原登记，并保留上一版基线。会话标题栏“资料引用登记”提供登记和接受表单。模型工具仍只读。
+当前源码版本 **0.2.1**（尚未发布本次版本到 npm）。每次 scan 内按来源复用文件 SHA-256、CSV/行解析与相同定位结果；缓存不跨 scan，plan 仍重新读取全部来源并核对 scanId。scanId 的输入与完整 JSON 明细语义保持一致。/impact check 默认最多显示 20 条状态摘要；/impact check json 查看完整引用、结论、产出和摘录。模型工具 source_impact_check 默认返回最多 20 条简要状态（含 total/affectedCount/truncated），details:true 才返回完整结构。操作使用 workingDirectory.get(session)，服务缺失时回退 header.cwd；成功输出会写明当前执行目录或回退目录。/cd 后读取新目录的独立 registry，不移动原登记。可用 `/impact accept <scanId> [id...]` 在重新核验后原子接受新基线（省略 id 时只接受已变化且可重新定位的引用）；失败不改写原登记，并保留上一版基线。会话标题栏“资料引用登记”提供登记和接受表单。模型工具仍只读。
 
 本次只完成 Windows 上的 typecheck、单元/rc.5 headless 集成、browser factory 的 jsdom 检查及 verify-pack；未安装到真实 DSH、未做 Electron 目视验收。
 
-版本：0.2.0。适配 DSH 桌面版 0.2.1-rc.5（Node 22+），MIT。
+版本：0.2.1。适配 DSH 桌面版 0.2.1-rc.5（Node 22+），MIT。
 
 把“来源文件变了”追到“哪些表格、结论、报告章节需要重查”。只处理用户或调用方明确登记的关系：
 
@@ -205,3 +205,10 @@ npm run verify-pack
 `npm test` 会重建需提交的 lib/。以上通过不等于 Electron 桌面通过；真实截图、剪贴板、焦点/布局及桌面安装仍需人工验收。
 
 本次接口依据（固定 rc.5）：[packages/session/working-directory/src/index.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/session/working-directory/src/index.ts)。
+
+
+### 0.2.1 兼容性声明
+
+本版声明 DSH `>=0.2.1-rc.5 <0.3.0-0`。官方版本检查使用 `semver.satisfies` 并开启 `includePrerelease`：接纳 0.2.1-rc.5、0.2.2-rc.1 及后续 0.2.x 预发布/正式版，排除 0.3.0（含预发布）。DSH peer 显式覆盖两个已知 RC，Cordis / Schemastery peer 覆盖两个官方 tag 的版本；开发依赖不变。此次没有安装到用户 DSH；准入通过不等于逐版本功能或界面验证通过。
+
+校验逻辑、源码对照与本次检查结果见[兼容性报告](../../docs/engines-compatibility.md)。

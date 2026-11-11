@@ -4,6 +4,7 @@ import {
   type Podling,
 } from './fetchers.js'
 import type { HttpClient } from './http.js'
+import { readCachedSource, type CacheOptions } from './feed-cache.js'
 
 const fetchers = {
   chooser: fetchChooser, committees: fetchCommittees, podlings: fetchPodlings,
@@ -19,6 +20,8 @@ export interface Citation {
   fetchedAt: string | null
   fetchedAtDisplay: string | null
   sourceTimestamp?: string
+  cacheStatus?: 'ok' | 'cached' | 'stale'
+  cacheError?: string
 }
 export interface Member { id: string; name: string }
 interface Evidence { id: string; label: string; sources: Citation[] }
@@ -70,6 +73,8 @@ export function buildCountsReport(inputs: CountSources): CountsReport {
     const input = inputs[key]
     if (!input || 'error' in input) return { url: SOURCES[key], fetchedAt: null, fetchedAtDisplay: null }
     return { url: input.url, fetchedAt: input.fetchedAt, fetchedAtDisplay: singaporeTime(input.fetchedAt),
+      ...(input.cacheStatus === undefined ? {} : { cacheStatus: input.cacheStatus }),
+      ...(input.cacheError === undefined ? {} : { cacheError: input.cacheError }),
       ...(input.sourceTimestamp === undefined ? {} : { sourceTimestamp: input.sourceTimestamp }) }
   }
   function measure<K extends SourceKey>(id: string, label: string, key: K,
@@ -158,12 +163,12 @@ export function buildCountsReport(inputs: CountSources): CountsReport {
     counts, retired, comparisons, categories }
 }
 
-export async function fetchCountsReport(http: HttpClient): Promise<CountsReport> {
+export async function fetchCountsReport(http: HttpClient, options: CacheOptions = {}): Promise<CountsReport> {
   const inputs: CountSources = {}
   // The HTTP client owns concurrency and rate-limit handling; one failure must not erase other sources.
   for (const key of Object.keys(fetchers) as SourceKey[]) {
     try {
-      Object.assign(inputs, { [key]: await fetchers[key](http) })
+      Object.assign(inputs, { [key]: await readCachedSource<Result<SourceKey>>(http, SOURCES[key], async response => fetchers[key](async () => response), options) })
     } catch (error) {
       inputs[key] = { error: errorText(error) }
     }
@@ -174,7 +179,7 @@ export async function fetchCountsReport(http: HttpClient): Promise<CountsReport>
 const markdown = (text: string) => text.replace(/[\\`*_[\]<>|]/g, '\\$&').replace(/[\r\n]+/g, ' ')
 const membersText = (members: Member[]) => members.length ? members.map(m => `${markdown(m.name)} (${markdown(m.id)})`).join('、') : '无'
 const citationsText = (sources: Citation[]) => sources.map(s =>
-  `[${markdown(s.url)}](${s.url})；抓取：${s.fetchedAtDisplay ?? '无成功抓取时间'}${s.sourceTimestamp === undefined ? '' : `；源文件时间：${markdown(s.sourceTimestamp)}`}`).join('； ')
+  `[${markdown(s.url)}](${s.url})；抓取：${s.fetchedAtDisplay ?? '无成功抓取时间'}${s.sourceTimestamp === undefined ? '' : `；源文件时间：${markdown(s.sourceTimestamp)}`}；缓存：${s.fetchedAt ? s.cacheStatus ?? 'ok' : '无可用缓存'}${s.cacheError ? `；刷新失败：${markdown(s.cacheError)}（沿用上次成功缓存）` : ''}`).join('； ')
 
 export function renderCountsMarkdown(report: CountsReport): string {
   const table = (rows: CountRow[]) => [

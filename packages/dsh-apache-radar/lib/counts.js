@@ -1,4 +1,5 @@
 import { SOURCES, fetchChooser, fetchCommittees, fetchPodlings, fetchPublicPodlings, fetchRetiredCommittees, fetchRetiredProjects, fetchAtticProjects, } from './fetchers.js';
+import { readCachedSource } from './feed-cache.js';
 const fetchers = {
     chooser: fetchChooser, committees: fetchCommittees, podlings: fetchPodlings,
     publicPodlings: fetchPublicPodlings, retired: fetchRetiredCommittees,
@@ -34,6 +35,8 @@ export function buildCountsReport(inputs) {
         if (!input || 'error' in input)
             return { url: SOURCES[key], fetchedAt: null, fetchedAtDisplay: null };
         return { url: input.url, fetchedAt: input.fetchedAt, fetchedAtDisplay: singaporeTime(input.fetchedAt),
+            ...(input.cacheStatus === undefined ? {} : { cacheStatus: input.cacheStatus }),
+            ...(input.cacheError === undefined ? {} : { cacheError: input.cacheError }),
             ...(input.sourceTimestamp === undefined ? {} : { sourceTimestamp: input.sourceTimestamp }) };
     }
     function measure(id, label, key, value, note) {
@@ -108,12 +111,12 @@ export function buildCountsReport(inputs) {
         explanation: '并列展示各来源口径。当前列示 = chooser 当前 TLP + 当前孵化项目；另以 Whimsy PMC 排除 Incubator、Attic 交叉核对。退休口径分别展示，不合并为单一退休总数。',
         counts, retired, comparisons, categories };
 }
-export async function fetchCountsReport(http) {
+export async function fetchCountsReport(http, options = {}) {
     const inputs = {};
     // The HTTP client owns concurrency and rate-limit handling; one failure must not erase other sources.
     for (const key of Object.keys(fetchers)) {
         try {
-            Object.assign(inputs, { [key]: await fetchers[key](http) });
+            Object.assign(inputs, { [key]: await readCachedSource(http, SOURCES[key], async (response) => fetchers[key](async () => response), options) });
         }
         catch (error) {
             inputs[key] = { error: errorText(error) };
@@ -123,7 +126,7 @@ export async function fetchCountsReport(http) {
 }
 const markdown = (text) => text.replace(/[\\`*_[\]<>|]/g, '\\$&').replace(/[\r\n]+/g, ' ');
 const membersText = (members) => members.length ? members.map(m => `${markdown(m.name)} (${markdown(m.id)})`).join('、') : '无';
-const citationsText = (sources) => sources.map(s => `[${markdown(s.url)}](${s.url})；抓取：${s.fetchedAtDisplay ?? '无成功抓取时间'}${s.sourceTimestamp === undefined ? '' : `；源文件时间：${markdown(s.sourceTimestamp)}`}`).join('； ');
+const citationsText = (sources) => sources.map(s => `[${markdown(s.url)}](${s.url})；抓取：${s.fetchedAtDisplay ?? '无成功抓取时间'}${s.sourceTimestamp === undefined ? '' : `；源文件时间：${markdown(s.sourceTimestamp)}`}；缓存：${s.fetchedAt ? s.cacheStatus ?? 'ok' : '无可用缓存'}${s.cacheError ? `；刷新失败：${markdown(s.cacheError)}（沿用上次成功缓存）` : ''}`).join('； ');
 export function renderCountsMarkdown(report) {
     const table = (rows) => [
         '| 口径 | 数量 / 状态 | 来源与时间 | 说明 |', '| --- | --- | --- | --- |',

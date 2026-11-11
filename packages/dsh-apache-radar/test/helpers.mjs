@@ -24,3 +24,42 @@ export function fixtureHttp() {
     },
   })
 }
+
+export function pluginContext(agents = []) {
+  const tools = new Map()
+  const events = new Map()
+  const disposers = []
+  let command, guard
+  const ctx = {
+    effect: setup => { const dispose = setup(); disposers.push(dispose); return dispose },
+    commands: { register: value => { command = value; return () => { command = undefined } } },
+    tools: {
+      register: tool => { tools.set(tool.name, tool); return () => tools.delete(tool.name) },
+      guard: value => { guard = value; return () => { guard = undefined } },
+      restrict: () => { throw new Error('restrict must use agent.ctx') },
+    },
+    agents: { list: () => agents },
+    on: (name, handler) => {
+      events.set(name, handler)
+      disposers.push(() => events.delete(name))
+    },
+  }
+  return { ctx, tools, events, get command() { return command }, get guard() { return guard },
+    dispose: () => { for (const dispose of disposers.reverse()) dispose?.() },
+  }
+}
+
+export function radarFixtureHttp({ at = FETCHED_AT, requests = [], fail = () => false } = {}) {
+  return async url => {
+    requests.push(url)
+    if (fail(url)) throw new Error(`Injected timeout: ${url}`)
+    const feedManifest = JSON.parse(await fixture('feed-provenance.json'))
+    let source = [...manifest.sources, ...feedManifest.sources].find(s => s.url === url)
+    // Replays a recorded historical Kafka query body; it is not a recorded rolling-query response.
+    if (!source && new URL(url).pathname.endsWith('/search') && new URL(url).searchParams.get('jql')?.startsWith('project in (KAFKA)')) {
+      source = feedManifest.sources.find(s => s.file === 'jira-kafka-newfeature.json')
+    }
+    if (!source) throw new Error('No recorded response fixture for this source')
+    return { url, fetchedAt: at, payload: await fixture(source.file) }
+  }
+}

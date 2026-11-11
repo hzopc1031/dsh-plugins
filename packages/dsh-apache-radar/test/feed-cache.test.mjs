@@ -66,3 +66,41 @@ test('malformed cache entries are explicit failures, never empty successful cach
     }
   } finally { await rm(directory, { recursive: true, force: true }) }
 })
+
+test('counts share persistent TTL caching with feeds; expiry refetches and malformed/failed refresh preserves the last good payload', async () => {
+  const { fetchCountsReport, renderCountsMarkdown } = await import('../lib/counts.js')
+  const { radarFixtureHttp } = await import('./helpers.mjs')
+  const directory = await mkdtemp(join(tmpdir(), 'apache-radar-count-cache-'))
+  try {
+    const cache = new Map()
+    const requests = []
+    await fetchCountsReport(radarFixtureHttp({ requests }), { cache, now: new Date(FETCHED_AT) })
+    assert.equal(requests.length, 7)
+    await saveFeedCache(directory, cache)
+    const disk = await loadFeedCache(directory)
+    const before = structuredClone(disk.get(SOURCES.chooser))
+    assert.ok(before.sourceTimestamp)
+    const cached = await fetchCountsReport(async () => { throw new Error('No HTTP inside TTL') }, { cache: disk, now: new Date(FETCHED_AT) })
+    assert.ok(cached.counts.every(row => row.sources[0].cacheStatus === 'cached'))
+    const later = new Date('2026-11-11T05:00:00Z')
+    for (const failure of ['timeout', 'malformed']) {
+      const calls = []
+      const fresh = radarFixtureHttp({ requests: calls, at: later.toISOString() })
+      const report = await fetchCountsReport(async url => {
+        if (url !== SOURCES.chooser) return fresh(url)
+        calls.push(url)
+        if (failure === 'timeout') throw new Error('Injected timeout')
+        return { url, fetchedAt: later.toISOString(), payload: '{' }
+      }, { cache: disk, now: later, ttlMs: 1000 })
+      assert.ok(calls.includes(SOURCES.chooser))
+      const source = report.counts[0].sources[0]
+      assert.equal(source.cacheStatus, 'stale')
+      assert.equal(source.fetchedAt, FETCHED_AT)
+      assert.match(source.cacheError, /timeout|Invalid source payload/)
+      assert.deepEqual(disk.get(SOURCES.chooser), before)
+      assert.match(renderCountsMarkdown(report), /刷新失败/)
+    }
+    await saveFeedCache(directory, disk)
+    assert.deepEqual((await loadFeedCache(directory)).get(SOURCES.chooser), before)
+  } finally { await rm(directory, { recursive: true, force: true }) }
+})

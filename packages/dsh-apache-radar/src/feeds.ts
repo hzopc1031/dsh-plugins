@@ -3,6 +3,7 @@ import { clean, elements, fetchReleases, link, object, SOURCES, text } from './f
 import type { HttpClient, SourceResponse } from './http.js'
 import { singaporeTime } from './counts.js'
 import { resolveWatchList } from './watch.js'
+import { readCachedSource } from './feed-cache.js'
 
 export const PROPOSAL_SOURCES = {
   kafka: 'https://cwiki.apache.org/confluence/display/KAFKA/Kafka+Improvement+Proposals',
@@ -40,6 +41,9 @@ export interface FeedItem {
   fixVersions?: string[]
   notesUrl?: string
   notesStatus?: 'found' | 'missing' | 'failed'
+}
+export function isSecurityItem(item: FeedItem): boolean {
+  return /\bCVE-\d{4}-\d+\b|\bsecurity\b|安全公告|漏洞/i.test(`${item.title} ${item.issueType ?? ''}`)
 }
 export interface FeedSource {
   project?: string
@@ -206,33 +210,18 @@ export async function collectWatchFeeds(http: HttpClient, options: {
   async function read<T>(kind: FeedSource['kind'], url: string, parser: (payload: string) => Parsed<T> | Promise<Parsed<T>>, project?: string): Promise<T | undefined> {
     const source: FeedSource = { project, kind, url, status: 'ok', warnings: [] }
     report.sources.push(source)
-    const previous = cache.get(url)
-    const age = previous ? now.getTime() - Date.parse(previous.fetchedAt) : NaN
     try {
-      if (previous && age >= 0 && age < ttlMs) {
-        const parsed = await parser(previous.payload)
-        Object.assign(source, { status: 'cached', fetchedAt: previous.fetchedAt, sourceTimestamp: parsed.sourceTimestamp ?? previous.sourceTimestamp, warnings: parsed.warnings })
-        return parsed.data
-      }
-      const response = await http(url)
-      if (response.url !== url || !Number.isFinite(Date.parse(response.fetchedAt))) throw new Error('Invalid feed response metadata')
-      const parsed = await parser(response.payload)
-      cache.set(url, { ...response, sourceTimestamp: parsed.sourceTimestamp })
-      Object.assign(source, { fetchedAt: response.fetchedAt, sourceTimestamp: parsed.sourceTimestamp, warnings: parsed.warnings })
-      return parsed.data
+      const result = await readCachedSource(http, url, response => parser(response.payload), { cache, now, ttlMs })
+      Object.assign(source, { status: result.cacheStatus, fetchedAt: result.fetchedAt,
+        sourceTimestamp: result.sourceTimestamp, warnings: result.warnings, error: result.cacheError })
+      return result.data
     } catch (error) {
       source.status = 'failed'
-      source.error = `${url}: ${error instanceof Error ? error.message : String(error)}`
-      if (previous) {
-        try {
-          const parsed = await parser(previous.payload)
-          Object.assign(source, { status: 'stale', fetchedAt: previous.fetchedAt, sourceTimestamp: parsed.sourceTimestamp ?? previous.sourceTimestamp, warnings: parsed.warnings })
-          return parsed.data
-        } catch { source.warnings.push('上次缓存也不可解析，未使用。') }
-      }
+      source.error = error instanceof Error ? error.message : String(error)
       return undefined
     }
   }
+
   function add(items: FeedItem[]) {
     for (const item of items) {
       if (!item.date) { report.undatedItems.push(item); continue }

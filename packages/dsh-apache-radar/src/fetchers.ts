@@ -17,6 +17,8 @@ export interface SourceResult<T> {
   fetchedAt: string
   sourceTimestamp?: string
   data: T
+  cacheStatus?: 'ok' | 'cached' | 'stale'
+  cacheError?: string
 }
 export interface Project { id: string; name: string; homepage: string; pmc: string; areas: string[] }
 export interface Committee { id: string; name: string; pmc: boolean }

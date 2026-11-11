@@ -1,22 +1,8 @@
-import { constants } from 'node:fs'
-import { lstat, mkdtemp, open, realpath, rename, rm, writeFile } from 'node:fs/promises'
-import { join, resolve } from 'node:path'
-import { publicSourceUrl } from './http.js'
+import { publicSourceUrl, type HttpClient, type SourceResponse } from './http.js'
 import type { FeedCache, FeedCacheEntry } from './feeds.js'
+import { readLocal, writeLocal } from './local-files.js'
 
 const filename = '.apache-radar-feed-cache.json'
-async function target(directory: string): Promise<string> {
-  if (!directory || directory.split(/[\\/]/).includes('..')) throw new Error('Cache directory traversal rejected')
-  const root = resolve(directory)
-  if (await realpath(root) !== root || !(await lstat(root)).isDirectory()) throw new Error('Cache directory symlink or invalid directory rejected')
-  const path = join(root, filename)
-  try {
-    if (!(await lstat(path)).isFile()) throw new Error('Cache target symlink or non-file rejected')
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
-  }
-  return path
-}
 function validate(value: unknown): FeedCacheEntry {
   if (!value || typeof value !== 'object') throw new Error('Invalid feed cache entry')
   const entry = value as Partial<FeedCacheEntry>
@@ -27,38 +13,55 @@ function validate(value: unknown): FeedCacheEntry {
 }
 
 export async function loadFeedCache(directory: string): Promise<FeedCache> {
-  const path = await target(directory)
-  let file
-  try { file = await open(path, constants.O_RDONLY | constants.O_NOFOLLOW) }
-  catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return new Map()
-    throw error
+  const content = await readLocal(directory, filename)
+  if (content === undefined) return new Map()
+  const raw: unknown = JSON.parse(content)
+  if (!Array.isArray(raw)) throw new Error('Invalid feed cache document')
+  const result: FeedCache = new Map()
+  for (const value of raw) {
+    const entry = validate(value)
+    if (result.has(entry.url)) throw new Error('Duplicate feed cache URL')
+    result.set(entry.url, entry)
   }
-  try {
-    const raw: unknown = JSON.parse(await file.readFile('utf8'))
-    if (!Array.isArray(raw)) throw new Error('Invalid feed cache document')
-    const result: FeedCache = new Map()
-    for (const value of raw) {
-      const entry = validate(value)
-      if (result.has(entry.url)) throw new Error('Duplicate feed cache URL')
-      result.set(entry.url, entry)
-    }
-    return result
-  } finally { await file.close() }
+  return result
 }
-
 export async function saveFeedCache(directory: string, cache: FeedCache): Promise<void> {
   const entries = [...cache.entries()].map(([url, value]) => {
     const entry = validate(value)
     if (url !== entry.url) throw new Error('Feed cache URL mismatch')
     return entry
   })
-  const path = await target(directory)
-  const temporary = await mkdtemp(join(resolve(directory), '.apache-radar-cache-'))
+  await writeLocal(directory, filename, JSON.stringify(entries))
+}
+
+export interface CacheOptions { cache?: FeedCache; now?: Date; ttlMs?: number }
+export async function readCachedSource<T extends { sourceTimestamp?: string }>(
+  http: HttpClient, url: string, parser: (response: SourceResponse) => Promise<T> | T, options: CacheOptions = {},
+): Promise<T & { url: string; fetchedAt: string; cacheStatus: 'ok' | 'cached' | 'stale'; cacheError?: string }> {
+  publicSourceUrl(url)
+  const now = options.now ?? new Date()
+  const ttlMs = options.ttlMs ?? 3_600_000
+  if (!Number.isFinite(now.getTime()) || !Number.isSafeInteger(ttlMs) || ttlMs < 0) throw new Error('Invalid cache clock or TTL')
+  const previous = options.cache?.get(url)
+  const age = previous ? now.getTime() - Date.parse(previous.fetchedAt) : NaN
+  const parse = async (response: FeedCacheEntry) => {
+    validate(response)
+    if (response.url !== url) throw new Error('Cache response URL mismatch')
+    const parsed = await parser(response)
+    return { ...parsed, url, fetchedAt: response.fetchedAt, sourceTimestamp: parsed.sourceTimestamp ?? response.sourceTimestamp }
+  }
   try {
-    const staged = join(temporary, 'cache.json')
-    await writeFile(staged, JSON.stringify(entries), { flag: 'wx', mode: 0o600 })
-    await target(directory)
-    await rename(staged, path)
-  } finally { await rm(temporary, { recursive: true, force: true }) }
+    if (previous && age >= 0 && age < ttlMs) return { ...await parse(previous), cacheStatus: 'cached' }
+    const response = await http(url)
+    const result = await parse(response)
+    options.cache?.set(url, { ...response, sourceTimestamp: result.sourceTimestamp })
+    return { ...result, cacheStatus: 'ok' }
+  } catch (cause) {
+    const cacheError = `${url}: ${cause instanceof Error ? cause.message : String(cause)}`
+    if (previous) {
+      try { return { ...await parse(previous), cacheStatus: 'stale', cacheError } }
+      catch { throw new Error(`${cacheError}; 上次缓存也不可解析，未使用。`, { cause }) }
+    }
+    throw new Error(cacheError, { cause })
+  }
 }

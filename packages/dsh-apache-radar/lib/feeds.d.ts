@@ -30,6 +30,7 @@ export interface FeedItem {
     notesUrl?: string;
     notesStatus?: 'found' | 'missing' | 'failed';
 }
+export declare function isSecurityItem(item: FeedItem): boolean;
 export interface FeedSource {
     project?: string;
     kind: FeedItem['kind'] | 'release-notes';

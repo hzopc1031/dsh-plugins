@@ -21,6 +21,6 @@ const [pack] = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json', '-
 }))
 const expected = ['package.json', 'index.js', 'cordis.patch.yml', 'locale/en.json', 'locale/zh.json',
   'icon.svg', 'README.md', 'LICENSE', 'CHANGELOG.md', 'docs/decisions.md',
-  ...['plugin', 'http', 'fetchers', 'counts', 'watch', 'feeds', 'feed-cache'].flatMap(name => [`lib/${name}.js`, `lib/${name}.d.ts`])]
+  ...['plugin', 'http', 'fetchers', 'counts', 'watch', 'feeds', 'feed-cache', 'local-files', 'brief', 'radar'].flatMap(name => [`lib/${name}.js`, `lib/${name}.d.ts`])]
 assert.deepEqual(pack.files.map(f => f.path).sort(), expected.sort())
 console.log(`PASS: ${pack.filename}, ${pack.entryCount} files, prebuilt lib, no lifecycle hooks or internal fixtures`)

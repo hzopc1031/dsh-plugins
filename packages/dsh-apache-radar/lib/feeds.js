@@ -2,6 +2,7 @@ import { parse } from 'parse5';
 import { clean, elements, fetchReleases, link, object, SOURCES, text } from './fetchers.js';
 import { singaporeTime } from './counts.js';
 import { resolveWatchList } from './watch.js';
+import { readCachedSource } from './feed-cache.js';
 export const PROPOSAL_SOURCES = {
     kafka: 'https://cwiki.apache.org/confluence/display/KAFKA/Kafka+Improvement+Proposals',
     flink: 'https://cwiki.apache.org/confluence/display/FLINK/Flink+Improvement+Proposals',
@@ -17,6 +18,9 @@ export function rollingWindow(now = new Date(), days = 7) {
     const end = now.toISOString();
     return { start, end, days, timezone: 'Asia/Singapore', mode: 'rolling',
         label: `滚动最近 ${days} 天：${singaporeTime(start)} 至 ${singaporeTime(end)}（含两端）；仅日期按 UTC+8 当日零时筛选，日期未知项另列，不计作窗口内动态。` };
+}
+export function isSecurityItem(item) {
+    return /\bCVE-\d{4}-\d+\b|\bsecurity\b|安全公告|漏洞/i.test(`${item.title} ${item.issueType ?? ''}`);
 }
 function date(value) {
     const result = text(value);
@@ -180,35 +184,15 @@ export async function collectWatchFeeds(http, options = {}) {
     async function read(kind, url, parser, project) {
         const source = { project, kind, url, status: 'ok', warnings: [] };
         report.sources.push(source);
-        const previous = cache.get(url);
-        const age = previous ? now.getTime() - Date.parse(previous.fetchedAt) : NaN;
         try {
-            if (previous && age >= 0 && age < ttlMs) {
-                const parsed = await parser(previous.payload);
-                Object.assign(source, { status: 'cached', fetchedAt: previous.fetchedAt, sourceTimestamp: parsed.sourceTimestamp ?? previous.sourceTimestamp, warnings: parsed.warnings });
-                return parsed.data;
-            }
-            const response = await http(url);
-            if (response.url !== url || !Number.isFinite(Date.parse(response.fetchedAt)))
-                throw new Error('Invalid feed response metadata');
-            const parsed = await parser(response.payload);
-            cache.set(url, { ...response, sourceTimestamp: parsed.sourceTimestamp });
-            Object.assign(source, { fetchedAt: response.fetchedAt, sourceTimestamp: parsed.sourceTimestamp, warnings: parsed.warnings });
-            return parsed.data;
+            const result = await readCachedSource(http, url, response => parser(response.payload), { cache, now, ttlMs });
+            Object.assign(source, { status: result.cacheStatus, fetchedAt: result.fetchedAt,
+                sourceTimestamp: result.sourceTimestamp, warnings: result.warnings, error: result.cacheError });
+            return result.data;
         }
         catch (error) {
             source.status = 'failed';
-            source.error = `${url}: ${error instanceof Error ? error.message : String(error)}`;
-            if (previous) {
-                try {
-                    const parsed = await parser(previous.payload);
-                    Object.assign(source, { status: 'stale', fetchedAt: previous.fetchedAt, sourceTimestamp: parsed.sourceTimestamp ?? previous.sourceTimestamp, warnings: parsed.warnings });
-                    return parsed.data;
-                }
-                catch {
-                    source.warnings.push('上次缓存也不可解析，未使用。');
-                }
-            }
+            source.error = error instanceof Error ? error.message : String(error);
             return undefined;
         }
     }

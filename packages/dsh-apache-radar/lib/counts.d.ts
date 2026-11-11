@@ -1,5 +1,6 @@
 import { fetchChooser, fetchCommittees, fetchPodlings, fetchPublicPodlings, fetchRetiredCommittees, fetchRetiredProjects, fetchAtticProjects } from './fetchers.js';
 import type { HttpClient } from './http.js';
+import { type CacheOptions } from './feed-cache.js';
 declare const fetchers: {
     chooser: typeof fetchChooser;
     committees: typeof fetchCommittees;
@@ -22,6 +23,8 @@ export interface Citation {
     fetchedAt: string | null;
     fetchedAtDisplay: string | null;
     sourceTimestamp?: string;
+    cacheStatus?: 'ok' | 'cached' | 'stale';
+    cacheError?: string;
 }
 export interface Member {
     id: string;
@@ -72,6 +75,6 @@ export interface CountsReport {
 }
 export declare function singaporeTime(timestamp: string): string;
 export declare function buildCountsReport(inputs: CountSources): CountsReport;
-export declare function fetchCountsReport(http: HttpClient): Promise<CountsReport>;
+export declare function fetchCountsReport(http: HttpClient, options?: CacheOptions): Promise<CountsReport>;
 export declare function renderCountsMarkdown(report: CountsReport): string;
 export {};

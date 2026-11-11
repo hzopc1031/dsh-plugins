@@ -15,6 +15,8 @@ export interface SourceResult<T> {
     fetchedAt: string;
     sourceTimestamp?: string;
     data: T;
+    cacheStatus?: 'ok' | 'cached' | 'stale';
+    cacheError?: string;
 }
 export interface Project {
     id: string;

@@ -1,5 +1,5 @@
 import { setTimeout as delay } from 'node:timers/promises'
-import type { HttpClient, SourceDocument } from './types.js'
+import type { HttpClient, MavenQuery, SourceDocument } from './types.js'
 
 export const SOURCES = {
   kafka: 'https://kafka.apache.org/community/cve-list/',
@@ -25,7 +25,7 @@ export function assertSourceUrl(url: string): void {
   if (!allowed.has(url)) throw new Error('Only documented anonymous official source URLs are allowed')
 }
 
-interface HttpOptions {
+export interface HttpOptions {
   fetch?: typeof globalThis.fetch
   now?: () => Date
   sleep?: (ms: number) => Promise<unknown>
@@ -57,6 +57,30 @@ async function readPayload(response: Response, maxBytes: number): Promise<string
 
 /** Serial anonymous GETs, one bounded 429 retry, no redirects or implicit live requests. */
 export function createHttpClient(options: HttpOptions = {}): HttpClient {
+  return transport(false, options)
+}
+
+export const OSV_QUERY_URL = 'https://api.osv.dev/v1/query'
+export const OSV_ID = /^(?:CVE-\d{4}-\d{4,}|GHSA-[23456789cfghjmpqrvwx]{4}-[23456789cfghjmpqrvwx]{4}-[23456789cfghjmpqrvwx]{4})$/
+export function osvUrl(id: string): string {
+  if (!OSV_ID.test(id)) throw new Error('Invalid CVE/GHSA id')
+  return `https://api.osv.dev/v1/vulns/${id}`
+}
+
+export function assertOsvRequest(url: string, query?: MavenQuery): void {
+  if (query) {
+    if (url !== OSV_QUERY_URL || !/^[A-Za-z0-9_.-]+:[A-Za-z0-9_.-]+$/.test(query.maven)
+      || !query.version || query.version.length > 200 || /[\x00-\x20\x7f]/.test(query.version)) throw new Error('OSV query requires a pinned Maven coordinate and version')
+  } else if (!url.startsWith('https://api.osv.dev/v1/vulns/') || osvUrl(url.slice('https://api.osv.dev/v1/vulns/'.length)) !== url) {
+    throw new Error('Only documented anonymous OSV endpoints are allowed')
+  }
+}
+
+export function createOsvHttpClient(options: HttpOptions = {}): HttpClient {
+  return transport(true, options)
+}
+
+function transport(osv: boolean, options: HttpOptions): HttpClient {
   const fetch = options.fetch ?? globalThis.fetch
   const now = options.now ?? (() => new Date())
   const sleep = options.sleep ?? delay
@@ -65,13 +89,19 @@ export function createHttpClient(options: HttpOptions = {}): HttpClient {
   for (const n of [timeoutMs, maxBytes]) {
     if (!Number.isSafeInteger(n) || n <= 0) throw new Error('HTTP limits must be positive integers')
   }
-  const request = async (url: string): Promise<SourceDocument> => {
-    assertSourceUrl(url)
+  const request = async (url: string, query?: MavenQuery): Promise<SourceDocument> => {
+    if (osv) assertOsvRequest(url, query)
+    else {
+      assertSourceUrl(url)
+      if (query) throw new Error('Official sources accept GET only')
+    }
     try {
       for (let attempt = 0; attempt < 2; attempt++) {
         const response = await fetch(url, {
-          method: 'GET', redirect: 'manual', credentials: 'omit',
-          headers: { 'User-Agent': USER_AGENT, Accept: 'text/html, application/xml, text/xml, text/plain' },
+          method: query ? 'POST' : 'GET', redirect: 'manual', credentials: 'omit',
+          headers: { 'User-Agent': USER_AGENT, Accept: osv ? 'application/json' : 'text/html, application/xml, text/xml, text/plain',
+            ...(query ? { 'Content-Type': 'application/json' } : {}) },
+          ...(query ? { body: JSON.stringify({ package: { name: query.maven, ecosystem: 'Maven' }, version: query.version }) } : {}),
           signal: AbortSignal.timeout(timeoutMs),
         })
         if (response.status === 429 && attempt === 0) {
@@ -83,13 +113,17 @@ export function createHttpClient(options: HttpOptions = {}): HttpClient {
           await sleep(Math.max(1_000, ms))
           continue
         }
+        if (osv && !query && response.status === 404) {
+          const payload = response.body ? await readPayload(response, maxBytes) : ''
+          return { url, payload, status: 404, fetchedAt: now().toISOString() }
+        }
         if (!response.ok) {
           await response.body?.cancel()
           throw new Error(`HTTP ${response.status}`)
         }
         const payload = await readPayload(response, maxBytes)
         if (!payload.trim()) throw new Error('Empty response body')
-        return { url, payload, fetchedAt: now().toISOString() }
+        return { url, payload, ...(osv ? { status: response.status } : {}), fetchedAt: now().toISOString() }
       }
       throw new Error('HTTP 429; retry later')
     } catch (error) {
@@ -97,8 +131,8 @@ export function createHttpClient(options: HttpOptions = {}): HttpClient {
     }
   }
   let pending: Promise<unknown> = Promise.resolve()
-  return url => {
-    const result = pending.then(() => request(url))
+  return (url, query) => {
+    const result = pending.then(() => request(url, query))
     pending = result.catch(() => {})
     return result
   }

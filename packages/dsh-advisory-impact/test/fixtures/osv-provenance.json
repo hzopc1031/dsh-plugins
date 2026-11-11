@@ -1,0 +1,20 @@
+[
+  {
+    "file": "osv-cve-lookups.json",
+    "url": "https://api.osv.dev/v1/vulns/<id>",
+    "originalFile": "osv-cve-lookups.json",
+    "originalFetchTime": "2026-11-11T12:58:41.530+08:00",
+    "timeBasis": "Original research artifact mtime (capture completion); HTTP request start time was not recorded.",
+    "sha256": "f5582116cbead11a14af9d449cd385a270f32eec0db57afcb7202fbf93c5986f",
+    "captureKind": "Recorded API summary, not a complete raw HTTP response. The test replay maps captured fields only; missing affected versions are not evidence of non-impact."
+  },
+  {
+    "file": "osv-queries.json",
+    "url": "https://api.osv.dev/v1/query",
+    "originalFile": "osv-queries.json",
+    "originalFetchTime": "2026-11-11T12:58:08.574+08:00",
+    "timeBasis": "Original research artifact mtime (capture completion); HTTP request start time was not recorded.",
+    "sha256": "3095d4c17146cc13155b09ca293a47dbb5d18fbe8cb37cc5f5291720a4f360f0",
+    "captureKind": "Recorded API summary, not a complete raw HTTP response. The test replay maps captured fields only; missing affected versions are not evidence of non-impact."
+  }
+]

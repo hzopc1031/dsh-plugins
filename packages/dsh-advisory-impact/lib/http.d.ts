@@ -1,4 +1,4 @@
-import type { HttpClient } from './types.js';
+import type { HttpClient, MavenQuery } from './types.js';
 export declare const SOURCES: {
     readonly kafka: "https://kafka.apache.org/community/cve-list/";
     readonly hadoop: "https://hadoop.apache.org/cve_list.html";
@@ -13,7 +13,7 @@ export declare class SourceError extends Error {
     constructor(url: string, message: string, options?: ErrorOptions);
 }
 export declare function assertSourceUrl(url: string): void;
-interface HttpOptions {
+export interface HttpOptions {
     fetch?: typeof globalThis.fetch;
     now?: () => Date;
     sleep?: (ms: number) => Promise<unknown>;
@@ -22,4 +22,8 @@ interface HttpOptions {
 }
 /** Serial anonymous GETs, one bounded 429 retry, no redirects or implicit live requests. */
 export declare function createHttpClient(options?: HttpOptions): HttpClient;
-export {};
+export declare const OSV_QUERY_URL = "https://api.osv.dev/v1/query";
+export declare const OSV_ID: RegExp;
+export declare function osvUrl(id: string): string;
+export declare function assertOsvRequest(url: string, query?: MavenQuery): void;
+export declare function createOsvHttpClient(options?: HttpOptions): HttpClient;

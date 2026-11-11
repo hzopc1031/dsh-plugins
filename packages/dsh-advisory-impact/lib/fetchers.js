@@ -212,8 +212,10 @@ function reference(doc, kind) {
     return { ...meta, kind, title, text, links };
 }
 export function fetchFlinkPointer(http) {
-    return http(SOURCES.flinkPointer).then(doc => reference(doc, 'pointer'));
+    return http(SOURCES.flinkPointer).then(parseFlinkPointer);
 }
 export function fetchDependencyGuidance(http) {
-    return http(SOURCES.guidance).then(doc => reference(doc, 'guidance'));
+    return http(SOURCES.guidance).then(parseDependencyGuidance);
 }
+export const parseFlinkPointer = (doc) => reference(doc, 'pointer');
+export const parseDependencyGuidance = (doc) => reference(doc, 'guidance');

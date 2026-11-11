@@ -8,9 +8,11 @@ export interface SourceMetadata {
 
 export interface SourceDocument extends SourceMetadata {
   payload: string
+  status?: number
 }
 
-export type HttpClient = (url: string) => Promise<SourceDocument>
+export interface MavenQuery { maven: string; version: string }
+export type HttpClient = (url: string, query?: MavenQuery) => Promise<SourceDocument>
 
 // Shared JSON data for the later native panel and report; raw HTML stays in the cache layer.
 export interface Advisory extends SourceMetadata {

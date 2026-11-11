@@ -195,9 +195,12 @@ function reference(doc: SourceDocument, kind: ReferencePage['kind']): ReferenceP
 }
 
 export function fetchFlinkPointer(http: HttpClient): Promise<ReferencePage> {
-  return http(SOURCES.flinkPointer).then(doc => reference(doc, 'pointer'))
+  return http(SOURCES.flinkPointer).then(parseFlinkPointer)
 }
 
 export function fetchDependencyGuidance(http: HttpClient): Promise<ReferencePage> {
-  return http(SOURCES.guidance).then(doc => reference(doc, 'guidance'))
+  return http(SOURCES.guidance).then(parseDependencyGuidance)
 }
+
+export const parseFlinkPointer = (doc: SourceDocument): ReferencePage => reference(doc, 'pointer')
+export const parseDependencyGuidance = (doc: SourceDocument): ReferencePage => reference(doc, 'guidance')

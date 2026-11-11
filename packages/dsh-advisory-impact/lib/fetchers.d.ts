@@ -7,3 +7,5 @@ export declare function parseSuppressions(doc: SourceDocument): SuppressionPage;
 export declare function fetchSuppressions(http: HttpClient): Promise<SuppressionPage>;
 export declare function fetchFlinkPointer(http: HttpClient): Promise<ReferencePage>;
 export declare function fetchDependencyGuidance(http: HttpClient): Promise<ReferencePage>;
+export declare const parseFlinkPointer: (doc: SourceDocument) => ReferencePage;
+export declare const parseDependencyGuidance: (doc: SourceDocument) => ReferencePage;

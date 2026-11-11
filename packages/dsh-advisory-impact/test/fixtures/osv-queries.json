@@ -1,0 +1,105 @@
+[
+  {
+    "query": {
+      "package": {
+        "name": "org.apache.kafka:kafka-clients",
+        "ecosystem": "Maven"
+      },
+      "version": "4.1.0"
+    },
+    "http": 200,
+    "count": 2,
+    "ids": [
+      [
+        "GHSA-28jg-cgg7-j4wc",
+        "Apache Kafka does not validate JWT tokens in its OAUTHBEARER authentication impl",
+        [
+          "BIT-kafka-2026-33557",
+          "CVE-2026-33557"
+        ]
+      ],
+      [
+        "GHSA-5qcv-4rpc-jp93",
+        "Apache Kafka Clients: Kafka Producer Message Corruption and Misrouting via Buffe",
+        [
+          "CVE-2026-35554"
+        ]
+      ]
+    ]
+  },
+  {
+    "query": {
+      "package": {
+        "name": "org.apache.kafka:kafka-clients",
+        "ecosystem": "Maven"
+      },
+      "version": "4.2.0"
+    },
+    "http": 200,
+    "count": 0,
+    "ids": []
+  },
+  {
+    "query": {
+      "package": {
+        "name": "org.apache.kafka:kafka-clients",
+        "ecosystem": "Maven"
+      },
+      "version": "3.7.0"
+    },
+    "http": 200,
+    "count": 4,
+    "ids": [
+      [
+        "GHSA-2x2g-32r7-p4x8",
+        "Apache Kafka Clients: Privilege escalation to filesystem read-access via automat",
+        [
+          "CVE-2024-31141"
+        ]
+      ],
+      [
+        "GHSA-5qcv-4rpc-jp93",
+        "Apache Kafka Clients: Kafka Producer Message Corruption and Misrouting via Buffe",
+        [
+          "CVE-2026-35554"
+        ]
+      ],
+      [
+        "GHSA-vgq5-3255-v292",
+        "Apache Kafka Client Arbitrary File Read and Server Side Request Forgery Vulnerab",
+        [
+          "BIT-kafka-2025-27817",
+          "CVE-2025-27817"
+        ]
+      ],
+      [
+        "GHSA-wf66-mphr-4c4r",
+        "Apache Kafka exposes sensitive information in its DEBUG logs",
+        [
+          "BIT-kafka-2026-33558",
+          "CVE-2026-33558"
+        ]
+      ]
+    ]
+  },
+  {
+    "query": {
+      "package": {
+        "name": "org.apache.hadoop:hadoop-common",
+        "ecosystem": "Maven"
+      },
+      "version": "3.3.6"
+    },
+    "http": 200,
+    "count": 1,
+    "ids": [
+      [
+        "GHSA-f5fw-25gw-5m92",
+        "Apache Hadoop: Temporary File Local Information Disclosure",
+        [
+          "CVE-2024-23454"
+        ]
+      ]
+    ]
+  }
+]

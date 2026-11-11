@@ -6,8 +6,13 @@ export interface SourceMetadata {
 }
 export interface SourceDocument extends SourceMetadata {
     payload: string;
+    status?: number;
 }
-export type HttpClient = (url: string) => Promise<SourceDocument>;
+export interface MavenQuery {
+    maven: string;
+    version: string;
+}
+export type HttpClient = (url: string, query?: MavenQuery) => Promise<SourceDocument>;
 export interface Advisory extends SourceMetadata {
     id: string;
     project: ProjectId;

@@ -7,7 +7,7 @@ const expected = [
   'package.json', 'index.js', 'index.d.ts', 'cordis.patch.yml', 'icon.svg',
   'LICENSE', 'README.md', 'CHANGELOG.md', 'locale/en.json', 'locale/zh.json',
   'docs/decisions.md', 'docs/dsh-api.md',
-  ...['plugin', 'types', 'http', 'fetchers', 'verdicts'].flatMap(name => [`lib/${name}.js`, `lib/${name}.d.ts`]),
+  ...['plugin', 'types', 'http', 'fetchers', 'verdicts', 'local', 'config', 'cache', 'osv', 'evaluate'].flatMap(name => [`lib/${name}.js`, `lib/${name}.d.ts`]),
 ].sort()
 assert.deepEqual(pack.files.map(file => file.path).sort(), expected, 'Unexpected or missing package files')
 const pkg = JSON.parse(readFileSync('package.json', 'utf8'))

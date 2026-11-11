@@ -1,11 +1,14 @@
 import type { Context } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-commands'
 import z from '@deepseek-ai/schemastery'
+import { DEFAULT_WATCH_LIST, resolveWatchList } from './watch.js'
 
 export const name = 'apache-radar'
 export const inject = ['commands']
-export interface Config {}
-export const Config: z<Config> = z.object({})
+export interface Config { watchList?: string[] }
+export const Config: z<Config> = z.object({
+  watchList: z.array(z.string()).default([...DEFAULT_WATCH_LIST]).description('关注项目 id，数组顺序即展示顺序；默认 kafka / hadoop / flink'),
+})
 
 export const HELP = `Apache 社区雷达：本地查看 Apache 官方口径与关注项目动态。
 当前为脚手架，仅支持 /apache-radar 或 /apache-radar help。
@@ -13,7 +16,8 @@ export const HELP = `Apache 社区雷达：本地查看 Apache 官方口径与�
 默认关注 Kafka / Hadoop / Flink；数据工具与周报尚未接通。
 不使用 reporter.apache.org，无需模型调用。`
 
-export function apply(ctx: Context, _config: Config = {}): void {
+export function apply(ctx: Context, config: Config = {}): void {
+  resolveWatchList(config.watchList)
   ctx.effect(() => ctx.commands.register({
     name: 'apache-radar',
     description: '查看本地 Apache 社区雷达帮助',

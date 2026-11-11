@@ -9,7 +9,7 @@ export const SOURCES = {
     releases: 'https://projects.apache.org/json/foundation/releases.json',
     attic: 'https://attic.apache.org/projects.html',
 };
-function object(value) {
+export function object(value) {
     if (!value || typeof value !== 'object' || Array.isArray(value))
         throw new Error('Expected an object');
     return value;
@@ -20,7 +20,7 @@ function entries(value) {
         throw new Error('Missing source entries');
     return result;
 }
-function text(value) {
+export function text(value) {
     if (typeof value !== 'string' || !value.trim())
         throw new Error('Expected a nonempty string');
     return value;
@@ -40,7 +40,7 @@ function count(value) {
         throw new Error('Expected a source count');
     return value;
 }
-function link(value) {
+export function link(value) {
     const url = new URL(text(value));
     if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password)
         throw new Error('Invalid source link');
@@ -143,7 +143,7 @@ export function fetchReleases(http) {
         return { project, version: text(version), date, url: SOURCES.releases };
     })));
 }
-function elements(node, tag) {
+export function elements(node, tag) {
     const matches = 'tagName' in node && node.tagName === tag ? [node] : [];
     return matches.concat('childNodes' in node ? node.childNodes.flatMap(child => elements(child, tag)) : []);
 }
@@ -152,7 +152,7 @@ function content(node) {
         return node.value;
     return 'childNodes' in node ? node.childNodes.map(content).join('') : '';
 }
-const clean = (node) => content(node).replace(/\s+/g, ' ').trim();
+export const clean = (node) => content(node).replace(/\s+/g, ' ').trim();
 export async function fetchAtticProjects(http) {
     const response = await http(SOURCES.attic);
     try {

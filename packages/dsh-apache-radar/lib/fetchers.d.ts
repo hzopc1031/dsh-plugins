@@ -1,3 +1,4 @@
+import { type DefaultTreeAdapterMap } from 'parse5';
 import type { HttpClient } from './http.js';
 export declare const SOURCES: {
     readonly chooser: "https://projects.apache.org/json/foundation/chooser.json";
@@ -53,6 +54,9 @@ export interface AtticProject {
     established: string;
     retired: string;
 }
+export declare function object(value: unknown): Record<string, unknown>;
+export declare function text(value: unknown): string;
+export declare function link(value: unknown): string;
 export declare function fetchChooser(http: HttpClient): Promise<SourceResult<{
     projects: Project[];
     categories: string[];
@@ -81,4 +85,9 @@ export declare function fetchReleases(http: HttpClient): Promise<SourceResult<{
     date: string;
     url: "https://projects.apache.org/json/foundation/releases.json";
 }[]>>;
+type Node = DefaultTreeAdapterMap['node'];
+type Element = DefaultTreeAdapterMap['element'];
+export declare function elements(node: Node, tag: string): Element[];
+export declare const clean: (node: Node) => string;
 export declare function fetchAtticProjects(http: HttpClient): Promise<SourceResult<AtticProject[]>>;
+export {};

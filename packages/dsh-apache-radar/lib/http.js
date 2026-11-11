@@ -1,7 +1,7 @@
 import { setTimeout as delay } from 'node:timers/promises';
 export const USER_AGENT = 'dsh-apache-radar/0.1.0 (+https://github.com/hzopc1031/dsh-plugins)';
 const hosts = new Set(['projects.apache.org', 'whimsy.apache.org', 'attic.apache.org',
-    'incubator.apache.org', 'svn.apache.org', 'issues.apache.org', 'cwiki.apache.org',
+    'incubator.apache.org', 'kafka.apache.org', 'svn.apache.org', 'issues.apache.org', 'cwiki.apache.org',
     'release-catalog.apache.org', 'www.apache.org', 'apache.org']);
 export function publicSourceUrl(input) {
     const url = new URL(input);

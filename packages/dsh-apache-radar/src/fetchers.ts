@@ -28,7 +28,7 @@ export interface AtticProject {
   description: string; established: string; retired: string
 }
 
-function object(value: unknown): Record<string, unknown> {
+export function object(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Expected an object')
   return value as Record<string, unknown>
 }
@@ -37,7 +37,7 @@ function entries(value: unknown): [string, unknown][] {
   if (!result.length) throw new Error('Missing source entries')
   return result
 }
-function text(value: unknown): string {
+export function text(value: unknown): string {
   if (typeof value !== 'string' || !value.trim()) throw new Error('Expected a nonempty string')
   return value
 }
@@ -53,7 +53,7 @@ function count(value: unknown): number {
   if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 0) throw new Error('Expected a source count')
   return value
 }
-function link(value: unknown): string {
+export function link(value: unknown): string {
   const url = new URL(text(value))
   if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password) throw new Error('Invalid source link')
   return url.href
@@ -157,7 +157,7 @@ export function fetchReleases(http: HttpClient) {
 
 type Node = DefaultTreeAdapterMap['node']
 type Element = DefaultTreeAdapterMap['element']
-function elements(node: Node, tag: string): Element[] {
+export function elements(node: Node, tag: string): Element[] {
   const matches = 'tagName' in node && node.tagName === tag ? [node] : []
   return matches.concat('childNodes' in node ? node.childNodes.flatMap(child => elements(child, tag)) : [])
 }
@@ -165,7 +165,7 @@ function content(node: Node): string {
   if (node.nodeName === '#text' && 'value' in node) return node.value
   return 'childNodes' in node ? node.childNodes.map(content).join('') : ''
 }
-const clean = (node: Node) => content(node).replace(/\s+/g, ' ').trim()
+export const clean = (node: Node) => content(node).replace(/\s+/g, ' ').trim()
 
 export async function fetchAtticProjects(http: HttpClient): Promise<SourceResult<AtticProject[]>> {
   const response = await http(SOURCES.attic)

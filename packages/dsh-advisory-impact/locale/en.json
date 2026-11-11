@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Official advisory impact",
+    "description": "Check pinned running versions against official Kafka, Hadoop and Flink advisories; Chinese reports cite sources and fetch times. OSV is secondary. Includes a native DSH impact panel; no model key required."
+  }
+}

@@ -21,6 +21,7 @@
 | 本地票据核对 | `dsh-invoice-gate`（未发布 npm / not published to npm） | 本地票据与台账核对、差异及证据包；不做 OCR／验真，模型不改金额（`/invoice-gate`）/ Local invoice reconciliation and evidence packs | [README](packages/dsh-invoice-gate/README.md) |
 | HTML 演示稿导出 | `dsh-html-deck-export`（未发布 npm / not published to npm） | 本地 HTML → 16:9 图片版 PPTX、讲稿备注与逐页报告；HTML 保留为源文件，不自动上传（`/html-deck-export`）/ Local image PPTX export with notes and per-page reports | [README](packages/dsh-html-deck-export/README.md) |
 | 内容证据工作台 | `dsh-content-evidence`（未发布 npm / not published to npm） | 材料与证据追踪、四平台草稿、复核、本地导出；不自动发布 / Evidence tracing, four-platform drafts, review and local export; never auto-publishes | [README](packages/dsh-content-evidence/README.md) |
+| 官方公告影响核对 | `dsh-advisory-impact`（未发布 npm / not published to npm） | 按运行版本核对 Kafka/Hadoop/Flink 官方公告，原生面板显示三态、来源与时间 / Official-first version checks in a native panel | [README](packages/dsh-advisory-impact/README.md) |
 
 > 心跳插件的 npm 包名是 `dsh-heartbeat-monitor`：`dsh-heartbeat` 已被一个无关的包占用。
 > The heartbeat plugin is published as `dsh-heartbeat-monitor` because `dsh-heartbeat` is an unrelated package.
@@ -77,11 +78,14 @@ dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packag
 dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-invoice-gate"
 dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-html-deck-export"
 dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-content-evidence"
+dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-advisory-impact"
 ```
 
 `dsh-invoice-gate` 的 0.1.0 尚未发布到 npm。它声明 DSH `>=0.2.1-rc.5 <0.3.0`，本机加载检查使用 `0.2.2-rc.1`。/ Invoice Gate is unreleased; live loading was checked with `0.2.2-rc.1`. ExcelJS/uuid 的修复需在消费端 profile 根级应用 override，见 [依赖审计与安装限制](packages/dsh-invoice-gate/README.md#安装后的依赖审计--consumer-override-limit)；本包根目录的零发现不代表整个宿主依赖图无发现。
 
 `dsh-content-evidence` 尚未发布到 npm。本地导出支持 Linux / macOS 的目录相对 I/O（无需 procfs）；已在 Linux 禁用两种 fd 路径验证，未实测原生 macOS。Windows 仍安全拒绝导出。也可安装到 web profile。重启 DSH 后打开侧栏「内容证据」。数据默认保存在 `$DSH_HOME/content-evidence` 或 `~/.dsh/content-evidence`，卸载保留数据；导出仅写本机目录，插件绝不自动发布。/ Unreleased. Local export supports Linux/macOS directory-relative I/O without procfs; verified on Linux with both fd paths disabled. Native macOS and Windows were not executed for export; Windows still safely refuses export. Restart DSH and open Content evidence in the sidebar. Data defaults to `$DSH_HOME/content-evidence` or `~/.dsh/content-evidence` and survives uninstall. Exports stay local; nothing is published automatically.
+
+`dsh-advisory-impact` 尚未发布到 npm。其原生面板已在 DSH 0.2.2-rc.1 Web 实测，无需模型 key。/ Unreleased. The native panel was verified on DSH 0.2.2-rc.1 Web and does not require a model key.
 
 同样的 `github:...` 地址也可以填进界面的「添加插件」。把 `main` 换成某个提交哈希即可固定版本。
 

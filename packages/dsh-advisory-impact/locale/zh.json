@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "官方公告影响核对",
+    "description": "按用户填写的运行版本核对 Kafka、Hadoop、Flink 官方公告，生成带来源时间的中文报告；OSV 仅作第二来源。提供 DSH 原生公告影响面板，无需模型 key。"
+  }
+}

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.1 (2026-11-11)
+
+- 修复 DSH 0.2.2-rc.1 加载兼容声明；Linux 加载验证，Windows / Electron 功能未实测。
+
+
 ## 0.1.0 — 2026-11-10
 
 - 新增 Windows 人类命令 `/dll-check <EXE或DLL路径> [--depth 1–3]`，精确面向 DSH 0.2.1-rc.5（b830ec9）；不注册模型工具或创建模型消息。

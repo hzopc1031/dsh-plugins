@@ -1,10 +1,10 @@
 # dsh-instruction-conflicts — 指令冲突解释器
 
-当前源码版本 **0.2.0**（尚未发布本次版本到 npm）。重复命令可复用相同日志对象及 assembly 证据下的 canonical fold 结果；surface 替换、投影、正文、其他日志或 assembly 变化会使缓存失效。文件 resolve/stat 每次重读，磁盘状态不缓存。默认摘要最多 20 个来源、10 项冲突、20 段正文，每段最多 3000 字符；json/history-json 获取完整结构，history 获取完整历史正文。完整证据与冲突判断不因显示裁剪而删除。engines.dsh 与精确 rc.5 peer 对齐为 0.2.1-rc.5。
+当前源码版本 **0.2.1**（尚未发布本次版本到 npm）。重复命令可复用相同日志对象及 assembly 证据下的 canonical fold 结果；surface 替换、投影、正文、其他日志或 assembly 变化会使缓存失效。文件 resolve/stat 每次重读，磁盘状态不缓存。默认摘要最多 20 个来源、10 项冲突、20 段正文，每段最多 3000 字符；json/history-json 获取完整结构，history 获取完整历史正文。完整证据与冲突判断不因显示裁剪而删除。engines.dsh 与 DSH peers 声明 `>=0.2.1-rc.5 <0.3.0`；开发依赖保留精确版本。
 
 本次只完成 Windows 上的 typecheck、单元/rc.5 headless 集成、browser factory 的 jsdom 检查及 verify-pack；未安装到真实 DSH、未做 Electron 目视验收。最新批次记录见仓库 [OPTIMIZE_REPORT.md](../../OPTIMIZE_REPORT.md)。
 
-版本 0.2.0，面向桌面 DSH 0.2.1-rc.5。MIT。
+版本 0.2.1，声明 DSH `>=0.2.1-rc.5 <0.3.0`，本次核对 0.2.2-rc.1。MIT。
 
 把实际注入的规则正文、历史版本与当前上下文放在一起看：例如项目 AGENTS.md 的“禁止全局安装”与技能正文的“必须全局安装依赖”，以两列显示来源、角色、seq、行号和原句，标为**疑似冲突**。
 
@@ -127,3 +127,5 @@ npm run verify-pack
 ```
 
 `npm test` 会重建需提交的 lib/。以上通过不等于 Electron 桌面通过；真实截图、剪贴板、焦点/布局及桌面安装仍需人工验收。
+
+本次 0.2.2-rc.1 兼容结论与 API 依据见[兼容矩阵](../../docs/compat-matrix.md)。本次在 Linux 实际加载；Windows / Electron 功能未实机验证，历史 rc.5 测试记录不代表本次加载过该版本。

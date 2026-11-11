@@ -1,3 +1,4 @@
+import { intranetConfig } from './intranet-http.js';
 import { CommandDefinitionId } from '@deepseek-ai/dsh-commands';
 import z from '@deepseek-ai/schemastery';
 import { randomUUID } from 'node:crypto';
@@ -14,6 +15,7 @@ import { SafeText } from './safety.js';
 export const name = 'github-triage';
 export const inject = ['commands', 'storageDomain'];
 export const Config = z.object({
+    ...intranetConfig,
     repositories: z.array(z.object({
         repo: z.string().required(),
         business: z.string().default('').description('项目业务说明：核心功能、高风险模块、优先级原则；与文件内容一同交给 AI'),
@@ -99,7 +101,7 @@ export async function apply(ctx, input = {}) {
     const perform = async (repo, limit, scheduled, signal, scan = {}) => {
         if (Date.now() < (retryAt.get(repo.repo) ?? 0))
             throw new GithubError(429, retryAt.get(repo.repo));
-        const client = new Github({ safe });
+        const client = new Github({ safe, network: input });
         try {
             const next = structuredClone(state), now = Date.now();
             const report = await run(client, repo, next, { ...scan, limit, now, model: dshModel(ctx, config), modelRoute: JSON.stringify([config.modelEnabled, config.provider, config.model]), modelNote: modelWarning(ctx, config), signal });

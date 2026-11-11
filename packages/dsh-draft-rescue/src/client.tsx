@@ -84,7 +84,14 @@ export function DraftRescue({ sessionId, useInput, inputActions, useSessions, us
   function append(draft: Draft) {
     try {
       requireVersion(boot())
-      const prepared = prepareAppend(draft, live.current)
+      let currentSnapshot: unknown
+      if ((boot() as { release?: { version?: string } } | undefined)?.release?.version === '0.2.2-rc.1') {
+        inputActions.persistDraft()
+        const raw = window.localStorage.getItem('dsh.conversation.' + sessionId)
+        currentSnapshot = raw ? JSON.parse(raw).draft : undefined
+        if (live.current.draft && currentSnapshot === undefined) throw new Error('无法核对当前引用块位置，请复制原文后粘贴。')
+      }
+      const prepared = prepareAppend(draft, live.current, currentSnapshot)
       if (!inputActions.insertText(prepared.text, prepared.span)) throw new Error('输入框已变化或暂不可编辑，请重试。')
       setNotice('已追加到当前输入框，尚未发送。')
     } catch (error) { setNotice(error instanceof Error ? error.message : '追加失败。') }

@@ -120,3 +120,24 @@ test('corrupt/future cache is surfaced/refetched, and symlink cache files are ne
   assert.equal(await readFile(victim, 'utf8'), 'keep me')
   assert.equal(s.count(), 4)
 })
+
+test('snapshot round trip validates before writes, preserves source time and works in offline mode', async t => {
+  const original = await setup(t)
+  await original.cache.load(SOURCES.kafka, parse, 0)
+  const snapshot = await original.cache.exportSnapshot()
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'advisory-import-'))
+  t.after(() => rm(dir, { recursive: true, force: true }))
+  const cache = new SourceCache(dir, async () => assert.fail('offline must never fetch'), () => new Date(AT), true)
+  await cache.importSnapshot(snapshot)
+  const result = await cache.load(SOURCES.kafka, parse, 0, true)
+  assert.equal(result.state, 'stale')
+  assert.ok(result.data.advisories.length)
+  assert.equal(result.fetchedAt, AT)
+  assert.match(result.cacheError, /本地快照/)
+  const before = await cache.exportSnapshot()
+  const entry = JSON.parse(snapshot)[0]
+  for (const bad of ['../escape', '[]', JSON.stringify([entry, entry]), JSON.stringify([entry, { ...entry, url: 'file:///etc/passwd' }])]) {
+    await assert.rejects(cache.importSnapshot(bad))
+    assert.equal(await cache.exportSnapshot(), before)
+  }
+})

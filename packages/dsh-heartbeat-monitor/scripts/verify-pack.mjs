@@ -1,4 +1,4 @@
-﻿// Pack to a temp dir and check the exact file list: no tests, sources, secrets or temp files.
+// Pack to a temp dir and check the exact file list: no tests, sources, secrets or temp files.
 import { execFileSync } from 'node:child_process'
 const out = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], { encoding: 'utf8', shell: process.platform === 'win32' }))
 const files = out[0].files.map(f => f.path).sort()

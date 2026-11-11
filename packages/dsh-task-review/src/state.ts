@@ -1,4 +1,4 @@
-﻿import { appendPluginRecord, pluginRecordOf, type Session, type SessionEvent } from '@deepseek-ai/dsh-session'
+import { appendPluginRecord, pluginRecordOf, type Session, type SessionEvent } from '@deepseek-ai/dsh-session'
 import { argumentSummary, defaults, pathsFrom, text, type Call, type Change, type Segment } from './core.js'
 import { callStatus } from './bash.js'
 

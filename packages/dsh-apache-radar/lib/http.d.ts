@@ -1,3 +1,4 @@
+import { createIntranetHttp, type IntranetSettings } from './intranet-http.js';
 export interface SourceResponse {
     url: string;
     fetchedAt: string;
@@ -5,7 +6,7 @@ export interface SourceResponse {
     status?: number;
 }
 export type HttpClient = (url: string) => Promise<SourceResponse>;
-export declare const USER_AGENT = "dsh-apache-radar/0.1.0 (+https://github.com/hzopc1031/dsh-plugins)";
+export declare const USER_AGENT = "dsh-apache-radar/0.1.1 (+https://github.com/hzopc1031/dsh-plugins)";
 export declare function publicSourceUrl(input: string): string;
 export declare class HttpError extends Error {
     readonly url: string;
@@ -18,4 +19,4 @@ export declare function createHttpClient(options?: {
     now?: () => Date;
     timeoutMs?: number;
     sleep?: (ms: number) => Promise<unknown>;
-}): HttpClient;
+} & IntranetSettings): HttpClient & Pick<ReturnType<typeof createIntranetHttp>, 'close' | 'diagnose'>;

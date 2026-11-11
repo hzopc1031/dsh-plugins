@@ -14,8 +14,8 @@ export function abortable<T>(work: Promise<T>, signal: AbortSignal): Promise<T> 
 
 export function requireDesktop(boot: unknown, location: Pick<Location, 'protocol' | 'hostname'>): void {
   const version = (boot as { release?: { version?: unknown } } | undefined)?.release?.version
-  if (version !== '0.2.1-rc.5' || location.protocol !== 'dsh-app:' || location.hostname !== 'app') {
-    throw new Error('仅支持 DSH 0.2.1-rc.5 桌面页面。')
+  if (!['0.2.1-rc.5', '0.2.2-rc.1'].includes(String(version)) || location.protocol !== 'dsh-app:' || location.hostname !== 'app') {
+    throw new Error(`仅支持已核对的 DSH 0.2.1-rc.5 / 0.2.2-rc.1 桌面页面（dsh-app://app），当前 ${typeof version === 'string' ? version : '未知'}。`)
   }
 }
 

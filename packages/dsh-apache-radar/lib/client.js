@@ -55,6 +55,7 @@ const projectName = (id) => ({ kafka: 'Kafka', hadoop: 'Hadoop', flink: 'Flink' 
 const time = (value) => value ? new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Singapore',
     year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(value)) : '尚未成功抓取';
 const statusName = (value) => ({ ok: '已更新', cached: '缓存', stale: '上次成功缓存', failed: '抓取失败', unavailable: '暂无来源' })[value] ?? value;
+const sourceError = (error) => error && /fetch failed|NETWORK_ERROR|ECONN|ETIMEDOUT|ENOTFOUND|UND_ERR_|CERT|SIGNATURE|ISSUER|HTTP[ _]\d{3}/i.test(error) ? '来源不可用 · 见网络诊断' : error;
 const labels = { code: { copyLabel: '复制', copiedLabel: '已复制' }, footnotes: '注释' };
 function securityOverview(report) {
     const affected = report.projects.filter(p => p.advisories.some(a => a.verdict === 'affected'));
@@ -104,13 +105,13 @@ function SourceChip({ source }) {
         source.cacheStatus === 'stale' && react_1.default.createElement(Badge, { tone: "warn" }, "\u65E7\u7F13\u5B58"),
         source.cacheError && react_1.default.createElement("details", { className: "ar-source-error" },
             react_1.default.createElement("summary", null, "\u6293\u53D6\u5931\u8D25 \u00B7 \u67E5\u770B\u539F\u56E0"),
-            react_1.default.createElement("span", { className: "ar-error-text" }, source.cacheError)));
+            react_1.default.createElement("span", { className: "ar-error-text" }, sourceError(source.cacheError))));
 }
 function CountCard({ row, title, featured = false }) {
     return react_1.default.createElement("article", { className: `ar-card ar-metric ${featured ? 'ar-featured' : ''}` },
         react_1.default.createElement("div", { className: "ar-eyebrow" }, title ?? row.label),
         react_1.default.createElement("strong", { className: "ar-number" }, row.status === 'ok' ? row.value : '—'),
-        react_1.default.createElement("p", { className: "ar-note" }, row.status === 'error' ? row.error : row.note),
+        react_1.default.createElement("p", { className: "ar-note" }, row.status === 'error' ? sourceError(row.error) : row.note),
         row.sources.map((source, i) => react_1.default.createElement(SourceChip, { key: i, source: source })));
 }
 function Overview({ data, jump }) {
@@ -135,7 +136,7 @@ function Overview({ data, jump }) {
                 react_1.default.createElement("div", { className: "ar-retired" }, counts.retired.map(row => react_1.default.createElement("div", { key: row.id, className: "ar-retired-cell" },
                     react_1.default.createElement("span", null, ({ 'retired-whimsy': 'Whimsy 委员会', 'retired-projects': 'Projects 委员会', 'attic-pmcs': 'Attic PMC', 'attic-subprojects': 'Attic 子项目' })[row.id] ?? row.label),
                     react_1.default.createElement("strong", null, row.status === 'ok' ? row.value : '—'),
-                    row.status === 'error' && react_1.default.createElement("p", { className: "ar-error-text" }, row.error),
+                    row.status === 'error' && react_1.default.createElement("p", { className: "ar-error-text" }, sourceError(row.error)),
                     row.sources.map((s, i) => react_1.default.createElement(SourceChip, { key: i, source: s }))))),
                 mismatches.map(c => react_1.default.createElement("details", { className: "ar-difference", key: c.id, open: c.id === 'retired-whimsy-attic' },
                     react_1.default.createElement("summary", null,
@@ -144,7 +145,7 @@ function Overview({ data, jump }) {
                         " \u00B7 ",
                         c.status === 'error' ? '无法核对' : '存在差异'),
                     react_1.default.createElement("p", null, c.note),
-                    c.status === 'error' ? react_1.default.createElement("p", null, c.error) : react_1.default.createElement(react_1.default.Fragment, null,
+                    c.status === 'error' ? react_1.default.createElement("p", null, sourceError(c.error)) : react_1.default.createElement(react_1.default.Fragment, null,
                         react_1.default.createElement("p", null,
                             "\u4EC5\u5DE6\u4FA7\uFF1A",
                             c.onlyLeft.map(m => `${m.name} (${m.id})`).join('、') || '无'),
@@ -157,7 +158,7 @@ function Overview({ data, jump }) {
                     react_1.default.createElement("h3", null, "\u5B98\u65B9\u9886\u57DF\u6807\u7B7E"),
                     react_1.default.createElement(Badge, null, "\u53EF\u591A\u9009\u5F52\u7C7B")),
                 react_1.default.createElement("p", { className: "ar-muted" }, "\u6CBF\u7528 chooser \u7684\u6807\u7B7E\uFF0C\u4E00\u4E2A\u9879\u76EE\u53EF\u4EE5\u5C5E\u4E8E\u591A\u4E2A\u9886\u57DF\u3002"),
-                counts.categories.status === 'error' ? react_1.default.createElement("p", { className: "ar-error-text" }, counts.categories.error) : react_1.default.createElement("div", { className: "ar-categories" }, counts.categories.rows.map(row => react_1.default.createElement("details", { key: row.id, className: "ar-category" },
+                counts.categories.status === 'error' ? react_1.default.createElement("p", { className: "ar-error-text" }, sourceError(counts.categories.error)) : react_1.default.createElement("div", { className: "ar-categories" }, counts.categories.rows.map(row => react_1.default.createElement("details", { key: row.id, className: "ar-category" },
                     react_1.default.createElement("summary", null,
                         row.label,
                         react_1.default.createElement("b", null, row.status === 'ok' ? row.value : '—')),
@@ -227,7 +228,7 @@ function Sources({ sources }) {
             react_1.default.createElement("p", { className: "ar-footnote" },
                 time(s.fetchedAt),
                 s.sourceTimestamp ? ` · 源时间 ${s.sourceTimestamp}` : ''),
-            s.error && react_1.default.createElement("p", { className: "ar-error-text" }, s.error),
+            s.error && react_1.default.createElement("p", { className: "ar-error-text" }, sourceError(s.error)),
             s.warnings.map((w, n) => react_1.default.createElement("p", { className: "ar-footnote", key: n }, w))))));
 }
 function Watch({ data, mutate, busy, focusProject }) {
@@ -309,7 +310,7 @@ function SecurityCitation({ source }) {
             source.sourceTimestamp),
         source.error && react_1.default.createElement("details", { className: "ar-source-error" },
             react_1.default.createElement("summary", null, "\u6765\u6E90\u5931\u8D25 \u00B7 \u67E5\u770B\u539F\u56E0"),
-            react_1.default.createElement("span", { className: "ar-error-text" }, source.error)));
+            react_1.default.createElement("span", { className: "ar-error-text" }, sourceError(source.error))));
 }
 function SecurityCard({ report, jump }) {
     const summary = securityOverview(report);
@@ -342,8 +343,8 @@ function SecurityCard({ report, jump }) {
                     p.source.sourceTimestamp),
                 p.source.error && react_1.default.createElement("details", { className: "ar-source-error" },
                     react_1.default.createElement("summary", null, "\u6765\u6E90\u5931\u8D25"),
-                    react_1.default.createElement("span", null, p.source.error))),
-            p.error && react_1.default.createElement("p", { className: "ar-error-text" }, p.error))));
+                    react_1.default.createElement("span", null, sourceError(p.source.error)))),
+            p.error && react_1.default.createElement("p", { className: "ar-error-text" }, sourceError(p.error)))));
 }
 function SecurityStrip({ project, security, report, mutate, busy, expanded = false }) {
     const [version, setVersion] = (0, react_1.useState)(security?.pin ?? '');
@@ -366,7 +367,7 @@ function SecurityStrip({ project, security, report, mutate, busy, expanded = fal
             react_1.default.createElement("button", { disabled: busy, className: "ar-primary" }, "\u4FDD\u5B58\u7248\u672C\u5E76\u5224\u65AD"),
             security?.pin && react_1.default.createElement("button", { type: "button", disabled: busy, onClick: () => mutate('pin', project, { version: '' }) }, "\u6E05\u9664")),
         react_1.default.createElement(SecurityCitation, { source: security?.source }),
-        security?.error && react_1.default.createElement("p", { className: "ar-error-text" }, security.error),
+        security?.error && react_1.default.createElement("p", { className: "ar-error-text" }, sourceError(security.error)),
         security?.notices.map(n => react_1.default.createElement("p", { className: "ar-footnote", key: n }, n)),
         project === 'flink' && react_1.default.createElement(SecurityCitation, { source: report?.flinkPointer }),
         react_1.default.createElement("details", { className: "ar-advisories", open: expanded || undefined },
@@ -404,7 +405,7 @@ function SecurityStrip({ project, security, report, mutate, busy, expanded = fal
                         react_1.default.createElement(SecurityCitation, { source: a.osv }),
                         a.osv.status === 'failed' && react_1.default.createElement("button", { disabled: busy, onClick: () => mutate('osv', project, { cve: a.id }) }, "\u91CD\u8BD5 OSV"),
                         a.osv.data?.record && react_1.default.createElement("pre", null, JSON.stringify(a.osv.data.record.affected, null, 2)))))),
-            !security?.advisories.length && react_1.default.createElement("p", { className: "ar-empty-inline" }, security?.error ?? '尚未采集官方列表，请刷新；不能据此认定没有公告。'),
+            !security?.advisories.length && react_1.default.createElement("p", { className: "ar-empty-inline" }, sourceError(security?.error) ?? '尚未采集官方列表，请刷新；不能据此认定没有公告。'),
             project === 'kafka' && react_1.default.createElement("details", { className: "ar-suppressions" },
                 react_1.default.createElement("summary", null, "\u626B\u63CF\u5668\u62A5\u4E86\uFF0C\u4F46\u5B98\u65B9\u8BF4\u660E\u4E0D\u9002\u7528 \u00B7 \u5355\u72EC\u67E5\u770B"),
                 react_1.default.createElement("p", { className: "ar-footnote" }, "\u5B98\u65B9 suppressions \u4E0D\u8BA1\u4E3A\u5F71\u54CD Kafka \u7684\u516C\u544A\u3002"),
@@ -501,6 +502,7 @@ function Dashboard() {
     const [focusProject, setFocusProject] = (0, react_1.useState)();
     const [busy, setBusy] = (0, react_1.useState)(true);
     const [error, setError] = (0, react_1.useState)('');
+    const [diagnosis, setDiagnosis] = (0, react_1.useState)();
     const generation = (0, react_1.useRef)(0);
     async function request(action = 'read', project, target = directory, extra) {
         const version = ++generation.current;
@@ -513,6 +515,10 @@ function Dashboard() {
                 throw new Error(result.error ?? `HTTP ${response.status}`);
             if (generation.current !== version)
                 return;
+            if (action === 'diagnose') {
+                setDiagnosis(result);
+                return;
+            }
             setData(result);
             if (result.directory) {
                 setDirectory(result.directory);
@@ -530,6 +536,22 @@ function Dashboard() {
         finally {
             if (generation.current === version)
                 setBusy(false);
+        }
+    }
+    async function exportSnapshot() {
+        setError('');
+        try {
+            const response = await fetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ directory: data.directory, action: 'export' }) });
+            if (!response.ok)
+                throw new Error((await response.json()).error);
+            const url = URL.createObjectURL(await response.blob()), anchor = document.createElement('a');
+            anchor.href = url;
+            anchor.download = 'apache-radar-snapshot.json';
+            anchor.click();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+        catch (error) {
+            setError(error instanceof Error ? error.message : '快照导出失败');
         }
     }
     (0, react_1.useEffect)(() => { void request(); return () => { generation.current++; }; }, []);
@@ -572,6 +594,26 @@ function Dashboard() {
                     react_1.default.createElement("datalist", { id: "ar-directories" }, data.directories.map(d => react_1.default.createElement("option", { value: d, key: d }))),
                     react_1.default.createElement("button", { disabled: busy }, "\u6253\u5F00")),
                 react_1.default.createElement("div", { className: "ar-actions" },
+                    react_1.default.createElement("button", { disabled: busy || !data.directory, onClick: () => void request('diagnose') }, "\u7F51\u7EDC\u8BCA\u65AD"),
+                    react_1.default.createElement("button", { disabled: busy || !data.directory, onClick: () => void exportSnapshot() }, "\u5BFC\u51FA\u5FEB\u7167"),
+                    react_1.default.createElement("label", null,
+                        "\u5BFC\u5165\u5FEB\u7167 ",
+                        react_1.default.createElement("input", { type: "file", accept: "application/json,.json", disabled: busy || !data.directory, style: { maxWidth: 170 }, onChange: async (e) => {
+                                const file = e.target.files?.[0];
+                                e.target.value = '';
+                                if (!file)
+                                    return;
+                                if (file.size > 32 * 1024 * 1024) {
+                                    setError('快照超过 32 MiB');
+                                    return;
+                                }
+                                try {
+                                    await request('import', undefined, data.directory, { snapshot: await file.text() });
+                                }
+                                catch {
+                                    setError('无法读取快照文件');
+                                }
+                            } })),
                     react_1.default.createElement("span", { className: "ar-last" },
                         "\u4E0A\u6B21\u91C7\u96C6 ",
                         time(data.collectedAt)),
@@ -589,7 +631,23 @@ function Dashboard() {
                     " ",
                     ready ? '仍保留当前画面中的上次数据。' : ''),
                 react_1.default.createElement("button", { disabled: busy, onClick: () => void request('read') }, "\u91CD\u8BD5\u8BFB\u53D6")),
-            (stale || failed) && react_1.default.createElement("div", { className: "ar-notice warn", role: "status" },
+            data.localSnapshot && react_1.default.createElement("div", { className: "ar-notice warn", role: "status" },
+                react_1.default.createElement("strong", null, "\u672C\u5730\u5FEB\u7167\uFF08\u5BFC\u5165\uFF09"),
+                react_1.default.createElement("span", null, "\u5305\u542B\u5BFC\u5165\u6570\u636E\uFF0C\u975E\u5B9E\u65F6\u5B98\u65B9\u6293\u53D6\uFF1B\u8BF7\u6838\u5BF9\u6765\u6E90\u65F6\u95F4\u3002")),
+            diagnosis !== undefined && react_1.default.createElement("div", { className: "ar-card ar-section", role: "status" },
+                react_1.default.createElement("strong", null, "\u7F51\u7EDC\u8BCA\u65AD"),
+                react_1.default.createElement("pre", { style: { whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' } }, JSON.stringify(diagnosis, null, 2))),
+            !!data.diagnostics?.length && react_1.default.createElement("div", { className: "ar-notice warn", role: "status" },
+                react_1.default.createElement("strong", null, "\u7F51\u7EDC\u8BCA\u65AD \u00B7 \u6765\u6E90\u83B7\u53D6\u5931\u8D25"),
+                react_1.default.createElement("div", null, data.diagnostics.map(d => react_1.default.createElement("p", { key: d.code },
+                    react_1.default.createElement("b", null,
+                        d.code,
+                        " \u00B7 ",
+                        d.count,
+                        " \u4E2A\u6765\u6E90"),
+                    react_1.default.createElement("br", null),
+                    d.hintZh)))),
+            (!data.diagnostics?.length && (stale || failed)) && react_1.default.createElement("div", { className: "ar-notice warn", role: "status" },
                 react_1.default.createElement("strong", null, stale ? '正在显示上次成功缓存' : '部分来源未能取得数据'),
                 react_1.default.createElement("span", null,
                     stale ? '数据已过期或刷新失败；请核对每个来源的时间。' : '失败不代表没有动态。',

@@ -1,5 +1,11 @@
 # 更新记录
 
+## 0.2.1 (2026-11-11)
+
+- 修复 DSH 0.2.2-rc.1 加载兼容声明；Linux 加载验证，Windows / Electron 功能未实测。
+- 增加插件级 HTTP 代理、公司 CA、具名网络原因与中文排查提示；默认沿用宿主 fetch。
+
+
 ## 0.2.0 · 2026-11-11
 
 - 新增可选 localRepoPath / localRef 与 add --local、local / --clear 命令。固定 argv、shell:false 的只读 Git 白名单，限制时间、取消与输出；对照本地提交快照、文件/函数片段、修复提交、提交包含关系和完整 patch-id，模型输出 localApplicability / localReason。

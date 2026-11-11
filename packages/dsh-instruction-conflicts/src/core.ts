@@ -1,4 +1,4 @@
-﻿import { createHash } from 'node:crypto'
+import { createHash } from 'node:crypto'
 
 export type Presence = 'yes' | 'no' | 'unknown' | 'not-applicable'
 export type Category = 'project' | 'global' | 'runtime' | 'skill' | 'other'

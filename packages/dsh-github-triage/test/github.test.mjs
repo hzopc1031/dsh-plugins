@@ -105,3 +105,10 @@ for(const scenario of ['incremental','full issues','full prs','full both','merge
   const expected=scenario==='incremental'?['repo:o/r is:issue is:open']:scenario==='merged fix PR'?['repo:o/r is:pr is:merged "#42"']:scenario==='full both'?['repo:o/r is:issue','repo:o/r is:pr']:['repo:o/r is:'+(scenario==='full issues'?'issue':'pr')]
   assert.deepEqual(queries,expected)
 })
+test('HTTP failures retain named status codes in the user-visible message', () => {
+  for (const status of [403, 429, 503]) {
+    const error = new GithubError(status)
+    assert.equal(error.code, 'HTTP_' + status)
+    assert.match(error.message, new RegExp('HTTP ' + status))
+  }
+})

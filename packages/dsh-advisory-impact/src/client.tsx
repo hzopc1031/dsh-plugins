@@ -7,6 +7,7 @@ import type { Settings } from './config.js'
 export const name = 'advisory-impact'
 export const inject = ['slots']
 declare const PANEL_CSS: string
+const sourceError = (error?: string) => error && /fetch failed|NETWORK_ERROR|ECONN|ETIMEDOUT|ENOTFOUND|UND_ERR_|CERT|SIGNATURE|ISSUER|HTTP[ _]\d{3}/i.test(error) ? '来源不可用 · 见网络诊断' : error
 const title = (id: string) => ({ kafka: 'Kafka', hadoop: 'Hadoop', flink: 'Flink' })[id] ?? id
 const safeUrl = (url: string) => (/^https?:\/\//.test(url) ? url : undefined)
 const Link = ({ url, children }: { url: string; children: React.ReactNode }) => (
@@ -59,8 +60,8 @@ function Evidence({
       {source.sourceTimestamp && <span className="ai-chip">页面时间 {source.sourceTimestamp}</span>}
       {(source.error || source.cacheError) && (
         <p className="ai-error">
-          {source.error}
-          {source.cacheError ? ` · 缓存：${source.cacheError}` : ''}
+          {sourceError(source.error)}
+          {source.cacheError ? ` · 缓存：${sourceError(source.cacheError)}` : ''}
         </p>
       )}
     </div>
@@ -191,7 +192,7 @@ function ProjectView({ project, ttl, now }: { project: Project; ttl: number; now
         ))}
         {project.error && (
           <p role="alert" className="ai-error">
-            {project.error}
+            {sourceError(project.error)}
           </p>
         )}
       </section>
@@ -373,6 +374,7 @@ export function Panel() {
             </button>
           </div>
         </header>
+        {!!view?.diagnostics?.length && <div className="ai-card" role="status"><strong>网络诊断 · 来源获取失败</strong>{view.diagnostics.map(d => <p key={d.code}><b>{d.code} · {d.count} 个来源</b><br/>{d.hintZh}</p>)}<p>运行 /advisory-impact diagnose 查看 DNS / TCP / TLS 与代理来源。</p></div>}
         <p className="ai-lead">用你实际运行的版本，核对官方安全公告。官方优先，OSV 仅作第二来源。</p>
         <details className="ai-card ai-setup" open={!settings || undefined}>
           <summary>
@@ -519,7 +521,7 @@ export function Panel() {
                 含陈旧或已过期数据。下方保留各来源最后成功抓取时间；请刷新后再核对。
               </p>
             )}
-            {overview.failed && (
+            {overview.failed && !view.diagnostics?.length && (
               <p role="alert" className="ai-banner ai-affected">
                 部分来源或缓存失败。可用的最后成功数据继续显示；失败不代表没有公告或不受影响。
               </p>

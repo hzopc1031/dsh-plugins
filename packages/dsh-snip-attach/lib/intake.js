@@ -13,8 +13,8 @@ export function abortable(work, signal) {
 }
 export function requireDesktop(boot, location) {
     const version = boot?.release?.version;
-    if (version !== '0.2.1-rc.5' || location.protocol !== 'dsh-app:' || location.hostname !== 'app') {
-        throw new Error('仅支持 DSH 0.2.1-rc.5 桌面页面。');
+    if (!['0.2.1-rc.5', '0.2.2-rc.1'].includes(String(version)) || location.protocol !== 'dsh-app:' || location.hostname !== 'app') {
+        throw new Error(`仅支持已核对的 DSH 0.2.1-rc.5 / 0.2.2-rc.1 桌面页面（dsh-app://app），当前 ${typeof version === 'string' ? version : '未知'}。`);
     }
 }
 export function shotUrl(text) {

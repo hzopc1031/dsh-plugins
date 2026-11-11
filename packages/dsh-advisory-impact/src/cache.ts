@@ -1,3 +1,4 @@
+import { readdir } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import { isMissing, readLocal, writeLocal } from './local.js'
 import type { HttpClient, MavenQuery, SourceDocument, SourceMetadata } from './types.js'
@@ -12,26 +13,64 @@ export interface SourceResult<T> {
   cacheError?: string
 }
 
+function validateEntry(entry: any): void {
+  if (!entry || typeof entry !== 'object' || typeof entry.url !== 'string') throw new Error('Invalid cache entry')
+  if (entry.url.startsWith('https://api.osv.dev/')) assertOsvRequest(entry.url, entry.query)
+  else { assertSourceUrl(entry.url); if (entry.query !== undefined) throw new Error('Invalid cache query') }
+  if (typeof entry.payload !== 'string' || Buffer.byteLength(entry.payload) > 8 * 1024 * 1024
+    || typeof entry.fetchedAt !== 'string' || !Number.isFinite(Date.parse(entry.fetchedAt))
+    || ![undefined, 200, 404].includes(entry.status) || entry.status === 404 && (entry.url === OSV_QUERY_URL || !entry.url.startsWith('https://api.osv.dev/'))
+    || entry.sourceTimestamp !== undefined && typeof entry.sourceTimestamp !== 'string') throw new Error('Invalid cache entry')
+}
+const cacheKey = (url: string, query?: MavenQuery) => createHash('sha256').update(JSON.stringify([url, query ?? null])).digest('hex') + '.json'
+
 /** Plugin-owned directory; hashed request keys never become caller-controlled relative paths. */
 export class SourceCache {
   private readonly failures = new Map<string, string>()
-  constructor(readonly directory: string, private readonly http: HttpClient, private readonly now: () => Date = () => new Date()) {}
+  constructor(readonly directory: string, private readonly http: HttpClient, private readonly now: () => Date = () => new Date(), private readonly offlineOnly = false) {}
+
+  async exportSnapshot(): Promise<string> {
+    const entries = []
+    let names: string[]
+    try { names = await readdir(this.directory) } catch (error) { if (isMissing(error)) return '[]'; throw error }
+    for (const name of names.filter(n => /^[a-f0-9]{64}\.json$/.test(n)).sort()) {
+      const entry = JSON.parse(await readLocal(this.directory, name, 32 * 1024 * 1024))
+      validateEntry(entry)
+      if (cacheKey(entry.url, entry.query) !== name) throw new Error('Invalid cache key')
+      entries.push(entry)
+    }
+    const text = JSON.stringify(entries)
+    if (Buffer.byteLength(text) > 32 * 1024 * 1024) throw new Error('快照超过 32 MiB')
+    return text
+  }
+  async importSnapshot(text: string): Promise<void> {
+    if (Buffer.byteLength(text) > 32 * 1024 * 1024) throw new Error('快照超过 32 MiB')
+    const entries: unknown = JSON.parse(text)
+    if (!Array.isArray(entries) || !entries.length) throw new Error('快照为空或格式无效')
+    const keys = new Set<string>()
+    for (const entry of entries) {
+      validateEntry(entry)
+      const key = cacheKey(entry.url, entry.query)
+      if (keys.has(key)) throw new Error('快照含重复来源')
+      keys.add(key)
+    }
+    for (const entry of entries) await writeLocal(this.directory, cacheKey(entry.url, entry.query), JSON.stringify({ ...entry, imported: true }), true)
+  }
 
   async load<T extends SourceMetadata>(url: string, parse: (doc: SourceDocument) => T, ttlMs: number, force = false, query?: MavenQuery): Promise<SourceResult<T>> {
     if (url.startsWith('https://api.osv.dev/')) assertOsvRequest(url, query)
     else { assertSourceUrl(url); if (query) throw new Error('Official sources accept GET only') }
     if (query) query = { maven: query.maven, version: query.version }
     if (!Number.isSafeInteger(ttlMs) || ttlMs < 0) throw new Error('TTL must be a non-negative integer')
-    const key = createHash('sha256').update(JSON.stringify([url, query ?? null])).digest('hex') + '.json'
+    const key = cacheKey(url, query)
     let previous: SourceDocument | undefined
     let previousData: T | undefined
     let cacheError: string | undefined
     try {
       const entry = JSON.parse(await readLocal(this.directory, key, 32 * 1024 * 1024))
-      if (entry.url !== url || JSON.stringify(entry.query ?? null) !== JSON.stringify(query ?? null)
-        || typeof entry.payload !== 'string' || !Number.isFinite(Date.parse(entry.fetchedAt))
-        || ![undefined, 200, 404].includes(entry.status) || entry.status === 404 && (url === OSV_QUERY_URL || !url.startsWith('https://api.osv.dev/'))
-        || entry.sourceTimestamp !== undefined && typeof entry.sourceTimestamp !== 'string') throw new Error('Invalid cache entry')
+      validateEntry(entry)
+      if (entry.url !== url || JSON.stringify(entry.query ?? null) !== JSON.stringify(query ?? null)) throw new Error('Invalid cache entry')
+      if (entry.imported) cacheError = '本地快照（导入），非实时官方抓取'
       previous = { url, payload: entry.payload, fetchedAt: entry.fetchedAt, status: entry.status, sourceTimestamp: entry.sourceTimestamp }
       previousData = parse(previous)
     } catch (error) {
@@ -46,6 +85,7 @@ export class SourceCache {
         ...(error !== undefined ? { error } : {}), ...extra() }
     }
     try {
+      if (this.offlineOnly) throw new Error('离线模式：仅使用本地缓存或快照')
       const doc = await this.http(url, query)
       if (doc.url !== url || !Number.isFinite(Date.parse(doc.fetchedAt))) throw new Error('Invalid HTTP source metadata')
       const data = parse(doc)

@@ -65,6 +65,12 @@ The default watch list is Kafka / Hadoop / Flink. Official pages are authoritati
 
 This is unreleased: use the quoted Git install command above. Reopen DSH, select the panel, enter an existing local project path, save your actual running version, and refresh. No model API key or chat turn is needed. Screenshots show recorded fixture replay with sample pins, including a controlled Kafka inventory subset, rather than live inventories or a real cluster.
 
+## 公司内网访问
+
+在公司电脑遇到 `fetch failed` 时，可查看错误代码与代理/公司证书排查提示。插件设置增加 `httpsProxy`、`noProxy`、`caBundlePath`、`insecureSkipTlsVerify`（默认关闭，开启不安全）。默认沿用 DSH 的用户级代理配置，不读取 Windows 系统代理或 PAC。具体 Windows `.dsh/.env` 写法、证书与重载步骤见[公司内网配置](../../docs/intranet-network.md)。
+
+运行 `/advisory-impact diagnose` 检查 DNS / TCP / TLS 与代理来源。同原因错误在面板合并显示。`snapshot-export` 将官方缓存导出到项目内 `.advisory-impact-snapshot.json`；拷贝到目标项目同名位置后运行 `snapshot-import` 导入。开启 `offlineOnly` 仅使用本地缓存/快照；缺失的 OSV 第二来源仍标为不可用。
+
 ## 补充说明 / Details
 
 ### 来源与判断边界
@@ -85,8 +91,10 @@ This is unreleased: use the quoted Git install command above. Reopen DSH, select
 
 ### 版本与验证
 
-`0.1.0` 未发布 npm，仅供 Git 分支安装；没有合并 main、PR 或市场提交。声明兼容 DSH `>=0.2.1-rc.5 <0.3.0`、Node.js `>=22`；实际在 Linux 加载并验证的是 **DSH 0.2.2-rc.1 / 源码 fcc0ad46**。最低开发 peers 的类型构建通过，不据此宣称所有版本或 Electron 桌面实测通过。预编译 `lib/` 已提交，无安装生命周期脚本。
+`0.1.1` 未发布 npm，仅供 Git 分支安装；没有合并 main、PR 或市场提交。声明兼容 DSH `>=0.2.1-rc.5 <0.3.0`、Node.js `>=22`；实际在 Linux 加载并验证的是 **DSH 0.2.2-rc.1 / 官方 tag 源码 66491b05**。最低开发 peers 的类型构建通过，不据此宣称所有版本或 Electron 桌面实测通过。预编译 `lib/` 已提交，无安装生命周期脚本。
 
 已在真实 DSH Web、零模型 key、无聊天轮次下验证面板导航、版本编辑、项目切换、报告、明暗主题、OSV 404/分歧和故障后的缓存回退。单元与集成测试仅用带来源的录制夹具；最终独立烟测也成功读取六个公开官方端点及一条 OSV GET，报告保留实际来源与时间。截图来自录制回放，不冒充该次实时抓取。
 
 开发校验：在包目录运行 `npm test && npm run verify-pack`。固定决策见 [decisions.md](docs/decisions.md)，DSH 接口依据见 [dsh-api.md](docs/dsh-api.md)。
+
+当前兼容声明与 Linux 0.2.2-rc.1 加载结果见[兼容矩阵](../../docs/compat-matrix.md)；范围声明不表示逐版本实测，Windows / Electron 未在本机验证。

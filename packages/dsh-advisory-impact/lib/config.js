@@ -1,3 +1,4 @@
+import { intranetConfig } from './intranet-http.js';
 import z from '@deepseek-ai/schemastery';
 import { lstat } from 'node:fs/promises';
 import { isMissing, readLocal, writeLocal } from './local.js';
@@ -5,6 +6,8 @@ export const DEFAULT_WATCH = ['kafka', 'hadoop', 'flink'];
 export const PIN_FILE = '.advisory-impact.json';
 export const DEFAULT_TTL_MS = 6 * 60 * 60 * 1000;
 export const Config = z.object({
+    ...intranetConfig,
+    offlineOnly: z.boolean().default(false).description('仅使用本地缓存或导入快照，不访问外网'),
     watch: z.array(z.string()).default([...DEFAULT_WATCH]).description('关注的项目 id：kafka / hadoop / flink；其他 id 会明确提示尚无官方来源'),
     pins: z.array(z.object({
         project: z.string().required(), version: z.string().required(),

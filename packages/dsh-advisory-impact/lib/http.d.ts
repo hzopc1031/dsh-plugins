@@ -1,3 +1,4 @@
+import { createIntranetHttp, type IntranetSettings } from './intranet-http.js';
 import type { HttpClient, MavenQuery } from './types.js';
 export declare const SOURCES: {
     readonly kafka: "https://kafka.apache.org/community/cve-list/";
@@ -7,13 +8,13 @@ export declare const SOURCES: {
     readonly suppressions: "https://raw.githubusercontent.com/apache/kafka/trunk/gradle/resources/dependencycheck-suppressions.xml";
     readonly guidance: "https://security.apache.org/report-dependency/";
 };
-export declare const USER_AGENT = "dsh-advisory-impact/0.1.0 (https://github.com/hzopc1031/dsh-plugins)";
+export declare const USER_AGENT = "dsh-advisory-impact/0.1.1 (https://github.com/hzopc1031/dsh-plugins)";
 export declare class SourceError extends Error {
     readonly url: string;
     constructor(url: string, message: string, options?: ErrorOptions);
 }
 export declare function assertSourceUrl(url: string): void;
-export interface HttpOptions {
+export interface HttpOptions extends IntranetSettings {
     fetch?: typeof globalThis.fetch;
     now?: () => Date;
     sleep?: (ms: number) => Promise<unknown>;
@@ -21,9 +22,9 @@ export interface HttpOptions {
     maxBytes?: number;
 }
 /** Serial anonymous GETs, one bounded 429 retry, no redirects or implicit live requests. */
-export declare function createHttpClient(options?: HttpOptions): HttpClient;
+export declare function createHttpClient(options?: HttpOptions): HttpClient & Pick<ReturnType<typeof createIntranetHttp>, 'close' | 'diagnose'>;
 export declare const OSV_QUERY_URL = "https://api.osv.dev/v1/query";
 export declare const OSV_ID: RegExp;
 export declare function osvUrl(id: string): string;
 export declare function assertOsvRequest(url: string, query?: MavenQuery): void;
-export declare function createOsvHttpClient(options?: HttpOptions): HttpClient;
+export declare function createOsvHttpClient(options?: HttpOptions): HttpClient & Pick<ReturnType<typeof createIntranetHttp>, 'close' | 'diagnose'>;

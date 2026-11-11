@@ -1,3 +1,4 @@
+import { collapseNetworkErrors } from './intranet-http.js';
 export const VERDICT_LABELS = { affected: '受影响', not_affected: '不受影响', unknown: '无法判断' };
 export const STATE_LABELS = { fresh: '刚抓取', cached: '缓存有效', stale: '抓取失败，使用最后成功缓存（已陈旧）', error: '来源失败，无可用缓存' };
 export function displayTime(value) {
@@ -39,7 +40,7 @@ export function createViewModel(evaluation) {
             counts[advisory.verdict]++;
         counts.osvOnly += project.osvOnly.items.length;
     }
-    return { settings: evaluation.settings, counts, projects,
+    return { diagnostics: collapseNetworkErrors(evaluation), settings: evaluation.settings, counts, projects,
         suppressions: { title: '扫描器报了，但官方说明不适用', source: sourceView(evaluation.suppressions),
             items: evaluation.suppressions?.data?.suppressions.map(s => ({ ...s, fetchedTime: displayTime(s.fetchedAt) })) ?? null },
         guidance: sourceView(evaluation.guidance), flinkPointer: sourceView(evaluation.flinkPointer) };

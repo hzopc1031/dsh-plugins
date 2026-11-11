@@ -1,6 +1,6 @@
 # DLL 诊断 / dsh-dll-doctor
 
-版本 0.1.0。仅面向 Windows 与 DSH **0.2.1-rc.5**（官方标签 `dsh-v0.2.1-rc.5`，commit `b830ec9`）。只做一件事：静态读取一个 EXE/DLL，帮助定位缺失依赖与架构不匹配。不执行或加载被分析文件，不调用 LoadLibrary，不联网，不修改系统或注册表，不创建模型消息，也不注册模型工具。
+版本 0.1.1。面向 Windows，声明 DSH `>=0.2.1-rc.5 <0.3.0`；本次对照官方 0.2.2-rc.1 源码。只做一件事：静态读取一个 EXE/DLL，帮助定位缺失依赖与架构不匹配。不执行或加载被分析文件，不调用 LoadLibrary，不联网，不修改系统或注册表，不创建模型消息，也不注册模型工具。
 
 ## 使用
 
@@ -70,3 +70,5 @@ node scripts/smoke-real.mjs
 已测：84 项自动测试通过；本机 notepad x64 的 56 条直接导入均找到或为 API set，注册表读取成功；构造缺失及 x64 引用 x86 DLL 验证通过，临时文件已清理。见 [STATUS](STATUS.md)。未在真实桌面 DSH 中测试；未测真实 Dependencies、32 位 Node/Windows、ARM64 真机及任意应用启动。
 
 搜索顺序参考 [Microsoft 文档](https://learn.microsoft.com/en-us/windows/win32/dlls/dynamic-link-library-search-order)。许可证 MIT，第三方说明见 [THIRD_PARTY_NOTICES](THIRD_PARTY_NOTICES.md)。
+
+本次 0.2.2-rc.1 兼容结论与 API 依据见[兼容矩阵](../../docs/compat-matrix.md)。本次在 Linux 实际加载；Windows / Electron 功能未实机验证，历史 rc.5 测试记录不代表本次加载过该版本。

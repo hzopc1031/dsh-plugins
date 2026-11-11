@@ -55,8 +55,8 @@ function abortable(work, signal) {
 }
 function requireDesktop(boot2, location) {
   const version = boot2?.release?.version;
-  if (version !== "0.2.1-rc.5" || location.protocol !== "dsh-app:" || location.hostname !== "app") {
-    throw new Error("\u4EC5\u652F\u6301 DSH 0.2.1-rc.5 \u684C\u9762\u9875\u9762\u3002");
+  if (!["0.2.1-rc.5", "0.2.2-rc.1"].includes(String(version)) || location.protocol !== "dsh-app:" || location.hostname !== "app") {
+    throw new Error(`\u4EC5\u652F\u6301\u5DF2\u6838\u5BF9\u7684 DSH 0.2.1-rc.5 / 0.2.2-rc.1 \u684C\u9762\u9875\u9762\uFF08dsh-app://app\uFF09\uFF0C\u5F53\u524D ${typeof version === "string" ? version : "\u672A\u77E5"}\u3002`);
   }
 }
 function shotUrl(text) {

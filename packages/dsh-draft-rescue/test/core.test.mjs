@@ -68,3 +68,19 @@ for (const phase of ['adjudicating', 'claimed', 'submitting']) test('拒绝忙�
 test('存储不可访问时报错，不伪装成零草稿', () => {
   assert.throws(() => listDrafts({ get length() { throw new Error('storage denied') } }, boot), /storage denied/)
 })
+
+test('0.2.2-rc.1 accepts the same draft schema', () => {
+  const runtime = { release: { version: '0.2.2-rc.1' } }
+  assert.deepEqual(listDrafts(storage([['dsh.conversation.a', record({ text: 'rc.1', references: [] })]]), runtime), [{ sessionId: 'a', text: 'rc.1' }])
+})
+
+test('rc.1 quote spans are validated and count as one position when appending', () => {
+  const snapshot = { text: '> quoted\n尾', references: [], quotes: [{ text: 'quoted', offset: 0, length: 8 }] }
+  assert.equal(draftText(snapshot), snapshot.text)
+  const result = prepareAppend({ text: 'new' }, { draft: snapshot.text, occurrences: [], phase: 'plain', draftRev: 4 }, snapshot)
+  assert.equal(result.span.start, 3)
+  assert.equal(result.text, '\nnew')
+  assert.equal(draftText({ ...snapshot, quotes: [{ ...snapshot.quotes[0], length: 9 }] }), undefined)
+  assert.equal(draftText({ ...snapshot, quotes: [snapshot.quotes[0], snapshot.quotes[0]] }), undefined)
+  assert.throws(() => prepareAppend({ text: 'new' }, { draft: 'changed', occurrences: [], phase: 'plain' }, snapshot), /不一致/)
+})

@@ -56,7 +56,7 @@ test('HTTP failure, redirect, timeout and body errors surface as errors, never e
   await assert.rejects(oversized(SOURCES.kafka), /size limit/)
   await assert.rejects(createHttpClient({ fetch: async () => new Response('') })(SOURCES.kafka), /Empty response body/)
   await assert.rejects(createHttpClient({ fetch: async () => new Response(new Uint8Array([0xff])) })(SOURCES.kafka), SourceError)
-  await assert.rejects(createHttpClient()(SOURCES.kafka), /Live network disabled/)
+  await assert.rejects(createHttpClient()(SOURCES.kafka), /NETWORK_ERROR/)
 })
 
 test('only exact public official endpoints are admitted; redirects cannot reach login or reporter', async () => {

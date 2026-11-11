@@ -21,7 +21,14 @@ async function fixture(t, options = {}) {
   return { server, jobs, directory, logs }
 }
 const get = (url, options = {}) => fetch(url, { headers: { Origin: ORIGIN }, ...options })
-const absent = async file => { await assert.rejects(access(file), { code: 'ENOENT' }) }
+const absent = async file => {
+  // Response completion can precede the asynchronous rm finishing.
+  for (let attempt = 0; attempt < 50; attempt++) {
+    try { await access(file) } catch (error) { assert.equal(error.code, 'ENOENT'); return }
+    await new Promise(resolve => setTimeout(resolve, 10))
+  }
+  assert.fail('temporary screenshot was not removed')
+}
 
 test('binds IPv4 loopback ephemeral port; names contain only generated UUID; concurrent capture refused', async t => {
   const f = await fixture(t), url = f.server.start()

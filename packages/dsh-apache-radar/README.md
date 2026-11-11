@@ -72,11 +72,17 @@ Every displayed count includes its source URL and fetch time in Asia/Singapore (
 
 The one-hour cache preserves the last good response on failure. JIRA is a capped first page per watched project, not a complete shipped-feature list; fixVersion and accepted proposals do not prove release. Hadoop has no verified general HIP feed. The native panel supports light/dark themes and needs no chat session or model key. No pin means unknown. Official pages are authoritative; OSV lookups are secondary and may return HTTP 404. Kafka suppressions stay separate. Flink’s ASF advisory page is experimental, covers advisories since 2023 and may lag. There is no production-upgrade verdict, foundation-wide daily sweep or automatic schedule.
 
+## 公司内网访问
+
+在公司电脑遇到 `fetch failed` 时，可查看错误代码与代理/公司证书排查提示。插件设置增加 `httpsProxy`、`noProxy`、`caBundlePath`、`insecureSkipTlsVerify`（默认关闭，开启不安全）。默认沿用 DSH 的用户级代理配置，不读取 Windows 系统代理或 PAC。具体 Windows `.dsh/.env` 写法、证书与重载步骤见[公司内网配置](../../docs/intranet-network.md)。
+
+选择项目目录后点击「网络诊断」，查看 DNS / TCP / TLS 及代理来源；同原因错误合并显示失败来源数量。「导出快照」「导入快照」可在断网机器复用官方响应，数据标为「本地快照」，保留原抓取时间。`offlineOnly: true` 使刷新也仅使用本地缓存。
+
 ## 补充说明
 
 ### 版本与验证范围
 
-版本 `0.1.0`（未发布），Node.js `>=22`，声明 DSH `>=0.2.2-rc.1 <0.3.0`。周报阅读使用该版本的 `MarkdownText.omitHtml` 禁用原始 HTML；对照旧版 0.2.1-rc.5 源码，该属性尚不存在，因此收紧最低版本，不承诺旧版界面兼容。接口对照只读源码 `fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159`；本机实际加载验证版本为 **DSH 0.2.2-rc.1**。声明范围不代表逐版本测试，也不代表已验证 Electron 桌面安装。
+版本 `0.1.1`（未发布），Node.js `>=22`，声明 DSH `>=0.2.2-rc.1 <0.3.0`。周报阅读使用该版本的 `MarkdownText.omitHtml` 禁用原始 HTML；对照旧版 0.2.1-rc.5 源码，该属性尚不存在，因此收紧最低版本，不承诺旧版界面兼容。接口对照只读源码 `66491b05e3f05ad35bcdd4f6cd7ed26041d9e3db`；本机实际加载验证版本为 **DSH 0.2.2-rc.1**。声明范围不代表逐版本测试，也不代表已验证 Electron 桌面安装。
 
 Linux 烟测在隔离 profile 中加载真实 DSH Web，使用录制数据验证侧栏入口、无模型且无会话时的直接使用、明暗主题、项目切换、关注编辑、版本保存、公告判定、JIRA 跳转、OSV 404、周报复制、窄屏和失败回退。未验证 Electron 桌面安装；前次任务的公开计数与匿名 JIRA 请求记录仍作为历史证据。本次界面验证不请求实时 ASF 来源。测试夹具保留原 URL、抓取时间、完整性摘要和裁剪说明，历史快照不表示当前官方数量。
 
@@ -103,3 +109,5 @@ Linux 烟测在隔离 profile 中加载真实 DSH Web，使用录制数据验证
 ### 开发验证
 
 在包目录运行 `npm ci --ignore-scripts`，然后 `npm test && npm run verify-pack`。测试只使用记录夹具和注入故障，阻断实时 HTTP 与 socket；周报无需模型。`lib/` 已提交，打包检查排除夹具、测试及 `node_modules`，无安装生命周期脚本。
+
+当前兼容声明与 Linux 0.2.2-rc.1 加载结果见[兼容矩阵](../../docs/compat-matrix.md)；范围声明不表示逐版本实测，Windows / Electron 未在本机验证。

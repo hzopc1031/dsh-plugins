@@ -16,7 +16,7 @@ function object(value: unknown): value is Record<string, unknown> {
 /** Exact boot release identity, never inferred from the draft's shape. */
 export function requireVersion(boot: unknown): void {
   const version = object(boot) && object(boot.release) ? boot.release.version : undefined
-  if (version !== SUPPORTED_VERSION) throw new Error('仅支持 DSH 0.2.1-rc.5；版本不符或无法识别，已拒绝读取草稿。')
+  if (version !== SUPPORTED_VERSION && version !== '0.2.2-rc.1') throw new Error(`仅支持已核对的 DSH 0.2.1-rc.5 / 0.2.2-rc.1，当前 ${typeof version === 'string' ? version : '未知'}；已拒绝读取草稿。`)
 }
 
 /** Validate rc.5 semantic spans, but recover only their plain text projection. */
@@ -42,6 +42,21 @@ export function draftText(value: unknown): string | undefined {
     end = ref.offset + ref.length
     if (end > text.length || text.slice(ref.offset, end) !== ref.clipboardText) return undefined
   }
+  if (value.quotes !== undefined) {
+    if (!Array.isArray(value.quotes)) return undefined
+    for (const quote of value.quotes) {
+      if (!object(quote) || typeof quote.text !== 'string' || !quote.text.trim()
+        || !Number.isSafeInteger(quote.offset) || !Number.isSafeInteger(quote.length)
+        || Number(quote.offset) < 0 || Number(quote.length) <= 0) return undefined
+      const projected = quote.text.replace(/\r\n?/gu, '\n').split('\n').map(line => `> ${line}`).join('\n')
+      if (quote.length !== projected.length || text.slice(Number(quote.offset), Number(quote.offset) + Number(quote.length)) !== projected) return undefined
+    }
+    let spanEnd = object(value.command) ? String(value.command.token).trimEnd().length : 0
+    for (const span of [...value.references, ...value.quotes].sort((a, b) => a.offset - b.offset)) {
+      if (span.offset < spanEnd) return undefined
+      spanEnd = span.offset + span.length
+    }
+  }
   return text
 }
 
@@ -66,9 +81,14 @@ export function listDrafts(storage: StorageReader, boot: unknown): Draft[] {
 export function copyText(draft: Draft): string { return draft.text }
 
 /** Append in detect coordinates (a reference chip counts as ONE character). */
-export function prepareAppend(draft: Draft, input: Pick<InputState, 'draft' | 'draftRev' | 'occurrences' | 'phase'>): { text: string; span: TokenSpan } {
+export function prepareAppend(draft: Draft, input: Pick<InputState, 'draft' | 'draftRev' | 'occurrences' | 'phase'>, currentSnapshot?: unknown): { text: string; span: TokenSpan } {
   if (input.phase !== 'plain') throw new Error('当前输入框忙碌或处于命令模式，请回到普通输入后追加。')
-  const end = input.draft.length - input.occurrences.reduce((sum, ref) => sum + ref.length - 1, 0)
+  let quoteWidth = 0
+  if (currentSnapshot !== undefined) {
+    if (!object(currentSnapshot) || draftText(currentSnapshot) !== input.draft) throw new Error('当前草稿快照与输入框不一致，请复制原文后粘贴。')
+    quoteWidth = ((currentSnapshot.quotes ?? []) as { length: number }[]).reduce((sum, quote) => sum + quote.length - 1, 0)
+  }
+  const end = input.draft.length - quoteWidth - input.occurrences.reduce((sum, ref) => sum + ref.length - 1, 0)
   if (end < 0) throw new Error('输入框状态无效，请重试。')
   return {
     text: (input.draft ? '\n' : '') + copyText(draft),

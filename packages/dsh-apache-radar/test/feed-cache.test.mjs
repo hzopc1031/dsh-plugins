@@ -107,3 +107,20 @@ test('counts share persistent TTL caching with feeds; expiry refetches and malfo
     assert.match(cacheError, /Invalid source payload/)
   } finally { await rm(directory, { recursive: true, force: true }) }
 })
+
+test('snapshot export/import validates all entries, labels imported data and never accepts paths', async t => {
+  const { exportFeedSnapshot, importFeedSnapshot, parseFeedSnapshot } = await import('../lib/feed-cache.js')
+  const directory = await mkdtemp(join(tmpdir(), 'radar-snapshot-'))
+  t.after(() => rm(directory, { recursive: true, force: true }))
+  const url = 'https://projects.apache.org/json/foundation/chooser.json'
+  const entry = { url, fetchedAt: '2026-11-11T00:00:00Z', payload: '{}' }
+  await importFeedSnapshot(directory, JSON.stringify([entry]))
+  const snapshot = await exportFeedSnapshot(directory)
+  assert.match(snapshot, /本地快照/)
+  assert.equal(parseFeedSnapshot(snapshot).get(url).payload, '{}')
+  const before = snapshot
+  for (const bad of ['../cache.json', '[]', JSON.stringify([entry, { ...entry, url: 'file:///etc/passwd' }]), JSON.stringify([entry, entry])]) {
+    await assert.rejects(importFeedSnapshot(directory, bad))
+    assert.equal(await exportFeedSnapshot(directory), before)
+  }
+})

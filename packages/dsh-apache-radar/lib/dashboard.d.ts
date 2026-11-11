@@ -5,6 +5,12 @@ import type { CountsReport } from './counts.js';
 import type { FeedSource, FeedWindow } from './feeds.js';
 import type { itemSummary } from './radar.js';
 export interface DashboardData {
+    diagnostics?: {
+        code: string;
+        hintZh: string;
+        count: number;
+    }[];
+    localSnapshot?: boolean;
     security?: SecurityReport;
     pins?: Record<string, string>;
     directories: string[];

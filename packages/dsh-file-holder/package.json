@@ -1,6 +1,6 @@
 {
   "name": "dsh-file-holder",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "查询 Windows 项目内指定文件的占用程序（仅人类命令）",
   "type": "module",
   "main": "index.js",
@@ -11,7 +11,7 @@
     "./icon": "./icon.svg"
   },
   "files": ["index.js", "index.d.ts", "lib/*.js", "lib/*.d.ts", "file-holder.ps1", "cordis.patch.yml", "locale/*.json", "icon.svg", "README.md", "CHANGELOG.md", "STATUS.md", "LICENSE", "THIRD_PARTY_NOTICES.md"],
-  "engines": { "node": ">=22", "dsh": "0.2.1-rc.5" },
+  "engines": { "node": ">=22", "dsh": ">=0.2.1-rc.5 <0.3.0" },
   "dsh": { "bundle": { "patch": "./cordis.patch.yml" } },
   "license": "MIT",
   "author": "hzopc1031",
@@ -23,10 +23,10 @@
     "verify-pack": "node scripts/verify-pack.mjs"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "~4.0.5",
-    "@deepseek-ai/dsh-commands": "0.2.1-rc.5",
-    "@deepseek-ai/dsh-subprocess": "0.2.1-rc.5",
-    "@deepseek-ai/dsh-working-directory": "0.2.1-rc.5"
+    "@deepseek-ai/cordis": ">=4.0.5 <4.2.0",
+    "@deepseek-ai/dsh-commands": ">=0.2.1-rc.5 <0.3.0",
+    "@deepseek-ai/dsh-subprocess": ">=0.2.1-rc.5 <0.3.0",
+    "@deepseek-ai/dsh-working-directory": ">=0.2.1-rc.5 <0.3.0"
   },
   "peerDependenciesMeta": {
     "@deepseek-ai/cordis": { "optional": true },

@@ -1,3 +1,4 @@
+import { createIntranetHttp, describeNetworkError, type IntranetSettings } from './intranet-http.js'
 import { setTimeout as delay } from 'node:timers/promises'
 import type { HttpClient, MavenQuery, SourceDocument } from './types.js'
 
@@ -10,7 +11,7 @@ export const SOURCES = {
   guidance: 'https://security.apache.org/report-dependency/',
 } as const
 
-export const USER_AGENT = 'dsh-advisory-impact/0.1.0 (https://github.com/hzopc1031/dsh-plugins)'
+export const USER_AGENT = 'dsh-advisory-impact/0.1.1 (https://github.com/hzopc1031/dsh-plugins)'
 const allowed = new Set<string>(Object.values(SOURCES))
 
 export class SourceError extends Error {
@@ -25,7 +26,7 @@ export function assertSourceUrl(url: string): void {
   if (!allowed.has(url)) throw new Error('Only documented anonymous official source URLs are allowed')
 }
 
-export interface HttpOptions {
+export interface HttpOptions extends IntranetSettings {
   fetch?: typeof globalThis.fetch
   now?: () => Date
   sleep?: (ms: number) => Promise<unknown>
@@ -56,7 +57,7 @@ async function readPayload(response: Response, maxBytes: number): Promise<string
 }
 
 /** Serial anonymous GETs, one bounded 429 retry, no redirects or implicit live requests. */
-export function createHttpClient(options: HttpOptions = {}): HttpClient {
+export function createHttpClient(options: HttpOptions = {}): HttpClient & Pick<ReturnType<typeof createIntranetHttp>, 'close' | 'diagnose'> {
   return transport(false, options)
 }
 
@@ -76,12 +77,13 @@ export function assertOsvRequest(url: string, query?: MavenQuery): void {
   }
 }
 
-export function createOsvHttpClient(options: HttpOptions = {}): HttpClient {
+export function createOsvHttpClient(options: HttpOptions = {}): HttpClient & Pick<ReturnType<typeof createIntranetHttp>, 'close' | 'diagnose'> {
   return transport(true, options)
 }
 
-function transport(osv: boolean, options: HttpOptions): HttpClient {
-  const fetch = options.fetch ?? globalThis.fetch
+function transport(osv: boolean, options: HttpOptions): HttpClient & Pick<ReturnType<typeof createIntranetHttp>, 'close' | 'diagnose'> {
+  const network = createIntranetHttp(options)
+  const fetch = options.fetch ?? network.fetch
   const now = options.now ?? (() => new Date())
   const sleep = options.sleep ?? delay
   const timeoutMs = options.timeoutMs ?? 15_000
@@ -127,13 +129,17 @@ function transport(osv: boolean, options: HttpOptions): HttpClient {
       }
       throw new Error('HTTP 429; retry later')
     } catch (error) {
-      throw new SourceError(url, error instanceof Error ? error.message : 'Fetch failed', { cause: error })
+      const info = describeNetworkError(error)
+      const detail = error instanceof Error ? error.message : 'fetch failed'
+      const hint = !detail.includes(info.hintZh) && (info.code !== 'NETWORK_ERROR' || /fetch failed/i.test(detail)) ? `；${info.code}；${info.hintZh}` : ''
+      throw new SourceError(url, detail + hint, { cause: error })
     }
   }
   let pending: Promise<unknown> = Promise.resolve()
-  return (url, query) => {
+  const client: HttpClient = (url, query) => {
     const result = pending.then(() => request(url, query))
     pending = result.catch(() => {})
     return result
   }
+  return Object.assign(client, { close: network.close, diagnose: network.diagnose })
 }

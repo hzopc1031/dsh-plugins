@@ -1,6 +1,6 @@
 {
   "name": "dsh-apache-radar",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Local Apache community radar with explicit official source scopes",
   "type": "module",
   "main": "index.js",
@@ -49,13 +49,14 @@
   "scripts": {
     "build": "tsc && node scripts/build-client.mjs",
     "typecheck": "tsc --noEmit",
-    "test": "npm run build && node --test --test-isolation=none test/*.test.mjs",
+    "test": "npm run build && node --test --test-concurrency=2 test/*.test.mjs",
     "verify-pack": "node scripts/verify-pack.mjs"
   },
   "dependencies": {
     "node-html-parser": "7.0.1",
     "parse5": "7.3.0",
-    "saxes": "6.0.0"
+    "saxes": "6.0.0",
+    "undici": "6.29.1"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": ">=4.0.5 <4.2.0",

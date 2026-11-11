@@ -12,10 +12,10 @@
 | 资料更新影响分析 | `dsh-source-impact`（未发布 npm / not published to npm） | 显式来源引用追踪与更新影响复查清单（`/impact`）/ Explicit source citation tracking and update impact checklists | [README](packages/dsh-source-impact/README.md) |
 | 权限拒绝诊断台 | `dsh-permission-doctor`（未发布 npm / not published to npm） | 只读诊断工具拒绝与未弹审批的证据（`/permission-doctor`）/ Read-only diagnostics for tool denials and missing approval prompts | [README](packages/dsh-permission-doctor/README.md) |
 | 指令冲突解释器 | `dsh-instruction-conflicts`（未发布 npm / not published to npm） | 规则正文疑似冲突、注入版本与当前上下文证据（`/instruction-conflicts`）/ Suspected instruction conflicts, injected versions and current context evidence | [README](packages/dsh-instruction-conflicts/README.md) |
-| 未发送草稿找回 | `dsh-draft-rescue`（未发布 npm / not published to npm） | 独立面板找回、复制与追加本机文字草稿；精确锁定 rc.5 / Recover local unsent text without changing navigation | [README](packages/dsh-draft-rescue/README.md) |
+| 未发送草稿找回 | `dsh-draft-rescue`（未发布 npm / not published to npm） | 独立面板找回、复制与追加本机文字草稿；校验已核对的宿主版本 / Recover local unsent text without changing navigation | [README](packages/dsh-draft-rescue/README.md) |
 | 文件引用路径复制 | `dsh-file-ref-copy`（未发布 npm / not published to npm） | 从已完成回答的原始 Markdown 复制绝对、相对与带行号路径 / Copy local file paths from a loaded completed reply | [README](packages/dsh-file-ref-copy/README.md) |
-| 桌面截图附件 | `dsh-snip-attach`（尚未发布到 npm / not published to npm） | Windows 框选截图后加入待发送附件，针对桌面 rc.5（`/screenshot`）/ Windows snip to pending attachments | [README](packages/dsh-snip-attach/README.md) |
-| 文件占用程序查询 | `dsh-file-holder`（未发布 npm / not published to npm） | 查询 Windows 项目内文件的占用程序、PID 与观察时间（`/file-holder`）；仅支持 rc.5 / Windows project file holder lookup | [README](packages/dsh-file-holder/README.md) |
+| 桌面截图附件 | `dsh-snip-attach`（尚未发布到 npm / not published to npm） | Windows 框选截图后加入待发送附件，针对 Windows 桌面（`/screenshot`）/ Windows snip to pending attachments | [README](packages/dsh-snip-attach/README.md) |
+| 文件占用程序查询 | `dsh-file-holder`（未发布 npm / not published to npm） | 查询 Windows 项目内文件的占用程序、PID 与观察时间（`/file-holder`） / Windows project file holder lookup | [README](packages/dsh-file-holder/README.md) |
 | DLL 诊断 | `dsh-dll-doctor`（未发布 npm / not published to npm） | 只读检查 Windows EXE/DLL 的缺失依赖与架构不匹配（`/dll-check`）/ Static Windows DLL diagnostics | [README](packages/dsh-dll-doctor/README.md) |
 | GitHub issue/PR 研判 | `dsh-github-triage`（未发布 npm / not published to npm） | AI 结合业务说明和你自己的本地代码，判断上游问题是否存在、PR 是否适合合入或回迁；三档建议、首次有界全量扫描、后续定时看变化，纠正规则可导出编辑。 | [README](packages/dsh-github-triage/README.md) |
 | 本地票据核对 | `dsh-invoice-gate`（未发布 npm / not published to npm） | 本地票据与台账核对、差异及证据包；不做 OCR／验真，模型不改金额（`/invoice-gate`）/ Local invoice reconciliation and evidence packs | [README](packages/dsh-invoice-gate/README.md) |
@@ -29,15 +29,15 @@
 
 ## 安装 / Installation
 
-本次优化源码版本与 npm 发布版本分开记录（2026-11-10）：`dsh-task-review` 和 `dsh-heartbeat-monitor` 的 npm 最新版本分别仍是 **0.1.1 / 0.1.0**。本 worktree 中它们及其余功能升级包为 **0.2.0**；仅修复路径投影的 `dsh-file-ref-copy` 为 **0.1.1**。本次未执行 npm publish，安装 npm 最新包不会得到这些新改动。
+本次优化源码版本与 npm 发布版本分开记录（2026-11-10）：`dsh-task-review` 和 `dsh-heartbeat-monitor` 的 npm 最新版本分别仍是 **0.1.1 / 0.1.0**。该优化批次的多数源码版本为 **0.2.0**；当时 `dsh-file-ref-copy` 为 **0.1.1**。本次内网兼容修复另有 patch 版本，以各包 package.json 为准。本次未执行 npm publish，安装 npm 最新包不会得到这些新改动。
 
 本批次增加 bash 进程失败识别与 PTC 关联、有效工作目录（命令会标明当前执行目录或回退目录）、截图预览确认后再注入、组合检查模板与失败项跳转、扫描复用与精简输出、资料引用原子接受基线、诊断内存缓存以及草稿按可靠标题/工作区筛选与追加目标说明。各包 README 说明具体行为。
 
 `main` 的 Git 安装地址继续用于已有版本。本批次版本需使用包含本次提交的 ref；推送后可将以下地址中的 `main` 换成 `optimize-batch` 或固定提交 SHA。分支推送不表示已合并到 main。
 
-本批次对照官方 `dsh-v0.2.1-rc.5` 与发布类型/运行时包。草稿、文件引用、截图及指令冲突包精确声明 rc.5；其余包保留各自 engines 范围，但本次没有据此验证其他宿主版本。所有包都已预编译，没有安装脚本。装完后**完全退出桌面 DSH（含托盘）再重新打开**。
+本次内网与兼容修复以官方 `dsh-v0.2.2-rc.1` 为准，17 个插件均在 Linux 已安装的 **0.2.2-rc.1** 中加载。Windows / Electron 未在本机实测。见[兼容矩阵](docs/compat-matrix.md)及[公司电脑代理、CA 与离线快照配置](docs/intranet-network.md)。包均已预编译，无安装脚本；安装后完全退出桌面 DSH（含托盘）再重开。
 
-This batch is checked against DSH `0.2.1-rc.5`. Per-package engine ranges do not imply other versions were tested. Packages are prebuilt and have no install scripts. Fully quit and reopen DSH Desktop after installing.
+修复提交位于 `fix/intranet-compat` 分支，未合入 main、未发布 npm。安装本次修复时，将下方安装地址中的 `main` 换为 `fix/intranet-compat` 或本次固定提交 SHA。
 
 ### 1. 桌面 DSH 界面 / Desktop UI
 
@@ -89,15 +89,15 @@ dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packag
 
 `dsh-advisory-impact` 尚未发布到 npm。其原生面板已在 DSH 0.2.2-rc.1 Web 实测，无需模型 key。/ Unreleased. The native panel was verified on DSH 0.2.2-rc.1 Web and does not require a model key.
 
-`dsh-apache-radar` 尚未发布到 npm。兼容 DSH `>=0.2.1-rc.5 <0.3.0`，本机加载验证使用 `0.2.2-rc.1`。无需模型 key，也不会自动发布。/ Unreleased. Live loading was checked with DSH `0.2.2-rc.1`. It requires no model key and does not auto-publish.
+`dsh-apache-radar` 尚未发布到 npm。声明 DSH `>=0.2.2-rc.1 <0.3.0`，本机加载验证使用 `0.2.2-rc.1`。无需模型 key，也不会自动发布。/ Unreleased. Live loading was checked with DSH `0.2.2-rc.1`. It requires no model key and does not auto-publish.
 
 同样的 `github:...` 地址也可以填进界面的「添加插件」。把 `main` 换成某个提交哈希即可固定版本。
 
 The same `github:...` address works in the Add plugin dialog. Replace `main` with a commit hash to pin a version.
 
-`dsh-html-deck-export` 的 0.1.0 尚未发布到 npm。兼容 DSH `>=0.2.1-rc.5 <0.3.0`，已在 Linux CLI `0.2.2-rc.1`（`fcc0ad46`）加载验证，需要本机 Chrome。/ Unreleased; requires local Chrome. Loaded on Linux DSH `0.2.2-rc.1`. Linux 可将 `desktop` 换成 `web` 或自己的 profile。/ On Linux, replace `desktop` with `web` or your chosen profile.
+`dsh-html-deck-export` 的 0.1.0 尚未发布到 npm。兼容 DSH `>=0.2.1-rc.5 <0.3.0`，已在 Linux CLI `0.2.2-rc.1`加载验证，需要本机 Chrome。/ Unreleased; requires local Chrome. Loaded on Linux DSH `0.2.2-rc.1`. Linux 可将 `desktop` 换成 `web` 或自己的 profile。/ On Linux, replace `desktop` with `web` or your chosen profile.
 
-新增的草稿找回与文件引用路径复制针对 `0.2.1-rc.5`，不承诺其他版本兼容；草稿找回还会在读取本机存储前精确检查宿主版本，不匹配时拒绝读取。/ The draft and file-reference plugins target exactly `0.2.1-rc.5`; draft storage reads fail closed on other or unknown releases.
+草稿找回和截图附件内部结构已核对 rc.5 与 0.2.2-rc.1，运行时只接受这两个明确版本，未来或未知版本显示中文说明。文件引用路径复制没有额外版本锁；完整声明和验证边界见兼容矩阵。
 
 > **Windows 命令行提示**：如果 `dsh` 报 `profile "desktop" is managed exclusively by the Electron application`，说明 PATH 上的是独立安装的 dsh；请改用桌面版自带的 CLI（命令其余部分不变）：
 >

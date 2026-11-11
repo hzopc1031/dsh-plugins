@@ -12,6 +12,7 @@ export interface Settings {
     cacheTtlMs: number;
 }
 export declare const Config: z<Schemastery.ObjectS<NoInfer<{
+    offlineOnly: z<boolean, boolean, "defined">;
     watch: z<string[], string[], "defined">;
     pins: z<({
         project?: string | null | undefined;
@@ -25,7 +26,12 @@ export declare const Config: z<Schemastery.ObjectS<NoInfer<{
         maven: z<string, string, "plain">;
     }>>[], "defined">;
     cacheTtlMs: z<number, number, "defined">;
+    httpsProxy: z<string>;
+    noProxy: z<string>;
+    caBundlePath: z<string>;
+    insecureSkipTlsVerify: z<boolean>;
 }>>, Schemastery.ObjectT<NoInfer<{
+    offlineOnly: z<boolean, boolean, "defined">;
     watch: z<string[], string[], "defined">;
     pins: z<({
         project?: string | null | undefined;
@@ -39,6 +45,10 @@ export declare const Config: z<Schemastery.ObjectS<NoInfer<{
         maven: z<string, string, "plain">;
     }>>[], "defined">;
     cacheTtlMs: z<number, number, "defined">;
+    httpsProxy: z<string>;
+    noProxy: z<string>;
+    caBundlePath: z<string>;
+    insecureSkipTlsVerify: z<boolean>;
 }>>, "plain">;
 export declare function parseSettings(value?: unknown): Settings;
 /** Re-read on every evaluation so edits apply without a restart; file fields override plugin config. */

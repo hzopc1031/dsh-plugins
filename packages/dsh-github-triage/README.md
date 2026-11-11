@@ -170,11 +170,15 @@ repositories:
 
 `mode` 为 `issues`、`prs`、`both`。定时配置的 `daily` 与 `everyHours` 二选一，都不设置则仅手动运行。本地路径、ref、规则文件均可选；`localRef` 默认 HEAD。命令添加时可用 `--full-max 200` 设置仓库的全量默认上限。
 
+## 公司内网访问
+
+在公司电脑遇到 `fetch failed` 时，可查看错误代码与代理/公司证书排查提示。插件设置增加 `httpsProxy`、`noProxy`、`caBundlePath`、`insecureSkipTlsVerify`（默认关闭，开启不安全）。默认沿用 DSH 的用户级代理配置，不读取 Windows 系统代理或 PAC。具体 Windows `.dsh/.env` 写法、证书与重载步骤见[公司内网配置](../../docs/intranet-network.md)。
+
 ## 补充说明
 
 ### 版本与兼容
 
-当前版本 **0.2.0**，尚未发布 npm，面向 **DeepSeek Harness 0.2.1-rc.5**，要求 Node.js 22 或以上；本地对照需要 PATH 中可用的 Git。开发验证环境为 Windows / Node.js 24，其他平台与 Node.js 22 实机尚未验证。未发布改动合入 main 前，上面的 main 安装地址仍指向现有 main 内容。
+当前版本 **0.2.1**，尚未发布 npm，声明 **DSH >=0.2.1-rc.5 <0.3.0**，本次实际加载 **0.2.2-rc.1**，要求 Node.js 22 或以上；本地对照需要 PATH 中可用的 Git。本次验证环境为 Linux / Node.js 24；Windows / Electron 与 Node.js 22 实机未在本次验证。未发布改动合入 main 前，上面的 main 安装地址仍指向现有 main 内容。
 
 ### 只读边界与证据局限
 
@@ -201,3 +205,5 @@ repositories:
 ### 来源与许可
 
 原创实现，使用 [MIT 许可](LICENSE)。参考了 [dsh-github-flow](https://github.com/ItQianChen/dsh-github-flow)（MIT）的凭据复用与证据组织思路，以及 [dsh-github-bot](https://github.com/PerryLink/dsh-github-bot)（Apache-2.0）的有界拉取、轮询与 PR/CI 证据思路，未直接移植代码。详见 [THIRD_PARTY_NOTICES](THIRD_PARTY_NOTICES)。
+
+当前兼容声明与 Linux 0.2.2-rc.1 加载结果见[兼容矩阵](../../docs/compat-matrix.md)；范围声明不表示逐版本实测，Windows / Electron 未在本机验证。

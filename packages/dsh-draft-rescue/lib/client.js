@@ -37,7 +37,7 @@ function object(value) {
 }
 function requireVersion(boot2) {
   const version = object(boot2) && object(boot2.release) ? boot2.release.version : void 0;
-  if (version !== SUPPORTED_VERSION) throw new Error("\u4EC5\u652F\u6301 DSH 0.2.1-rc.5\uFF1B\u7248\u672C\u4E0D\u7B26\u6216\u65E0\u6CD5\u8BC6\u522B\uFF0C\u5DF2\u62D2\u7EDD\u8BFB\u53D6\u8349\u7A3F\u3002");
+  if (version !== SUPPORTED_VERSION && version !== "0.2.2-rc.1") throw new Error(`\u4EC5\u652F\u6301\u5DF2\u6838\u5BF9\u7684 DSH 0.2.1-rc.5 / 0.2.2-rc.1\uFF0C\u5F53\u524D ${typeof version === "string" ? version : "\u672A\u77E5"}\uFF1B\u5DF2\u62D2\u7EDD\u8BFB\u53D6\u8349\u7A3F\u3002`);
 }
 function draftText(value) {
   if (typeof value === "string") return value;
@@ -54,6 +54,19 @@ function draftText(value) {
     if (!object(ref) || typeof ref.source !== "string" || typeof ref.ref !== "string" || typeof ref.label !== "string" || typeof ref.clipboardText !== "string" || typeof ref.offset !== "number" || !Number.isInteger(ref.offset) || ref.offset < end || typeof ref.length !== "number" || !Number.isInteger(ref.length) || ref.length <= 0 || ref.length !== ref.clipboardText.length || ref.appearance !== void 0 && !["session", "file", "folder"].includes(String(ref.appearance)) || ref.invalid !== void 0 && typeof ref.invalid !== "boolean") return void 0;
     end = ref.offset + ref.length;
     if (end > text.length || text.slice(ref.offset, end) !== ref.clipboardText) return void 0;
+  }
+  if (value.quotes !== void 0) {
+    if (!Array.isArray(value.quotes)) return void 0;
+    for (const quote of value.quotes) {
+      if (!object(quote) || typeof quote.text !== "string" || !quote.text.trim() || !Number.isSafeInteger(quote.offset) || !Number.isSafeInteger(quote.length) || Number(quote.offset) < 0 || Number(quote.length) <= 0) return void 0;
+      const projected = quote.text.replace(/\r\n?/gu, "\n").split("\n").map((line) => `> ${line}`).join("\n");
+      if (quote.length !== projected.length || text.slice(Number(quote.offset), Number(quote.offset) + Number(quote.length)) !== projected) return void 0;
+    }
+    let spanEnd = object(value.command) ? String(value.command.token).trimEnd().length : 0;
+    for (const span of [...value.references, ...value.quotes].sort((a, b) => a.offset - b.offset)) {
+      if (span.offset < spanEnd) return void 0;
+      spanEnd = span.offset + span.length;
+    }
   }
   return text;
 }
@@ -80,9 +93,14 @@ function listDrafts(storage, boot2) {
 function copyText(draft) {
   return draft.text;
 }
-function prepareAppend(draft, input) {
+function prepareAppend(draft, input, currentSnapshot) {
   if (input.phase !== "plain") throw new Error("\u5F53\u524D\u8F93\u5165\u6846\u5FD9\u788C\u6216\u5904\u4E8E\u547D\u4EE4\u6A21\u5F0F\uFF0C\u8BF7\u56DE\u5230\u666E\u901A\u8F93\u5165\u540E\u8FFD\u52A0\u3002");
-  const end = input.draft.length - input.occurrences.reduce((sum, ref) => sum + ref.length - 1, 0);
+  let quoteWidth = 0;
+  if (currentSnapshot !== void 0) {
+    if (!object(currentSnapshot) || draftText(currentSnapshot) !== input.draft) throw new Error("\u5F53\u524D\u8349\u7A3F\u5FEB\u7167\u4E0E\u8F93\u5165\u6846\u4E0D\u4E00\u81F4\uFF0C\u8BF7\u590D\u5236\u539F\u6587\u540E\u7C98\u8D34\u3002");
+    quoteWidth = (currentSnapshot.quotes ?? []).reduce((sum, quote) => sum + quote.length - 1, 0);
+  }
+  const end = input.draft.length - quoteWidth - input.occurrences.reduce((sum, ref) => sum + ref.length - 1, 0);
   if (end < 0) throw new Error("\u8F93\u5165\u6846\u72B6\u6001\u65E0\u6548\uFF0C\u8BF7\u91CD\u8BD5\u3002");
   return {
     text: (input.draft ? "\n" : "") + copyText(draft),
@@ -176,7 +194,14 @@ function DraftRescue({ sessionId, useInput, inputActions, useSessions, useProjec
   function append(draft) {
     try {
       requireVersion(boot());
-      const prepared = prepareAppend(draft, live.current);
+      let currentSnapshot;
+      if (boot()?.release?.version === "0.2.2-rc.1") {
+        inputActions.persistDraft();
+        const raw = window.localStorage.getItem("dsh.conversation." + sessionId);
+        currentSnapshot = raw ? JSON.parse(raw).draft : void 0;
+        if (live.current.draft && currentSnapshot === void 0) throw new Error("\u65E0\u6CD5\u6838\u5BF9\u5F53\u524D\u5F15\u7528\u5757\u4F4D\u7F6E\uFF0C\u8BF7\u590D\u5236\u539F\u6587\u540E\u7C98\u8D34\u3002");
+      }
+      const prepared = prepareAppend(draft, live.current, currentSnapshot);
       if (!inputActions.insertText(prepared.text, prepared.span)) throw new Error("\u8F93\u5165\u6846\u5DF2\u53D8\u5316\u6216\u6682\u4E0D\u53EF\u7F16\u8F91\uFF0C\u8BF7\u91CD\u8BD5\u3002");
       setNotice("\u5DF2\u8FFD\u52A0\u5230\u5F53\u524D\u8F93\u5165\u6846\uFF0C\u5C1A\u672A\u53D1\u9001\u3002");
     } catch (error) {

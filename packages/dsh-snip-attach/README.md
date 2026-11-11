@@ -1,10 +1,10 @@
 # 桌面截图附件 · dsh-snip-attach
 
-当前源码版本 **0.2.0**（尚未发布本次版本到 npm）。剪贴板新旧判断改用 Windows GetClipboardSequenceNumber，并在读取图片前后核对序号，替代九点像素采样；同像素的新截图也可识别。序号无法证明写入者一定是截图工具，请在等待期间避免其他程序改写剪贴板。intake 最多等待 2 秒，卸载/切换会话取消，实时检查 removed/subagent/phase。rc.5 没有公开的 File → accepted attachment ID 回执，新增 ID 也可能来自其他附件，所以只提示“已提交截图，请核对待发送图片”，不声称已确认加入；缺少变化或拒绝时提示 Ctrl+V。继续复用当前 composer 唯一的隐藏 input/change，未调用内部 createDrafts/addFiles。
+当前源码版本 **0.2.1**（尚未发布本次版本到 npm）。剪贴板新旧判断改用 Windows GetClipboardSequenceNumber，并在读取图片前后核对序号，替代九点像素采样；同像素的新截图也可识别。序号无法证明写入者一定是截图工具，请在等待期间避免其他程序改写剪贴板。intake 最多等待 2 秒，卸载/切换会话取消，实时检查 removed/subagent/phase。rc.5 没有公开的 File → accepted attachment ID 回执，新增 ID 也可能来自其他附件，所以只提示“已提交截图，请核对待发送图片”，不声称已确认加入；缺少变化或拒绝时提示 Ctrl+V。继续复用当前 composer 唯一的隐藏 input/change，未调用内部 createDrafts/addFiles。
 
 本次只完成 Windows 上的 typecheck、单元/rc.5 headless 集成、browser factory 的 jsdom 检查及 verify-pack；未安装到真实 DSH、未做 Electron 目视验收。
 
-版本 **0.2.0**，MIT。**尚未发布到 npm**。仅针对官方 **DSH Desktop 0.2.1-rc.5 + Windows**；客户端每次操作会校验 `__DSH_BOOT__.release.version` 和桌面页面地址，其他版本或网页环境禁用按钮。`dsh.client.platform: web` 表示桌面壳中的 Web Client，并不表示支持普通浏览器。
+版本 **0.2.1**，MIT。**尚未发布到 npm**。仅针对官方 **DSH Desktop 0.2.1-rc.5 / 0.2.2-rc.1 + Windows**；客户端每次操作会校验 `__DSH_BOOT__.release.version` 和桌面页面地址，其他版本或网页环境禁用按钮。`dsh.client.platform: web` 表示桌面壳中的 Web Client，并不表示支持普通浏览器。
 
 在输入框底部左侧工具栏点击 **相机按钮「截图并添加附件」**，用 Windows `ms-screenclip:` 框选截图。检测到新的剪贴板图片后，先弹出预览，需点击「确认加入」才会通过 DSH 自己的文件 intake 加入当前会话的待发送附件；「取消」或切换会话不会注入。注入后只提示「已提交截图，请核对待发送图片」，不声称已确认加入，**不会自动发送**。按钮位于「+」右侧的左侧扩展区，权限/计划控件可能在两者之间。
 
@@ -132,3 +132,5 @@ npm run verify-pack
 ```
 
 `npm test` 会重建需提交的 lib/。以上通过不等于 Electron 桌面通过；真实截图、剪贴板、焦点/布局及桌面安装仍需人工验收。
+
+本次 0.2.2-rc.1 兼容结论与 API 依据见[兼容矩阵](../../docs/compat-matrix.md)。本次在 Linux 实际加载；Windows / Electron 功能未实机验证，历史 rc.5 测试记录不代表本次加载过该版本。

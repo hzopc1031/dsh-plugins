@@ -1,5 +1,6 @@
 import { execFile } from 'node:child_process'
-import { EnvHttpProxyAgent, fetch as proxyFetch, type Dispatcher } from 'undici'
+import type { Dispatcher } from 'undici'
+import { createIntranetHttp, describeNetworkError, type IntranetSettings } from './intranet-http.js'
 import { repoName, limitSchema, fullLimitSchema, type Scan, type Item } from './types.js'
 import { SafeText } from './safety.js'
 import { BusinessReadError, clip, FILE_SNIPPET_LIMIT, MAX_CONTEXT_FILES } from './business.js'
@@ -13,18 +14,22 @@ export const ghToken: GhToken = signal => new Promise(resolve => {
     (error, stdout) => resolve(error ? '' : stdout.trim()))
 })
 export class GithubError extends Error {
-  constructor(public readonly status: number, public readonly retryAt?: number) {
-    super(status === 403 || status === 429 ? 'GitHub 限流或权限不足；稍后重试。' : 'GitHub 请求失败，请检查网络、代理和仓库访问权限。')
+  readonly code?: string
+  constructor(public readonly status: number, public readonly retryAt?: number, cause?: unknown) {
+    const info = status === 0 ? describeNetworkError(cause) : undefined
+    super(info ? `GitHub ${info.message}；${info.hintZh}` : status === 403 || status === 429
+      ? `GitHub HTTP ${status} 限流或权限不足；稍后重试。` : `GitHub HTTP ${status} 请求失败，请检查网络、代理和仓库访问权限。`, { cause })
+    this.code = info?.code ?? `HTTP_${status}`
   }
 }
 interface IssueWire { number: number; title: string; body: string | null; updated_at: string; html_url: string; pull_request?: unknown }
 interface RepositoryWire { has_issues?: boolean; has_pull_requests?: boolean }
 interface PullWire extends IssueWire { head: { sha: string }; additions?: number; deletions?: number; changed_files?: number; draft?: boolean; merge_commit_sha?:string; merged?:boolean }
 export class Github {
-  #options: { safe?: SafeText; fetch?: Fetcher; env?: NodeJS.ProcessEnv; gh?: GhToken; timeoutMs?: number; maxPages?: number; now?: () => number }
+  #options: { safe?: SafeText; fetch?: Fetcher; env?: NodeJS.ProcessEnv; gh?: GhToken; timeoutMs?: number; maxPages?: number; now?: () => number; network?: IntranetSettings }
   #token = ''
   #ready?: Promise<void>
-  #dispatcher?: EnvHttpProxyAgent
+  #network: ReturnType<typeof createIntranetHttp>
   #cooldown = 0
   #trees = new Map<string, Promise<string[]>>()
   readonly safe: SafeText
@@ -32,8 +37,9 @@ export class Github {
   #featureWarnings: string[] = []
   #repositories = new Map<string, RepositoryWire>()
   get warnings(): string[] { return [...this.#warnings, ...this.#featureWarnings] }
-  constructor(options: { safe?: SafeText; fetch?: Fetcher; env?: NodeJS.ProcessEnv; gh?: GhToken; timeoutMs?: number; maxPages?: number; now?: () => number } = {}) {
+  constructor(options: { safe?: SafeText; fetch?: Fetcher; env?: NodeJS.ProcessEnv; gh?: GhToken; timeoutMs?: number; maxPages?: number; now?: () => number; network?: IntranetSettings } = {}) {
     this.#options = options
+    this.#network = createIntranetHttp(options.network, options.env)
     this.safe = options.safe ?? new SafeText(options.env)
   }
   private async auth(signal?: AbortSignal): Promise<void> {
@@ -57,11 +63,10 @@ export class Github {
     if (now < this.#cooldown) throw new GithubError(429, this.#cooldown)
     const combined = AbortSignal.any([AbortSignal.timeout(this.#options.timeoutMs ?? 20000), ...(signal ? [signal] : [])])
     await this.auth(combined)
-    const headers: Record<string,string> = { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', 'User-Agent': 'dsh-github-triage/0.2.0' }
+    const headers: Record<string,string> = { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', 'User-Agent': 'dsh-github-triage/0.2.1' }
     if (this.#token) headers.Authorization = 'Bearer ' + this.#token
-    if (!this.#options.fetch && !this.#dispatcher) this.#dispatcher = new EnvHttpProxyAgent()
     try {
-      const response = await (this.#options.fetch ?? proxyFetch)(url.href, { method: 'GET', headers, signal: combined, redirect: 'error', dispatcher: this.#dispatcher })
+      const response = await (this.#options.fetch ?? this.#network.fetch)(url.href, { method: 'GET', headers, signal: combined, redirect: 'error' })
       if (!response.ok) {
         let retryAt: number | undefined
         if ([403,429].includes(response.status)) {
@@ -77,7 +82,7 @@ export class Github {
     } catch (error) {
       if (signal?.aborted) throw new Error('GitHub 请求已取消')
       if (error instanceof GithubError) throw error
-      throw new GithubError(0)
+      throw new GithubError(0, undefined, combined.aborted ? combined.reason : error)
     }
   }
   private validateQuery(query: string): void {
@@ -254,6 +259,6 @@ export class Github {
     }
     return result
   }
-  async close(): Promise<void> { await this.#dispatcher?.close() }
+  async close(): Promise<void> { await this.#network.close() }
 }
 

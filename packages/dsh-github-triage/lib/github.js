@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process';
-import { EnvHttpProxyAgent, fetch as proxyFetch } from 'undici';
+import { createIntranetHttp, describeNetworkError } from './intranet-http.js';
 import { repoName, limitSchema, fullLimitSchema } from './types.js';
 import { SafeText } from './safety.js';
 import { BusinessReadError, clip, FILE_SNIPPET_LIMIT, MAX_CONTEXT_FILES } from './business.js';
@@ -9,17 +9,21 @@ export const ghToken = signal => new Promise(resolve => {
 export class GithubError extends Error {
     status;
     retryAt;
-    constructor(status, retryAt) {
-        super(status === 403 || status === 429 ? 'GitHub 限流或权限不足；稍后重试。' : 'GitHub 请求失败，请检查网络、代理和仓库访问权限。');
+    code;
+    constructor(status, retryAt, cause) {
+        const info = status === 0 ? describeNetworkError(cause) : undefined;
+        super(info ? `GitHub ${info.message}；${info.hintZh}` : status === 403 || status === 429
+            ? `GitHub HTTP ${status} 限流或权限不足；稍后重试。` : `GitHub HTTP ${status} 请求失败，请检查网络、代理和仓库访问权限。`, { cause });
         this.status = status;
         this.retryAt = retryAt;
+        this.code = info?.code ?? `HTTP_${status}`;
     }
 }
 export class Github {
     #options;
     #token = '';
     #ready;
-    #dispatcher;
+    #network;
     #cooldown = 0;
     #trees = new Map();
     safe;
@@ -29,6 +33,7 @@ export class Github {
     get warnings() { return [...this.#warnings, ...this.#featureWarnings]; }
     constructor(options = {}) {
         this.#options = options;
+        this.#network = createIntranetHttp(options.network, options.env);
         this.safe = options.safe ?? new SafeText(options.env);
     }
     async auth(signal) {
@@ -59,13 +64,11 @@ export class Github {
             throw new GithubError(429, this.#cooldown);
         const combined = AbortSignal.any([AbortSignal.timeout(this.#options.timeoutMs ?? 20000), ...(signal ? [signal] : [])]);
         await this.auth(combined);
-        const headers = { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', 'User-Agent': 'dsh-github-triage/0.2.0' };
+        const headers = { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', 'User-Agent': 'dsh-github-triage/0.2.1' };
         if (this.#token)
             headers.Authorization = 'Bearer ' + this.#token;
-        if (!this.#options.fetch && !this.#dispatcher)
-            this.#dispatcher = new EnvHttpProxyAgent();
         try {
-            const response = await (this.#options.fetch ?? proxyFetch)(url.href, { method: 'GET', headers, signal: combined, redirect: 'error', dispatcher: this.#dispatcher });
+            const response = await (this.#options.fetch ?? this.#network.fetch)(url.href, { method: 'GET', headers, signal: combined, redirect: 'error' });
             if (!response.ok) {
                 let retryAt;
                 if ([403, 429].includes(response.status)) {
@@ -84,7 +87,7 @@ export class Github {
                 throw new Error('GitHub 请求已取消');
             if (error instanceof GithubError)
                 throw error;
-            throw new GithubError(0);
+            throw new GithubError(0, undefined, combined.aborted ? combined.reason : error);
         }
     }
     validateQuery(query) {
@@ -305,5 +308,5 @@ export class Github {
         }
         return result;
     }
-    async close() { await this.#dispatcher?.close(); }
+    async close() { await this.#network.close(); }
 }

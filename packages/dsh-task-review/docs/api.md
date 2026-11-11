@@ -1,4 +1,4 @@
-﻿# DSH 0.2.1-rc.5 API 证据与设计
+# DSH 0.2.1-rc.5 API 证据与设计
 
 核对日期：2026-11-09。本机安装锚点 `D:/AIInfra/dsh-app/node_modules/@deepseek-ai/`，以下路径相对于该目录；另阅读任务指定的 `../_tools/ref/dsh` 中插件开发 skill 及其 host-plugin、verification 参考，`../_tools/ref2/dsh` 的 Client 包清单。所有 API 以本机对应版本的 README、类型和 built JS 为准。
 

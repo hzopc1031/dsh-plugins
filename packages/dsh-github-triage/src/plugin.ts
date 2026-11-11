@@ -1,3 +1,4 @@
+import { intranetConfig, type IntranetSettings } from './intranet-http.js'
 import type { Context } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 import { CommandDefinitionId, type CommandInvocation, type CommandResult } from '@deepseek-ai/dsh-commands'
@@ -17,6 +18,7 @@ import { SafeText } from './safety.js'
 export const name='github-triage'
 export const inject=['commands','storageDomain']
 export const Config = z.object({
+  ...intranetConfig,
   repositories:z.array(z.object({
     repo:z.string().required(),
     business:z.string().default('').description('项目业务说明：核心功能、高风险模块、优先级原则；与文件内容一同交给 AI'),
@@ -36,7 +38,7 @@ export const Config = z.object({
   provider:z.string().default('').description('DSH 已注册的服务商路由 ID，运行 /triage-models 复制 provider 值；与 model 分开填，不是密钥；默认空值无法 AI 研判'),
   model:z.string().default('').description('DSH 已注册服务商下的模型 ID，运行 /triage-models 复制 model 值；不填 provider/model 组合；默认空值无法 AI 研判'),
 })
-export interface Input {
+export interface Input extends IntranetSettings {
   repositories?: {repo:string;mode?:'issues'|'prs'|'both';daily?:string;everyHours?:number;limit?:number;business?:string;businessFile?:string;localRepoPath?:string;localRef?:string;rulesFile?:string;fullMax?:number}[]
   limit?:number;fullMax?:number;modelEnabled?:boolean;provider?:string;model?:string
 }
@@ -85,7 +87,7 @@ export async function apply(ctx: Context, input: Input = {}): Promise<void> {
   }
   const perform=async(repo: ReturnType<typeof repositories>[number], limit:number, scheduled:boolean, signal:AbortSignal,scan:Scan={})=>{
     if(Date.now()<(retryAt.get(repo.repo)??0))throw new GithubError(429,retryAt.get(repo.repo))
-    const client=new Github({safe})
+    const client=new Github({safe, network: input})
     try {
       const next=structuredClone(state),now=Date.now()
       const report=await run(client,repo,next,{...scan,limit,now,model:dshModel(ctx,config),modelRoute:JSON.stringify([config.modelEnabled,config.provider,config.model]),modelNote:modelWarning(ctx,config),signal})

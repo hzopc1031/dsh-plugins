@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.1 (2026-11-11)
+
+- 修复 DSH 0.2.2-rc.1 加载兼容声明；Linux 加载验证，Windows / Electron 功能未实测。
+- 增加插件级 HTTP 代理、公司 CA、具名网络原因与中文排查提示；默认沿用宿主 fetch。
+- 合并重复网络错误，支持网络诊断、缓存快照导入导出及离线模式。
+
+
 ## 0.1.0 — unreleased
 
 - Merge official Kafka/Hadoop/Flink advisories into each project’s version-and-security strip, with project-local version input, three-way official-range verdicts, fixed wording, original links/times and unknown reasons. No default version or production-safety conclusion.

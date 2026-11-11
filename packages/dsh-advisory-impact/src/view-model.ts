@@ -1,3 +1,4 @@
+import { collapseNetworkErrors } from './intranet-http.js'
 import type { Evaluation, EvaluatedProject } from './evaluate.js'
 import type { SourceResult } from './cache.js'
 import type { OsvLookup } from './osv.js'
@@ -47,7 +48,7 @@ export function createViewModel(evaluation: Evaluation) {
     for (const advisory of project.advisories ?? []) counts[advisory.verdict]++
     counts.osvOnly += project.osvOnly.items.length
   }
-  return { settings: evaluation.settings, counts, projects,
+  return { diagnostics: collapseNetworkErrors(evaluation), settings: evaluation.settings, counts, projects,
     suppressions: { title: '扫描器报了，但官方说明不适用', source: sourceView(evaluation.suppressions),
       items: evaluation.suppressions?.data?.suppressions.map(s => ({ ...s, fetchedTime: displayTime(s.fetchedAt) })) ?? null },
     guidance: sourceView(evaluation.guidance), flinkPointer: sourceView(evaluation.flinkPointer) }

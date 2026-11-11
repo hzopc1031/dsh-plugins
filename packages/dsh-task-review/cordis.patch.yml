@@ -1,4 +1,4 @@
-﻿- insert:
+- insert:
     - id: task-review
       name: dsh-task-review
       config: {}

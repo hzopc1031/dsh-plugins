@@ -1,7 +1,8 @@
 # Third-party notice
 
-Draft decoding follows DeepSeek Harness dsh-v0.2.1-rc.5 (MIT):
+Draft decoding follows DeepSeek Harness dsh-v0.2.1-rc.5 and dsh-v0.2.2-rc.1 (MIT):
 https://github.com/deepseek-ai/deepseek-harness/tree/dsh-v0.2.1-rc.5
+https://github.com/deepseek-ai/deepseek-harness/tree/dsh-v0.2.2-rc.1
 
 MIT License
 

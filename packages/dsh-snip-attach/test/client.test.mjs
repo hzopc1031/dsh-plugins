@@ -25,7 +25,8 @@ test('abortable preserves successful and failed RPC results', async () => {
 })
 test('version and desktop origin fail closed', () => {
   requireDesktop(boot, { protocol: 'dsh-app:', hostname: 'app' })
-  for (const data of [undefined, {}, { release: { version: '0.2.2-rc.1' } }]) assert.throws(() => requireDesktop(data, { protocol: 'dsh-app:', hostname: 'app' }))
+  requireDesktop({ release: { version: '0.2.2-rc.1' } }, { protocol: 'dsh-app:', hostname: 'app' })
+  for (const data of [undefined, {}, { release: { version: '0.2.2-rc.2' } }]) assert.throws(() => requireDesktop(data, { protocol: 'dsh-app:', hostname: 'app' }))
   for (const location of [{ protocol: 'https:', hostname: 'app' }, { protocol: 'dsh-app:', hostname: 'shell' }]) assert.throws(() => requireDesktop(boot, location))
 })
 test('server URL parser accepts only exact IPv4 loopback, valid port and UUID', () => {

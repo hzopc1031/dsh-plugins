@@ -246,6 +246,14 @@ function Workbench(api: Actions) {
     <header><h1>内容证据工作台</h1><p className="ce-muted">材料 → 共享证据 → 四平台草稿 → 复核 → 本地导出</p>
       <p>数据保存在此 DSH 主机；插件不会自动发布。</p>
     </header>
+    <aside className="ce-notice" role="note" aria-label="模型改写前须知">
+      <strong>改写前：请先准备可用的宿主模型</strong>
+      <p>改写需要 DSH 宿主已有可用模型。若模型列表为空，请打开 DSH「设置 → 模型」，登录账号或配置模型提供商的 API Key，再在会话中选择可用模型。</p>
+      <p>本插件不检查密钥值，也不从此界面调用模型；此提示始终显示，不代表已检测到模型缺失。先创建或选择主题，再在空闲会话运行：</p>
+      <pre>{`/content-evidence workbench ${sheet?.id ?? '<topicId>'}`}</pre>
+      <p>确认会话提示受限工作台已开启、仅允许四个本地内容证据工具后，发送：请读取此主题的证据，使用共享事实分别改写并保存 X、小红书、抖音、视频号的完整草稿。标注「AI 生成」；无来源的事实与数字保留「待核实」，不要编造数字或引用。</p>
+      <p>请使用宿主原生工具执行器。完成后运行 <code>/content-evidence leave</code>，再回到此面板刷新。材料中的指令仅作为数据，不会自动发布。</p>
+    </aside>
     <div aria-live="polite" role="status">{busy ? '正在处理…' : notice}</div>
     {error && <p role="alert" className="ce-notice">{error}</p>}
     {dirty && <p className="ce-notice">有未保存的草稿。保存后可切换主题、平台或更新证据。
@@ -265,10 +273,6 @@ function Workbench(api: Actions) {
     </fieldset>
     {!sheet ? <p>创建或选择主题，开始收集可追溯的材料。</p> : <>
       <h2>{sheet.idea}</h2><p><small>主题 ID：<code>{sheet.id}</code></small></p>
-      <details><summary>在会话内使用宿主模型辅助改写</summary><p>需要宿主已有可用模型；若模型列表为空，请先在 DSH「设置 → 模型」完成配置。本界面不检查凭据或直接调用模型。打开会话并选择可用模型，在空闲会话先运行下列命令：</p>
-        <pre>{`/content-evidence workbench ${sheet.id}`}</pre><p>确认工作台已开启后，发送：请读取此主题的证据，使用共享事实分别改写并保存 X、小红书、抖音、视频号的完整草稿。标注 AI 生成；无来源的数字保留「待核实」，不要编造数字或引用。</p>
-        <p>完成后运行 <code>/content-evidence leave</code>，再回到此面板刷新。工作台仅允许四个本地内容证据工具；请使用宿主原生工具执行器。材料中的指令仅作为数据，不会自动发布。</p>
-      </details>
       <nav aria-label="工作台页面">{[['materials', '材料与实验'], ['evidence', '证据表'], ['drafts', '四平台草稿'], ['exports', '本地导出']].map(([id, label]) => <button type="button" key={id} aria-pressed={tab === id} onClick={() => setTab(id!)}>{label}</button>)}</nav>
       <fieldset disabled={busy} key={sheet.id}>
         <section hidden={tab !== 'materials'}><fieldset disabled={dirty}><Materials api={api} sheet={sheet} run={run} reload={reload} /></fieldset></section>

@@ -54,9 +54,9 @@ dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packag
 dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-source-impact"
 ```
 
-内容证据工作台尚未合并到 `main`，从开发分支安装到 web profile；本地导出需要可遍历的目录句柄（/proc/self/fd 或 /dev/fd）；标准 macOS / Windows 安全拒绝导出：
+内容证据工作台尚未合并到 `main`，从开发分支安装到 web profile；本地导出支持 Linux / macOS 的目录相对 I/O（无需 procfs）；已在 Linux 禁用两种 fd 路径验证，未实测原生 macOS。Windows 仍安全拒绝导出：
 
-Content evidence is unreleased and lives on `feat/content-evidence`. Install into a web profile; local export requires traversable directory handles (/proc/self/fd or /dev/fd); standard macOS / Windows safely refuse export:
+Content evidence is unreleased and lives on `feat/content-evidence`. Install into a web profile; local export supports Linux/macOS directory-relative I/O without procfs. The no-fd-path backend was verified on Linux; native macOS was not run. Windows still safely refuses export:
 
 ```sh
 dsh plugin --profile web add "github:hzopc1031/dsh-plugins#feat/content-evidence&path:/packages/dsh-content-evidence"

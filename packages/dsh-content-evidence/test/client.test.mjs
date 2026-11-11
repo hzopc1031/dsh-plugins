@@ -129,8 +129,6 @@ async function mount(t) {
 
 test('compiled client exports the plugin contract, registers both slots and unmounts its Remote contribution', async t => {
   const ui = await mount(t)
-  const help = JSON.stringify(ui.view.toJSON())
-  for (const required of ['设置 → 模型', '空闲会话', '/content-evidence workbench', '待核实', '原生工具执行器']) assert.ok(help.includes(required), required)
   assert.equal(ui.client.name, 'content-evidence-client')
   assert.equal(typeof ui.client.apply, 'function')
   assert.deepEqual(Array.from(ui.client.inject), ['slots', 'remote'])
@@ -143,6 +141,24 @@ test('compiled client exports the plugin contract, registers both slots and unmo
   assert.equal(ui.core.entries('main').length, 0)
   assert.equal(ui.core.entries('sidebar.panellist').length, 0)
   assert.equal(ui.ctx.get('remote.contentEvidence'), undefined)
+})
+
+test('model setup notice stays visible with or without a topic and makes no model or credential request', async t => {
+  const ui = await mount(t)
+  for (const selected of [true, false]) {
+    if (!selected) {
+      await act(async () => { ui.view.root.findAllByType('select')[0].props.onChange({ target: { value: '' } }) })
+    }
+    const notice = ui.view.root.findByProps({ 'aria-label': '模型改写前须知' })
+    for (let node = notice; node; node = node.parent) {
+      assert.notEqual(node.type, 'details')
+      assert.ok(!node.props.hidden)
+    }
+    const copy = renderToStaticMarkup(React.createElement('aside', notice.props))
+    for (const required of ['已有可用模型', '模型列表为空', '设置 → 模型', '登录账号', '提供商的 API Key', '空闲会话', '确认会话提示受限工作台已开启', '四个本地内容证据工具', 'X、小红书、抖音、视频号', 'AI 生成', '待核实', '不检查密钥值', '不从此界面调用模型', '此提示始终显示', '原生工具执行器']) assert.ok(copy.includes(required), required)
+    assert.equal(notice.findByType('pre').children.join(''), `/content-evidence workbench ${selected ? ui.topic.id : '<topicId>'}`)
+  }
+  assert.ok(ui.calls.every(call => ['listTopics', 'readEvidence'].includes(call.method)))
 })
 
 test('UI creates topics, stores sources/experiments/claims and renders malicious material as inert text', async t => {

@@ -52,7 +52,7 @@ export function repoCommand(raw: string, state: State, config:Repo[]=[]): string
     state.overrides[repo]=repoSchema.parse(r);delete state.lastRun[repo]
     return '已更新业务说明：'+repo
   }
-  const r: Repo = { repo, mode: 'both' }
+  const r: Repo = { ...(repositories(config,state).find(r=>r.repo===repo)??{mode:'both' as const}), repo }
   const seen = new Set<string>()
   for (let i = 0; i < args.length; i++) {
     const flag = args[i], key = ['--issues','--prs','--both'].includes(flag) ? 'mode' : ['--daily','--every'].includes(flag) ? 'schedule' : flag

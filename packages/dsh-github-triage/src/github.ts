@@ -57,7 +57,7 @@ export class Github {
     if (now < this.#cooldown) throw new GithubError(429, this.#cooldown)
     const combined = AbortSignal.any([AbortSignal.timeout(this.#options.timeoutMs ?? 20000), ...(signal ? [signal] : [])])
     await this.auth(combined)
-    const headers: Record<string,string> = { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', 'User-Agent': 'dsh-github-triage/0.2.0' }
+    const headers: Record<string,string> = { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', 'User-Agent': 'dsh-github-triage/0.3.0' }
     if (this.#token) headers.Authorization = 'Bearer ' + this.#token
     if (!this.#options.fetch && !this.#dispatcher) this.#dispatcher = new EnvHttpProxyAgent()
     try {

@@ -1,4 +1,4 @@
-dsh-github-triage 0.1.0
+dsh-github-triage 0.3.0
 
 This package is an original implementation, licensed under MIT (see LICENSE).
 
@@ -22,3 +22,35 @@ Their distributed packages retain their own copyright and license notices.
 Official DeepSeek Harness rc.5 packages are host peers/development dependencies.
 Local monorepo package conventions were followed under this repository's MIT license.
 
+
+Browser bundle:
+- zod 4.4.3 is bundled into lib/client.js for shared frontend/server validation.
+  https://github.com/colinhacks/zod
+  Its full MIT license follows.
+- React, react/jsx-runtime, and @deepseek-ai/dsh-client-ui-primitives are
+  external host-shared modules, not redistributed inside this browser bundle.
+- esbuild and jsdom are development/build/test tools only, not runtime assets.
+- Browser registration/build conventions follow this monorepo's MIT-licensed
+  dsh-draft-rescue and dsh-snip-attach and official DeepSeek Harness rc.5 (MIT).
+  No official UI component implementation is copied; Modal is host-shared.
+MIT License
+
+Copyright (c) 2025 Colin McDonnell
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

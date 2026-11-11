@@ -11,6 +11,7 @@ import { dshModel, listModels, modelWarning } from './model.js';
 import { openLocal } from './local.js';
 import { rulesCommand } from './rule-files.js';
 import { SafeText } from './safety.js';
+import { uiService } from './ui-service.js';
 export const name = 'github-triage';
 export const inject = ['commands', 'storageDomain'];
 export const Config = z.object({
@@ -196,6 +197,30 @@ export async function apply(ctx, input = {}) {
         await save(next);
         return message;
     }));
+    const ui = uiService({
+        config, state: () => state, save, safe, serialize, perform, signal: lifetime.signal,
+        validate: async (repo) => {
+            if (repo.localRef && !repo.localRepoPath)
+                throw new Error('ref 需要本地仓库');
+            if (repo.localRepoPath) {
+                const local = await openLocal(repo, lifetime.signal);
+                if (!local.sha)
+                    throw new Error('本地路径或 ref 无效');
+            }
+        },
+        model: () => ({ enabled: config.modelEnabled, provider: config.provider, model: config.model, available: !modelWarning(ctx, config), warning: modelWarning(ctx, config) }),
+        models: () => listModels(ctx),
+    });
+    command('triage-ui', 'GitHub 仓库研判界面数据接口（JSON）', async (i) => {
+        if (i.rawInput.length > 150000)
+            return JSON.stringify({ ok: false, error: '请求过大' });
+        try {
+            return JSON.stringify(await ui(JSON.parse(i.rawInput)));
+        }
+        catch {
+            return JSON.stringify({ ok: false, error: '请求必须为有效 JSON' });
+        }
+    });
     const tick = async () => {
         if (stopped || ticking)
             return;

@@ -1,5 +1,14 @@
 # 更新记录
 
+## 0.3.0 · 2026-11-11
+
+- 新增中文界面：会话顶部「GitHub 仓库研判」按钮，通过 rc.5 conversation.session.header.actions 插槽打开共享 Modal。遵循既有 UI 包的 dsh.client/platform:web/inject 与 lazy-CJS factory 协议，React/primitives 外部共享。
+- 管理仓库、业务说明与文件、本地 Git 路径/ref、类型、定时和上限；共享 zod 校验，按字段 patch 合并到最新配置。/triage-repo add 对同名仓库改为合并显式字段，六个旧命令和语法继续可用。
+- 模型状态及真实只读模型 ID 目录；手动普通/全量分析通过原串行队列异步执行，显示任务状态、同仓库防重复入队；三档分组、类型筛选、业务结论、本地证据和安全原链接。
+- 详情中纠正三档结论并填写理由，规则可查看和导出，默认不覆盖。没有新增 GitHub 写操作或本地代码修改。
+- 预构建 lib 与浏览器 bundle 纳入 42 文件发布白名单；临时 rc.5 profile 验证 client 入口。UI smoke 改用系统 TEMP、桌面自带 CLI 本地路径离线安装、独立无头 Edge/CDP、截图与失败清理；真实 UI 在沙箱中因 CLI 访问被拒未验证。
+- 新增结构化 /triage-ui 数据命令，借助宿主真实 commands.execute remote 承接界面调用；结果沿用宿主会话命令日志。新增服务端和 jsdom 测试、client 入口与 UI smoke 验证脚本。
+
 ## 0.2.0 · 2026-11-11
 
 - 新增可选 localRepoPath / localRef 与 add --local、local / --clear 命令。固定 argv、shell:false 的只读 Git 白名单，限制时间、取消与输出；对照本地提交快照、文件/函数片段、修复提交、提交包含关系和完整 patch-id，模型输出 localApplicability / localReason。

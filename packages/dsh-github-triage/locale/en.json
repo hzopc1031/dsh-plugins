@@ -1,6 +1,1 @@
-{
-  "meta": {
-    "title": "GitHub Triage",
-    "description": "Read-only AI triage with business and local code context, three recommendations, bounded full scans and reusable correction rules"
-  }
-}
+﻿{"meta":{"title":"GitHub Triage","description":"Configure repositories, business context, local code and schedules in a session-header panel; inspect AI recommendations, evidence and reusable corrections"}}

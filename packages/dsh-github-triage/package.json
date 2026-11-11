@@ -1,7 +1,7 @@
 {
   "name": "dsh-github-triage",
-  "version": "0.2.0",
-  "description": "AI-led read-only GitHub issue and PR triage with business context for DeepSeek Harness",
+  "version": "0.3.0",
+  "description": "在界面配置仓库、业务与本地代码，结合 AI 判断 issue 是否值得修、PR 是否值得合入",
   "type": "module",
   "main": "index.js",
   "types": "lib/plugin.d.ts",
@@ -11,7 +11,12 @@
       "default": "./index.js"
     },
     "./locale/*.json": "./locale/*.json",
-    "./icon": "./icon.svg"
+    "./icon": "./icon.svg",
+    "./client": {
+      "types": "./lib/client.d.ts",
+      "default": "./lib/client.js"
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "index.js",
@@ -32,6 +37,14 @@
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-ui-session",
+        "@deepseek-ai/dsh-api-remotes"
+      ]
     }
   },
   "license": "MIT",
@@ -48,11 +61,12 @@
     "directory": "packages/dsh-github-triage"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node scripts/build-client.mjs",
     "typecheck": "tsc --noEmit",
     "test": "npm run build && node --test --test-isolation=none test/*.test.mjs",
     "verify-pack": "node scripts/verify-pack.mjs",
-    "smoke-real": "node scripts/smoke-real.mjs"
+    "smoke-real": "node scripts/smoke-real.mjs",
+    "ui-smoke": "node scripts/ui-smoke.mjs"
   },
   "dependencies": {
     "undici": "^6.23.0",
@@ -96,7 +110,20 @@
     "@deepseek-ai/dsh-storage-json": "0.2.1-rc.5",
     "@deepseek-ai/dsh-app-boot": "0.2.1-rc.5",
     "@types/node": "^22.0.0",
-    "typescript": "~5.9.3"
+    "typescript": "~5.9.3",
+    "@deepseek-ai/dsh-client-ui-slots": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-client-ui-session": "0.2.1-rc.5",
+    "@types/react-dom": "^18.2.0",
+    "react": "^18.2.0",
+    "jsdom": "^26.0.0",
+    "@deepseek-ai/dsh-api-remotes": "0.2.1-rc.5",
+    "esbuild": "^0.25.0",
+    "react-dom": "^18.2.0",
+    "@deepseek-ai/dsh-client-ui-renderer": "0.2.1-rc.5",
+    "@types/react": "^18.2.0",
+    "@deepseek-ai/dsh-client-ui-conversation": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-client-ui-primitives": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-client-modules": "0.2.1-rc.5"
   },
   "homepage": "https://github.com/hzopc1031/dsh-plugins/tree/main/packages/dsh-github-triage#readme"
 }

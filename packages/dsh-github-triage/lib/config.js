@@ -95,7 +95,7 @@ export function repoCommand(raw, state, config = []) {
         delete state.lastRun[repo];
         return '已更新业务说明：' + repo;
     }
-    const r = { repo, mode: 'both' };
+    const r = { ...(repositories(config, state).find(r => r.repo === repo) ?? { mode: 'both' }), repo };
     const seen = new Set();
     for (let i = 0; i < args.length; i++) {
         const flag = args[i], key = ['--issues', '--prs', '--both'].includes(flag) ? 'mode' : ['--daily', '--every'].includes(flag) ? 'schedule' : flag;

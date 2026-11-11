@@ -6,6 +6,7 @@ import { execFileSync } from 'node:child_process'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { initProfile, loadProfileDirectory, boot } from '@deepseek-ai/dsh-app-boot'
 import { Github } from '../lib/github.js'
+import ClientModules from '@deepseek-ai/dsh-client-modules'
 import LlmRuntime, { LlmAdapter } from '@deepseek-ai/dsh-llm'
 import { model } from './fixtures.mjs'
 import { SessionId } from '@deepseek-ai/dsh-session'
@@ -46,7 +47,7 @@ test('temporary official profile loads prebuilt plugin, commands persist only in
       async *stream(request){prompts.push(JSON.parse(request.messages[0].content[0].text));yield {type:'text-delta',text:await model(request.messages[0].content[0].text)};yield {type:'finish',reason:{kind:'stop'}}}
     }
     const start=async()=>{
-      const context=await boot('github-triage-test',config,patches,c=>{c.plugin(LlmRuntime)},pathToFileURL(path.join(profile,'package.json')).href)
+      const context=await boot('github-triage-test',config,patches,c=>{c.plugin(LlmRuntime);c.plugin(ClientModules)},pathToFileURL(path.join(profile,'package.json')).href)
       context.llm.registerAdapter(['test'],new MockAdapter())
       return context
     }
@@ -55,7 +56,27 @@ test('temporary official profile loads prebuilt plugin, commands persist only in
     let session=ctx.sessions.create(SessionId('github-triage-test'),{meta:{cwd:root}})
     let agent={id:session.id,session,ctx,status:'idle'}
     const execute=async line=>(await ctx.commands.execute(agent,line,[],new AbortController().signal)).result
-    assert.deepEqual(ctx.commands.list(agent).map(c=>c.name).filter(n=>n.startsWith('triage')).sort(),['triage','triage-fix','triage-models','triage-repo','triage-report','triage-rules'])
+    assert.deepEqual(ctx.commands.list(agent).map(c=>c.name).filter(n=>n.startsWith('triage')).sort(),['triage','triage-fix','triage-models','triage-repo','triage-report','triage-rules','triage-ui'])
+    const manifest=JSON.parse(await readFile(path.join(project,'package.json'),'utf8'))
+    assert.equal(manifest.dsh.client.platform,'web')
+    assert.deepEqual(manifest.dsh.client.inject,['@deepseek-ai/dsh-client-ui-conversation','@deepseek-ai/dsh-client-ui-session','@deepseek-ai/dsh-api-remotes'])
+    assert.equal(manifest.exports['./client'].default,'./lib/client.js')
+    assert.match(await readFile(path.join(project,'lib/client.js'),'utf8'),/window\.__ModuleLoader__\.load/)
+    const ui=async request=>{
+      const response=await execute('/triage-ui '+JSON.stringify(request))
+      assert.equal(response.kind,'success');const reply=JSON.parse(response.text);assert.equal(reply.ok,true,JSON.stringify(reply));return reply.data
+    }
+    assert.equal(ctx.clientModules.clientPath('dsh-github-triage'),path.join(project,'lib','client.js'))
+    const graph=ctx.clientModules.graph()
+    assert.ok(JSON.stringify(graph).includes('dsh-github-triage'))
+    const empty=await ui({action:'snapshot'});assert.equal(empty.repositories.length,0);assert.equal(empty.model.provider,'test')
+    assert.match((await ui({action:'models'})),/test-model/)
+    await ui({action:'add',value:{repo:'ui/repo',mode:'prs',business:'界面业务',limit:3}})
+    await ui({action:'patch',repo:'ui/repo',patch:{limit:4}})
+    assert.equal((await ui({action:'snapshot'})).repositories[0].business,'界面业务')
+    const invalid=JSON.parse((await execute('/triage-ui {"action":"patch","repo":"ui/repo","patch":{"limit":0}}')).text)
+    assert.equal(invalid.ok,false);assert.ok(invalid.fields.limit)
+    await ui({action:'remove',repo:'ui/repo'})
     assert.match((await execute('/triage')).text,/未配置仓库/)
     assert.match((await execute('/triage-repo add O/R --prs --limit 5 --business "核心 登录业务"')).text,/已保存/)
     assert.match((await execute('/triage-repo list')).text,/o\/r · prs/)
@@ -64,6 +85,10 @@ test('temporary official profile loads prebuilt plugin, commands persist only in
     assert.equal((await execute('/triage-fix o/r#1 不建议合')).kind,'error')
     assert.match((await execute('/triage-models')).text,/provider: "test"  model: "test-model"/)
     assert.equal((await execute('/triage-repo local o/r '+JSON.stringify(path.join(root,'missing')))).kind,'error')
+    const invalidLocal=JSON.parse((await execute('/triage-ui '+JSON.stringify({action:'patch',repo:'o/r',patch:{localRepoPath:path.join(root,'missing')}}))).text)
+    assert.equal(invalidLocal.ok,false);assert.ok(invalidLocal.fields.localRepoPath)
+    await ui({action:'patch',repo:'o/r',patch:{localRepoPath:root,localRef:'HEAD'}})
+    assert.equal((await ui({action:'snapshot'})).repositories[0].business,'核心 登录业务')
     assert.match((await execute('/triage-repo local o/r '+JSON.stringify(root)+' --ref HEAD')).text,/已更新本地仓库对照/)
     const triage=(await execute('/triage o/r --limit 1')).text
     assert.match(triage,/renderer startup fails/);assert.match(triage,/业务说明：已使用/);assert.match(triage,/结合业务：/)
@@ -71,6 +96,16 @@ test('temporary official profile loads prebuilt plugin, commands persist only in
     await execute('/triage o/r --full --since 2026-01-01 --max 150')
     assert.equal(scans.at(-1).limit,150);assert.equal(scans.at(-1).scan.full,true)
     assert.equal(prompts[0].business.text,'核心 登录业务')
+    const started=await ui({action:'start',repo:'o/r',scan:{limit:1}})
+    assert.ok(['queued','running'].includes(started.status))
+    for(let n=0;n<100;n++){
+      const jobs=await ui({action:'jobs'})
+      if(jobs.every(j=>j.status==='completed'||j.status==='failed'))break
+      await new Promise(resolve=>setTimeout(resolve,10))
+    }
+    assert.equal((await ui({action:'jobs'}))[0].status,'completed')
+    await ui({action:'fix',repo:'o/r',number:1,recommendation:'manual-review',reason:'界面纠正理由'})
+    assert.match(await ui({action:'rules',repo:'o/r'}),/界面纠正理由/)
     assert.match((await execute('/triage-fix o/r#1 不值得修 已解决')).text,/已保存纠正/)
     assert.match((await execute('/triage-report o/r')).text,/已解决/)
     assert.match((await execute('/triage-fix o/r#1 manual-review 新三档纠正')).text,/已保存纠正/)

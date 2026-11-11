@@ -42,3 +42,11 @@ test('every N hours and missed run coalescing',()=>{const s={kind:'every',hours:
 test('startup every runs once, no schedule and clock rollback',()=>{assert.equal(dueSlot({kind:'every',hours:1},undefined,12),12);assert.equal(dueSlot(undefined,0,100),undefined);assert.equal(dueSlot({kind:'every',hours:1},100,90),undefined)})
 test('global limit is inherited when static repository has no override',()=>{const resolved=settings(Config({repositories:[{repo:'o/r'}],limit:7}));assert.equal(resolved.limit,7);assert.equal(resolved.repositories[0].limit,undefined)})
 test('secret redaction preserves valid structured data with escaped characters',()=>{const secret='fixture"quoted\\secret',safe=new SafeText({GH_TOKEN:secret});const result=safe.value({text:secret,nested:[secret]});assert.deepEqual(result,{text:'[REDACTED]',nested:['[REDACTED]']})})
+
+test('add merges only explicit options into latest command/static repository settings',()=>{
+  const s=emptyState(),staticRepo={repo:'o/r',mode:'prs',business:'核心业务',businessFile:'docs/business.md',localRepoPath:'C:\\repo',localRef:'release',rulesFile:'C:\\rules.md',fullMax:200,schedule:{kind:'daily',time:'09:30'},limit:8}
+  repoCommand('add o/r --limit 4',s,[staticRepo])
+  assert.deepEqual(s.overrides['o/r'],{...staticRepo,limit:4})
+  repoCommand('add o/r --business "新业务"',s,[staticRepo])
+  assert.equal(s.overrides['o/r'].business,'新业务');assert.equal(s.overrides['o/r'].limit,4);assert.equal(s.overrides['o/r'].businessFile,'docs/business.md')
+})

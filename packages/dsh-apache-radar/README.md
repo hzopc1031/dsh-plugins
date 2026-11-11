@@ -26,16 +26,16 @@
 ## 三步快速上手
 
 1. **完全退出桌面 DSH。** 关闭所有窗口，并从系统托盘退出 DSH，确认已完全关闭后再安装或更新。需要 Node.js 22 及以上和 DSH 0.2.2-rc.1 及以上（小于 0.3.0）。
-2. **在终端安装开发分支。** `0.1.0` 尚未发布到 npm，也未合入 main；包内已有界面和后台编译文件，无需允许安装脚本。
+2. **从 Git 安装。** `0.1.0` 尚未发布到 npm；包内已有界面和后台编译文件，无需允许安装脚本。
 
    ```powershell
-   dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#feat/apache-radar&path:/packages/dsh-apache-radar"
+   dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-apache-radar"
    ```
 
    若独立 CLI 提示 desktop 只能由桌面应用管理，改用桌面版自带的 CLI，参数和 Git 地址不变：
 
    ```powershell
-   & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" plugin --profile desktop add "github:hzopc1031/dsh-plugins#feat/apache-radar&path:/packages/dsh-apache-radar"
+   & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-apache-radar"
    ```
 
 3. **重开 DSH，从侧栏打开「Apache 雷达」。** 确认“Apache 社区雷达”已启用，选择或输入已有本地项目的绝对目录，点击「打开」，再点击「刷新数据」。概览出现带来源和时间的卡片后，可在「关注动态」选择组件、填写实际运行版本并保存判定，再切到「每周简报」生成、复制或打开周报。无需创建聊天或填写账号、令牌、模型配置；首次采集需要访问公开 ASF 网站。原有 `/apache-radar help` 等命令仍可在项目会话使用。
@@ -66,7 +66,7 @@
 
 Check official advisory ranges against locally pinned running versions inside each project page. Keep a linked Chinese weekly brief for watched projects and compare official count scopes without treating them as one universal total. Kafka, Hadoop and Flink are watched by default. Releases, JIRA issues and KIP/FLIP proposals retain their original links and source statuses.
 
-This is **unreleased, Git-branch installation only**. Fully quit DSH Desktop, install using the quoted `feat/apache-radar` command above, reopen DSH and select **Apache 雷达** in the sidebar. Choose an existing local project directory, refresh, and generate or copy the brief. Slash commands remain available in project sessions. No model key or model call is required by the plugin. English metadata is shipped; panel copy, command output and briefs are Chinese.
+This is **unreleased**. Fully quit DSH Desktop, install using the quoted Git command above, reopen DSH and select **Apache 雷达** in the sidebar. Choose an existing local project directory, refresh, and generate or copy the brief. Slash commands remain available in project sessions. No model key or model call is required by the plugin. English metadata is shipped; panel copy, command output and briefs are Chinese.
 
 Every displayed count includes its source URL and fetch time in Asia/Singapore (UTC+8), plus a source timestamp when available. Retired committees and Attic PMC/subproject scopes stay side by side, including mismatches. GitHub Releases is not the release authority. reporter.apache.org is never used. Nothing is uploaded or automatically published.
 

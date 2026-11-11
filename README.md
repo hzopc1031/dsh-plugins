@@ -17,7 +17,7 @@
 | 桌面截图附件 | `dsh-snip-attach`（尚未发布到 npm / not published to npm） | Windows 框选截图后加入待发送附件，针对桌面 rc.5（`/screenshot`）/ Windows snip to pending attachments | [README](packages/dsh-snip-attach/README.md) |
 | 文件占用程序查询 | `dsh-file-holder`（未发布 npm / not published to npm） | 查询 Windows 项目内文件的占用程序、PID 与观察时间（`/file-holder`）；仅支持 rc.5 / Windows project file holder lookup | [README](packages/dsh-file-holder/README.md) |
 | DLL 诊断 | `dsh-dll-doctor`（未发布 npm / not published to npm） | 只读检查 Windows EXE/DLL 的缺失依赖与架构不匹配（`/dll-check`）/ Static Windows DLL diagnostics | [README](packages/dsh-dll-doctor/README.md) |
-| GitHub issue/PR 研判 | `dsh-github-triage`（未发布 npm / not published to npm） | 自动拉取 issues/PR，由 AI 结合业务说明判断真实性、修复及合入价值；只读、增量、定时简报（`/triage`），针对 rc.5 / AI-led triage with business context | [README](packages/dsh-github-triage/README.md) |
+| GitHub issue/PR 研判 | `dsh-github-triage`（未发布 npm / not published to npm） | 自动拉取指定 GitHub 仓库的 issues 和 PR，由 AI 结合你的业务说明，帮你判断问题是否真实存在、值不值得修，PR 是否值得合入。 | [README](packages/dsh-github-triage/README.md) |
 
 > 心跳插件的 npm 包名是 `dsh-heartbeat-monitor`：`dsh-heartbeat` 已被一个无关的包占用。
 > The heartbeat plugin is published as `dsh-heartbeat-monitor` because `dsh-heartbeat` is an unrelated package.

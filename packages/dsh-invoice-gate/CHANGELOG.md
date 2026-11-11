@@ -8,7 +8,7 @@
 - Keep ExcelJS 4.4.0 and override its uuid to 11.1.1. Package-root production audit on 2026-11-11 reports zero findings; document the separate consumer-root override requirement. Verify CommonJS v4 compatibility, XLSX text identifiers and preservation of previous packs on failure.
 - Recheck all 76 tests and package contents, including forced fd-path failures in real export/status subprocesses, replacement refusals and failure preservation. Run GBK, mismatch and OFD-refusal samples in disposable Linux DSH 0.2.2-rc.1 with fd paths disabled and no model. Command-only result cards remain absent; local status files and packs carry the results.
 
-- Add a local CNY invoice/ledger verification gate and evidence packs, available from the `feat/invoice-gate` git branch; not published to npm.
+- Add a local CNY invoice/ledger verification gate and evidence packs, available from `main`; not published to npm.
 - Read explicitly mapped CSV/XLSX, documented structured/OCR JSON, labelled PDF text and the documented XML dialect. Inventory failures/skips and refuse OFD and scans without OCR JSON.
 - Keep originals read-only with SHA-256, identifiers as strings, blanks distinct from zero and formula-only fields unchecked; execute no macros, links or formulas.
 - Check exact integer-fen arithmetic, supplied line totals, duplicate numbers/hashes, optional buyers/dates and number-based ledger matches. List unexecuted and unimplemented rules; never delete, merge or repair invoices automatically.

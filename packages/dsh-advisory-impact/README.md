@@ -25,10 +25,10 @@
 ## 三步开始
 
 1. **完全退出桌面 DSH。** 关闭所有窗口，并从系统托盘退出。准备一个本机已有项目目录，以及你实际运行的产品版本；插件没有默认运行版本。
-2. **安装未发布的开发分支。** 当前没有 npm 发布包，使用带引号的 Git 地址：
+2. **从 Git 安装。** 当前没有 npm 发布包，使用带引号的 Git 地址：
 
    ```powershell
-   dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#feat/advisory-impact&path:/packages/dsh-advisory-impact"
+   dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-advisory-impact"
    ```
 
    需要 Node.js ≥22、DSH `>=0.2.1-rc.5 <0.3.0`。Windows 若提示 desktop 环境由 Electron 管理，请使用桌面版自带的 CLI，见[仓库安装说明](../../README.md#安装--installation)。
@@ -63,7 +63,7 @@ Pin your running Kafka, Hadoop or Flink version and check official security advi
 
 The default watch list is Kafka / Hadoop / Flink. Official pages are authoritative; OSV is a secondary source and can return HTTP 404. Disagreements stay visible. Kafka's official dependency suppressions and OSV-only records have separate sections. Flink's ASF list is experimental, covers advisories since 2023 and may lag CVE publications; Kafka's CVE page excludes dependency advisories.
 
-This is unreleased: use the quoted feature-branch Git install command above. Reopen DSH, select the panel, enter an existing local project path, save your actual running version, and refresh. No model API key or chat turn is needed. Screenshots show recorded fixture replay with sample pins, including a controlled Kafka inventory subset, rather than live inventories or a real cluster.
+This is unreleased: use the quoted Git install command above. Reopen DSH, select the panel, enter an existing local project path, save your actual running version, and refresh. No model API key or chat turn is needed. Screenshots show recorded fixture replay with sample pins, including a controlled Kafka inventory subset, rather than live inventories or a real cluster.
 
 ## 补充说明 / Details
 

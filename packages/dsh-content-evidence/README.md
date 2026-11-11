@@ -6,16 +6,16 @@ Evidence-based content workbench with a web sidebar and main panel. Materials, e
 
 Requires Node.js `>=22` and DSH `>=0.2.1-rc.5 <0.3.0`. APIs were verified against DSH `0.2.2-rc.1`, source `fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159`, and checked at the `0.2.1-rc.5` API baseline. Host libraries are optional peers supplied by DSH; development installs include them for building and testing.
 
-## Install from the branch / 从开发分支安装
+## 安装 / Installation
 
-`0.1.0` is unreleased and **not published to npm**. Install the committed prebuilt package from `feat/content-evidence`, then restart the web Host. Local export supports Linux and macOS directory-relative I/O without requiring procfs or traversable `/dev/fd`. Windows still refuses before creating export files. The portable path was verified on Linux with both fd paths disabled; native macOS and Windows were not executed.
+`0.1.0` is unreleased and **not published to npm**. Install the committed prebuilt package from `main`, then restart the web Host. Local export supports Linux and macOS directory-relative I/O without requiring procfs or traversable `/dev/fd`. Windows still refuses before creating export files. The portable path was verified on Linux with both fd paths disabled; native macOS and Windows were not executed.
 
 ```sh
-dsh plugin --profile web add "github:hzopc1031/dsh-plugins#feat/content-evidence&path:/packages/dsh-content-evidence"
+dsh plugin --profile web add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-content-evidence"
 dsh --profile web --no-open
 ```
 
-也可在「插件 → 添加插件」输入完整的 `github:...` 地址。当前包尚未合并到 `main`；不要用 npm 包名或 `#main` 安装。安装产物包含 `lib/` 和 `dist/`，无安装时构建脚本。
+也可在「插件 → 添加插件」输入完整的 `github:...` 地址。尚未发布到 npm，请不要用 npm 包名安装。安装产物包含 `lib/` 和 `dist/`，无安装时构建脚本。
 
 The same git address works in Plugins → Add plugin. Pin a commit instead of the branch for a fixed revision. The package ships `lib/` and `dist/` and has no install lifecycle hooks. Remove with `dsh plugin --profile web remove dsh-content-evidence`; this removes the package and its configuration layer while retaining your separate data directory and exported folders.
 

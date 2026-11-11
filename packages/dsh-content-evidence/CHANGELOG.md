@@ -2,7 +2,7 @@
 
 ## 0.1.0
 
-- Unreleased; install prebuilt artifacts from the `feat/content-evidence` git branch. Local export uses verified directory handles and refuses unsupported hosts safely.
+- Unreleased; install prebuilt artifacts from `main`. Local export uses verified directory handles and refuses unsupported hosts safely.
 - Add the installable DSH bundle and `/content-evidence` status command.
 - Persist topics, copied materials, experiments, source-linked claims, structured drafts, reviews, export history and manual published links outside the package.
 - Add the Host Remote service and generated strict Host/client contracts, atomic writes and validation of stored paths and references.

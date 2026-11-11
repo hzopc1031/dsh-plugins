@@ -24,7 +24,7 @@
     "url": "git+https://github.com/hzopc1031/dsh-plugins.git",
     "directory": "packages/dsh-invoice-gate"
   },
-  "homepage": "https://github.com/hzopc1031/dsh-plugins/tree/feat/invoice-gate/packages/dsh-invoice-gate#readme",
+  "homepage": "https://github.com/hzopc1031/dsh-plugins/tree/main/packages/dsh-invoice-gate#readme",
   "bugs": { "url": "https://github.com/hzopc1031/dsh-plugins/issues" },
   "scripts": {
     "build": "tsc",

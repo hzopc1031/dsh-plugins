@@ -61,7 +61,7 @@
 - 目前只在 Linux 上实际测过。在 Mac 上需要指定本机 Chrome 的路径，还没有实测。导出的 PPTX 用 LibreOffice 打开过，PowerPoint 和 WPS 还没测。
 
 **当前状态**
-版本 0.1.0，还在 `feat/html-deck-export` 分支上，没有合并到 main，也没有发布到 npm。已在 Linux DSH 0.2.2-rc.1 的隔离环境加载，验证离线导出、中文失败报告与进度文件；自动测试覆盖官方样例、沙箱重试、字体和取消清理等行为。开源协议是 MIT。
+版本 0.1.0，尚未发布到 npm。已在 Linux DSH 0.2.2-rc.1 的隔离环境加载，验证离线导出、中文失败报告与进度文件；自动测试覆盖官方样例、沙箱重试、字体和取消清理等行为。开源协议是 MIT。
 
 This DSH plugin registers `html_deck_export` and `/html-deck-export` help/workbench.
 It exports finished local HTML decks in supported formats to **image-based
@@ -83,13 +83,13 @@ DSH `0.2.2-rc.1`, source revision `fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159`.
 The installed CLI successfully loaded the plugin in a disposable Linux web profile.
 Command, tool restriction and guard APIs are also exercised with rc.5 host libraries.
 
-Install the prebuilt feature branch into your chosen profile (replace `web` as needed):
+Install the prebuilt package into your chosen profile (replace `web` as needed):
 
 ```sh
-dsh plugin --profile web add "github:hzopc1031/dsh-plugins#feat/html-deck-export&path:/packages/dsh-html-deck-export"
+dsh plugin --profile web add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-html-deck-export"
 ```
 
-This branch is not merged into `main`. Built `lib/` is committed; installation
+Built `lib/` is committed; installation
 needs no build permission or lifecycle hook. Restart DSH after installation.
 To uninstall, run `dsh plugin --profile web remove dsh-html-deck-export`.
 Uninstalling removes the plugin; user PPTX files, reports and evidence remain in

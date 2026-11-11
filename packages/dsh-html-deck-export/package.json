@@ -64,6 +64,6 @@
     "url": "git+https://github.com/hzopc1031/dsh-plugins.git",
     "directory": "packages/dsh-html-deck-export"
   },
-  "homepage": "https://github.com/hzopc1031/dsh-plugins/tree/feat/html-deck-export/packages/dsh-html-deck-export#readme",
+  "homepage": "https://github.com/hzopc1031/dsh-plugins/tree/main/packages/dsh-html-deck-export#readme",
   "bugs": { "url": "https://github.com/hzopc1031/dsh-plugins/issues" }
 }

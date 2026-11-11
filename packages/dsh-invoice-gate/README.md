@@ -2,7 +2,7 @@
 
 把本地票据和台账放在一起，找出金额勾稽、重复票号和未匹配记录，再导出一份能追溯原始文件的核对证据包。适合单人逐次核对 CNY 票据；不替你识别扫描件，不做税局验真，也不替你判断能否报销。
 
-**0.1.0 尚未发布到 npm；当前从 `feat/invoice-gate` 分支安装。**
+**0.1.0 尚未发布到 npm。**
 
 模型不得编造或改写金额、税额、合计或票号；没有改金额工具。整次核对可以只用命令完成，零模型调用。插件只读原件、记录 SHA-256，不写回来源文件，不自动上传、不发起网络请求，也不采集财务遥测。SHA-256 只能帮助发现文件变化，不能证明票据真实。
 
@@ -13,7 +13,7 @@
 从 Git 安装（先停止使用该 profile 的 DSH，再安装并重启）：
 
 ```sh
-dsh plugin --profile web add "github:hzopc1031/dsh-plugins#feat/invoice-gate&path:/packages/dsh-invoice-gate"
+dsh plugin --profile web add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-invoice-gate"
 ```
 
 桌面用户可将 `web` 换成其桌面 CLI 使用的 `desktop` profile。插件已提交编译后的 `lib/`，没有安装生命周期脚本。Cordis id 是 `invoice-gate`。本地开发也可在仓库根目录执行：

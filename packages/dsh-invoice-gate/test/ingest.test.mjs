@@ -1,0 +1,481 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import { createHash } from 'node:crypto'
+import childProcess from 'node:child_process'
+import fs from 'node:fs'
+import fsPromises from 'node:fs/promises'
+import { chmod, copyFile, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises'
+import { syncBuiltinESMExports } from 'node:module'
+import { fileURLToPath } from 'node:url'
+import http from 'node:http'
+import https from 'node:https'
+import net from 'node:net'
+import { ingest, fieldNames } from '../index.js'
+
+const fixtures = fileURLToPath(new URL('./fixtures/', import.meta.url))
+const number = '12345678901234567890'
+const mapping = Object.fromEntries(fieldNames.map((name, i) => [name, ['开票日期', '发票号码', '购买方', '销售方', '金额', '税额', '价税合计', '币种', '材料类型'][i]]))
+const input = (path, extra = {}) => ({ path, kind: 'ticket', ...extra })
+async function temp(t) {
+  await mkdir('.tmp', { recursive: true })
+  const root = await mkdtemp(fileURLToPath(new URL('../.tmp/ingest-', import.meta.url)))
+  t.after(() => rm(root, { recursive: true, force: true }))
+  return root
+}
+const hash = data => createHash('sha256').update(data).digest('hex')
+function readerHook(t, script) {
+  const spawn = childProcess.spawn
+  return t.mock.method(childProcess, 'spawn', (command, args, options) => {
+    const injected = [...args]
+    const index = injected.indexOf('--eval') + 1
+    assert.ok(index > 0)
+    injected[index] = script + '\n' + injected[index]
+    return spawn(command, injected, options)
+  })
+}
+
+test('Chinese CSV mapping, blank amounts, strings and logical row inventory', async t => {
+  const result = await ingest(fixtures, [input('clean.csv', { mapping, kind: 'ledger' })])
+  assert.equal(result.files[0].status, 'parsed')
+  const record = result.records[0]
+  assert.equal(record.kind, 'ledger')
+  assert.equal(record.fields.number.raw, number)
+  assert.equal(typeof record.fields.number.raw, 'string')
+  assert.equal(record.fields.amount.raw, '100.00')
+  assert.equal(record.fields.number.source.row, 2)
+  assert.equal(record.fields.date.review, 'pending')
+  assert.deepEqual(result.inventory.filter(e => e.unit === 'row').map(e => [e.row, e.status]), [[1, 'skipped'], [2, 'parsed']])
+  const root = await temp(t)
+  await writeFile(root + '/rows.csv', '票号,金额,说明\r\n00001,,"SAMPLE,\n非真实票据"\r\n,,\r\n00002,0.00,SAMPLE\r\n')
+  const rows = await ingest(root, [input('rows.csv', { mapping: { number: '票号', amount: '金额' } })])
+  assert.equal(rows.records.length, 2)
+  assert.equal(rows.records[0].fields.number.raw, '00001')
+  assert.equal(rows.records[0].fields.amount.raw, '')
+  assert.equal(rows.records[1].fields.amount.raw, '0.00')
+  assert.equal(rows.inventory.find(e => e.row === 3).reason, 'blank-row')
+})
+
+test('mapping is mandatory and ambiguous/missing columns refuse every row', async t => {
+  for (const map of [undefined, {}, { amount: '不存在' }, { unknown: '金额' }]) {
+    const result = await ingest(fixtures, [input('clean.csv', { mapping: map })])
+    assert.equal(result.records.length, 0)
+    assert.equal(result.files[0].status, 'refused')
+    assert.equal(result.inventory.filter(e => e.unit === 'row').length, 2)
+  }
+  const root = await temp(t)
+  await writeFile(root + '/duplicate.csv', '金额,金额\n100,100\n')
+  const result = await ingest(root, [input('duplicate.csv', { mapping: { amount: '金额' } })])
+  assert.ok(result.inventory.some(e => e.reason === 'missing-or-ambiguous-mapped-header'))
+})
+
+test('UTF-8 with/without BOM, GBK and four-byte GB18030 preserve Chinese fields, quoted CSV and text ids', async t => {
+  const root = await temp(t)
+  const utf8 = (await readFile(fixtures + 'clean.csv', 'utf8')).replace(/^\uFEFF/, '')
+  await writeFile(root + '/utf8.csv', utf8)
+  await writeFile(root + '/utf8-bom.csv', '\uFEFF' + utf8)
+  await writeFile(root + '/utf8-four-byte.csv', utf8.replace('SAMPLE 示例买方', 'SAMPLE 示例买方𠮷'))
+  for (const name of ['gbk.csv', 'gb18030.csv']) await copyFile(fixtures + name, root + '/' + name)
+  await writeFile(root + '/ascii.csv', 'Number,Amount,Tax,Total,Label\n12345678901234567890,,0.00,0.00,"SAMPLE, non-real invoice"\n')
+  const names = ['utf8.csv', 'utf8-bom.csv', 'gbk.csv', 'utf8-four-byte.csv', 'gb18030.csv', 'ascii.csv']
+  const before = await Promise.all(names.map(name => readFile(root + '/' + name)))
+  const result = await ingest(root, names.map(name => input(name, { mapping: name === 'ascii.csv'
+    ? { number: 'Number', amount: 'Amount', tax: 'Tax', total: 'Total', materialType: 'Label' } : mapping })))
+  assert.ok(result.files.every(file => file.status === 'parsed'))
+  assert.deepEqual(result.inventory.filter(e => e.unit === 'file').map(e => e.encoding), ['utf-8', 'utf-8', 'gb18030', 'utf-8', 'gb18030', 'utf-8'])
+  const values = record => Object.fromEntries(fieldNames.map(name => [name, record.fields[name].raw]))
+  assert.deepEqual(values(result.records[1]), values(result.records[0]))
+  assert.deepEqual(values(result.records[2]), values(result.records[0]))
+  assert.deepEqual(values(result.records[4]), values(result.records[3]))
+  assert.equal(result.records[4].fields.buyer.raw, 'SAMPLE 示例买方𠮷')
+  for (const record of result.records) assert.equal(record.fields.number.raw, number)
+  assert.equal(result.records[5].fields.amount.raw, '')
+  assert.equal(result.records[5].fields.materialType.raw, 'SAMPLE, non-real invoice')
+  for (const [i, name] of names.entries()) {
+    assert.equal(result.files[i].sha256, hash(before[i]))
+    assert.deepEqual(await readFile(root + '/' + name), before[i])
+  }
+})
+
+test('invalid mixed CSV bytes and invalid UTF-8 after a BOM are refused, hashed and inventoried', async t => {
+  const root = await temp(t)
+  const valid = Buffer.from('Number,Label\n12345678901234567890,SAMPLE 示例 非真实票据')
+  await writeFile(root + '/mixed.csv', Buffer.concat([valid, Buffer.from([0xff, 0x81])]))
+  await writeFile(root + '/bom-gbk.csv', Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), await readFile(fixtures + 'gbk.csv')]))
+  await writeFile(root + '/gbk.json', Buffer.concat([Buffer.from('{"SAMPLE":"'), Buffer.from([0xca, 0xbe, 0xc0, 0xfd]), Buffer.from('"}')] ))
+  const result = await ingest(root, ['mixed.csv', 'bom-gbk.csv', 'gbk.json'].map(name => input(name, { mapping })))
+  assert.equal(result.records.length, 0)
+  assert.equal(result.files.length, 3)
+  assert.ok(result.files.every(file => file.sha256))
+  assert.deepEqual(result.inventory.slice(0, 2).map(e => [e.unit, e.status, e.reason, e.encoding]), [
+    ['file', 'refused', 'csv-encoding-invalid-utf8-or-gb18030', undefined],
+    ['file', 'refused', 'csv-encoding-invalid-utf8-or-gb18030', undefined],
+  ])
+  assert.equal(result.files[2].status, 'refused')
+  assert.equal(result.files[2].reason, 'input-encoding-invalid-utf8')
+})
+
+test('XLSX preserves text identifiers, cached values and formula-only fields; inventories blank and unselected rows', async () => {
+  const result = await ingest(fixtures, [input('ledger.xlsx', { kind: 'ledger', mapping, sheet: '示例台账 SAMPLE' })])
+  assert.equal(result.files[0].status, 'partial')
+  assert.equal(result.records.length, 5)
+  assert.equal(result.records[0].fields.number.raw, number)
+  assert.equal(result.records[0].fields.number.source.cell, 'B2')
+  assert.equal(result.records[0].fields.number.source.sheet, '示例台账 SAMPLE')
+  assert.equal(result.records[1].fields.amount.raw, '')
+  assert.equal(result.records[2].fields.total.issue, 'formula-without-cache')
+  assert.equal(result.records[2].fields.total.raw, null)
+  assert.equal(result.records[2].fields.total.review, 'unreadable')
+  assert.equal(result.records[2].fields.number.issue, 'identifier-must-be-text')
+  assert.equal(result.records[3].fields.total.raw, '106')
+  assert.equal(result.records[3].fields.total.source.formula, '100+6')
+  assert.ok(result.inventory.some(e => e.row === 6 && e.reason === 'blank-row'))
+  assert.ok(result.inventory.some(e => e.sheet === '跳过 SAMPLE' && e.unit === 'row' && e.reason === 'sheet-not-selected'))
+})
+
+test('JSON and OCR schema preserve raw values, supplied coordinates, labels and line items', async () => {
+  const result = await ingest(fixtures, [input('tickets.json'), input('ocr.json'), input('mismatch.json')])
+  assert.equal(result.records.length, 4)
+  for (const file of result.files) assert.equal(file.status, 'parsed')
+  assert.equal(result.records[0].fields.number.raw, number)
+  assert.equal(result.records[0].lineItems[0].total.raw, '106.00')
+  assert.match(result.records[0].label, /非真实票据/)
+  const ocr = result.records[2].fields.total
+  assert.equal(ocr.raw, '106.00')
+  assert.equal(ocr.source.path, '/records/0/fields/total/raw')
+  assert.equal(ocr.source.page, 1)
+  assert.deepEqual(ocr.source.box, [0, 0, 100, 20])
+  assert.equal(result.records[0].fields.total.source.page, undefined)
+  assert.equal(result.records[3].fields.amount.raw, '100.00')
+  assert.equal(result.records[3].fields.tax.raw, '6.00')
+  assert.equal(result.records[3].fields.total.raw, '108.00')
+})
+
+test('invalid JSON rows are inventoried independently; amounts/ids must never be numeric JSON', async t => {
+  const root = await temp(t)
+  await writeFile(root + '/rows.json', JSON.stringify({ schemaVersion: 1, type: 'ocr', records: [
+    { fields: { number, amount: '' } }, { fields: { number: 123 } },
+    { fields: { amount: { raw: '1.00', page: 0 } } },
+    { fields: { amount: { raw: '1.00', box: [2, 0, 1, 2] } } },
+    { fields: { total: '106.00' }, lineItems: [null] },
+  ] }))
+  const result = await ingest(root, [input('rows.json')])
+  assert.equal(result.files[0].status, 'partial')
+  assert.equal(result.records.length, 1)
+  assert.equal(result.records[0].fields.amount.raw, '')
+  assert.equal(result.records[0].fields.tax.raw, null)
+  assert.equal(result.records[0].fields.tax.source, null)
+  assert.equal(result.inventory.filter(e => e.unit === 'row' && e.status === 'refused').length, 4)
+})
+
+test('fixture-backed XML preserves ids and paths, refuses unknown structures and DTDs', async t => {
+  const result = await ingest(fixtures, [input('invoice.xml'), input('unknown.xml')])
+  assert.equal(result.records.length, 1)
+  assert.equal(result.records[0].fields.number.raw, number)
+  assert.equal(result.records[0].fields.number.source.path, '/Invoice/number')
+  assert.equal(result.records[0].lineItems[0].total.raw, '106.00')
+  assert.equal(result.files[1].reason, 'unknown-xml-structure')
+  const root = await temp(t)
+  await writeFile(root + '/entities.xml', '<!DOCTYPE Invoice [<!ENTITY secret SYSTEM "file:///etc/passwd">]><Invoice schemaVersion="1"><number>&secret;</number></Invoice>')
+  const refused = await ingest(root, [input('entities.xml')])
+  assert.equal(refused.files[0].reason, 'xml-dtd-and-entities-refused')
+})
+
+test('PDF text yields labelled amounts and page excerpts; no-text pages are refused individually', async () => {
+  const result = await ingest(fixtures, [input('text.pdf'), input('scan.pdf'), input('mixed.pdf')])
+  assert.equal(result.records.length, 2)
+  assert.equal(result.files[0].status, 'parsed')
+  assert.equal(result.records[0].fields.number.raw, number)
+  assert.equal(result.records[0].fields.amount.raw, '100.00')
+  assert.equal(result.records[0].fields.tax.raw, '6.00')
+  assert.equal(result.records[0].fields.total.raw, '106.00')
+  assert.equal(result.records[0].fields.total.source.page, 1)
+  assert.match(result.records[0].fields.total.source.excerpt, /Total: 106.00/)
+  assert.equal(result.records[0].fields.total.source.box, undefined)
+  assert.equal(result.files[1].status, 'refused')
+  assert.equal(result.files[2].status, 'partial')
+  const pages = result.inventory.filter(e => e.unit === 'page')
+  assert.deepEqual(pages.map(e => [e.page, e.status]), [[1, 'parsed'], [1, 'refused'], [1, 'parsed'], [2, 'refused']])
+  assert.equal(pages[1].reason, 'no-text-layer-provide-ocr-json')
+})
+
+test('OFD and raster are clearly refused; explicit OCR sidecars retain both originals and provenance', async () => {
+  const refused = await ingest(fixtures, [input('sample.ofd'), input('scan.png')])
+  assert.match(refused.files[0].reason, /ofd-out-of-mvp/)
+  assert.equal(refused.inventory.find(e => e.unit === 'page').reason, 'raster-image-provide-ocr-json')
+  const result = await ingest(fixtures, [input('scan.pdf', { ocrJson: 'ocr.json' }), input('scan.png', { ocrJson: 'ocr.json' })])
+  assert.equal(result.files.length, 4)
+  assert.ok(result.files.every(file => file.sha256 && file.status === 'parsed'))
+  assert.equal(result.records.length, 2)
+  assert.equal(result.records[0].originalFileId, 'file-1')
+  assert.equal(result.records[0].fileId, 'file-1:ocr')
+  assert.equal(result.records[0].fields.number.source.file, 'ocr.json')
+  assert.ok(result.inventory.filter(e => e.unit === 'page').every(e => e.reason === 'explicit-ocr-sidecar'))
+  const missing = await ingest(fixtures, [input('scan.png', { ocrJson: 'missing.json' })])
+  assert.equal(missing.files[0].reason, 'ocr-sidecar-failed')
+  assert.equal(missing.files[1].status, 'failed')
+})
+
+test('PDF duplicate labels are unreadable and blank labels never consume the following line', async () => {
+  const result = await ingest(fixtures, [input('edge-labels.pdf')])
+  assert.equal(result.files[0].status, 'partial')
+  assert.equal(result.records[0].fields.amount.raw, null)
+  assert.equal(result.records[0].fields.amount.issue, 'ambiguous-pdf-label')
+  assert.equal(result.records[0].fields.tax.raw, '')
+  assert.equal(result.records[0].fields.total.raw, '108.00')
+})
+
+test('explicit sidecars are inventoried even when the original is unreadable or the combination is unsupported', async () => {
+  const result = await ingest(fixtures, [input('missing.pdf', { ocrJson: 'ocr.json' }), input('clean.csv', { ocrJson: 'ocr.json', mapping })])
+  assert.equal(result.files.length, 4)
+  assert.equal(result.files[0].status, 'failed')
+  assert.equal(result.files[1].status, 'parsed')
+  assert.equal(result.files[2].reason, 'ocr-sidecar-only-for-pdf-or-images')
+  assert.equal(result.files[3].reason, 'ocr-sidecar-only-for-pdf-or-images')
+  assert.equal(result.inventory.filter(e => e.unit === 'file').length, 4)
+  const wrongSchema = await ingest(fixtures, [input('scan.pdf', { ocrJson: 'tickets.json' })])
+  assert.equal(wrongSchema.files[1].reason, 'sidecar-requires-ocr-schema')
+})
+
+test('JS callers receive safe input validation and missing sheets remain inventoried', async () => {
+  await assert.rejects(ingest(fixtures, null), /input-list-required/)
+  const result = await ingest(fixtures, [null, input('clean.csv', { kind: 'unknown' }), input('ledger.xlsx', { mapping, sheet: 'missing SAMPLE' })])
+  assert.equal(result.files.length, 3)
+  assert.equal(result.files[0].reason, 'invalid-input')
+  assert.equal(result.files[1].reason, 'invalid-input-kind')
+  assert.equal(result.files[2].status, 'refused')
+  assert.ok(result.inventory.some(e => e.reason === 'selected-sheet-not-found'))
+  assert.equal(result.inventory.filter(e => e.unit === 'file').length, 3)
+})
+
+test('every original hash matches, duplicate hashes survive, originals stay bit-identical and ingest is deterministic', async () => {
+  const paths = ['clean.csv', 'ledger.xlsx', 'tickets.json', 'ocr.json', 'text.pdf', 'scan.pdf', 'invoice.xml', 'unknown.xml', 'sample.ofd', 'scan.png', 'duplicate-a.csv', 'duplicate-b.csv']
+  const before = await Promise.all(paths.map(path => readFile(fixtures + path)))
+  const inputs = paths.map(path => input(path, { mapping }))
+  const first = await ingest(fixtures, inputs)
+  assert.deepEqual(await ingest(fixtures, inputs), first)
+  for (const [i, path] of paths.entries()) {
+    assert.equal(first.files[i].sha256, hash(before[i]))
+    assert.deepEqual(await readFile(fixtures + path), before[i])
+    assert.ok(first.inventory.some(e => e.fileId === first.files[i].id && e.unit === 'file'))
+  }
+  assert.equal(first.files.at(-1).sha256, first.files.at(-2).sha256)
+  assert.equal(first.files.length, paths.length)
+})
+
+test('path traversal, absolute paths, file/directory symlink escapes and sidecar escapes cannot read outside project', async t => {
+  const root = await temp(t)
+  await mkdir(root + '/project')
+  await copyFile(fixtures + 'tickets.json', root + '/outside.json')
+  await copyFile(fixtures + 'scan.png', root + '/project/scan.png')
+  await symlink(root + '/outside.json', root + '/project/link.json')
+  await symlink(root, root + '/project/dir')
+  const result = await ingest(root + '/project', [input('../outside.json'), input(root + '/outside.json'), input('link.json'), input('dir/outside.json'), input('scan.png', { ocrJson: '../outside.json' })])
+  assert.equal(result.records.length, 0)
+  for (const file of result.files.filter(f => f.path !== 'scan.png')) {
+    assert.equal(file.sha256, null)
+    assert.equal(file.reason, 'path-outside-project')
+  }
+  assert.equal(result.files.find(f => f.path === 'scan.png').reason, 'ocr-sidecar-failed')
+})
+
+test('with both fd-path filesystems unavailable, nested reads stay confined, hashed and read-only', async t => {
+  const root = await temp(t)
+  await mkdir(root + '/project/nested', { recursive: true })
+  const before = await readFile(fixtures + 'clean.csv')
+  await writeFile(root + '/project/nested/SAMPLE.csv', before)
+  await writeFile(root + '/outside.csv', before)
+  await symlink(root, root + '/project/escape')
+  await symlink(root + '/outside.csv', root + '/project/link.csv')
+  await symlink('nested', root + '/project/local')
+  const denyFdPath = path => /^\/(?:proc\/self\/fd|dev\/fd)(?:\/|$)/.test(String(path))
+  const mocks = []
+  for (const object of [fs, fsPromises]) for (const name of ['realpath', 'readlink', 'open', 'realpathSync', 'readlinkSync', 'openSync']) {
+    if (typeof object[name] !== 'function') continue
+    const original = object[name]
+    mocks.push(t.mock.method(object, name, function (path, ...args) {
+      if (denyFdPath(path)) throw Object.assign(new Error('fd paths unavailable'), { code: 'ENOENT' })
+      return original.call(this, path, ...args)
+    }))
+  }
+  syncBuiltinESMExports()
+  t.after(() => { for (const mock of mocks) mock.mock.restore(); syncBuiltinESMExports() })
+  assert.throws(() => fs.realpathSync('/proc/self/fd/0'), /unavailable/)
+  assert.throws(() => fs.realpathSync('/dev/fd/0'), /unavailable/)
+  readerHook(t, `(() => {
+    const fs = require('node:fs')
+    for (const name of ['realpathSync', 'readlinkSync', 'openSync']) {
+      const original = fs[name]
+      fs[name] = (path, ...args) => {
+        if (/^\\/(?:proc\\/self\\/fd|dev\\/fd)(?:\\/|$)/.test(String(path))) throw Object.assign(new Error('fd paths unavailable'), { code: 'ENOENT' })
+        return original(path, ...args)
+      }
+    }
+    require('node:assert/strict').throws(() => fs.realpathSync('/proc/self/fd/3'))
+    require('node:assert/strict').throws(() => fs.realpathSync('/dev/fd/3'))
+  })()`)
+  const cwd = process.cwd()
+  const result = await ingest(root + '/project', [
+    input('nested/SAMPLE.csv', { mapping }), input('local/SAMPLE.csv', { mapping }),
+    ...['../outside.csv', root + '/outside.csv', 'escape/outside.csv', 'link.csv', 'nested/../../outside.csv'].map(path => input(path, { mapping })),
+  ])
+  assert.equal(process.cwd(), cwd)
+  assert.equal(result.records.length, 2)
+  assert.ok(result.records.every(record => record.fields.number.raw === number))
+  assert.ok(result.files.slice(0, 2).every(file => file.sha256 === hash(before) && file.status === 'parsed'))
+  assert.ok(result.files.slice(2).every(file => file.sha256 === null && file.reason === 'path-outside-project'))
+  assert.equal(result.inventory.filter(e => e.unit === 'file').length, 7)
+  assert.deepEqual(await readFile(root + '/project/nested/SAMPLE.csv'), before)
+  assert.deepEqual(await readFile(root + '/outside.csv'), before)
+})
+
+test('ancestor replacement before chdir is refused; replacement after chdir cannot redirect a read', async t => {
+  const root = await temp(t)
+  await mkdir(root + '/outside')
+  await writeFile(root + '/outside/SAMPLE.csv', 'Number,Label\nSAMPLE-OUTSIDE,非真实票据\n')
+  for (const when of ['before', 'after']) {
+    const project = root + '/' + when
+    await mkdir(project + '/nested', { recursive: true })
+    const before = await readFile(fixtures + 'clean.csv')
+    await writeFile(project + '/nested/SAMPLE.csv', before)
+    const hook = readerHook(t, `(() => {
+      const fs = require('node:fs')
+      const path = require('node:path')
+      const chdir = process.chdir.bind(process)
+      process.chdir = part => {
+        if (part !== 'nested') return chdir(part)
+        const parent = process.cwd()
+        if (${JSON.stringify(when)} === 'after') chdir(part)
+        fs.renameSync(path.join(parent, part), path.join(parent, 'pinned'))
+        fs.symlinkSync(path.join(parent, '../outside'), path.join(parent, part))
+        if (${JSON.stringify(when)} === 'before') chdir(part)
+      }
+    })()`)
+    const result = await ingest(project, [input('nested/SAMPLE.csv', { mapping })])
+    hook.mock.restore()
+    if (when === 'before') {
+      assert.equal(result.records.length, 0)
+      assert.equal(result.files[0].sha256, null)
+      assert.equal(result.files[0].status, 'refused')
+    } else {
+      assert.equal(result.files[0].status, 'parsed')
+      assert.equal(result.files[0].sha256, hash(before))
+      assert.equal(result.records[0].fields.number.raw, number)
+    }
+    assert.deepEqual(await readFile(project + '/pinned/SAMPLE.csv'), before)
+  }
+})
+
+test('missing, unreadable, malformed and truncated inputs are inventoried without exposing contents', async t => {
+  const root = await temp(t)
+  await writeFile(root + '/private.json', 'SAMPLE-PRIVATE must not appear in errors')
+  await chmod(root + '/private.json', 0)
+  await writeFile(root + '/bad.json', '{"SAMPLE-PRIVATE":')
+  await writeFile(root + '/bad.xml', '<Invoice><SAMPLE-PRIVATE>')
+  await writeFile(root + '/bad.xlsx', 'SAMPLE-PRIVATE truncated zip')
+  await writeFile(root + '/bad.pdf', '%PDF-1.4 SAMPLE-PRIVATE')
+  await writeFile(root + '/bad.csv', '票号,金额\nSAMPLE-OK,1.00\nSAMPLE-PRIVATE,"1')
+  const result = await ingest(root, ['missing.json', 'private.json', 'bad.json', 'bad.xml', 'bad.xlsx', 'bad.pdf', 'bad.csv'].map(path => input(path, { mapping: { number: '票号', amount: '金额' } })))
+  assert.equal(result.files.length, 7)
+  assert.ok(result.files.every(file => ['failed', 'refused', 'partial'].includes(file.status)))
+  assert.equal(result.files[1].sha256, null)
+  assert.equal(result.files[5].reason, 'truncated-pdf')
+  assert.ok(result.inventory.some(e => e.row === 3 && e.reason === 'truncated-csv'))
+  assert.equal(result.records[0].fields.number.raw, 'SAMPLE-OK')
+  assert.ok(!JSON.stringify(result.inventory).includes('SAMPLE-PRIVATE'))
+  assert.ok(!JSON.stringify(result.files).includes('SAMPLE-PRIVATE'))
+})
+
+test('every known refusal has a file/unit-specific Chinese explanation and next step', async t => {
+  const root = await temp(t)
+  for (const name of ['sample.ofd', 'scan.png', 'scan.pdf', 'unknown.xml', 'ledger.xlsx', 'clean.csv']) await copyFile(fixtures + name, root + '/' + name)
+  const pdf = (await readFile(fixtures + 'text.pdf')).toString('latin1')
+  const unlabelled = pdf.replace(/(?:Date|Number|Buyer|Seller|Amount|Tax|Total|Currency|MaterialType):/g, label => 'Z'.repeat(label.length - 1) + ':')
+  assert.equal(Buffer.byteLength(unlabelled, 'latin1'), Buffer.byteLength(pdf, 'latin1'))
+  await writeFile(root + '/SAMPLE-labels.pdf', Buffer.from(unlabelled, 'latin1'))
+  for (const [name, data] of [
+    ['SAMPLE-malformed.xml', '<Invoice><Label>SAMPLE 非真实票据</Label>'],
+    ['SAMPLE-unsupported.bin', 'SAMPLE 非真实票据'],
+    ['SAMPLE-truncated.pdf', '%PDF-1.4 SAMPLE non-real invoice'],
+    ['SAMPLE-bad.json', '{"label":"SAMPLE 非真实票据",'],
+    ['SAMPLE-bad.xlsx', 'SAMPLE 非真实票据 truncated zip'],
+    ['SAMPLE-truncated.csv', '票号,金额\nSAMPLE,"1'],
+    ['SAMPLE-invalid.csv', Buffer.from([0xff, 0x81])],
+    ['SAMPLE-invalid.json', Buffer.from([0xff])],
+    ['SAMPLE-invalid.xml', Buffer.from([0xff])],
+    ['SAMPLE-unreadable.json', 'SAMPLE 非真实票据'],
+    ['SAMPLE-number.json', JSON.stringify({ schemaVersion: 1, type: 'ocr', label: 'SAMPLE 非真实票据', records: [{ fields: { number: 123 } }] })],
+  ]) await writeFile(root + '/' + name, data)
+  await chmod(root + '/SAMPLE-unreadable.json', 0)
+  await mkdir(root + '/project')
+  await symlink(root + '/clean.csv', root + '/project/SAMPLE-link.csv')
+  const cases = [
+    [input('sample.ofd'), 'file', 'ofd-out-of-mvp-use-xml-pdf-or-ocr-json', /不支持 OFD.*请提供/],
+    [input('scan.png'), 'page', 'raster-image-provide-ocr-json', /图片.*请.*OCR JSON/],
+    [input('scan.pdf'), 'page', 'no-text-layer-provide-ocr-json', /第 1 页.*没有可用文本层.*请提供 OCR JSON/],
+    [input('SAMPLE-labels.pdf'), 'page', 'unrecognized-pdf-labels-provide-ocr-json', /第 1 页.*无法识别票据字段标签.*请.*OCR JSON/],
+    [input('unknown.xml'), 'file', 'unknown-xml-structure', /无法识别 XML 票据结构.*请/],
+    [input('SAMPLE-malformed.xml'), 'file', 'malformed-xml', /XML 格式损坏或未闭合.*请/],
+    [input('SAMPLE-unsupported.bin'), 'file', 'unsupported-format', /不支持此文件格式.*请提供 CSV/],
+    [input('SAMPLE-missing.json'), 'file', 'input-unreadable', /文件不存在或无法读取.*请检查/],
+    [input('SAMPLE-unreadable.json'), 'file', 'input-unreadable', /无法读取.*读取权限/],
+    [input('SAMPLE-truncated.pdf'), 'file', 'truncated-pdf', /PDF 缺少结束标记.*请重新/],
+    [input('SAMPLE-bad.json'), 'file', 'malformed-json', /JSON 格式损坏或已截断.*请/],
+    [input('SAMPLE-bad.xlsx'), 'file', 'malformed-xlsx', /XLSX 无法解析.*请重新/],
+    [input('SAMPLE-truncated.csv', { mapping: { number: '票号' } }), 'row', 'truncated-csv', /第 2 行.*引号未闭合.*请重新/],
+    [input('clean.csv'), 'file', 'explicit-column-mapping-required', /缺少明确列映射.*请.*mapping/],
+    [input('clean.csv', { mapping: { unknown: '金额' } }), 'file', 'invalid-column-mapping', /列映射无效.*请/],
+    [input('clean.csv', { mapping: { number: '' } }), 'file', 'invalid-column-mapping', /列映射无效.*请/],
+    [input('clean.csv', { mapping: { number: '不存在 SAMPLE' } }), 'file', 'missing-or-ambiguous-mapped-header', /表头不存在或重复.*请核对/],
+    [input('SAMPLE-invalid.csv', { mapping }), 'file', 'csv-encoding-invalid-utf8-or-gb18030', /UTF-8／GB18030.*请重新另存/],
+    [input('SAMPLE-invalid.json'), 'file', 'input-encoding-invalid-utf8', /不是有效 UTF-8.*请.*UTF-8/],
+    [input('SAMPLE-invalid.xml'), 'file', 'input-encoding-invalid-utf8', /不是有效 UTF-8.*请.*UTF-8/],
+    [input('SAMPLE-number.json'), 'row', 'identifier-must-be-text', /第 1 行.*票号为数值类型.*请从原件核对完整票号/],
+    [input('ledger.xlsx', { mapping, sheet: '示例台账 SAMPLE' }), 'row', 'unreadable-fields', /工作表.*第 4 行.*B4.*票号为数值类型.*请从原件核对/],
+    [input('ledger.xlsx', { mapping, sheet: '不存在 SAMPLE' }), 'sheet', 'selected-sheet-not-found', /工作表.*不存在 SAMPLE.*找不到指定工作表.*请核对/],
+  ]
+  const result = await ingest(root, cases.map(([spec]) => spec))
+  assert.equal(result.files.length, cases.length)
+  for (const [i, [spec, unit, reason, message]] of cases.entries()) {
+    const file = result.files[i]
+    assert.ok(['refused', 'failed', 'partial'].includes(file.status), spec.path)
+    assert.ok(file.message.includes(spec.path), spec.path)
+    const entry = result.inventory.find(entry => entry.fileId === file.id && entry.unit === unit && entry.reason === reason)
+    assert.ok(entry, `${spec.path}: ${reason} is inventoried`)
+    assert.match(entry.message, message)
+    assert.ok(entry.message.includes(spec.path))
+    assert.ok(result.inventory.some(entry => entry.fileId === file.id && entry.unit === 'file'))
+  }
+  for (const spec of [input('../clean.csv'), input(root + '/clean.csv'), input('SAMPLE-link.csv')]) {
+    const refused = await ingest(root + '/project', [spec])
+    assert.equal(refused.inventory.length, 1)
+    assert.equal(refused.inventory[0].reason, 'path-outside-project')
+    assert.equal(refused.files[0].sha256, null)
+    assert.ok(refused.inventory[0].message.includes(spec.path))
+    assert.match(refused.inventory[0].message, /路径越界或符号链接不安全.*请将普通文件放入所选项目/)
+  }
+  for (const entry of result.inventory) if (entry.reason) assert.ok(entry.message, entry.reason)
+  const unreadable = result.records.flatMap(record => Object.values(record.fields)).filter(field => field.issue)
+  assert.ok(unreadable.some(field => field.issue === 'identifier-must-be-text' && field.message.includes('票号为数值类型')))
+  for (const field of unreadable) assert.ok(field.message)
+})
+
+test('ledger and ticket fixtures share string ids; parser leaves unmatched sides and mismatches intact', async () => {
+  const result = await ingest(fixtures, [input('ledger.csv', { kind: 'ledger', mapping }), input('tickets.json'), input('mismatch.json')])
+  assert.deepEqual(result.records.map(r => [r.kind, r.fields.number.raw]), [
+    ['ledger', number], ['ledger', 'SAMPLE-LEDGER-ONLY'], ['ticket', number], ['ticket', 'SAMPLE-TICKET-ONLY'], ['ticket', number],
+  ])
+  assert.equal(result.records.at(-1).fields.total.raw, '108.00')
+})
+
+test('ingest needs no outbound network or model; macros, links and formulas are inert', async t => {
+  const deny = () => { assert.fail('unexpected outbound network') }
+  t.mock.method(globalThis, 'fetch', deny)
+  t.mock.method(http, 'request', deny)
+  t.mock.method(https, 'request', deny)
+  t.mock.method(net.Socket.prototype, 'connect', deny)
+  const result = await ingest(fixtures, [input('ledger.xlsx', { mapping }), input('text.pdf'), input('invoice.xml'), input('ocr.json')])
+  assert.ok(result.records.length > 0)
+  assert.ok(!result.files.some(f => f.status === 'failed'))
+  assert.equal(result.records[2].fields.total.raw, null)
+  assert.equal(result.records[3].fields.total.raw, '106')
+})

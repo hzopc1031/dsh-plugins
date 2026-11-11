@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Invoice schemaVersion="1"><Label>SAMPLE 示例 非真实票据</Label><date>2026-11-01</date><number>12345678901234567890</number><buyer>SAMPLE 示例买方</buyer><seller>SAMPLE 示例卖方</seller><amount>100.00</amount><tax>6.00</tax><total>106.00</total><currency>CNY</currency><materialType>非真实票据 SAMPLE</materialType><lineItems><item><total>106.00</total></item></lineItems></Invoice>

@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Invoice Gate",
+    "description": "Local invoice verification gate: confined ingest, checks and evidence packs. No OCR or authenticity verification."
+  }
+}

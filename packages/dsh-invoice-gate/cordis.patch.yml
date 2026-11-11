@@ -1,0 +1,4 @@
+- insert:
+    - id: invoice-gate
+      name: dsh-invoice-gate
+      config: {}

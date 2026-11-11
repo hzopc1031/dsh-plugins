@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Official advisory impact",
+    "description": "Local Kafka, Hadoop and Flink official advisory checks; development scaffold with help command only."
+  }
+}

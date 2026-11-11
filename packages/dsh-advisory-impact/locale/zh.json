@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "官方公告影响核对",
+    "description": "本地核对 Kafka、Hadoop、Flink 官方安全公告；当前为开发中脚手架，仅提供帮助命令。"
+  }
+}

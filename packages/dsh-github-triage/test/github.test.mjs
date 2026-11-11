@@ -88,3 +88,20 @@ test('large related files are skipped with explicit evidence, not delivered to m
 test('contents never follows a returned download URL or echoes token',async()=>{const secret='contentsFixtureSecret',seen=[];const c=new Github({env:{GH_TOKEN:secret},fetch:async(url)=>{seen.push(url);return response({...contentWire(secret),download_url:'https://evil.example/file'})}});assert.equal(await c.contents('o/r','business.md',16384),'[REDACTED]');assert.equal(seen.length,1);assert.equal(new URL(seen[0]).host,'api.github.com')})
 
 test('contents rejects invalid UTF8 business and code text',async()=>{const bytes=Buffer.from([0xff,0xfe]);const c=new Github({env,gh,fetch:async()=>response({type:'file',size:bytes.length,encoding:'base64',content:bytes.toString('base64')})});await assert.rejects(c.contents('o/r','business.md',16384))})
+
+for(const scenario of ['incremental','full issues','full prs','full both','merged fix PR'])test('every search query has an explicit issue/PR type: '+scenario,async()=>{
+  const queries=[]
+  const c=new Github({env,gh,fetch:async url=>{
+    const u=new URL(url)
+    if(u.pathname==='/search/issues'){
+      const q=u.searchParams.get('q');queries.push(q);assert.match(q,/\bis:(?:issue|pr)\b/)
+      return response({items:[],total_count:0})
+    }
+    if(u.pathname==='/repos/o/r')return response({})
+    assert.equal(u.pathname,'/repos/o/r/pulls');return response([])
+  }})
+  if(scenario==='merged fix PR')await c.localDetails('o/r',{number:42,kind:'issue',notes:[]})
+  else await c.list('o/r',scenario.startsWith('full ')?scenario.slice(5):'both',10,undefined,{full:scenario.startsWith('full ')})
+  const expected=scenario==='incremental'?['repo:o/r is:issue is:open']:scenario==='merged fix PR'?['repo:o/r is:pr is:merged "#42"']:scenario==='full both'?['repo:o/r is:issue','repo:o/r is:pr']:['repo:o/r is:'+(scenario==='full issues'?'issue':'pr')]
+  assert.deepEqual(queries,expected)
+})

@@ -8,17 +8,21 @@ import { parseArgs } from 'node:util'
 import { Github, GithubError } from '../lib/github.js'
 import { run,render } from '../lib/pipeline.js'
 import { emptyState, stateSchema, repoName, limitSchema } from '../lib/types.js'
+import { runArguments } from '../lib/config.js'
 import { dueSlot } from '../lib/schedule.js'
 
-const usage='用法：node packages/dsh-github-triage/scripts/smoke-real.mjs [owner/repo] [--limit 5] [--schedule-only] [--business "文本"] [--business-file <路径>] [--model-adapter <本地 mjs> | --mock-model]'
+const usage='用法：node packages/dsh-github-triage/scripts/smoke-real.mjs [owner/repo] [--limit 5 | --full --since YYYY-MM-DD --until YYYY-MM-DD --max N] [--local <路径>] [--local-ref <分支>] [--schedule-only] [--business "文本"] [--business-file <路径>] [--model-adapter <本地 mjs> | --mock-model]'
 let args
 try {
   const {values,positionals}=parseArgs({allowPositionals:true,options:{
-    limit:{type:'string',default:'5'},business:{type:'string'},'business-file':{type:'string'},'mock-model':{type:'boolean'},'schedule-only':{type:'boolean'},'model-adapter':{type:'string'},help:{type:'boolean'},
+    limit:{type:'string'},full:{type:'boolean'},since:{type:'string'},until:{type:'string'},max:{type:'string'},local:{type:'string'},'local-ref':{type:'string'},business:{type:'string'},'business-file':{type:'string'},'mock-model':{type:'boolean'},'schedule-only':{type:'boolean'},'model-adapter':{type:'string'},help:{type:'boolean'},
   }})
   if(values['mock-model']&&values['model-adapter'])throw new Error('conflicting model options')
   if(positionals.length>1)throw new Error('too many repositories')
-  args={...values,repo:repoName.parse(positionals[0]??'cordiverse/cordis'),limit:limitSchema.parse(Number(values.limit))}
+  const flags=['--full',...['since','until','max'].flatMap(k=>values[k]?['--'+k,values[k]]:[])]
+  const scan=runArguments(values.full?flags.join(' '):['since','until','max'].flatMap(k=>values[k]?['--'+k,values[k]]:[]).join(' '))
+  if(values.full&&values.limit||values['local-ref']&&!values.local)throw new Error('conflicting options')
+  args={...values,...scan,repo:repoName.parse(positionals[0]??'cordiverse/cordis'),limit:values.full?(scan.max??100):limitSchema.parse(Number(values.limit??5))}
 }catch{
   console.error('参数无效；仓库须为 owner/repo，limit 须为 1–100 的整数。\n'+usage)
   process.exitCode=1
@@ -45,19 +49,19 @@ else if(args){
         model=(await import(pathToFileURL(path.resolve(args['model-adapter'])).href)).default
         if(typeof model!=='function')throw new Error('adapter must export a function')
       }
-      const source={safe:client.safe,get warnings(){return client.warnings},list:async()=>snapshot,enrich:client.enrich.bind(client),contents:client.contents.bind(client)}
-      const state=emptyState(),settings={repo,mode:'both',business:args.business,businessFile:args['business-file']}
+      const source={safe:client.safe,get warnings(){return client.warnings},list:async()=>snapshot,enrich:client.enrich.bind(client),localDetails:client.localDetails.bind(client),contents:client.contents.bind(client)}
+      const state=emptyState(),settings={repo,mode:'both',business:args.business,businessFile:args['business-file'],localRepoPath:args.local,localRef:args['local-ref']}
       const modelRoute=args['mock-model']?'smoke/mock-model':args['model-adapter']?'smoke/adapter:'+path.resolve(args['model-adapter']):'unconfigured'
       if(!model)console.log('未配置模型，仅规则预筛，未经 AI 研判。')
-      const snapshot=await client.list(repo,'both',limit)
-      const first=await run(source,settings,state,{limit,now:Date.now(),model,modelRoute})
+      const snapshot=await client.list(repo,'both',limit,undefined,args)
+      const first=await run(source,settings,state,{...args,limit,now:Date.now(),model,modelRoute})
       assert.equal(first.analyzed,snapshot.length)
       console.log(render(first))
       const cache=path.join(dir,'cache.json')
       await writeFile(cache,JSON.stringify(client.safe.value(state)),{mode:0o600})
       const restored=stateSchema.parse(JSON.parse(await readFile(cache,'utf8')))
       // Same fetched snapshot, persisted round-trip: isolate cache from concurrent GitHub updates.
-      const second=await run(source,settings,restored,{limit,now:Date.now(),model,modelRoute})
+      const second=await run(source,settings,restored,{...args,limit,now:Date.now(),model,modelRoute})
       const assessed=first.results.filter(r=>r.judgment).length
       assert.equal(second.reused,assessed);assert.equal(second.analyzed,snapshot.length-assessed);assert.equal(second.briefing,undefined)
       assert.equal(Object.keys(restored.cache).length,assessed)

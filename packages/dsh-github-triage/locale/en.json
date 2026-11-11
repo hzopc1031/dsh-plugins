@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "GitHub Triage",
-    "description": "AI-led read-only GitHub triage with business context, schedules and corrections"
+    "description": "Read-only AI triage with business and local code context, three recommendations, bounded full scans and reusable correction rules"
   }
 }

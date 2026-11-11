@@ -1,5 +1,5 @@
 import { type Dispatcher } from 'undici';
-import { type Item } from './types.js';
+import { type Scan, type Item } from './types.js';
 import { SafeText } from './safety.js';
 export type Fetcher = (url: string, init: {
     method: string;
@@ -40,10 +40,12 @@ export declare class Github {
     private validateQuery;
     graphql<T>(query: string, signal?: AbortSignal): Promise<T>;
     private pages;
-    list(repoInput: string, mode: 'issues' | 'prs' | 'both', limit: number, signal?: AbortSignal): Promise<Item[]>;
+    list(repoInput: string, mode: 'issues' | 'prs' | 'both', limit: number, signal?: AbortSignal, scan?: Scan): Promise<Item[]>;
     private issue;
     contents(repo: string, file: string, maxBytes: number, signal?: AbortSignal): Promise<string>;
     private snippets;
     enrich(repo: string, item: Item, signal?: AbortSignal): Promise<Item>;
+    /** Extra GET evidence only when a local comparison was explicitly configured. */
+    localDetails(repo: string, item: Item, signal?: AbortSignal): Promise<Item>;
     close(): Promise<void>;
 }

@@ -1,6 +1,12 @@
 import { z } from 'zod';
 export declare const repoName: z.ZodPipe<z.ZodString, z.ZodTransform<string, string>>;
 export declare const limitSchema: z.ZodNumber;
+export declare const fullLimitSchema: z.ZodNumber;
+export interface Scan {
+    full?: boolean;
+    since?: string;
+    until?: string;
+}
 export declare const scheduleSchema: z.ZodDiscriminatedUnion<[z.ZodObject<{
     kind: z.ZodLiteral<"daily">;
     time: z.ZodString;
@@ -25,12 +31,17 @@ export declare const repoSchema: z.ZodObject<{
     limit: z.ZodOptional<z.ZodNumber>;
     business: z.ZodOptional<z.ZodString>;
     businessFile: z.ZodOptional<z.ZodString>;
+    localRepoPath: z.ZodOptional<z.ZodString>;
+    localRef: z.ZodOptional<z.ZodString>;
+    rulesFile: z.ZodOptional<z.ZodString>;
+    fullMax: z.ZodOptional<z.ZodNumber>;
 }, z.core.$strip>;
 export type Repo = z.infer<typeof repoSchema>;
 export type Schedule = z.infer<typeof scheduleSchema>;
 export interface Settings {
     repositories: Repo[];
     limit: number;
+    fullMax: number;
     provider: string;
     model: string;
     modelEnabled: boolean;
@@ -42,11 +53,18 @@ export interface Item {
     body: string;
     updated_at: string;
     url: string;
+    commits?: {
+        sha: string;
+        message: string;
+    }[];
+    mergeCommit?: string;
+    fixes?: Item[];
     head?: string;
     files?: {
         path: string;
         additions: number;
         deletions: number;
+        status?: string;
         patch?: string;
     }[];
     additions?: number;
@@ -71,6 +89,23 @@ export interface Item {
     }[];
 }
 export declare const issueJudgment: z.ZodObject<{
+    recommendation: z.ZodEnum<{
+        adopt: "adopt";
+        "manual-review": "manual-review";
+        "not-recommended": "not-recommended";
+    }>;
+    priority: z.ZodEnum<{
+        高: "高";
+        中: "中";
+        低: "低";
+    }>;
+    localApplicability: z.ZodEnum<{
+        present: "present";
+        "already-fixed": "already-fixed";
+        "not-applicable": "not-applicable";
+        unclear: "unclear";
+    }>;
+    localReason: z.ZodString;
     reason: z.ZodString;
     businessReason: z.ZodString;
     evidence: z.ZodArray<z.ZodString>;
@@ -83,9 +118,9 @@ export declare const issueJudgment: z.ZodObject<{
         无效: "无效";
     }>;
     exists: z.ZodEnum<{
+        unclear: "unclear";
         confirmed: "confirmed";
         likely: "likely";
-        unclear: "unclear";
         not_a_bug: "not_a_bug";
     }>;
     worthFixing: z.ZodEnum<{
@@ -93,13 +128,25 @@ export declare const issueJudgment: z.ZodObject<{
         待补充: "待补充";
         不值得修: "不值得修";
     }>;
+}, z.core.$strict>;
+export declare const prJudgment: z.ZodObject<{
+    recommendation: z.ZodEnum<{
+        adopt: "adopt";
+        "manual-review": "manual-review";
+        "not-recommended": "not-recommended";
+    }>;
     priority: z.ZodEnum<{
         高: "高";
         中: "中";
         低: "低";
     }>;
-}, z.core.$strict>;
-export declare const prJudgment: z.ZodObject<{
+    localApplicability: z.ZodEnum<{
+        present: "present";
+        "already-fixed": "already-fixed";
+        "not-applicable": "not-applicable";
+        unclear: "unclear";
+    }>;
+    localReason: z.ZodString;
     reason: z.ZodString;
     businessReason: z.ZodString;
     evidence: z.ZodArray<z.ZodString>;
@@ -122,6 +169,23 @@ export declare const prJudgment: z.ZodObject<{
     testing: z.ZodString;
 }, z.core.$strict>;
 export declare const judgmentSchema: z.ZodDiscriminatedUnion<[z.ZodObject<{
+    recommendation: z.ZodEnum<{
+        adopt: "adopt";
+        "manual-review": "manual-review";
+        "not-recommended": "not-recommended";
+    }>;
+    priority: z.ZodEnum<{
+        高: "高";
+        中: "中";
+        低: "低";
+    }>;
+    localApplicability: z.ZodEnum<{
+        present: "present";
+        "already-fixed": "already-fixed";
+        "not-applicable": "not-applicable";
+        unclear: "unclear";
+    }>;
+    localReason: z.ZodString;
     reason: z.ZodString;
     businessReason: z.ZodString;
     evidence: z.ZodArray<z.ZodString>;
@@ -134,9 +198,9 @@ export declare const judgmentSchema: z.ZodDiscriminatedUnion<[z.ZodObject<{
         无效: "无效";
     }>;
     exists: z.ZodEnum<{
+        unclear: "unclear";
         confirmed: "confirmed";
         likely: "likely";
-        unclear: "unclear";
         not_a_bug: "not_a_bug";
     }>;
     worthFixing: z.ZodEnum<{
@@ -144,12 +208,24 @@ export declare const judgmentSchema: z.ZodDiscriminatedUnion<[z.ZodObject<{
         待补充: "待补充";
         不值得修: "不值得修";
     }>;
+}, z.core.$strict>, z.ZodObject<{
+    recommendation: z.ZodEnum<{
+        adopt: "adopt";
+        "manual-review": "manual-review";
+        "not-recommended": "not-recommended";
+    }>;
     priority: z.ZodEnum<{
         高: "高";
         中: "中";
         低: "低";
     }>;
-}, z.core.$strict>, z.ZodObject<{
+    localApplicability: z.ZodEnum<{
+        present: "present";
+        "already-fixed": "already-fixed";
+        "not-applicable": "not-applicable";
+        unclear: "unclear";
+    }>;
+    localReason: z.ZodString;
     reason: z.ZodString;
     businessReason: z.ZodString;
     evidence: z.ZodArray<z.ZodString>;
@@ -181,6 +257,23 @@ export declare const resultSchema: z.ZodObject<{
         pr: "pr";
     }>;
     judgment: z.ZodOptional<z.ZodDiscriminatedUnion<[z.ZodObject<{
+        recommendation: z.ZodEnum<{
+            adopt: "adopt";
+            "manual-review": "manual-review";
+            "not-recommended": "not-recommended";
+        }>;
+        priority: z.ZodEnum<{
+            高: "高";
+            中: "中";
+            低: "低";
+        }>;
+        localApplicability: z.ZodEnum<{
+            present: "present";
+            "already-fixed": "already-fixed";
+            "not-applicable": "not-applicable";
+            unclear: "unclear";
+        }>;
+        localReason: z.ZodString;
         reason: z.ZodString;
         businessReason: z.ZodString;
         evidence: z.ZodArray<z.ZodString>;
@@ -193,9 +286,9 @@ export declare const resultSchema: z.ZodObject<{
             无效: "无效";
         }>;
         exists: z.ZodEnum<{
+            unclear: "unclear";
             confirmed: "confirmed";
             likely: "likely";
-            unclear: "unclear";
             not_a_bug: "not_a_bug";
         }>;
         worthFixing: z.ZodEnum<{
@@ -203,12 +296,24 @@ export declare const resultSchema: z.ZodObject<{
             待补充: "待补充";
             不值得修: "不值得修";
         }>;
+    }, z.core.$strict>, z.ZodObject<{
+        recommendation: z.ZodEnum<{
+            adopt: "adopt";
+            "manual-review": "manual-review";
+            "not-recommended": "not-recommended";
+        }>;
         priority: z.ZodEnum<{
             高: "高";
             中: "中";
             低: "低";
         }>;
-    }, z.core.$strict>, z.ZodObject<{
+        localApplicability: z.ZodEnum<{
+            present: "present";
+            "already-fixed": "already-fixed";
+            "not-applicable": "not-applicable";
+            unclear: "unclear";
+        }>;
+        localReason: z.ZodString;
         reason: z.ZodString;
         businessReason: z.ZodString;
         evidence: z.ZodArray<z.ZodString>;
@@ -231,6 +336,7 @@ export declare const resultSchema: z.ZodObject<{
         testing: z.ZodString;
     }, z.core.$strict>], "kind">>;
     evidence: z.ZodArray<z.ZodString>;
+    localStatus: z.ZodOptional<z.ZodString>;
     observation: z.ZodOptional<z.ZodString>;
     source: z.ZodEnum<{
         rules: "rules";
@@ -244,6 +350,23 @@ export declare const correctionSchema: z.ZodObject<{
     repo: z.ZodPipe<z.ZodString, z.ZodTransform<string, string>>;
     number: z.ZodNumber;
     judgment: z.ZodDiscriminatedUnion<[z.ZodObject<{
+        recommendation: z.ZodEnum<{
+            adopt: "adopt";
+            "manual-review": "manual-review";
+            "not-recommended": "not-recommended";
+        }>;
+        priority: z.ZodEnum<{
+            高: "高";
+            中: "中";
+            低: "低";
+        }>;
+        localApplicability: z.ZodEnum<{
+            present: "present";
+            "already-fixed": "already-fixed";
+            "not-applicable": "not-applicable";
+            unclear: "unclear";
+        }>;
+        localReason: z.ZodString;
         reason: z.ZodString;
         businessReason: z.ZodString;
         evidence: z.ZodArray<z.ZodString>;
@@ -256,9 +379,9 @@ export declare const correctionSchema: z.ZodObject<{
             无效: "无效";
         }>;
         exists: z.ZodEnum<{
+            unclear: "unclear";
             confirmed: "confirmed";
             likely: "likely";
-            unclear: "unclear";
             not_a_bug: "not_a_bug";
         }>;
         worthFixing: z.ZodEnum<{
@@ -266,12 +389,24 @@ export declare const correctionSchema: z.ZodObject<{
             待补充: "待补充";
             不值得修: "不值得修";
         }>;
+    }, z.core.$strict>, z.ZodObject<{
+        recommendation: z.ZodEnum<{
+            adopt: "adopt";
+            "manual-review": "manual-review";
+            "not-recommended": "not-recommended";
+        }>;
         priority: z.ZodEnum<{
             高: "高";
             中: "中";
             低: "低";
         }>;
-    }, z.core.$strict>, z.ZodObject<{
+        localApplicability: z.ZodEnum<{
+            present: "present";
+            "already-fixed": "already-fixed";
+            "not-applicable": "not-applicable";
+            unclear: "unclear";
+        }>;
+        localReason: z.ZodString;
         reason: z.ZodString;
         businessReason: z.ZodString;
         evidence: z.ZodArray<z.ZodString>;
@@ -293,6 +428,7 @@ export declare const correctionSchema: z.ZodObject<{
         }>;
         testing: z.ZodString;
     }, z.core.$strict>], "kind">;
+    business: z.ZodOptional<z.ZodString>;
     reason: z.ZodString;
     at: z.ZodNumber;
     title: z.ZodString;
@@ -310,6 +446,23 @@ export declare const reportSchema: z.ZodObject<{
             pr: "pr";
         }>;
         judgment: z.ZodOptional<z.ZodDiscriminatedUnion<[z.ZodObject<{
+            recommendation: z.ZodEnum<{
+                adopt: "adopt";
+                "manual-review": "manual-review";
+                "not-recommended": "not-recommended";
+            }>;
+            priority: z.ZodEnum<{
+                高: "高";
+                中: "中";
+                低: "低";
+            }>;
+            localApplicability: z.ZodEnum<{
+                present: "present";
+                "already-fixed": "already-fixed";
+                "not-applicable": "not-applicable";
+                unclear: "unclear";
+            }>;
+            localReason: z.ZodString;
             reason: z.ZodString;
             businessReason: z.ZodString;
             evidence: z.ZodArray<z.ZodString>;
@@ -322,9 +475,9 @@ export declare const reportSchema: z.ZodObject<{
                 无效: "无效";
             }>;
             exists: z.ZodEnum<{
+                unclear: "unclear";
                 confirmed: "confirmed";
                 likely: "likely";
-                unclear: "unclear";
                 not_a_bug: "not_a_bug";
             }>;
             worthFixing: z.ZodEnum<{
@@ -332,12 +485,24 @@ export declare const reportSchema: z.ZodObject<{
                 待补充: "待补充";
                 不值得修: "不值得修";
             }>;
+        }, z.core.$strict>, z.ZodObject<{
+            recommendation: z.ZodEnum<{
+                adopt: "adopt";
+                "manual-review": "manual-review";
+                "not-recommended": "not-recommended";
+            }>;
             priority: z.ZodEnum<{
                 高: "高";
                 中: "中";
                 低: "低";
             }>;
-        }, z.core.$strict>, z.ZodObject<{
+            localApplicability: z.ZodEnum<{
+                present: "present";
+                "already-fixed": "already-fixed";
+                "not-applicable": "not-applicable";
+                unclear: "unclear";
+            }>;
+            localReason: z.ZodString;
             reason: z.ZodString;
             businessReason: z.ZodString;
             evidence: z.ZodArray<z.ZodString>;
@@ -360,6 +525,7 @@ export declare const reportSchema: z.ZodObject<{
             testing: z.ZodString;
         }, z.core.$strict>], "kind">>;
         evidence: z.ZodArray<z.ZodString>;
+        localStatus: z.ZodOptional<z.ZodString>;
         observation: z.ZodOptional<z.ZodString>;
         source: z.ZodEnum<{
             rules: "rules";
@@ -373,12 +539,16 @@ export declare const reportSchema: z.ZodObject<{
     changed: z.ZodArray<z.ZodNumber>;
     briefing: z.ZodOptional<z.ZodString>;
     warnings: z.ZodArray<z.ZodString>;
+    businessContext: z.ZodOptional<z.ZodString>;
+    rulesStatus: z.ZodOptional<z.ZodString>;
+    localStatus: z.ZodOptional<z.ZodString>;
     businessStatus: z.ZodString;
     modelStatus: z.ZodOptional<z.ZodString>;
 }, z.core.$strip>;
 export type Report = z.infer<typeof reportSchema>;
 declare const currentStateSchema: z.ZodObject<{
-    formatVersion: z.ZodLiteral<2>;
+    formatVersion: z.ZodLiteral<3>;
+    ruleDocuments: z.ZodRecord<z.ZodString, z.ZodString>;
     overrides: z.ZodRecord<z.ZodString, z.ZodObject<{
         repo: z.ZodPipe<z.ZodString, z.ZodTransform<string, string>>;
         mode: z.ZodDefault<z.ZodEnum<{
@@ -396,6 +566,10 @@ declare const currentStateSchema: z.ZodObject<{
         limit: z.ZodOptional<z.ZodNumber>;
         business: z.ZodOptional<z.ZodString>;
         businessFile: z.ZodOptional<z.ZodString>;
+        localRepoPath: z.ZodOptional<z.ZodString>;
+        localRef: z.ZodOptional<z.ZodString>;
+        rulesFile: z.ZodOptional<z.ZodString>;
+        fullMax: z.ZodOptional<z.ZodNumber>;
     }, z.core.$strip>>;
     removed: z.ZodArray<z.ZodPipe<z.ZodString, z.ZodTransform<string, string>>>;
     cache: z.ZodRecord<z.ZodString, z.ZodObject<{
@@ -409,6 +583,23 @@ declare const currentStateSchema: z.ZodObject<{
                 pr: "pr";
             }>;
             judgment: z.ZodOptional<z.ZodDiscriminatedUnion<[z.ZodObject<{
+                recommendation: z.ZodEnum<{
+                    adopt: "adopt";
+                    "manual-review": "manual-review";
+                    "not-recommended": "not-recommended";
+                }>;
+                priority: z.ZodEnum<{
+                    高: "高";
+                    中: "中";
+                    低: "低";
+                }>;
+                localApplicability: z.ZodEnum<{
+                    present: "present";
+                    "already-fixed": "already-fixed";
+                    "not-applicable": "not-applicable";
+                    unclear: "unclear";
+                }>;
+                localReason: z.ZodString;
                 reason: z.ZodString;
                 businessReason: z.ZodString;
                 evidence: z.ZodArray<z.ZodString>;
@@ -421,9 +612,9 @@ declare const currentStateSchema: z.ZodObject<{
                     无效: "无效";
                 }>;
                 exists: z.ZodEnum<{
+                    unclear: "unclear";
                     confirmed: "confirmed";
                     likely: "likely";
-                    unclear: "unclear";
                     not_a_bug: "not_a_bug";
                 }>;
                 worthFixing: z.ZodEnum<{
@@ -431,12 +622,24 @@ declare const currentStateSchema: z.ZodObject<{
                     待补充: "待补充";
                     不值得修: "不值得修";
                 }>;
+            }, z.core.$strict>, z.ZodObject<{
+                recommendation: z.ZodEnum<{
+                    adopt: "adopt";
+                    "manual-review": "manual-review";
+                    "not-recommended": "not-recommended";
+                }>;
                 priority: z.ZodEnum<{
                     高: "高";
                     中: "中";
                     低: "低";
                 }>;
-            }, z.core.$strict>, z.ZodObject<{
+                localApplicability: z.ZodEnum<{
+                    present: "present";
+                    "already-fixed": "already-fixed";
+                    "not-applicable": "not-applicable";
+                    unclear: "unclear";
+                }>;
+                localReason: z.ZodString;
                 reason: z.ZodString;
                 businessReason: z.ZodString;
                 evidence: z.ZodArray<z.ZodString>;
@@ -459,6 +662,7 @@ declare const currentStateSchema: z.ZodObject<{
                 testing: z.ZodString;
             }, z.core.$strict>], "kind">>;
             evidence: z.ZodArray<z.ZodString>;
+            localStatus: z.ZodOptional<z.ZodString>;
             observation: z.ZodOptional<z.ZodString>;
             source: z.ZodEnum<{
                 rules: "rules";
@@ -472,6 +676,23 @@ declare const currentStateSchema: z.ZodObject<{
         repo: z.ZodPipe<z.ZodString, z.ZodTransform<string, string>>;
         number: z.ZodNumber;
         judgment: z.ZodDiscriminatedUnion<[z.ZodObject<{
+            recommendation: z.ZodEnum<{
+                adopt: "adopt";
+                "manual-review": "manual-review";
+                "not-recommended": "not-recommended";
+            }>;
+            priority: z.ZodEnum<{
+                高: "高";
+                中: "中";
+                低: "低";
+            }>;
+            localApplicability: z.ZodEnum<{
+                present: "present";
+                "already-fixed": "already-fixed";
+                "not-applicable": "not-applicable";
+                unclear: "unclear";
+            }>;
+            localReason: z.ZodString;
             reason: z.ZodString;
             businessReason: z.ZodString;
             evidence: z.ZodArray<z.ZodString>;
@@ -484,9 +705,9 @@ declare const currentStateSchema: z.ZodObject<{
                 无效: "无效";
             }>;
             exists: z.ZodEnum<{
+                unclear: "unclear";
                 confirmed: "confirmed";
                 likely: "likely";
-                unclear: "unclear";
                 not_a_bug: "not_a_bug";
             }>;
             worthFixing: z.ZodEnum<{
@@ -494,12 +715,24 @@ declare const currentStateSchema: z.ZodObject<{
                 待补充: "待补充";
                 不值得修: "不值得修";
             }>;
+        }, z.core.$strict>, z.ZodObject<{
+            recommendation: z.ZodEnum<{
+                adopt: "adopt";
+                "manual-review": "manual-review";
+                "not-recommended": "not-recommended";
+            }>;
             priority: z.ZodEnum<{
                 高: "高";
                 中: "中";
                 低: "低";
             }>;
-        }, z.core.$strict>, z.ZodObject<{
+            localApplicability: z.ZodEnum<{
+                present: "present";
+                "already-fixed": "already-fixed";
+                "not-applicable": "not-applicable";
+                unclear: "unclear";
+            }>;
+            localReason: z.ZodString;
             reason: z.ZodString;
             businessReason: z.ZodString;
             evidence: z.ZodArray<z.ZodString>;
@@ -521,6 +754,7 @@ declare const currentStateSchema: z.ZodObject<{
             }>;
             testing: z.ZodString;
         }, z.core.$strict>], "kind">;
+        business: z.ZodOptional<z.ZodString>;
         reason: z.ZodString;
         at: z.ZodNumber;
         title: z.ZodString;
@@ -537,6 +771,23 @@ declare const currentStateSchema: z.ZodObject<{
                 pr: "pr";
             }>;
             judgment: z.ZodOptional<z.ZodDiscriminatedUnion<[z.ZodObject<{
+                recommendation: z.ZodEnum<{
+                    adopt: "adopt";
+                    "manual-review": "manual-review";
+                    "not-recommended": "not-recommended";
+                }>;
+                priority: z.ZodEnum<{
+                    高: "高";
+                    中: "中";
+                    低: "低";
+                }>;
+                localApplicability: z.ZodEnum<{
+                    present: "present";
+                    "already-fixed": "already-fixed";
+                    "not-applicable": "not-applicable";
+                    unclear: "unclear";
+                }>;
+                localReason: z.ZodString;
                 reason: z.ZodString;
                 businessReason: z.ZodString;
                 evidence: z.ZodArray<z.ZodString>;
@@ -549,9 +800,9 @@ declare const currentStateSchema: z.ZodObject<{
                     无效: "无效";
                 }>;
                 exists: z.ZodEnum<{
+                    unclear: "unclear";
                     confirmed: "confirmed";
                     likely: "likely";
-                    unclear: "unclear";
                     not_a_bug: "not_a_bug";
                 }>;
                 worthFixing: z.ZodEnum<{
@@ -559,12 +810,24 @@ declare const currentStateSchema: z.ZodObject<{
                     待补充: "待补充";
                     不值得修: "不值得修";
                 }>;
+            }, z.core.$strict>, z.ZodObject<{
+                recommendation: z.ZodEnum<{
+                    adopt: "adopt";
+                    "manual-review": "manual-review";
+                    "not-recommended": "not-recommended";
+                }>;
                 priority: z.ZodEnum<{
                     高: "高";
                     中: "中";
                     低: "低";
                 }>;
-            }, z.core.$strict>, z.ZodObject<{
+                localApplicability: z.ZodEnum<{
+                    present: "present";
+                    "already-fixed": "already-fixed";
+                    "not-applicable": "not-applicable";
+                    unclear: "unclear";
+                }>;
+                localReason: z.ZodString;
                 reason: z.ZodString;
                 businessReason: z.ZodString;
                 evidence: z.ZodArray<z.ZodString>;
@@ -587,6 +850,7 @@ declare const currentStateSchema: z.ZodObject<{
                 testing: z.ZodString;
             }, z.core.$strict>], "kind">>;
             evidence: z.ZodArray<z.ZodString>;
+            localStatus: z.ZodOptional<z.ZodString>;
             observation: z.ZodOptional<z.ZodString>;
             source: z.ZodEnum<{
                 rules: "rules";
@@ -600,6 +864,9 @@ declare const currentStateSchema: z.ZodObject<{
         changed: z.ZodArray<z.ZodNumber>;
         briefing: z.ZodOptional<z.ZodString>;
         warnings: z.ZodArray<z.ZodString>;
+        businessContext: z.ZodOptional<z.ZodString>;
+        rulesStatus: z.ZodOptional<z.ZodString>;
+        localStatus: z.ZodOptional<z.ZodString>;
         businessStatus: z.ZodString;
         modelStatus: z.ZodOptional<z.ZodString>;
     }, z.core.$strip>>;
@@ -610,7 +877,8 @@ export type State = z.infer<typeof currentStateSchema>;
 export declare function emptyState(): State;
 export type Model = (prompt: string, signal?: AbortSignal) => Promise<string>;
 export declare const stateSchema: z.ZodPreprocess<z.ZodObject<{
-    formatVersion: z.ZodLiteral<2>;
+    formatVersion: z.ZodLiteral<3>;
+    ruleDocuments: z.ZodRecord<z.ZodString, z.ZodString>;
     overrides: z.ZodRecord<z.ZodString, z.ZodObject<{
         repo: z.ZodPipe<z.ZodString, z.ZodTransform<string, string>>;
         mode: z.ZodDefault<z.ZodEnum<{
@@ -628,6 +896,10 @@ export declare const stateSchema: z.ZodPreprocess<z.ZodObject<{
         limit: z.ZodOptional<z.ZodNumber>;
         business: z.ZodOptional<z.ZodString>;
         businessFile: z.ZodOptional<z.ZodString>;
+        localRepoPath: z.ZodOptional<z.ZodString>;
+        localRef: z.ZodOptional<z.ZodString>;
+        rulesFile: z.ZodOptional<z.ZodString>;
+        fullMax: z.ZodOptional<z.ZodNumber>;
     }, z.core.$strip>>;
     removed: z.ZodArray<z.ZodPipe<z.ZodString, z.ZodTransform<string, string>>>;
     cache: z.ZodRecord<z.ZodString, z.ZodObject<{
@@ -641,6 +913,23 @@ export declare const stateSchema: z.ZodPreprocess<z.ZodObject<{
                 pr: "pr";
             }>;
             judgment: z.ZodOptional<z.ZodDiscriminatedUnion<[z.ZodObject<{
+                recommendation: z.ZodEnum<{
+                    adopt: "adopt";
+                    "manual-review": "manual-review";
+                    "not-recommended": "not-recommended";
+                }>;
+                priority: z.ZodEnum<{
+                    高: "高";
+                    中: "中";
+                    低: "低";
+                }>;
+                localApplicability: z.ZodEnum<{
+                    present: "present";
+                    "already-fixed": "already-fixed";
+                    "not-applicable": "not-applicable";
+                    unclear: "unclear";
+                }>;
+                localReason: z.ZodString;
                 reason: z.ZodString;
                 businessReason: z.ZodString;
                 evidence: z.ZodArray<z.ZodString>;
@@ -653,9 +942,9 @@ export declare const stateSchema: z.ZodPreprocess<z.ZodObject<{
                     无效: "无效";
                 }>;
                 exists: z.ZodEnum<{
+                    unclear: "unclear";
                     confirmed: "confirmed";
                     likely: "likely";
-                    unclear: "unclear";
                     not_a_bug: "not_a_bug";
                 }>;
                 worthFixing: z.ZodEnum<{
@@ -663,12 +952,24 @@ export declare const stateSchema: z.ZodPreprocess<z.ZodObject<{
                     待补充: "待补充";
                     不值得修: "不值得修";
                 }>;
+            }, z.core.$strict>, z.ZodObject<{
+                recommendation: z.ZodEnum<{
+                    adopt: "adopt";
+                    "manual-review": "manual-review";
+                    "not-recommended": "not-recommended";
+                }>;
                 priority: z.ZodEnum<{
                     高: "高";
                     中: "中";
                     低: "低";
                 }>;
-            }, z.core.$strict>, z.ZodObject<{
+                localApplicability: z.ZodEnum<{
+                    present: "present";
+                    "already-fixed": "already-fixed";
+                    "not-applicable": "not-applicable";
+                    unclear: "unclear";
+                }>;
+                localReason: z.ZodString;
                 reason: z.ZodString;
                 businessReason: z.ZodString;
                 evidence: z.ZodArray<z.ZodString>;
@@ -691,6 +992,7 @@ export declare const stateSchema: z.ZodPreprocess<z.ZodObject<{
                 testing: z.ZodString;
             }, z.core.$strict>], "kind">>;
             evidence: z.ZodArray<z.ZodString>;
+            localStatus: z.ZodOptional<z.ZodString>;
             observation: z.ZodOptional<z.ZodString>;
             source: z.ZodEnum<{
                 rules: "rules";
@@ -704,6 +1006,23 @@ export declare const stateSchema: z.ZodPreprocess<z.ZodObject<{
         repo: z.ZodPipe<z.ZodString, z.ZodTransform<string, string>>;
         number: z.ZodNumber;
         judgment: z.ZodDiscriminatedUnion<[z.ZodObject<{
+            recommendation: z.ZodEnum<{
+                adopt: "adopt";
+                "manual-review": "manual-review";
+                "not-recommended": "not-recommended";
+            }>;
+            priority: z.ZodEnum<{
+                高: "高";
+                中: "中";
+                低: "低";
+            }>;
+            localApplicability: z.ZodEnum<{
+                present: "present";
+                "already-fixed": "already-fixed";
+                "not-applicable": "not-applicable";
+                unclear: "unclear";
+            }>;
+            localReason: z.ZodString;
             reason: z.ZodString;
             businessReason: z.ZodString;
             evidence: z.ZodArray<z.ZodString>;
@@ -716,9 +1035,9 @@ export declare const stateSchema: z.ZodPreprocess<z.ZodObject<{
                 无效: "无效";
             }>;
             exists: z.ZodEnum<{
+                unclear: "unclear";
                 confirmed: "confirmed";
                 likely: "likely";
-                unclear: "unclear";
                 not_a_bug: "not_a_bug";
             }>;
             worthFixing: z.ZodEnum<{
@@ -726,12 +1045,24 @@ export declare const stateSchema: z.ZodPreprocess<z.ZodObject<{
                 待补充: "待补充";
                 不值得修: "不值得修";
             }>;
+        }, z.core.$strict>, z.ZodObject<{
+            recommendation: z.ZodEnum<{
+                adopt: "adopt";
+                "manual-review": "manual-review";
+                "not-recommended": "not-recommended";
+            }>;
             priority: z.ZodEnum<{
                 高: "高";
                 中: "中";
                 低: "低";
             }>;
-        }, z.core.$strict>, z.ZodObject<{
+            localApplicability: z.ZodEnum<{
+                present: "present";
+                "already-fixed": "already-fixed";
+                "not-applicable": "not-applicable";
+                unclear: "unclear";
+            }>;
+            localReason: z.ZodString;
             reason: z.ZodString;
             businessReason: z.ZodString;
             evidence: z.ZodArray<z.ZodString>;
@@ -753,6 +1084,7 @@ export declare const stateSchema: z.ZodPreprocess<z.ZodObject<{
             }>;
             testing: z.ZodString;
         }, z.core.$strict>], "kind">;
+        business: z.ZodOptional<z.ZodString>;
         reason: z.ZodString;
         at: z.ZodNumber;
         title: z.ZodString;
@@ -769,6 +1101,23 @@ export declare const stateSchema: z.ZodPreprocess<z.ZodObject<{
                 pr: "pr";
             }>;
             judgment: z.ZodOptional<z.ZodDiscriminatedUnion<[z.ZodObject<{
+                recommendation: z.ZodEnum<{
+                    adopt: "adopt";
+                    "manual-review": "manual-review";
+                    "not-recommended": "not-recommended";
+                }>;
+                priority: z.ZodEnum<{
+                    高: "高";
+                    中: "中";
+                    低: "低";
+                }>;
+                localApplicability: z.ZodEnum<{
+                    present: "present";
+                    "already-fixed": "already-fixed";
+                    "not-applicable": "not-applicable";
+                    unclear: "unclear";
+                }>;
+                localReason: z.ZodString;
                 reason: z.ZodString;
                 businessReason: z.ZodString;
                 evidence: z.ZodArray<z.ZodString>;
@@ -781,9 +1130,9 @@ export declare const stateSchema: z.ZodPreprocess<z.ZodObject<{
                     无效: "无效";
                 }>;
                 exists: z.ZodEnum<{
+                    unclear: "unclear";
                     confirmed: "confirmed";
                     likely: "likely";
-                    unclear: "unclear";
                     not_a_bug: "not_a_bug";
                 }>;
                 worthFixing: z.ZodEnum<{
@@ -791,12 +1140,24 @@ export declare const stateSchema: z.ZodPreprocess<z.ZodObject<{
                     待补充: "待补充";
                     不值得修: "不值得修";
                 }>;
+            }, z.core.$strict>, z.ZodObject<{
+                recommendation: z.ZodEnum<{
+                    adopt: "adopt";
+                    "manual-review": "manual-review";
+                    "not-recommended": "not-recommended";
+                }>;
                 priority: z.ZodEnum<{
                     高: "高";
                     中: "中";
                     低: "低";
                 }>;
-            }, z.core.$strict>, z.ZodObject<{
+                localApplicability: z.ZodEnum<{
+                    present: "present";
+                    "already-fixed": "already-fixed";
+                    "not-applicable": "not-applicable";
+                    unclear: "unclear";
+                }>;
+                localReason: z.ZodString;
                 reason: z.ZodString;
                 businessReason: z.ZodString;
                 evidence: z.ZodArray<z.ZodString>;
@@ -819,6 +1180,7 @@ export declare const stateSchema: z.ZodPreprocess<z.ZodObject<{
                 testing: z.ZodString;
             }, z.core.$strict>], "kind">>;
             evidence: z.ZodArray<z.ZodString>;
+            localStatus: z.ZodOptional<z.ZodString>;
             observation: z.ZodOptional<z.ZodString>;
             source: z.ZodEnum<{
                 rules: "rules";
@@ -832,6 +1194,9 @@ export declare const stateSchema: z.ZodPreprocess<z.ZodObject<{
         changed: z.ZodArray<z.ZodNumber>;
         briefing: z.ZodOptional<z.ZodString>;
         warnings: z.ZodArray<z.ZodString>;
+        businessContext: z.ZodOptional<z.ZodString>;
+        rulesStatus: z.ZodOptional<z.ZodString>;
+        localStatus: z.ZodOptional<z.ZodString>;
         businessStatus: z.ZodString;
         modelStatus: z.ZodOptional<z.ZodString>;
     }, z.core.$strip>>;

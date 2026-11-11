@@ -1,18 +1,25 @@
-import { type Item, type Model, type Report, type Result, type State, type Repo } from './types.js';
+import { type Scan, type Item, type Model, type Report, type Result, type State, type Repo } from './types.js';
+import { type LocalEvidence } from './local.js';
 import { SafeText } from './safety.js';
 import { type Business, type ContentsSource } from './business.js';
 export declare function fingerprint(item: Item, businessHash?: string, route?: string): string;
 export interface Source extends ContentsSource {
-    list(repo: string, mode: Repo['mode'], limit: number, signal?: AbortSignal): Promise<Item[]>;
+    list(repo: string, mode: Repo['mode'], limit: number, signal?: AbortSignal, scan?: Scan): Promise<Item[]>;
     enrich(repo: string, item: Item, signal?: AbortSignal): Promise<Item>;
+    localDetails?(repo: string, item: Item, signal?: AbortSignal): Promise<Item>;
     safe?: SafeText;
     warnings?: string[];
 }
+export declare const recommendationLabels: {
+    adopt: string;
+    'manual-review': string;
+    'not-recommended': string;
+};
 export declare function sorted(results: Result[]): Result[];
 export declare function briefing(repo: string, changed: Result[], reused: number): string | undefined;
 /** Keep valid structured JSON and a byte budget even for large/untrusted sources. */
-export declare function modelPrompt(item: Item, evidence: string[], business: Business, state: State, repo: Repo): string;
-export declare function run(source: Source, repo: Repo, state: State, options: {
+export declare function modelPrompt(item: Item, evidence: string[], business: Business, state: State, repo: Repo, local?: LocalEvidence, ruleText?: string): string;
+export declare function run(source: Source, repo: Repo, state: State, options: Scan & {
     limit: number;
     now: number;
     model?: Model;

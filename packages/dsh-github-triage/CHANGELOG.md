@@ -2,6 +2,14 @@
 
 ## 0.2.0 · 2026-11-11
 
+- 新增可选 localRepoPath / localRef 与 add --local、local / --clear 命令。固定 argv、shell:false 的只读 Git 白名单，限制时间、取消与输出；对照本地提交快照、文件/函数片段、修复提交、提交包含关系和完整 patch-id，模型输出 localApplicability / localReason。
+- issue / PR 统一 recommendation：adopt、manual-review、not-recommended；两者均有优先级，卡片和简报按三档及优先级排序，保留细分判断、reason 与 businessReason。
+- 新增 --full / --since / --until / --max，按更新时间扫描开放与关闭条目，默认 100、硬上限 500；支持全局/仓库 fullMax，超限仅取最近并提示费用和限流。定时仍用增量窗口；不支持标签区间。
+- /triage-fix 支持三档值；业务说明与纠正形成仓库级 Markdown 规则，新增 /triage-rules 查看/导出/导入及只读 rulesFile。导出只写显式指定路径，默认拒绝覆盖，--force 仍拒绝链接/特殊文件；模型注入有长度限制。
+- 内部状态 formatVersion:3，清除旧派生缓存、报告、待发简报，迁移保留用户纠正；本地提交和规则内容参与指纹。
+- 扩展真实临时 Git 测试与 rc.5 临时 profile 验证；smoke 支持本地对照、全量参数及三档模拟模型。重建 lib，保持 0.2.0，不发布 npm。
+
+
 - AI 主导最终研判，规则仅提供证据。无模型、调用失败、输出校验失败时只显示预筛证据和明确提示，不缓存为已研判。
 - 新增业务说明 business / businessFile：仓库默认分支或本机普通文件；带引号命令增改清除，保存在自身存储域。
 - issue / PR 必填 businessReason，新增 exists / worthFixing / fitsDirection / testing；片段最多 3 文件、每文件 3KB，模型上下文最多 48KB。

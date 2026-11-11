@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url'
 const cwd=fileURLToPath(new URL('../',import.meta.url))
 const [pack]=JSON.parse(execFileSync('npm',['pack','--dry-run','--json','--ignore-scripts'],{cwd,encoding:'utf8',shell:process.platform==='win32'}))
 const read=async p=>(await readFile(new URL('../'+p,import.meta.url),'utf8')).replace(/^\uFEFF/,'')
-const modules=['business','config','github','model','pipeline','plugin','rules','safety','schedule','state','types']
+const modules=['local','rule-files','business','config','github','model','pipeline','plugin','rules','safety','schedule','state','types']
 const expected=['package.json','index.js','cordis.patch.yml','locale/en.json','locale/zh.json','icon.svg','README.md','LICENSE','CHANGELOG.md','THIRD_PARTY_NOTICES',...modules.flatMap(n=>['lib/'+n+'.js','lib/'+n+'.d.ts'])]
 assert.deepEqual(pack.files.map(f=>f.path).sort(),expected.sort())
 const pkg=JSON.parse(await read('package.json'))

@@ -1,6 +1,6 @@
 import { execFile } from 'node:child_process';
 import { EnvHttpProxyAgent, fetch as proxyFetch } from 'undici';
-import { repoName, limitSchema } from './types.js';
+import { repoName, limitSchema, fullLimitSchema } from './types.js';
 import { SafeText } from './safety.js';
 import { BusinessReadError, clip, FILE_SNIPPET_LIMIT, MAX_CONTEXT_FILES } from './business.js';
 export const ghToken = signal => new Promise(resolve => {
@@ -97,9 +97,9 @@ export class Github {
         return this.request('/graphql?query=' + encodeURIComponent(query), 'GET', signal);
     }
     pages() { return Math.max(1, Math.min(3, this.#options.maxPages ?? 3)); }
-    async list(repoInput, mode, limit, signal) {
+    async list(repoInput, mode, limit, signal, scan = {}) {
         const repo = repoName.parse(repoInput);
-        limitSchema.parse(limit);
+        (scan.full ? fullLimitSchema : limitSchema).parse(limit);
         // Refresh capabilities on each run: only explicitly false flags disable an API.
         this.#featureWarnings = [];
         this.#trees.delete(repo);
@@ -110,6 +110,36 @@ export class Github {
         if (issuesDisabled || prsDisabled)
             this.#featureWarnings.push('该仓库已关闭 ' +
                 (issuesDisabled && prsDisabled ? 'Issues/PR' : issuesDisabled ? 'Issues' : 'PR') + ' 功能；已跳过对应拉取。');
+        if (scan.full) {
+            if (issuesDisabled && prsDisabled || mode === 'issues' && issuesDisabled || mode === 'prs' && prsDisabled)
+                return [];
+            const range = scan.since || scan.until ? ' updated:' + (scan.since && scan.until ? scan.since + '..' + scan.until : scan.since ? '>=' + scan.since : '<=' + scan.until) : '';
+            const kinds = [], items = [];
+            if (mode !== 'prs' && !issuesDisabled)
+                kinds.push('issue');
+            if (mode !== 'issues' && !prsDisabled)
+                kinds.push('pr');
+            let totalCount = 0;
+            // Search requires an explicit type; each stream needs its own limit before merging.
+            for (const kind of kinds) {
+                const query = 'repo:' + repo + ' is:' + kind + range, typedItems = [];
+                for (let page = 1; page <= Math.ceil(limit / 100); page++) {
+                    const data = await this.request('/search/issues?q=' + encodeURIComponent(query) + '&sort=updated&order=desc&per_page=100&page=' + page, 'GET', signal);
+                    if (page === 1)
+                        totalCount += data.total_count;
+                    if (data.incomplete_results)
+                        this.#warnings.push('GitHub 搜索返回不完整结果；请缩小时间范围后重试。');
+                    typedItems.push(...data.items.map(i => ({ ...this.issue(repo, i), kind: i.pull_request ? 'pr' : 'issue', url: 'https://github.com/' + repo + (i.pull_request ? '/pull/' : '/issues/') + i.number })));
+                    if (data.items.length < 100 || typedItems.length >= limit)
+                        break;
+                }
+                items.push(...typedItems.slice(0, limit));
+            }
+            if (totalCount > limit)
+                this.#warnings.push('全量扫描超过上限 ' + limit + '，仅取最近更新的条目（含开放与关闭）；可缩小时间范围。');
+            this.#warnings.push('全量扫描会增加 GitHub 请求与模型费用；后续定时仅处理开放条目的新增和变化。');
+            return items.sort((a, b) => b.updated_at.localeCompare(a.updated_at)).slice(0, limit);
+        }
         const items = [];
         if (mode !== 'prs' && !issuesDisabled) {
             const data = await this.request('/search/issues?q=' + encodeURIComponent('repo:' + repo + ' is:issue is:open') + '&sort=updated&order=desc&per_page=' + limit, 'GET', signal);
@@ -196,13 +226,13 @@ export class Github {
         const base = '/repos/' + repo;
         const pr = await this.request(base + '/pulls/' + item.number, 'GET', signal);
         // Preserve a consistent snapshot: retry next time instead of caching mixed heads.
-        if (pr.head.sha !== item.head || pr.updated_at !== item.updated_at)
+        if (item.head && pr.head.sha !== item.head || pr.updated_at !== item.updated_at)
             throw new Error('PR 在拉取时发生更新，请重试');
-        Object.assign(result, { head: pr.head.sha, additions: pr.additions, deletions: pr.deletions, changedFiles: pr.changed_files, draft: pr.draft, url: 'https://github.com/' + repo + '/pull/' + item.number });
+        Object.assign(result, { head: pr.head.sha, mergeCommit: pr.merge_commit_sha, additions: pr.additions, deletions: pr.deletions, changedFiles: pr.changed_files, draft: pr.draft, url: 'https://github.com/' + repo + '/pull/' + item.number });
         result.files = [];
         for (let page = 1; page <= this.pages(); page++) {
             const files = await this.request(base + '/pulls/' + item.number + '/files?per_page=100&page=' + page, 'GET', signal);
-            result.files.push(...files.map(f => ({ path: f.filename, additions: f.additions, deletions: f.deletions, patch: f.patch?.slice(0, 1600) })));
+            result.files.push(...files.map(f => ({ path: f.filename, additions: f.additions, deletions: f.deletions, status: f.status, patch: f.patch ? clip(f.patch, 16 * 1024) : undefined })));
             if (files.length < 100)
                 break;
         }
@@ -233,6 +263,46 @@ export class Github {
                 result.linked.push({ number: linked.number, title: linked.title, body: (linked.body ?? '').slice(0, 2000) });
         }
         await this.snippets(repo, result, result.files.map(f => f.path), signal);
+        return result;
+    }
+    /** Extra GET evidence only when a local comparison was explicitly configured. */
+    async localDetails(repo, item, signal) {
+        repo = repoName.parse(repo);
+        const result = { ...item, notes: [...(item.notes ?? [])] };
+        const commits = async (pr) => {
+            const data = await this.request('/repos/' + repo + '/pulls/' + pr.number + '/commits?per_page=100', 'GET', signal);
+            pr.commits = data.slice(0, 100).map(c => ({ sha: c.sha, message: clip(c.commit.message, 500) }));
+            if (data.length === 100)
+                result.notes.push('上游提交最多读取 100 条，可能不完整');
+        };
+        try {
+            if (item.kind === 'pr')
+                await commits(result);
+            else {
+                const data = await this.request('/search/issues?q=' + encodeURIComponent('repo:' + repo + ' is:pr is:merged "#' + item.number + '"') + '&sort=updated&order=desc&per_page=5', 'GET', signal);
+                result.fixes = [];
+                for (const candidate of data.items.slice(0, 5)) {
+                    if (!new RegExp('(?:fix(?:es|ed)?|clos(?:e[sd]?)|resolv(?:e[sd]?))\\s+#' + item.number + '\\b', 'i').test(candidate.body ?? ''))
+                        continue;
+                    const detail = await this.request('/repos/' + repo + '/pulls/' + candidate.number, 'GET', signal);
+                    if (!detail.merged)
+                        continue;
+                    const fix = { ...this.issue(repo, detail), kind: 'pr', head: detail.head.sha, mergeCommit: detail.merge_commit_sha, changedFiles: detail.changed_files, files: [] };
+                    const files = await this.request('/repos/' + repo + '/pulls/' + fix.number + '/files?per_page=100', 'GET', signal);
+                    fix.files = files.map(f => ({ path: f.filename, additions: f.additions, deletions: f.deletions, status: f.status, patch: f.patch ? clip(f.patch, 16 * 1024) : undefined }));
+                    await commits(fix);
+                    result.fixes.push(fix);
+                    if (result.fixes.length === 2)
+                        break;
+                }
+            }
+        }
+        catch (error) {
+            signal?.throwIfAborted();
+            if (error instanceof GithubError && [403, 429].includes(error.status))
+                throw error;
+            result.notes.push('上游提交/关联修复 PR 证据未完整取得');
+        }
         return result;
     }
     async close() { await this.#dispatcher?.close(); }

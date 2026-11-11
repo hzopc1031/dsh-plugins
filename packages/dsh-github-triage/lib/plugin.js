@@ -1,13 +1,15 @@
 import { CommandDefinitionId } from '@deepseek-ai/dsh-commands';
 import z from '@deepseek-ai/schemastery';
 import { randomUUID } from 'node:crypto';
-import { repoSchema, limitSchema, repoName } from './types.js';
+import { repoSchema, limitSchema, fullLimitSchema, repoName } from './types.js';
 import { domainSpec, prune } from './state.js';
 import { Github, GithubError } from './github.js';
-import { repoCommand, repositories, runArguments } from './config.js';
+import { repoCommand, repositories, runArguments, tokens } from './config.js';
 import { correct, render, run } from './pipeline.js';
 import { dueSlot } from './schedule.js';
 import { dshModel, listModels, modelWarning } from './model.js';
+import { openLocal } from './local.js';
+import { rulesCommand } from './rule-files.js';
 import { SafeText } from './safety.js';
 export const name = 'github-triage';
 export const inject = ['commands', 'storageDomain'];
@@ -16,12 +18,17 @@ export const Config = z.object({
         repo: z.string().required(),
         business: z.string().default('').description('项目业务说明：核心功能、高风险模块、优先级原则；与文件内容一同交给 AI'),
         businessFile: z.string().default('').description('相对路径读 GitHub 默认分支，如 docs/business.md；本机绝对路径只读普通文件，限 16KB，拒绝 UNC/设备路径'),
+        localRepoPath: z.string().default('').description('可选本地 Git 仓库绝对路径；只读所选 ref 已提交代码，不读取未提交修改'),
+        localRef: z.string().default('').description('本地分支或提交，默认 HEAD；不 checkout、不 fetch'),
+        rulesFile: z.string().default('').description('可选本机 UTF-8 规则文件，只读，最多 16KB'),
+        fullMax: z.number().min(1).max(500).step(1),
         mode: z.union(['issues', 'prs', 'both']).default('both'),
         daily: z.string().default('').description('本地时间 HH:MM，与 everyHours 二选一'),
         everyHours: z.number().min(0).max(8760).default(0),
         limit: z.number().min(1).max(100).step(1),
     })).default([]).description('默认空仓库清单'),
     limit: z.number().min(1).max(100).step(1).default(20),
+    fullMax: z.number().min(1).max(500).step(1).default(100),
     modelEnabled: z.boolean().default(true),
     provider: z.string().default('').description('DSH 已注册的服务商路由 ID，运行 /triage-models 复制 provider 值；与 model 分开填，不是密钥；默认空值无法 AI 研判'),
     model: z.string().default('').description('DSH 已注册服务商下的模型 ID，运行 /triage-models 复制 model 值；不填 provider/model 组合；默认空值无法 AI 研判'),
@@ -30,12 +37,12 @@ export function settings(input) {
     const repositories = (input.repositories ?? []).map(r => {
         if (r.daily && r.everyHours)
             throw new Error('daily 与 everyHours 不能同时设置');
-        return repoSchema.parse({ repo: r.repo, mode: r.mode ?? 'both', limit: r.limit, business: r.business, businessFile: r.businessFile,
+        return repoSchema.parse({ repo: r.repo, mode: r.mode ?? 'both', limit: r.limit, business: r.business, businessFile: r.businessFile, localRepoPath: r.localRepoPath || undefined, localRef: r.localRef || undefined, rulesFile: r.rulesFile || undefined, fullMax: r.fullMax,
             schedule: r.daily ? { kind: 'daily', time: r.daily } : r.everyHours ? { kind: 'every', hours: r.everyHours } : undefined });
     });
     if (repositories.length > 50)
         throw new Error('最多配置 50 个仓库');
-    return { repositories, limit: limitSchema.parse(input.limit ?? 20), modelEnabled: input.modelEnabled ?? true, provider: input.provider?.trim() ?? '', model: input.model?.trim() ?? '' };
+    return { repositories, fullMax: fullLimitSchema.parse(input.fullMax ?? 100), limit: limitSchema.parse(input.limit ?? 20), modelEnabled: input.modelEnabled ?? true, provider: input.provider?.trim() ?? '', model: input.model?.trim() ?? '' };
 }
 export async function apply(ctx, input = {}) {
     const config = settings(input), domain = await ctx.storageDomain.open(domainSpec);
@@ -89,13 +96,13 @@ export async function apply(ctx, input = {}) {
             delivering = false;
         }
     };
-    const perform = async (repo, limit, scheduled, signal) => {
+    const perform = async (repo, limit, scheduled, signal, scan = {}) => {
         if (Date.now() < (retryAt.get(repo.repo) ?? 0))
             throw new GithubError(429, retryAt.get(repo.repo));
         const client = new Github({ safe });
         try {
             const next = structuredClone(state), now = Date.now();
-            const report = await run(client, repo, next, { limit, now, model: dshModel(ctx, config), modelRoute: JSON.stringify([config.modelEnabled, config.provider, config.model]), modelNote: modelWarning(ctx, config), signal });
+            const report = await run(client, repo, next, { ...scan, limit, now, model: dshModel(ctx, config), modelRoute: JSON.stringify([config.modelEnabled, config.provider, config.model]), modelNote: modelWarning(ctx, config), signal });
             // Credentials learned from gh must also be redacted at the durable boundary.
             const clean = client.safe.value(next);
             if (scheduled) {
@@ -134,8 +141,16 @@ export async function apply(ctx, input = {}) {
     command('triage-repo', '增删、列出只读研判 GitHub 仓库', async (i) => serialize(async () => {
         const raw = safe.text(i.rawInput).trim();
         if (raw === 'list')
-            return repositories(config.repositories, state).map(r => r.repo + ' · ' + r.mode + ' · ' + (r.schedule ? JSON.stringify(r.schedule) : '仅手动') + ' · 上限 ' + (r.limit ?? config.limit) + ' · 业务说明：' + (r.businessFile || (r.business ? '内联文本' : '未配置'))).join('\n') || '未配置仓库。';
+            return repositories(config.repositories, state).map(r => r.repo + ' · ' + r.mode + ' · ' + (r.schedule ? JSON.stringify(r.schedule) : '仅手动') + ' · 上限 ' + (r.limit ?? config.limit) + ' · 业务说明：' + (r.businessFile || (r.business ? '内联文本' : '未配置')) + ' · 本地：' + (r.localRepoPath || '未配置') + ' · 规则：' + (r.rulesFile || '自身存储')).join('\n') || '未配置仓库。';
         const next = structuredClone(state), message = repoCommand(raw, next, config.repositories);
+        const [action, changedRepo] = tokens(raw);
+        for (const r of Object.values(next.overrides).filter(r => ['add', 'local'].includes(action) && r.repo === changedRepo?.toLowerCase())) {
+            if (r.localRepoPath) {
+                const local = await openLocal(r, AbortSignal.any([i.signal, lifetime.signal]));
+                if (!local.sha)
+                    throw new Error('本地路径或 ref 无效');
+            }
+        }
         if (repositories(config.repositories, next).length > 50)
             throw new Error('最多 50 个仓库');
         await save(next);
@@ -147,7 +162,7 @@ export async function apply(ctx, input = {}) {
         return listModels(ctx);
     });
     command('triage', '只读研判 GitHub issues/PR', async (i) => {
-        const { repo, limit } = runArguments(safe.text(i.rawInput)), signal = AbortSignal.any([i.signal, lifetime.signal]);
+        const scan = runArguments(safe.text(i.rawInput)), { repo, limit } = scan, signal = AbortSignal.any([i.signal, lifetime.signal]);
         return serialize(async () => {
             const all = repositories(config.repositories, state);
             const selected = repo ? [all.find(r => r.repo === repo) ?? { repo, mode: 'both' }] : all;
@@ -155,7 +170,7 @@ export async function apply(ctx, input = {}) {
                 return '未配置仓库。用 /triage-repo add owner/repo 添加，或 /triage owner/repo 手动运行。';
             const output = [];
             for (const r of selected)
-                output.push(render(await perform(r, limit ?? r.limit ?? config.limit, false, signal)));
+                output.push(render(await perform(r, scan.full ? (scan.max ?? r.fullMax ?? config.fullMax) : (limit ?? r.limit ?? config.limit), false, signal, scan)));
             return output.join('\n\n');
         });
     });
@@ -171,6 +186,11 @@ export async function apply(ctx, input = {}) {
         const reports = repo ? [state.reports[repo]].filter(Boolean) : Object.values(state.reports);
         return reports.length ? reports.map(render).join('\n\n') : '暂无报告。';
     });
+    command('triage-rules', '查看、导出或导入仓库规则', async (i) => serialize(async () => {
+        const next = structuredClone(state), message = await rulesCommand(safe.text(i.rawInput), next, repositories(config.repositories, state), safe);
+        await save(next);
+        return message;
+    }));
     command('triage-fix', '纠正结论并保存为后续研判参考', async (i) => serialize(async () => {
         const next = structuredClone(state), message = correct(next, safe.text(i.rawInput), Date.now());
         await save(next);

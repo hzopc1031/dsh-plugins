@@ -1,207 +1,203 @@
 # dsh-github-triage
 
-自动拉取指定 GitHub 仓库的问题与待办（issues）和待合并的代码改动（PR），由 AI 结合你的业务说明，判断问题是否真实存在、值不值得修，PR 是否值得合入。
+让 AI 结合你的业务说明和本地代码，判断上游问题在你这里是否存在、PR 是否适合合入或回迁，帮你决定先处理什么。
 
-- **不用一条条翻 issue：** 相比逐条打开 GitHub 列表，在一份结果中集中看问题、PR、判断理由和证据。
-- **结合你的业务判断轻重缓急：** 把项目用途、核心功能和优先事项告诉 AI，让它解释为什么值得修、为什么建议合入或暂缓。
-- **放心查看，不会动你的仓库：** 只读取信息，不评论、改标签、关闭问题或合并 PR。
-- **少做重复分析，省时间和费用：** 已有 AI 结论且内容未变的条目直接复用；条目、业务说明或模型设置变化后再判断。
+- **结合业务说明和你自己的代码来判断：** AI 不只看上游，还对照你选择的本地仓库，解释问题在你那里存不存在、修复是否已有、PR 适不适合你。
+- **先看值得做的事：** issue 和 PR 都分成“建议采纳、需人工看、不推荐”，每组按优先级排列，附业务理由、本地适用性与证据；比逐条翻 GitHub 列表更方便比较。
+- **第一次扫一遍，以后少做重复分析：** 第一次可以全量扫一遍（可限时间范围和条数），之后定时只看新增和有变化的内容，复用已有结论。
+- **把纠正变成下次的参考：** 你纠正过的结论会沉淀成规则，以后自动参考，可导出编辑，再导入继续用。
 
 ## 示例输出
 
-下面沿用结果卡片的格式，展示一条问题和一个 PR。仓库 `example-team/plugin-kit`、编号及内容均为虚构示意。
-
-输入业务说明并运行：
+以下仓库、编号和内容均为虚构示意；不是已经验证的研判结果。
 
 ```text
-/triage-repo add example-team/plugin-kit --business "插件框架，核心是生命周期和依赖隔离；优先保障文件变化后插件能正确重载"
-/triage example-team/plugin-kit --limit 6
+/triage-repo add example-team/plugin-kit --business "插件框架，优先保障文件变化后能正确重载" --local "C:\work\my-plugin-kit"
+/triage example-team/plugin-kit --full --since 2026-01-01 --max 100
 ```
 
-示意输出（节选）：
+示意输出（节选，省略原链接与部分证据）：
 
 ```text
 GitHub 仓库研判 · example-team/plugin-kit
 业务说明：已使用（内联文本，0.1KB）
+本地仓库对照：HEAD @ 0123456789ab（已提交代码）
 
-#42 文件监听漏掉连续写入，插件未重新加载
+建议采纳
+#42 连续写入后插件没有重新加载
+建议采纳 · 优先级：高
+本地适用性：present · 本地 src/watcher.ts 存在对应函数，暂未找到修复线索。
 高 · bug · 真实存在：likely · 值得修
-结合业务：文件变化后正确重载是核心流程；漏掉写入会让插件继续运行旧代码，建议优先核实。
-复现描述与监听代码片段中的事件合并逻辑相符，但尚未实际复现。
-- 有复现步骤和版本信息，缺少运行日志
-- 关键词粗略定位：src/watcher.ts、tests/watch.spec.ts
-来源：model
+结合业务：正确重载是核心流程，建议先核实这个问题。
+描述与代码片段中的事件合并逻辑相符，尚未实际复现。
 
-#43 修正目录变化被当成文件修改
+需人工看
+#43 调整目录变化事件分类
+需人工看 · 优先级：中
+本地适用性：unclear · 本地事件层已有调整，需核对架构差异。
 改完再合 · 符合业务方向：yes · 风险：中
-测试：有测试改动，但还需补充目录替换后连续写入的回归场景。
-结合业务：减少误报有助于避免无效重载，符合业务方向；仍需确认不会漏掉真正的文件变化。
-改动涉及监听事件分类，建议补齐边界测试并结束草稿状态后再审。
-- 改了 2 个文件，新增 401 / 删除 5 行
-- 有测试改动：1 个文件
-- 草稿 PR
-来源：model
+测试：需补目录替换后连续写入的回归场景。
+结合业务：方向符合，但现有测试不足以确认不会漏掉真正的文件变化。
+
+不推荐
+#44 修正重复的监听器清理
+不推荐 · 优先级：低
+本地适用性：already-fixed · 本地历史已包含该上游修复提交。
+不建议合 · 符合业务方向：yes · 风险：低
+测试：仍需确认本地已有修复的回归覆盖。
+结合业务：问题重要，但当前版本已处理，无需重复回迁。
 ```
 
-<sub>示例，结论以实际 AI 研判为准。</sub>
-
-卡片中的 `likely` 表示“较可能存在，仍需核实”，`yes` 表示“符合业务方向”，`来源：model` 表示 AI 给出的结论。实际结果还会附上原链接，以及本轮处理数、缓存复用数；业务说明会显示使用状态、来源和大小，读取失败也会提示。
+`adopt` 对应“建议采纳”（issue 值得修，PR 值得合入或回迁），`manual-review` 对应“需人工看”，`not-recommended` 对应“不推荐”。`likely` 表示较可能存在；`present`、`already-fixed`、`not-applicable`、`unclear` 分别表示本地存在、已有修复、不适用、证据不清楚。本地未配置时卡片明确注明“未配置本地仓库对照”。AI 结论不能代替复现与代码审查。
 
 ## 3 步快速上手
 
-### ① 安装
+1. **完全退出桌面 DSH。** 关闭所有窗口，并从系统托盘退出 DSH，确认已完全关闭后再安装或更新。
 
-先**完全退出桌面版 DSH**：关闭所有窗口，并从系统托盘退出，确认已完全关闭后，再在 PowerShell 运行：
+2. **在终端安装插件。** 需要 DSH 命令行可用，包内已带编译文件，安装时无需构建。
 
-```powershell
-& "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-github-triage"
-```
+   ```powershell
+   dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-github-triage"
+   ```
 
-命令安装到桌面版使用的 DSH 环境（`desktop` profile）。包内已带编译文件，安装时无需构建；所需宿主版本见文末。
+3. **重开 DSH，配置并运行一次。** 在插件设置找到 **GitHub 仓库研判（dsh-github-triage）** 并启用；先在 DSH 模型设置配置服务商，再在会话运行 `/triage-models`，把输出的 `provider`、`model` 分别填入插件同名字段，启用 `modelEnabled`。这里填准确 ID，不填 API key，也不把 `provider/model` 整串填入 `model`。目录为空时到 DSH 模型设置查 ID。
 
-### ② 配模型
+   添加上游仓库与业务说明：
 
-重新打开 DSH，在插件设置中找到 **GitHub 仓库研判（dsh-github-triage）**，确认已启用。在 DSH 的模型/服务商设置中配置并启用要用的模型，再在会话输入：
+   ```text
+   /triage-repo add owner/repo --both --business "插件框架，优先处理生命周期异常与依赖隔离失效"
+   ```
 
-```text
-/triage-models
-```
+   **可选：配置本地仓库对照。** 换成你自己的仓库绝对路径，需已安装 Git；只读取选定分支或提交，默认当前 HEAD，不切分支、不拉取远程、不读取未提交修改。业务文字与相关代码片段会送给所选模型服务商，请只选择愿意发送的内容。
 
-把输出中的 `provider`、`model` 分别复制到插件配置的同名字段，并启用 `modelEnabled`。例如，若命令列出 `provider: "my-route"  model: "my-model"`，对应配置为：
+   ```text
+   /triage-repo local owner/repo "C:\work\my-repo" --ref main
+   ```
 
-```yaml
-modelEnabled: true
-provider: "my-route"
-model: "my-model"
-```
+   先少量试跑，看到按三档分组的卡片、理由、证据和原链接即完成首次使用：
 
-这里的值只是填写示例，必须换成你在 DSH 中已注册的值。两个字段分别是服务商和模型的准确 ID，不能用显示名称，也不能把 `provider/model` 整串填进 `model`；这里不填 API key。若目录为空或读取失败，到 DSH 模型设置查看准确 ID。
+   ```text
+   /triage owner/repo --limit 6
+   ```
 
-### ③ 加仓库和业务说明，运行或定时
-
-把下面的 `owner/repo` 换成你的仓库。公开仓库可匿名读取，但额度较低；私有仓库需让 DSH 复用有相应读取权限的本机 GitHub CLI（`gh`）登录，或启动环境中的 `GH_TOKEN` / `GITHUB_TOKEN`。插件没有令牌填写项。
-
-直接写业务说明，先运行一次：
-
-```text
-/triage-repo add owner/repo --both --business "插件框架，核心是生命周期和依赖隔离；优先处理卸载异常和隔离失效"
-/triage owner/repo --limit 6
-```
-
-运行后会在会话里看到问题和 PR 的结果卡片，包含结合业务的理由、证据及原链接。未配好模型或调用失败时，会明确提示原因，只展示“仅规则预筛，未经 AI 研判”，不给修复或合入结论；配好后重新运行即可。
-
-也可以读取业务说明文件，并每天按**本机时间 09:30**检查：
-
-```text
-/triage-repo add owner/repo --both --business-file docs/business.md --daily 09:30 --limit 10
-```
-
-或者只看 PR，每隔 **6 小时**检查：
-
-```text
-/triage-repo add owner/repo --prs --every 6 --business "插件框架，重点关注生命周期与依赖隔离"
-```
-
-以上是替代用法：再次 `add` 会替换该仓库的全部设置，包括业务说明和定时设置。`--daily` 与 `--every` 二选一，都不填就只手动运行；`--every` 单位为小时。定时检查需要 DSH 和插件保持运行，有新内容才发送简报。
-
-`--business-file` 的相对路径读取 GitHub 仓库默认分支的文件；本机绝对路径读取本机普通文件，例如 `--business-file "C:\my docs\business.md"`。文件须为 UTF-8 文本，最多 16KB；有空格的文本或路径用英文引号包住。业务说明会交给你配置的模型服务商，请只选择愿意发送的内容。
+   公开仓库可匿名读取，但额度较低；私有仓库需要 DSH 启动环境中的 `GH_TOKEN` / `GITHUB_TOKEN`，或本机 GitHub CLI（`gh`）已有相应读取权限的登录。插件没有令牌填写项。模型不可用、禁用或输出无效时只展示“仅规则预筛，未经 AI 研判”，不缓存为已研判结论。
 
 ## 日常使用
 
-### 看已配置仓库和最近结果
+### 先全量扫，再定时看变化
 
 ```text
-/triage-repo list
-/triage
-/triage-report owner/repo
+/triage owner/repo --full --since 2026-01-01 --until 2026-11-11 --max 100
+/triage-repo add owner/repo --both --daily 09:30 --limit 20 --business "核心业务说明" --local "C:\work\my-repo"
 ```
 
-`/triage` 不带仓库会处理全部已配置仓库；带 `owner/repo` 可以临时运行，但要使用业务说明，应先添加该仓库。`/triage-report` 只查看最近结果，不重新分析；省略仓库则查看全部报告。
+全量扫描包括开放与已关闭的 issue/PR，按**最后更新时间**筛选，日期首尾均包含；不填日期就不限制时间。`--max` 为两者合计上限，默认 100、最大 500。超过上限只取最近更新的，并提示你缩小时间范围；搜索结果不完整时也会提示。因此“全量”是扫描范围，不保证超过上限的历史全部读完。暂不支持 `--from-tag` / `--to-tag`：提交标签区间不能可靠表示 issue/PR 范围。
 
-添加仓库时，`--issues`、`--prs`、`--both` 分别选择问题、PR 或两者，默认两者。`--limit` 是两者**合计的候选上限**，为 1–100，默认 20。手动运行的上限优先于仓库上限，仓库上限优先于全局 `limit`；最多配置 50 个仓库。
+全量扫描会增加 GitHub 请求和模型费用。建议先用小条数与时间范围试跑；遇到 GitHub 限流时等待后重试，插件不会绕过限流或自动追完所有历史。
 
-### 只更新业务说明
+之后定时只看开放条目最近窗口里的新增和变化；未变且已有结论的直接复用。`--daily HH:MM` 按本机时间，或用 `--every 6` 每 6 小时检查；两者二选一，都不填则仅手动运行。定时需要 DSH 和插件持续运行，有变化才发简报。
+
+再次 `add` 会替换该仓库**全部设置**，请一并写上要保留的业务、本地、规则和定时设置。全量扫描不改变定时模式。
+
+普通 `/triage [owner/repo] [--limit N]` 上限为 1–100，默认 20；全量模式使用 `--max`，不能与 `--limit` 混用。命令上限优先于仓库 `limit` / `fullMax`，再优先于全局同名配置。不带仓库处理全部已配置仓库，临时指定仓库则可直接运行；最多配置 50 个仓库。
+
+### 更换或清除本地对照
 
 ```text
-/triage-repo business owner/repo "新的业务方向：优先保障核心登录流程"
+/triage-repo local owner/repo "C:\work\my fork" --ref release
+/triage-repo local owner/repo --clear
+```
+
+这两条保留其他设置。也可以添加时写 `--local "C:\work\my fork" --ref release`。路径必须是存在的本地 Git 仓库根目录，且选定 ref 能解析为提交；拒绝 UNC、设备路径、备用数据流和相对路径，不展开 `~` 或环境变量。无效命令设置不会保存；静态配置失效时报告会显示对照失败。
+
+### 补充业务说明
+
+```text
+/triage-repo business owner/repo "新的业务方向：优先保障认证与会话隔离"
 /triage-repo business owner/repo --file "C:\my docs\business.md"
 /triage-repo business owner/repo --clear
 ```
 
-这三条分别设置文字、设置文件和清除说明，均保留该仓库其他设置。设置文字或文件时，会替换原有的两项业务设置。用 `add` 或配置同时提供 `business` 和 `businessFile` 时，两者会合并；文件读取失败但有文字时，仍使用文字并提示失败。没有可用说明时，模型理由会注明“未提供业务说明，按通用标准判断”。
+分别设置文字、设置文件、清除说明，并保留其他设置。设置文字或文件会替换原有两项业务设置。`add` 可用 `--business` / `--business-file`，同时提供则合并。文件相对路径读取 GitHub 默认分支，绝对路径只读本机 UTF-8 普通文件，最多 16KB。文件失败仍可使用内联文字；没有可用说明时模型理由注明“未提供业务说明，按通用标准判断”。
 
-### 纠正 AI 结论
-
-先取得该条目的 AI 结论，再输入：
+### 纠正结论，导出编辑规则
 
 ```text
-/triage-fix owner/repo#123 不值得修 已由其他模块解决
+/triage-fix owner/repo#123 not-recommended 本地没有这个模块，不需要回迁
+/triage-rules owner/repo
+/triage-rules export owner/repo "C:\work\triage-rules.md"
+/triage-rules import owner/repo "C:\work\triage-rules.md"
 ```
 
-问题可改类型（`bug`、`需求`、`提问`、`重复`、`无效`）或修复价值（`值得修`、`待补充`、`不值得修`）；PR 可改为 `值得合并`、`改完再合`、`不建议合`。同一条目优先采用你的纠正，后续同仓库同类条目会参考最近 8 条纠正。卡片会标明来源，纠正不会被当作已验证事实。
+先取得条目的 AI 结论，再用 `adopt` / `manual-review` / `not-recommended` 纠正。保留旧写法：issue 可改 `bug`、`需求`、`提问`、`重复`、`无效` 或 `值得修`、`待补充`、`不值得修`；PR 可改 `值得合并`、`改完再合`、`不建议合`。旧写法会同步映射三档建议；新三档也会同步对应的修复/合入价值字段。
 
-### 停止跟踪仓库
+纠正、当时的业务说明会形成仓库级 Markdown 规则，保存在插件自己的存储中。同一条目优先采用用户纠正；后续其他条目由模型参考这些规则，规则不会自动变成确定事实。查看、导出时能读到业务背景、纠正理由及最终建议；可以编辑规则后导入，必须保留第一行的仓库标识。导入不是批量修改历史卡片；要修改某条已有用户结论，仍用 `/triage-fix`。
+
+**导出是插件唯一主动写入用户指定本地文件的功能**（自身状态仍由宿主存储管理）。只写你在命令中指定的绝对路径，不自动创建目录；默认拒绝覆盖已有文件，确需替换加 `--force`，仍拒绝链接和特殊文件。导入仅读取，不修改源文件。文件须为 UTF-8，最多 16KB。
+
+也可在仓库配置填 `rulesFile`，或 `add` 时用 `--rules-file "C:\work\my-rules.md"`，每轮只读该外部文件；它可写普通 Markdown，无需导入格式头。规则会送给模型，合计最多 8KB，超过会截断并提示；外部文件与内部规则并用时各取约 4KB。最新纠正优先纳入，较长历史可能被截断。
+
+### 看报告或停止跟踪
 
 ```text
+/triage-repo list
+/triage-report owner/repo
 /triage-repo remove owner/repo
 ```
 
-这会移除命令添加的仓库，也会屏蔽静态配置中的同名仓库；再次 `add` 可恢复。命令设置保存在插件自己的存储中，优先于静态配置，不修改全局配置。
+`/triage-report` 不重新分析，不带仓库则看全部最近报告。`remove` 屏蔽静态配置中的同名仓库，再次 `add` 可恢复。命令设置只保存在插件自身存储中，优先于静态配置，不修改全局配置。
 
-### 用配置统一管理仓库
-
-也可以在插件配置中填写 `repositories`，与模型配置一起管理：
+### 用配置统一管理
 
 ```yaml
 modelEnabled: true
 provider: "my-route"  # 换成 /triage-models 列出的 provider
-model: "my-model"    # 换成对应的 model
+model: "my-model"    # 换成对应的 model ID
 limit: 20
+fullMax: 100
 repositories:
   - repo: owner/repo
     mode: both
     business: "企业登录服务，认证与会话隔离是核心业务"
     businessFile: docs/business.md
+    localRepoPath: 'C:\work\my-repo'
+    localRef: main
+    rulesFile: 'C:\work\my-rules.md'
     daily: "09:30"
-    limit: 10
-  - repo: owner/another
-    mode: prs
-    businessFile: 'C:\my docs\business.md'
-    everyHours: 6
+    limit: 20
+    fullMax: 200
 ```
 
-配置中的 `daily` 与 `everyHours` 二选一，都不设置则仅手动运行；`mode` 可填 `issues`、`prs`、`both`。其余范围与命令相同。
+`mode` 为 `issues`、`prs`、`both`。定时配置的 `daily` 与 `everyHours` 二选一，都不设置则仅手动运行。本地路径、ref、规则文件均可选；`localRef` 默认 HEAD。命令添加时可用 `--full-max 200` 设置仓库的全量默认上限。
 
 ## 补充说明
 
 ### 版本与兼容
 
-当前插件版本为 **0.2.0**，针对 **DeepSeek Harness 0.2.1-rc.5**，包声明要求 Node.js 22 或以上。已记录的测试环境为 Windows / Node.js 24，不据此承诺其他宿主版本或平台已验证。
+当前版本 **0.2.0**，尚未发布 npm，面向 **DeepSeek Harness 0.2.1-rc.5**，要求 Node.js 22 或以上；本地对照需要 PATH 中可用的 Git。开发验证环境为 Windows / Node.js 24，其他平台与 Node.js 22 实机尚未验证。未发布改动合入 main 前，上面的 main 安装地址仍指向现有 main 内容。
 
-### 限制与数据流向
+### 只读边界与证据局限
 
-- AI 给出建议，不能证明问题已复现、测试有效或修复正确。规则只整理复现、版本、日志、疑似重复、相关路径、PR 规模、自动检查（CI）、测试和关联问题等证据，最终判断由模型给出。
-- 只取最近更新的开放条目窗口，不扫描全部历史。每条最多尝试读取 3 个相关文本文件，每个片段最多 3KB；源文件超过 64KB 会跳过。PR 只保留部分改动片段，相关文件正文来自默认分支，新文件可能读不到，因此不能代替完整代码审查。
-- 业务说明送入模型最多 8KB，整个请求最多 48KB，超出会删减并提示。每条最多一次模型生成，45 秒超时，输出上限 1800 tokens。模型未配置、禁用、不可用、调用失败或返回格式不符时，只展示预筛证据，不写入已研判缓存，后续会重试。
-- 仓库内容、业务说明和纠正参考会送给所选模型服务商；模型没有工具，输入均作为不可信数据处理。插件会对已知 GitHub 令牌脱敏，但无法识别任意机密文本。
-- 本机业务文件拒绝目录、设备路径、UNC/网络共享和 Windows 备用数据流；路径中的 `~`、环境变量不会展开。仓库文件路径拒绝 `..` 和反斜杠。
-- GitHub 凭据依次取自 `GH_TOKEN`、`GITHUB_TOKEN`、本机 `gh auth token`，都没有则匿名访问。凭据仅在内存中用于请求头，不写入报告、不送模型，也不读取 DSH 密钥文件。请求固定访问 GitHub API，仅允许 GET，禁止重定向。
-- 单次 GitHub 请求 20 秒超时，限流后按响应头等待；支持 `HTTP_PROXY` / `HTTPS_PROXY` / `NO_PROXY`。插件没有 webhook 或独立后台常驻服务。
+- 绝不自动改代码、推送、创建 PR、评论、改标签、关闭问题、合并或向 GitHub 写入任何内容。不会 checkout、fetch 或修改本地工作区。回迁执行（自动打补丁/建分支）暂不做。
+- 本地对照使用 Node 官方 `child_process.execFile('git', 固定参数数组, { shell:false })`；没有新增或猜测 DSH 服务接口。代码只接受 `rev-parse`、`ls-tree`、`cat-file`、`show`、`log`、`merge-base`、`patch-id` 的限定参数形状；其他命令及额外参数均拒绝。关闭可选锁、外部 diff/textconv、hooks、fsmonitor 与缺失对象自动获取；不主动启动网络操作。
+- 本地读取选定 ref 的**已提交快照**。每条最多检查 3 个文件，每文件片段最多 3KB，源 blob 超过 64KB 跳过，总本地上下文最多 16KB。不会跟随代码中的符号链接去读取目标。历史取最近 80 条，查 issue 号、标题关键词和上游修复提交信息；用提交包含关系及完整简单文本 diff 的稳定 patch-id 寻找已合入/回迁线索。浅克隆、旧修复、重命名、二进制、截断 patch、架构改变都可能缺证据；“没找到”不能证明问题不存在或没有修复。
+- 关联修复 PR 搜索最多看 5 个候选，只接受正文明确关闭该 issue 的已合入 PR，最多 2 个；每个 PR 最多读 100 个提交。Git 每次最多 5 秒、输出最多 256KB（正文读取更小），超时、取消、超限都停止并提示，证据不足由模型标注 `unclear`。
+- 上游相关文件来自默认分支，每条最多 3 个片段、每片段 3KB；PR patch 与模型上下文均有界，不是完整代码审查。AI 不运行测试或复现，不保证适用性判断正确。
+- 业务说明送模型最多 8KB，整个请求最多 48KB，超出会删减并提示。每条最多一次模型生成，45 秒超时、1800 tokens 输出上限；模型失败只展示证据，不写已研判缓存。仓库内容、业务、本地代码、规则和纠正参考会发送给所选模型服务商；模型无工具，输入都当作不可信数据。已知 GitHub 令牌会脱敏，但任意机密无法自动识别。
+- GitHub 凭据按 `GH_TOKEN` → `GITHUB_TOKEN` → 固定参数的 `gh auth token` → 匿名读取，只在内存用于请求头，不写报告、不送模型、不读 DSH 密钥文件。请求固定 GitHub API、仅 GET、拒绝重定向，20 秒超时；限流遵守响应头，支持 `HTTP_PROXY` / `HTTPS_PROXY` / `NO_PROXY`。
 
-### 调度、缓存与 rc.5 接口
+### 调度、缓存和真实宿主接口
 
-定时由插件内部计时器每 30 秒检查一次，不使用 rc.5 的会话调度服务执行任意回调。重启时只补最近一轮；间隔任务在首次检查时执行一轮，每日任务若最近时点已过也会补跑。发现新增或变化才投递简报，首次识别仓库关闭 Issues/PR 时也会提示。没有可用会话时先存到插件自身存储，之后再投递；异常中断下仍可能重复投递。
+沿用 rc.5 的 `llm.stream`、`llm.listProviders()` / `llm.listModels(provider)`、`commands.register` 文本卡片及 `storageDomain` 自身存储域。接口依据固定 [DSH dsh-v0.2.1-rc.5](https://github.com/deepseek-ai/deepseek-harness/tree/dsh-v0.2.1-rc.5/packages/preset/agent-preset/skills/cordis-plugin-development)。全量扫描采用 [GitHub 只读搜索 API](https://docs.github.com/en/rest/search/search#search-issues-and-pull-requests)，受搜索索引、结果完整性和限流约束。
 
-缓存用一组变化标记（指纹）判断是否需要重判：条目更新时间、PR 最新提交标识（head SHA）、模型设置、业务文字及文件内容。只复用已有结论的条目，最多保存 5000 条。CI 状态或相关代码独立变化可能不改变条目时间，因此不会单独触发重判；重复的失败预筛也不会反复推送简报。从 0.1.0 升级会保留仓库设置与用户纠正，清除旧规则结论、报告和待发简报，在下一轮重建。
+内部计时器每 30 秒检查一次，重启只补最近一轮；不借会话调度服务执行任意回调。发现变化才投递简报，无可用会话先保存，异常中断仍可能重复投递。没有 webhook 或独立后台服务。
 
-本包按 [DSH rc.5 官方插件约定](https://github.com/deepseek-ai/deepseek-harness/tree/dsh-v0.2.1-rc.5/packages/preset/agent-preset/skills/cordis-plugin-development)实现。模型调用使用 `llm.stream`，目录查询使用 `llm.listProviders()` / `llm.listModels(provider)`；命令通过 `commands.register` 返回文本结果卡片，状态通过 `storageDomain` 保存。
+缓存指纹包括条目更新时间、PR head、模型设置、业务内容、本地路径及解析后的提交、规则内容；最多 5000 条。规则、业务或本地 ref 提交变化后重新处理。旧结论结构自动清除派生缓存、报告与待发简报，保留设置和用户纠正。CI 或上游相关代码独立变化可能不改变条目时间，不能单独触发重判。用户对同一条目的纠正会持续优先采用，业务或本地代码变化后需留意这条旧纠正是否仍适合。
 
-### 测试与验证范围
+### 验证范围
 
-现有自动测试覆盖命令、模型与业务说明、缓存、只读和脱敏，并用独立临时 rc.5 环境检查加载、命令执行和重载。测试中的网络和模型使用替身；提供的真实 GitHub 运行样本展示了问题与 PR 拉取，以及相同快照重载后的缓存复用，但未验证真实 AI 的判断质量。
-
-这些结果不代表用户桌面安装、Electron 渲染、真实模型请求、Node.js 22 实机或长期调度已验证。`npm run verify-pack` 检查预编译文件和打包白名单，包含本 README；详细开发验证记录见 [STATUS.md](STATUS.md)。
+自动测试覆盖真实临时 Git 仓库、只读白名单、边界、三档分组、全量参数/分页、规则文件、模型失败与缓存迁移；另用独立临时 rc.5 profile 验证命令、持久化和重载。`verify-pack` 核对预构建 lib 与发布文件白名单。真实 GitHub smoke 和未测项见 [STATUS.md](STATUS.md)；模拟模型只验证流程和格式，不代表真实 AI 判断质量。用户桌面安装、Electron 渲染、真实模型请求与长期调度未验证。
 
 ### 来源与许可
 
-本包为原创实现，使用 [MIT 许可](LICENSE)。参考了 [dsh-github-flow](https://github.com/ItQianChen/dsh-github-flow)（MIT）的凭据复用和证据组织思路，以及 [dsh-github-bot](https://github.com/PerryLink/dsh-github-bot)（Apache-2.0）的有界拉取、轮询和 PR/CI 证据思路，未直接移植代码。详见 [THIRD_PARTY_NOTICES](THIRD_PARTY_NOTICES)。
+原创实现，使用 [MIT 许可](LICENSE)。参考了 [dsh-github-flow](https://github.com/ItQianChen/dsh-github-flow)（MIT）的凭据复用与证据组织思路，以及 [dsh-github-bot](https://github.com/PerryLink/dsh-github-bot)（Apache-2.0）的有界拉取、轮询与 PR/CI 证据思路，未直接移植代码。详见 [THIRD_PARTY_NOTICES](THIRD_PARTY_NOTICES)。

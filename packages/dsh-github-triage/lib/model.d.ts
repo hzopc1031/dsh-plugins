@@ -2,6 +2,23 @@ import { z } from 'zod';
 import type { Context } from '@deepseek-ai/cordis';
 import { type Judgment, type Model, type Settings } from './types.js';
 export declare const outputJsonSchema: z.core.ZodStandardJSONSchemaPayload<z.ZodDiscriminatedUnion<[z.ZodObject<{
+    recommendation: z.ZodEnum<{
+        adopt: "adopt";
+        "manual-review": "manual-review";
+        "not-recommended": "not-recommended";
+    }>;
+    priority: z.ZodEnum<{
+        高: "高";
+        中: "中";
+        低: "低";
+    }>;
+    localApplicability: z.ZodEnum<{
+        present: "present";
+        "already-fixed": "already-fixed";
+        "not-applicable": "not-applicable";
+        unclear: "unclear";
+    }>;
+    localReason: z.ZodString;
     reason: z.ZodString;
     businessReason: z.ZodString;
     evidence: z.ZodArray<z.ZodString>;
@@ -14,9 +31,9 @@ export declare const outputJsonSchema: z.core.ZodStandardJSONSchemaPayload<z.Zod
         无效: "无效";
     }>;
     exists: z.ZodEnum<{
+        unclear: "unclear";
         confirmed: "confirmed";
         likely: "likely";
-        unclear: "unclear";
         not_a_bug: "not_a_bug";
     }>;
     worthFixing: z.ZodEnum<{
@@ -24,12 +41,24 @@ export declare const outputJsonSchema: z.core.ZodStandardJSONSchemaPayload<z.Zod
         待补充: "待补充";
         不值得修: "不值得修";
     }>;
+}, z.core.$strict>, z.ZodObject<{
+    recommendation: z.ZodEnum<{
+        adopt: "adopt";
+        "manual-review": "manual-review";
+        "not-recommended": "not-recommended";
+    }>;
     priority: z.ZodEnum<{
         高: "高";
         中: "中";
         低: "低";
     }>;
-}, z.core.$strict>, z.ZodObject<{
+    localApplicability: z.ZodEnum<{
+        present: "present";
+        "already-fixed": "already-fixed";
+        "not-applicable": "not-applicable";
+        unclear: "unclear";
+    }>;
+    localReason: z.ZodString;
     reason: z.ZodString;
     businessReason: z.ZodString;
     evidence: z.ZodArray<z.ZodString>;

@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { mkdtemp, mkdir, writeFile, readFile, readdir, rm, symlink } from 'node:fs/promises'
 import path from 'node:path'
+import { execFileSync } from 'node:child_process'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { initProfile, loadProfileDirectory, boot } from '@deepseek-ai/dsh-app-boot'
 import { Github } from '../lib/github.js'
@@ -10,13 +11,17 @@ import { model } from './fixtures.mjs'
 import { SessionId } from '@deepseek-ai/dsh-session'
 const project=fileURLToPath(new URL('../',import.meta.url))
 test('temporary official profile loads prebuilt plugin, commands persist only in own storage domain, unload/reload',async(t)=>{
-  t.mock.method(Github.prototype,'list',async()=>[{number:1,kind:'issue',title:'renderer startup fails',body:'Steps to reproduce: 1. open. 2. click. Version: 1.0.0 Error: failed',updated_at:'2026-11-11',url:'https://github.com/o/r/issues/1'}])
+  const scans=[]
+  t.mock.method(Github.prototype,'list',async(repo,mode,limit,signal,scan)=>{scans.push({limit,scan});return [{number:1,kind:'issue',title:'renderer startup fails',body:'Steps to reproduce: 1. open. 2. click. Version: 1.0.0 Error: failed',updated_at:'2026-11-11',url:'https://github.com/o/r/issues/1'}]})
+  t.mock.method(Github.prototype,'localDetails',async(_,item)=>item)
   t.mock.method(Github.prototype,'enrich',async(_,item)=>item)
   const parent=path.join(project,'.tmp');await mkdir(parent,{recursive:true})
   const root=await mkdtemp(path.join(parent,'profile-'))
   const old=process.env.DSH_HOME
   let ctx
   try {
+    const git=(...args)=>execFileSync('git',args,{cwd:root,encoding:'utf8',windowsHide:true,shell:false})
+    git('init','-q');git('-c','user.name=Fixture','-c','user.email=fixture@example.invalid','commit','--allow-empty','-qm','profile fixture')
     process.env.DSH_HOME=path.join(root,'home')
     const profile=path.join(root,'home','profiles','github-triage-test')
     initProfile(profile,['dsh-github-triage'])
@@ -50,7 +55,7 @@ test('temporary official profile loads prebuilt plugin, commands persist only in
     let session=ctx.sessions.create(SessionId('github-triage-test'),{meta:{cwd:root}})
     let agent={id:session.id,session,ctx,status:'idle'}
     const execute=async line=>(await ctx.commands.execute(agent,line,[],new AbortController().signal)).result
-    assert.deepEqual(ctx.commands.list(agent).map(c=>c.name).filter(n=>n.startsWith('triage')).sort(),['triage','triage-fix','triage-models','triage-repo','triage-report'])
+    assert.deepEqual(ctx.commands.list(agent).map(c=>c.name).filter(n=>n.startsWith('triage')).sort(),['triage','triage-fix','triage-models','triage-repo','triage-report','triage-rules'])
     assert.match((await execute('/triage')).text,/未配置仓库/)
     assert.match((await execute('/triage-repo add O/R --prs --limit 5 --business "核心 登录业务"')).text,/已保存/)
     assert.match((await execute('/triage-repo list')).text,/o\/r · prs/)
@@ -58,11 +63,25 @@ test('temporary official profile loads prebuilt plugin, commands persist only in
     assert.match((await execute('/triage-report')).text,/暂无报告/)
     assert.equal((await execute('/triage-fix o/r#1 不建议合')).kind,'error')
     assert.match((await execute('/triage-models')).text,/provider: "test"  model: "test-model"/)
+    assert.equal((await execute('/triage-repo local o/r '+JSON.stringify(path.join(root,'missing')))).kind,'error')
+    assert.match((await execute('/triage-repo local o/r '+JSON.stringify(root)+' --ref HEAD')).text,/已更新本地仓库对照/)
     const triage=(await execute('/triage o/r --limit 1')).text
     assert.match(triage,/renderer startup fails/);assert.match(triage,/业务说明：已使用/);assert.match(triage,/结合业务：/)
+    assert.match(triage,/建议采纳/);assert.ok(prompts[0].local.commit)
+    await execute('/triage o/r --full --since 2026-01-01 --max 150')
+    assert.equal(scans.at(-1).limit,150);assert.equal(scans.at(-1).scan.full,true)
     assert.equal(prompts[0].business.text,'核心 登录业务')
     assert.match((await execute('/triage-fix o/r#1 不值得修 已解决')).text,/已保存纠正/)
     assert.match((await execute('/triage-report o/r')).text,/已解决/)
+    assert.match((await execute('/triage-fix o/r#1 manual-review 新三档纠正')).text,/已保存纠正/)
+    const rules=path.join(root,'rules.md')
+    assert.match((await execute('/triage-rules o/r')).text,/新三档纠正/)
+    assert.match((await execute('/triage-rules export o/r '+JSON.stringify(rules))).text,/已导出/)
+    assert.equal((await execute('/triage-rules export o/r '+JSON.stringify(rules))).kind,'error')
+    await writeFile(rules,(await readFile(rules,'utf8')).replace('新三档纠正','已解决：编辑的规则'))
+    assert.match((await execute('/triage-rules import o/r '+JSON.stringify(rules))).text,/已导入/)
+    assert.match((await execute('/triage-rules o/r')).text,/编辑的规则/)
+    assert.match((await execute('/triage-repo local o/r --clear')).text,/已更新/)
     assert.match((await execute('/triage-repo remove o/r')).text,/已移除/)
     // Re-add without schedule so the startup timer never makes a network request.
     await execute('/triage-repo add o/r --issues --limit 4')
@@ -79,7 +98,8 @@ test('temporary official profile loads prebuilt plugin, commands persist only in
     assert.match((await execute('/triage-repo list')).text,/业务说明：内联文本/)
     await execute('/triage-repo business o/r --clear')
     assert.match((await execute('/triage-repo list')).text,/业务说明：未配置/)
-    assert.match((await execute('/triage-report o/r')).text,/已解决/)
+    assert.match((await execute('/triage-report o/r')).text,/新三档纠正/)
+    assert.match((await execute('/triage-rules o/r')).text,/编辑的规则/)
     await ctx.fiber.dispose();ctx=undefined
     for(const patch of patches)for(const entry of patch.insert??[])if(entry.id==='github-triage')entry.config={}
     ctx=await start()

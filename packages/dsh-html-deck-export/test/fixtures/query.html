@@ -1,0 +1,14 @@
+<!doctype html>
+<!-- MIT Copyright (c) 2026 hzopc1031 -->
+<html lang="zh-CN"><head><meta charset="utf-8"><title>Query contract</title>
+<style>
+body { margin:0; font-family:'Noto Sans CJK SC',sans-serif }
+.slide { position:absolute; inset:0; display:none; background:#285343; color:white; padding:80px }
+.slide.active { display:block }
+</style></head><body>
+<section class="slide" data-slide-id="one"><h1>一</h1><aside class="notes"><p>第一行 &copy;</p><p>第二行<br>第三行</p></aside></section>
+<section class="slide" data-slide-id="two"><h1>二</h1></section>
+<script>
+const index = Number(new URLSearchParams(location.search).get('slide') || 1) - 1;
+document.querySelectorAll('section.slide')[index].classList.add('active');
+</script></body></html>

@@ -19,6 +19,7 @@
 | DLL 诊断 | `dsh-dll-doctor`（未发布 npm / not published to npm） | 只读检查 Windows EXE/DLL 的缺失依赖与架构不匹配（`/dll-check`）/ Static Windows DLL diagnostics | [README](packages/dsh-dll-doctor/README.md) |
 | GitHub issue/PR 研判 | `dsh-github-triage`（未发布 npm / not published to npm） | AI 结合业务说明和你自己的本地代码，判断上游问题是否存在、PR 是否适合合入或回迁；三档建议、首次有界全量扫描、后续定时看变化，纠正规则可导出编辑。 | [README](packages/dsh-github-triage/README.md) |
 | 本地票据核对 | `dsh-invoice-gate`（未发布 npm / not published to npm） | 本地票据与台账核对、差异及证据包；不做 OCR／验真，模型不改金额（`/invoice-gate`）/ Local invoice reconciliation and evidence packs | [README](packages/dsh-invoice-gate/README.md) |
+| HTML 演示稿导出 | `dsh-html-deck-export`（未发布 npm / not published to npm） | 本地 HTML → 16:9 图片版 PPTX、讲稿备注与逐页报告；HTML 保留为源文件，不自动上传（`/html-deck-export`）/ Local image PPTX export with notes and per-page reports | [README](packages/dsh-html-deck-export/README.md) |
 
 > 心跳插件的 npm 包名是 `dsh-heartbeat-monitor`：`dsh-heartbeat` 已被一个无关的包占用。
 > The heartbeat plugin is published as `dsh-heartbeat-monitor` because `dsh-heartbeat` is an unrelated package.
@@ -73,6 +74,7 @@ dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packag
 dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-snip-attach"
 & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-github-triage"
 dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-invoice-gate"
+dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-html-deck-export"
 ```
 
 `dsh-invoice-gate` 的 0.1.0 尚未发布到 npm。它声明 DSH `>=0.2.1-rc.5 <0.3.0`，本机加载检查使用 `0.2.2-rc.1`。/ Invoice Gate is unreleased; live loading was checked with `0.2.2-rc.1`. ExcelJS/uuid 的修复需在消费端 profile 根级应用 override，见 [依赖审计与安装限制](packages/dsh-invoice-gate/README.md#安装后的依赖审计--consumer-override-limit)；本包根目录的零发现不代表整个宿主依赖图无发现。
@@ -80,6 +82,8 @@ dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packag
 同样的 `github:...` 地址也可以填进界面的「添加插件」。把 `main` 换成某个提交哈希即可固定版本。
 
 The same `github:...` address works in the Add plugin dialog. Replace `main` with a commit hash to pin a version.
+
+`dsh-html-deck-export` 的 0.1.0 尚未发布到 npm。兼容 DSH `>=0.2.1-rc.5 <0.3.0`，已在 Linux CLI `0.2.2-rc.1`（`fcc0ad46`）加载验证，需要本机 Chrome。/ Unreleased; requires local Chrome. Loaded on Linux DSH `0.2.2-rc.1`. Linux 可将 `desktop` 换成 `web` 或自己的 profile。/ On Linux, replace `desktop` with `web` or your chosen profile.
 
 新增的草稿找回与文件引用路径复制针对 `0.2.1-rc.5`，不承诺其他版本兼容；草稿找回还会在读取本机存储前精确检查宿主版本，不匹配时拒绝读取。/ The draft and file-reference plugins target exactly `0.2.1-rc.5`; draft storage reads fail closed on other or unknown releases.
 

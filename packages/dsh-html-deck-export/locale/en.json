@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "HTML Deck Export",
+    "description": "Local HTML deck to image-based PPTX, notes and per-page report through a guarded export-only DSH workbench."
+  }
+}

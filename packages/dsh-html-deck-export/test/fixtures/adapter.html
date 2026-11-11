@@ -1,0 +1,21 @@
+<!doctype html>
+<!-- MIT Copyright (c) 2026 hzopc1031 -->
+<html lang="zh-CN"><head><meta charset="utf-8"><title>Adapter contract</title>
+<style>
+body { margin:0; font-family:'Noto Sans CJK SC',sans-serif; background:#183657 }
+#deck { height:100vh }
+.slide { position:absolute; inset:0; opacity:0; padding:60px; box-sizing:border-box; color:white }
+.slide.is-active { opacity:1 }
+.slide:nth-of-type(2) h1 { font-family:monospace }
+aside.notes { border:10px solid red }
+</style></head><body>
+<div id="deck">
+<section class="slide is-active" data-slide-id="first"><h1>第一页</h1><aside class="notes"><p>初始备注</p></aside></section>
+<section class="slide" data-slide-id="second" data-notes="属性备注&#10;中文"><h1>Second 第二页</h1><aside class="notes">次要备注</aside></section>
+</div>
+<script>
+window.__goTo = (i, options) => {
+  document.querySelectorAll('#deck > .slide').forEach((node, index) => node.classList.toggle('is-active', index === i));
+  window.__SPEAKER_NOTES__ = [{ id:'unrelated', text:'不属于任何页面' }, { id:'first', points:['运行时备注', '跳过动画：' + options.skipAnim] }];
+};
+</script></body></html>

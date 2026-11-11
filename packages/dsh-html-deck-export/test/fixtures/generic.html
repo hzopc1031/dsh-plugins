@@ -1,0 +1,26 @@
+<!doctype html>
+<!-- MIT Copyright (c) 2026 hzopc1031 -->
+<html lang="zh-CN">
+<head><meta charset="utf-8"><title>Detector fixture</title></head>
+<body>
+  <div id="deck">
+    <section class="slide" data-slide-id="second-name" data-title="第一页">
+      <h1>First in DOM order</h1>
+      <aside class="notes"><p title="a > b">第一行 &amp; 开场</p><p>第二行<br>第三行 &#x4e2d;&#25991;</p></aside>
+      <section class="slide" data-slide-id="nested"><aside class="notes">Not a page or parent note</aside></section>
+    </section>
+    <div class="overview"><section class="slide">Overview clone</section></div>
+    <section class="slide slide-clone">Direct-child clone</section>
+    <section class="slide" data-clone="true">Another clone</section>
+    <section class="slide" data-slide-id="first-name" data-notes="保留属性备注&#10;下一行 &quot;引号&quot;">
+      <h1>Second in DOM order</h1><aside class="notes">Attribute notes take precedence</aside>
+    </section>
+    <div><section class="slide">Not a direct child</section></div>
+  </div>
+  <div id="overview"><section class="slide">Outside overview clone</section></div>
+  <section class="slide overview-clone">Explicit overview clone</section>
+  <template><section class="slide">Inert template</section></template>
+  <!-- <section class="slide">Comment</section> -->
+  <script>const markup = '<section class="slide">Script string</section>';</script>
+</body>
+</html>

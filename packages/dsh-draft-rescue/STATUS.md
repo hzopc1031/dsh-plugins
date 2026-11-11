@@ -1,5 +1,7 @@
 # 开发状态
 
+0.2.2 已以能力与结构校验替换下述历史精确版本门禁，rc.5 / rc.1 对照及当前测试见 [功能适配报告](../../docs/rc1-draft-snip-compatibility.md)。
+
 本次 0.2.0 优化、验证与推送状态见 [OPTIMIZE_REPORT.md](../../OPTIMIZE_REPORT.md)。下列首版执行记录为历史记录；不表示本次已做桌面验收。
 
 - 包名：`dsh-draft-rescue`

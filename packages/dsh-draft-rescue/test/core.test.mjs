@@ -1,8 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { copyText, draftText, listDrafts, prepareAppend, requireVersion } from '../lib/core.js'
+import { copyText, draftText, listDrafts, prepareAppend, requireCapabilities } from '../lib/core.js'
 
-const boot = { release: { version: '0.2.1-rc.5' } }
+const input = { draft: '', draftRev: 0, phase: 'plain', occurrences: [] }
 const record = draft => JSON.stringify({ draft, view: null, viewRequest: null })
 const storage = entries => ({ length: entries.length, key: i => entries[i][0], getItem: key => entries.find(e => e[0] === key)?.[1] ?? null })
 
@@ -11,32 +11,55 @@ test('列出非空 legacy 和 rc.5 结构草稿，保留原文空白与换行', 
   assert.deepEqual(listDrafts(storage([
     ['dsh.conversation.b', record({ text, references: [] })],
     ['dsh.conversation.a', record('old draft')],
-  ]), boot), [{ sessionId: 'a', text: 'old draft' }, { sessionId: 'b', text }])
+  ])), [{ sessionId: 'a', text: 'old draft' }, { sessionId: 'b', text }])
 })
-test('忽略空白草稿、非草稿键、无 sessionId 的键与损坏 JSON', () => {
-  const values = ['', ' \t\r\n', null, {}, { text: 'x' }, { text: 5, references: [] }]
+test('忽略空白草稿、非草稿键、无 sessionId 的键与扫描中已删除的记录', () => {
   assert.deepEqual(listDrafts(storage([
-    ...values.map((draft, i) => ['dsh.conversation.' + i, record(draft)]),
-    ['dsh.conversation.bad', '{'], ['other', record('not draft')],
-    ['dsh.conversation.', record('missing id')], ['dsh.conversation.missing', null],
-  ]), boot), [])
+    ...['', ' \t\r\n'].map((draft, i) => ['dsh.conversation.' + i, record(draft)]),
+    ['other', record('not draft')], ['dsh.conversation.', record('missing id')],
+    ['dsh.conversation.missing', null],
+  ])), [])
 })
+
+test('存储格式无法识别时整次扫描拒绝，不返回已扫描条目，不修改数据', () => {
+  for (const raw of ['{', 'null', '{}', record(null), record({text:'x'}),
+    JSON.stringify({draft:'x',view:null}), JSON.stringify({draft:'x',view:null,viewRequest:null,future:1}),
+    JSON.stringify({draft:'x',view:1,viewRequest:null}), JSON.stringify({draft:'x',view:null,viewRequest:{view:'x',focus:1}})]) {
+    const entries = [['dsh.conversation.a', record('valid')], ['dsh.conversation.b', raw]]
+    const before = structuredClone(entries)
+    assert.throws(() => listDrafts(storage(entries)), /已拒绝读取/)
+    assert.deepEqual(entries, before)
+  }
+})
+
 test('隐藏的旧空会话仍可找回；空的新会话不会显示；不修改存储或会话投影', () => {
   const entries = [['dsh.conversation.hidden-old-blank', record('尚未发送')], ['dsh.conversation.new-blank', record('')]]
   const before = structuredClone(entries)
-  assert.deepEqual(listDrafts(storage(entries), boot), [{ sessionId: 'hidden-old-blank', text: '尚未发送' }])
+  assert.deepEqual(listDrafts(storage(entries)), [{ sessionId: 'hidden-old-blank', text: '尚未发送' }])
   assert.deepEqual(entries, before)
 })
-for (const value of [undefined, null, {}, { release: {} }, { release: { version: '0.2.2' } }, { release: { version: '0.2.1-rc.4' } }, { release: { version: '0.2.1-rc.5+custom' } }]) {
-  test('版本锁失败且完全不触碰 storage：' + JSON.stringify(value), () => {
-    const trap = new Proxy({}, { get() { assert.fail('version check must run before storage') } })
-    assert.throws(() => listDrafts(trap, value), /拒绝读取/)
-  })
-}
-test('精确版本通过', () => assert.doesNotThrow(() => requireVersion(boot)))
-test('仅提取胶囊文字投影，不恢复 references 和附件', () => {
-  assert.equal(draftText({ text: '看 文件', references: [{ source: 'file', ref: '/a', offset: 2, length: 2, label: '文件', clipboardText: '文件' }], attachments: ['ignored'] }), '看 文件')
+test('能力检查不依赖版本标签；rc.5、rc.1 和未知版本使用相同有效接口', () => {
+  for (const version of ['0.2.1-rc.5', '0.2.2-rc.1', 'unknown']) {
+    assert.doesNotThrow(() => requireCapabilities({...input, release: {version}}, {insertText() {}}))
+  }
 })
+
+test('输入接口或结构不符时在获取 storage 前拒绝', () => {
+  for (const state of [undefined, {}, {...input,draftRev:NaN}, {...input,draftRev:-1},
+    {...input,phase:'future'}, {...input,occurrences:[{length:2}]}]) {
+    let read = false
+    assert.throws(() => { requireCapabilities(state, {insertText(){}}); read=true }, /已拒绝读取/)
+    assert.equal(read, false)
+  }
+  assert.throws(() => requireCapabilities(input, {}), /insertText/)
+})
+
+test('仅提取胶囊文字投影，未知字段拒绝', () => {
+  const draft = { text: '看 文件', references: [{ source: 'file', ref: '/a', offset: 2, length: 2, label: '文件', clipboardText: '文件' }] }
+  assert.equal(draftText(draft), '看 文件')
+  assert.equal(draftText({...draft, attachments: ['unknown']}), undefined)
+})
+
 test('结构草稿拒绝无效或重叠引用与命令 token', () => {
   const ref = { source: 'file', ref: '/a', offset: 0, length: 2, label: 'aa', clipboardText: 'aa' }
   for (const references of [[{ ...ref, length: 3 }], [{ ...ref, offset: -1 }], [ref, ref], [{ ...ref, source: 1 }]]) {
@@ -60,11 +83,23 @@ test('已有输入追加换行后原文，尾部折叠范围不替换现有选�
   })
 })
 test('当前输入框有引用胶囊时，尾部坐标按每个胶囊一字符计算', () => {
-  assert.deepEqual(prepareAppend({ sessionId: 'x', text: 'old' }, { draft: '看 file.ts', occurrences: [{ length: 7 }], phase: 'plain', draftRev: 1 }).span, { start: 3, end: 3, draftRev: 1 })
+  assert.deepEqual(prepareAppend({ sessionId: 'x', text: 'old' }, { draft: '看 file.ts', occurrences: [{ occurrenceId: 1, source:'file', ref:'/file.ts', label:'file.ts', clipboardText:'file.ts', offset:2, length:7 }], phase: 'plain', draftRev: 1 }).span, { start: 3, end: 3, draftRev: 1 })
 })
-for (const phase of ['adjudicating', 'claimed', 'submitting']) test('拒绝忙碌或命令输入框：' + phase, () => {
+for (const phase of ['adjudicating', 'claimed', 'submitting', 'sending']) test('拒绝忙碌或命令输入框：' + phase, () => {
   assert.throws(() => prepareAppend({ sessionId: 'x', text: 'old' }, { draft: '', occurrences: [], phase, draftRev: 1 }), /普通输入/)
 })
 test('存储不可访问时报错，不伪装成零草稿', () => {
-  assert.throws(() => listDrafts({ get length() { throw new Error('storage denied') } }, boot), /storage denied/)
+  assert.throws(() => listDrafts({ get length() { throw new Error('storage denied') } }), /storage denied/)
+})
+
+test('rc.1 quote snapshots validate normalized projection and all atomic span overlaps', () => {
+  const text = 'before > first\n> second after'
+  const quote = {offset:7, length:16, text:'first\r\nsecond'}
+  assert.equal(draftText({text,references:[],quotes:[quote]}), text)
+  assert.deepEqual(listDrafts(storage([['dsh.conversation.rc1',record({text,references:[],quotes:[quote]})]])), [{sessionId:'rc1',text}])
+  for(const quotes of [null, {}, [{...quote,length:15}], [{...quote,offset:8}], [quote,quote], [{...quote,text:' '}], [{...quote,extra:1}]]) {
+    assert.equal(draftText({text,references:[],quotes}), undefined)
+  }
+  assert.equal(draftText({text,quotes:[quote],references:[{source:'file',ref:'x',label:'first',clipboardText:'first',offset:9,length:5}]}), undefined)
+  assert.equal(draftText({text:'/go > x',command:{token:'/go '},references:[],quotes:[{offset:4,length:3,text:'x'}]}), '/go > x')
 })

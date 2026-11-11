@@ -11,5 +11,5 @@ declare module '@deepseek-ai/dsh-session-projection/types' {
 }
 export declare const inject: string[];
 type Props = PropsRuntime<'conversation.session.header.actions'>;
-export declare function DraftRescue({ sessionId, useInput, inputActions, useSessions, useProjection }: Props): import("react").JSX.Element;
+export declare function DraftRescue(props: Props): import("react").JSX.Element;
 export declare function apply(ctx: Context): void;

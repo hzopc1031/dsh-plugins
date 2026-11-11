@@ -12,9 +12,9 @@
 | 资料更新影响分析 | `dsh-source-impact`（未发布 npm / not published to npm） | 显式来源引用追踪与更新影响复查清单（`/impact`）/ Explicit source citation tracking and update impact checklists | [README](packages/dsh-source-impact/README.md) |
 | 权限拒绝诊断台 | `dsh-permission-doctor`（未发布 npm / not published to npm） | 只读诊断工具拒绝与未弹审批的证据（`/permission-doctor`）/ Read-only diagnostics for tool denials and missing approval prompts | [README](packages/dsh-permission-doctor/README.md) |
 | 指令冲突解释器 | `dsh-instruction-conflicts`（未发布 npm / not published to npm） | 规则正文疑似冲突、注入版本与当前上下文证据（`/instruction-conflicts`）/ Suspected instruction conflicts, injected versions and current context evidence | [README](packages/dsh-instruction-conflicts/README.md) |
-| 未发送草稿找回 | `dsh-draft-rescue`（未发布 npm / not published to npm） | 独立面板找回、复制与追加本机文字草稿；精确锁定 rc.5 / Recover local unsent text without changing navigation | [README](packages/dsh-draft-rescue/README.md) |
+| 未发送草稿找回 | `dsh-draft-rescue`（未发布 npm / not published to npm） | 独立面板找回、复制与追加本机文字草稿；已核对 rc.5 / rc.1 接口并按能力检测 / Recover local unsent text without changing navigation | [README](packages/dsh-draft-rescue/README.md) |
 | 文件引用路径复制 | `dsh-file-ref-copy`（未发布 npm / not published to npm） | 从已完成回答的原始 Markdown 复制绝对、相对与带行号路径 / Copy local file paths from a loaded completed reply | [README](packages/dsh-file-ref-copy/README.md) |
-| 桌面截图附件 | `dsh-snip-attach`（尚未发布到 npm / not published to npm） | Windows 框选截图后加入待发送附件，针对桌面 rc.5（`/screenshot`）/ Windows snip to pending attachments | [README](packages/dsh-snip-attach/README.md) |
+| 桌面截图附件 | `dsh-snip-attach`（尚未发布到 npm / not published to npm） | Windows 框选截图后加入待发送附件，已核对桌面 rc.5 / rc.1 接口（`/screenshot`）/ Windows snip to pending attachments | [README](packages/dsh-snip-attach/README.md) |
 | 文件占用程序查询 | `dsh-file-holder`（未发布 npm / not published to npm） | 查询 Windows 项目内文件的占用程序、PID 与观察时间（`/file-holder`）；开发基线 rc.5 / Windows project file holder lookup | [README](packages/dsh-file-holder/README.md) |
 | DLL 诊断 | `dsh-dll-doctor`（未发布 npm / not published to npm） | 只读检查 Windows EXE/DLL 的缺失依赖与架构不匹配（`/dll-check`）/ Static Windows DLL diagnostics | [README](packages/dsh-dll-doctor/README.md) |
 | GitHub 哨兵 | `dsh-github-triage`（未发布 npm / not published to npm） | 点击已打开会话顶部的文字按钮「GitHub 哨兵」，配置仓库、业务说明、本地代码和定时；AI 判断问题是否适用、PR 是否值得合入，三档结果可查看证据、纠正并导出规则；保留命令操作。 | [README](packages/dsh-github-triage/README.md) |
@@ -35,7 +35,7 @@
 
 `main` 的 Git 安装地址继续用于已有版本。本批次版本需使用包含本次提交的 ref；推送后可将以下地址中的 `main` 换成 `optimize-batch` 或固定提交 SHA。分支推送不表示已合并到 main。
 
-本次对照官方 `dsh-v0.2.1-rc.5` 与 `dsh-v0.2.2-rc.1`，统一版本准入为 `>=0.2.1-rc.5 <0.3.0-0`；Apache Radar 因依赖 rc.1 新增的 `MarkdownText.omitHtml`，例外使用 `>=0.2.2-rc.1 <0.3.0-0`。草稿找回和截图附件仍有独立的 rc.5 功能门禁。范围通过不代表功能与界面均已验证，详见[兼容性报告](docs/engines-compatibility.md)。所有包都已预编译，没有安装脚本。装完后**完全退出桌面 DSH（含托盘）再重新打开**。
+本次对照官方 `dsh-v0.2.1-rc.5` 与 `dsh-v0.2.2-rc.1`，统一版本准入为 `>=0.2.1-rc.5 <0.3.0-0`；Apache Radar 因依赖 rc.1 新增的 `MarkdownText.omitHtml`，例外使用 `>=0.2.2-rc.1 <0.3.0-0`。草稿找回和截图附件 0.2.2 已将精确版本门禁改为能力与结构校验，已对照两版源码并通过模拟交互回归；真实 rc.1 桌面仍待验收。范围通过不代表功能与界面均已验证，详见[兼容性报告](docs/engines-compatibility.md)。所有包都已预编译，没有安装脚本。装完后**完全退出桌面 DSH（含托盘）再重新打开**。
 
 Compatibility metadata is checked against official DSH `0.2.1-rc.5` and `0.2.2-rc.1` sources. Per-package engine ranges do not imply other versions were tested. Packages are prebuilt and have no install scripts. Fully quit and reopen DSH Desktop after installing.
 
@@ -97,7 +97,7 @@ The same `github:...` address works in the Add plugin dialog. Replace `main` wit
 
 `dsh-html-deck-export` 的 0.1.1 尚未发布到 npm。兼容 DSH `>=0.2.1-rc.5 <0.3.0-0`，已在 Linux CLI `0.2.2-rc.1`（`fcc0ad46`）加载验证，需要本机 Chrome。/ Unreleased; requires local Chrome. Loaded on Linux DSH `0.2.2-rc.1`. Linux 可将 `desktop` 换成 `web` 或自己的 profile。/ On Linux, replace `desktop` with `web` or your chosen profile.
 
-草稿找回与文件引用路径复制以 `0.2.1-rc.5` 为开发基线，尚未进行 rc.1 界面验证；草稿找回还会在读取本机存储前精确检查宿主版本，不匹配时拒绝读取。/ The draft and file-reference plugins target exactly `0.2.1-rc.5`; draft storage reads fail closed on other or unknown releases.
+草稿找回和截图附件 0.2.2 已按 rc.5 / rc.1 官方接口适配：草稿格式无法识别时拒绝整次扫描；截图仍需核对附件，rc.1 确认加入后图片会立即上传。目标输入框已有原子引用块时，草稿追加由宿主安全拒绝，可手动粘贴。开发依赖保持 rc.5，尚未进行 rc.1 真实界面验证；文件引用路径复制的原开发基线不变。详见[功能适配证据](docs/rc1-draft-snip-compatibility.md)。
 
 > **Windows 命令行提示**：如果 `dsh` 报 `profile "desktop" is managed exclusively by the Electron application`，说明 PATH 上的是独立安装的 dsh；请改用桌面版自带的 CLI（命令其余部分不变）：
 >

@@ -4,6 +4,8 @@ import { logError } from './capture.js';
 export const name = 'screenshot';
 export const inject = ['commands'];
 export async function apply(ctx) {
+    if (typeof ctx.commands?.register !== 'function')
+        throw new Error('宿主缺少 commands.register，已拒绝启动截图服务。');
     const server = new ShotServer();
     // Register cleanup before listening so unload during startup is covered.
     ctx.effect(() => () => server.close());

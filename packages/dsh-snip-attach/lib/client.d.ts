@@ -7,7 +7,7 @@ import type { PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots';
 export declare const inject: string[];
 type Props = PropsRuntime<'conversation.input.left'>;
 export type Execute = Context['remote']['commands']['execute'];
-export declare function SnipButton({ sessionId, useInput, useSession, execute }: Props & {
+export declare function SnipButton(props: Props & {
     execute: Execute;
 }): import("react").JSX.Element;
 export declare function apply(ctx: Context): void;

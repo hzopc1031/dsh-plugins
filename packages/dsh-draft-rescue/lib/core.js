@@ -1,24 +1,21 @@
-export const SUPPORTED_VERSION = '0.2.1-rc.5';
 export const STORAGE_PREFIX = 'dsh.conversation.';
 function object(value) {
     return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
-/** Exact boot release identity, never inferred from the draft's shape. */
-export function requireVersion(boot) {
-    const version = object(boot) && object(boot.release) ? boot.release.version : undefined;
-    if (version !== SUPPORTED_VERSION)
-        throw new Error('仅支持 DSH 0.2.1-rc.5；版本不符或无法识别，已拒绝读取草稿。');
+function keys(value, allowed) {
+    return Object.keys(value).every(key => allowed.includes(key));
 }
-/** Validate rc.5 semantic spans, but recover only their plain text projection. */
+/** Recognize both audited semantic formats, never guess at unknown fields. */
 export function draftText(value) {
     if (typeof value === 'string')
         return value;
-    if (!object(value) || typeof value.text !== 'string' || !Array.isArray(value.references))
+    if (!object(value) || !keys(value, ['text', 'references', 'command', 'quotes'])
+        || typeof value.text !== 'string' || !Array.isArray(value.references))
         return undefined;
     const text = value.text;
     let end = 0;
     if (value.command !== undefined) {
-        if (!object(value.command) || typeof value.command.token !== 'string')
+        if (!object(value.command) || !keys(value.command, ['token']) || typeof value.command.token !== 'string')
             return undefined;
         const spelling = value.command.token.trimEnd();
         if (!/^\/\S/u.test(spelling) || !text.startsWith(spelling))
@@ -26,23 +23,68 @@ export function draftText(value) {
         end = spelling.length;
     }
     for (const ref of value.references) {
-        if (!object(ref) || typeof ref.source !== 'string' || typeof ref.ref !== 'string'
+        if (!object(ref) || !keys(ref, ['source', 'ref', 'label', 'clipboardText', 'offset', 'length', 'appearance', 'invalid'])
+            || typeof ref.source !== 'string' || typeof ref.ref !== 'string'
             || typeof ref.label !== 'string' || typeof ref.clipboardText !== 'string'
             || typeof ref.offset !== 'number' || !Number.isInteger(ref.offset) || ref.offset < end
             || typeof ref.length !== 'number' || !Number.isInteger(ref.length) || ref.length <= 0
             || ref.length !== ref.clipboardText.length
-            || (ref.appearance !== undefined && !['session', 'file', 'folder'].includes(String(ref.appearance)))
+            || (ref.appearance !== undefined && (typeof ref.appearance !== 'string' || !['session', 'file', 'folder'].includes(ref.appearance)))
             || (ref.invalid !== undefined && typeof ref.invalid !== 'boolean'))
             return undefined;
         end = ref.offset + ref.length;
         if (end > text.length || text.slice(ref.offset, end) !== ref.clipboardText)
             return undefined;
     }
+    if (value.quotes !== undefined && !Array.isArray(value.quotes))
+        return undefined;
+    const spans = [...value.references];
+    for (const quote of value.quotes ?? []) {
+        if (!object(quote) || !keys(quote, ['offset', 'length', 'text'])
+            || typeof quote.text !== 'string' || !quote.text.trim()
+            || !Number.isSafeInteger(quote.offset) || quote.offset < 0
+            || !Number.isSafeInteger(quote.length) || quote.length <= 0)
+            return undefined;
+        // Official rc.1 formatQuoteText: normalize CR/CRLF and prefix every line.
+        const formatted = quote.text.replace(/\r\n?/gu, '\n').split('\n').map(line => `> ${line}`).join('\n');
+        if (quote.length !== formatted.length || text.slice(quote.offset, quote.offset + formatted.length) !== formatted)
+            return undefined;
+        spans.push(quote);
+    }
+    end = object(value.command) ? value.command.token.trimEnd().length : 0;
+    for (const span of spans.sort((a, b) => a.offset - b.offset)) {
+        if (span.offset < end)
+            return undefined;
+        end = span.offset + span.length;
+        if (end > text.length)
+            return undefined;
+    }
     return text;
 }
+/** Validate the public input shape before scanning storage or preparing an edit. */
+export function requireInput(input) {
+    if (!object(input) || typeof input.draft !== 'string' || !Number.isSafeInteger(input.draftRev)
+        || input.draftRev < 0 || typeof input.phase !== 'string'
+        || !['plain', 'adjudicating', 'claimed', 'submitting', 'sending'].includes(input.phase)
+        || !Array.isArray(input.occurrences)
+        || draftText({ text: input.draft, references: input.occurrences.map(ref => {
+                if (!object(ref))
+                    return ref;
+                const { occurrenceId: _id, ...semantic } = ref;
+                return semantic;
+            }) }) === undefined)
+        throw new Error('无法识别宿主输入框结构，已拒绝读取草稿或追加。');
+}
+export function requireCapabilities(input, actions) {
+    requireInput(input);
+    if (!object(actions) || typeof actions.insertText !== 'function')
+        throw new Error('宿主缺少 insertText 输入接口，已拒绝读取草稿或追加。');
+}
 /** Enumerate storage independently of session-list visibility; never writes or deletes. */
-export function listDrafts(storage, boot) {
-    requireVersion(boot); // Must precede every storage access, including length.
+export function listDrafts(storage) {
+    if (!Number.isSafeInteger(storage.length) || storage.length < 0 || typeof storage.key !== 'function' || typeof storage.getItem !== 'function') {
+        throw new Error('无法识别本机草稿存储接口，已拒绝读取草稿。');
+    }
     const result = [];
     for (let i = 0; i < storage.length; i++) {
         const key = storage.key(i);
@@ -56,11 +98,17 @@ export function listDrafts(storage, boot) {
             value = JSON.parse(raw);
         }
         catch {
-            continue;
+            throw new Error('草稿存储 JSON 损坏，已拒绝读取草稿；未修改原记录。');
         }
-        if (!object(value))
-            continue;
+        if (!object(value) || !keys(value, ['draft', 'view', 'viewRequest'])
+            || !(value.view === null || typeof value.view === 'string')
+            || !(value.viewRequest === null || (object(value.viewRequest) && keys(value.viewRequest, ['view', 'focus'])
+                && typeof value.viewRequest.view === 'string' && typeof value.viewRequest.focus === 'string'))) {
+            throw new Error('无法识别草稿存储结构，已拒绝读取草稿；未修改原记录。');
+        }
         const text = draftText(value.draft);
+        if (text === undefined)
+            throw new Error('无法识别草稿格式，已拒绝读取草稿；未修改原记录。');
         if (text?.trim())
             result.push({ sessionId: key.slice(STORAGE_PREFIX.length), text });
     }
@@ -69,6 +117,7 @@ export function listDrafts(storage, boot) {
 export function copyText(draft) { return draft.text; }
 /** Append in detect coordinates (a reference chip counts as ONE character). */
 export function prepareAppend(draft, input) {
+    requireInput(input);
     if (input.phase !== 'plain')
         throw new Error('当前输入框忙碌或处于命令模式，请回到普通输入后追加。');
     const end = input.draft.length - input.occurrences.reduce((sum, ref) => sum + ref.length - 1, 0);

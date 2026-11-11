@@ -1,6 +1,8 @@
 # DSH rc.1 插件版本准入修复
 
-本次只改 `fix/engines-range` worktree，基于 `47a4c8d94cfab9a7e108673582ec00f23618fded`。未安装或修改用户 DSH、未安装依赖、未发布、未 commit/push。日期：2026-11-11。
+后续功能适配：`fix/rc1-gates` 基于 `cdd34c8`，草稿找回和截图附件均升为 **0.2.2**，已将精确 rc.5 门禁替换为能力与结构校验。两包 build/typecheck/test/verify-pack 均通过（草稿 29、截图 50 项）；未做真实 rc.1 桌面验收。逐项文件与行号见 [功能适配报告](rc1-draft-snip-compatibility.md)。下文其余 15 包结果属于此前版本准入批次。
+
+前一批次只改 `fix/engines-range` worktree，基于 `47a4c8d94cfab9a7e108673582ec00f23618fded`。未安装或修改用户 DSH、未安装依赖、未发布、未 commit/push。日期：2026-11-11。
 
 ## 根因与官方证据
 
@@ -41,7 +43,7 @@ Apache Radar 依赖 rc.1 新增的 `MarkdownText.omitHtml` 禁止原始 HTML，r
 
 ## 逐包版本与验证矩阵
 
-P = 官方版本准入通过，R = 拒绝；**不代表功能/界面测试通过**。typecheck 和 npm test 因 17 个包均缺少 node_modules 全部跳过，没有安装依赖。所有包实际执行了 `npm run verify-pack`。
+P = 官方版本准入通过，R = 拒绝；**不代表功能/界面测试通过**。前一批次 typecheck 和 npm test 因 17 个包均缺少 node_modules 全部跳过，没有安装依赖；本次两包已使用用户准备的 junction 依赖完成检查。所有包实际执行了 `npm run verify-pack`。
 
 | 包 | 原版 → 新版 | rc.5 | rc.1 | 0.2.2 | 0.2.9 | 0.3.0-rc.1 | verify-pack |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -49,7 +51,7 @@ P = 官方版本准入通过，R = 拒绝；**不代表功能/界面测试通过
 | dsh-apache-radar | 0.1.0 → 0.1.1 | R | P | P | P | R | PASS |
 | dsh-content-evidence | 0.1.0 → 0.1.1 | P | P | P | P | R | PASS |
 | dsh-dll-doctor | 0.1.0 → 0.1.1 | P | P | P | P | R | PASS |
-| dsh-draft-rescue | 0.2.0 → 0.2.1 | P | P | P | P | R | PASS |
+| dsh-draft-rescue | 0.2.1 → 0.2.2 | P | P | P | P | R | PASS |
 | dsh-file-holder | 0.1.0 → 0.1.1 | P | P | P | P | R | PASS |
 | dsh-file-ref-copy | 0.1.1 → 0.1.2 | P | P | P | P | R | PASS |
 | dsh-github-triage | 0.3.1 → 0.3.2 | P | P | P | P | R | PASS |
@@ -59,7 +61,7 @@ P = 官方版本准入通过，R = 拒绝；**不代表功能/界面测试通过
 | dsh-invoice-gate | 0.1.0 → 0.1.1 | P | P | P | P | R | 未完成：缺 exceljs |
 | dsh-permission-doctor | 0.2.0 → 0.2.1 | P | P | P | P | R | 未完成：缺 @deepseek-ai/schemastery |
 | dsh-plugin-combo-lab | 0.2.0 → 0.2.1 | P | P | P | P | R | PASS |
-| dsh-snip-attach | 0.2.0 → 0.2.1 | P | P | P | P | R | PASS |
+| dsh-snip-attach | 0.2.1 → 0.2.2 | P | P | P | P | R | PASS |
 | dsh-source-impact | 0.2.0 → 0.2.1 | P | P | P | P | R | PASS |
 | dsh-task-review | 0.2.0 → 0.2.1 | P | P | P | P | R | PASS |
 
@@ -85,8 +87,8 @@ Apache Radar 审核调整后重新运行 `node scripts/verify-engines.cjs` 和�
 | llm.stream / listProviders / listModels；triage | [llm/index.ts:483、718](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.2-rc.1/packages/llm/llm/src/index.ts#L483) 调用形式仍在，模型目录新增可选 badge；[GenerateOptions.purpose](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.2-rc.1/packages/llm/llm/src/types.ts#L551) 改为声明合并用途类型。triage 不设置 purpose，未直接命中该破坏性类型变化；未发模型请求。 |
 | agents.list / get、agent/created/status/disposed；triage、heartbeat、advisory、apache、task-review 等 | [agent/index.ts:96、611](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.2-rc.1/packages/core/agent/src/index.ts#L96) registry 方法保留；Session 先发布和完成 session/created，再运行 setup，Agent 稍后发布，失败时 Session 已提交事件可保留。涉及时序、自动复盘、生命周期清理的集成仍有风险。 |
 | slots.inject/register、conversation.session.header.actions、Modal；triage、draft、source、combo、file-ref-copy | ui-slots 的 index/renderer/store、[Modal.tsx](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.2-rc.1/packages/client/ui-primitives/src/Modal.tsx) 两 tag 内容相同。[header.actions:247](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.2-rc.1/packages/client/ui-conversation/src/client/contract/slots.ts#L247) 仍是 session list；新增注释要求弹层 portal，因为标题区会裁剪溢出。插件使用的 Modal 已采用 portal；实际布局/焦点/遮挡未验证。 |
-| InputState / 草稿存储；draft-rescue | stores.ts 内容相同，但 draft.ts 新增 quote 数据，input.ts:299 新增 sending 状态。插件的 prepareAppend 只允许 plain，会继续拒绝忙碌状态；内部格式仍非稳定 API。**更直接的已知限制：本包 src/core.ts:3、19 精确锁 rc.5，rc.1 仍拒绝读取/复制/追加。此次保留门禁，未冒充功能兼容。** |
-| composer 隐藏 file input / 桌面 origin；snip-attach | 这是内部 DOM 选择器而非正式 addFiles API。rc.1 的普通 Session 图片改为选中后立即上传（slots.ts:31、54），成功/失败语义不能仅看附件 ID。**src/intake.ts:17–20 独立拒绝所有非 rc.5 版本，本次保留。** 桌面截图、剪贴板、上传、回调仍不确定。 |
+| InputState / 草稿存储；draft-rescue | stores.ts 内容相同，但 draft.ts 新增 quote 数据，input.ts:308 新增 sending 状态。插件的 prepareAppend 只允许 plain，会继续拒绝忙碌状态；内部格式仍非稳定 API。0.2.2 已移除 src/core.ts 及 client 的精确版本门禁，严格识别外层结构及 quotes；未知或损坏格式整次拒绝，原存储不写。目标已有 quote 时由宿主拒绝追加，可复制后手动粘贴。见后续功能报告。 |
+| composer 隐藏 file input / 桌面 origin；snip-attach | 这是内部 DOM 选择器而非正式 addFiles API。rc.1 的普通 Session 图片改为选中后立即上传（slots.ts:31、54），成功/失败语义不能仅看附件 ID。0.2.2 已将 src/intake.ts 的精确版本门禁替换为实际接口、会话与附件形状检测，确认注入复查 picker；新增 ID 仅作 intake 线索。真实桌面截图、剪贴板、上传仍待验收。 |
 | MarkdownText.omitHtml；apache-radar | [MarkdownText.tsx:187–195](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.2-rc.1/packages/client/ui-primitives/src/markdown/MarkdownText.tsx#L187) 新增属性，rc.5 缺失；保留 rc.1 下界及原有带 omitHtml 的 Markdown 渲染，拒绝 rc.5。此次未重新验证真实浏览器显示。 |
 | 工具注册、tools/pre-execute / tools/result；permission、heartbeat、task-review、advisory、apache、source、invoice、html-deck | tools 源码从大型 index 拆为 contracts/events/executor 等。[events.ts:18、49](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.2-rc.1/packages/core/tools/src/events.ts#L18) 仍使用 exec/next 与 exec/result，Scoped 接收者由 ToolRuntime 改为 ToolsService。插件使用的事件参数仍存在；未对新执行器、取消与结果提交的全部时序作保证。 |
 | Session Query / systemPrompt / session 记录；instruction-conflicts、permission、heartbeat、task-review | session-query/index.ts 两 tag 内容相同，readSurface/readSession 入口仍在；[session/index.ts:495、511](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.2-rc.1/packages/core/session/src/index.ts#L495) 保留 appendPluginRecord/pluginRecordOf。system-prompt 的 assemble 仍在但 tools 组装职责有调整，旧日志折叠/complete/来源推断未做完整新格式回归，结论不确定。 |
@@ -95,7 +97,7 @@ Apache Radar 审核调整后重新运行 `node scripts/verify-engines.cjs` 和�
 | workspaceChanges；task-review | 对照 [workspace-changes/index.ts 与 types.ts](https://github.com/deepseek-ai/deepseek-harness/tree/dsh-v0.2.2-rc.1/packages/deliverables/workspace-changes/src)，使用的工作区变化查询未发现确定的删除；无新版本完整集成测试。 |
 | 内容面板 / API gateway / 文件链接；content-evidence、advisory、html-deck、invoice、file-ref-copy | 已定位各包实际入口，并检查上面的公共命令、工具、slot/Modal 依赖；每包自定义 remotes、文件链接解析、宿主注入边界和外部依赖未逐一做 rc.1 运行时重验。没有足够证据将元数据修复扩大为这些功能全部兼容的结论。 |
 
-本次变更目标是插件管理器版本准入。**草稿和截图的独立门禁、未装依赖下的构建/完整测试，是仍需后续处理的明确边界。** Apache Radar 因依赖 rc.1 新增安全属性保留 rc.1 下界，保留真实浏览器验证边界。
+本次变更目标是插件管理器版本准入。**后续 0.2.2 已完成草稿和截图的独立门禁适配与构建/完整测试（使用用户准备的只读 junction 依赖）；真实 rc.1 桌面仍待验收。** Apache Radar 因依赖 rc.1 新增安全属性保留 rc.1 下界，保留真实浏览器验证边界。
 
 ## README skill 自检
 

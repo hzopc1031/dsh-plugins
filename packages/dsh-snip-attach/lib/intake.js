@@ -11,10 +11,23 @@ export function abortable(work, signal) {
         work.then(value => { finish(() => { resolve(value); }); }, error => { finish(() => { reject(error); }); });
     });
 }
-export function requireDesktop(boot, location) {
-    const version = boot?.release?.version;
-    if (version !== '0.2.1-rc.5' || location.protocol !== 'dsh-app:' || location.hostname !== 'app') {
-        throw new Error('仅支持 DSH 0.2.1-rc.5 桌面页面。');
+export function requireDesktop(location) {
+    if (location.protocol !== 'dsh-app:' || location.hostname !== 'app') {
+        throw new Error('截图附件仅支持 DSH 桌面页面（dsh-app://app）。');
+    }
+}
+function object(value) {
+    return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+/** Probe the public runtime faces, independent of release labels. */
+export function requireCaptureCapabilities(input, session, execute, sessionId) {
+    if (typeof execute !== 'function' || typeof sessionId !== 'string' || !sessionId
+        || !object(input) || typeof input.phase !== 'string'
+        || !['plain', 'adjudicating', 'claimed', 'submitting', 'sending'].includes(input.phase)
+        || !Array.isArray(input.attachmentIds) || !input.attachmentIds.every(id => typeof id === 'string' && id.length > 0)
+        || !object(session) || typeof session.removed !== 'boolean'
+        || !(session.subagent === null || object(session.subagent))) {
+        throw new Error('宿主缺少截图所需的会话、附件状态或 remote.commands.execute 接口，已拒绝截图。');
     }
 }
 export function shotUrl(text) {

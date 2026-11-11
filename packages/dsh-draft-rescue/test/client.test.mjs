@@ -65,8 +65,8 @@ test('预构建 factory 只注册独立会话 action，宿主入口可由真实 
   await fiber
   await fiber.dispose()
 })
-test('模拟新会话：隐藏旧草稿可预览、原文复制与末尾 insertText；存储保持原样', async t => {
-  const f = await setup(t)
+for (const version of ['0.2.1-rc.5', '0.2.2-rc.1', 'unknown']) test(version + ' 模拟新会话：隐藏旧草稿可预览、原文复制与末尾 insertText；存储保持原样', async t => {
+  const f = await setup(t, version)
   const text = '  未发送的中文🙂\n第二行  '
   localStorageSet('hidden-old', text)
   localStorageSet('new-session', '')
@@ -107,10 +107,10 @@ test('large draft lists paginate, mount previews lazily and preserve latest draf
   assert.equal(document.querySelector('[role="dialog"]'),null)
   assert.equal(document.querySelectorAll('pre').length,0)
 })
-test('版本不符时 UI 显示拒绝信息，完全不读取 storage', async t => {
-  const f = await setup(t, '0.2.2')
+test('未知版本且结构不符时 UI 显示拒绝信息，完全不读取 storage', async t => {
+  const f = await setup(t, 'unknown')
   Object.defineProperty(window, 'localStorage', { get() { assert.fail('must not read storage') } })
-  await f.render({ useInput: select => select(input), inputActions: {} })
+  await f.render({ useInput: select => select({...input, draftRev: 'bad'}), inputActions: {} })
   await f.click('未发送草稿')
   assert.match(document.body.textContent, /已拒绝读取/)
   assert.equal(document.querySelector('pre'), null)
@@ -124,7 +124,44 @@ test('过期 revision 插入失败和剪贴板拒绝均显示失败，不误报�
   await f.click('复制原文')
   assert.match(document.body.textContent, /复制失败/)
   await f.click('追加到当前输入框')
-  assert.match(document.body.textContent, /已变化或暂不可编辑/)
+  assert.match(document.body.textContent, /已变化、含无法定位的引用块或暂不可编辑/)
+})
+
+test('rc.1 malformed storage fails the entire scan and preserves original bytes', async t => {
+  const f = await setup(t, '0.2.2-rc.1')
+  localStorageSet('a', 'valid')
+  window.localStorage.setItem('dsh.conversation.z', JSON.stringify({draft:{text:'future',references:[],unknown:1},view:null,viewRequest:null}))
+  const before=JSON.stringify(window.localStorage)
+  await f.render({useInput:select=>select(input), inputActions:{insertText(){assert.fail('no write')}}})
+  await f.click('未发送草稿')
+  assert.match(document.body.textContent,/无法识别草稿格式/)
+  assert.equal(document.querySelectorAll('section').length,0)
+  assert.equal(JSON.stringify(window.localStorage),before)
+})
+
+test('rc.1 target quotes remain untouched when the host rejects an out-of-bounds end span', async t => {
+  const f=await setup(t,'0.2.2-rc.1')
+  localStorageSet('source','recovered')
+  const state={...input,draft:'> quote ',occurrences:[]}
+  let writes=0
+  await f.render({useInput:select=>select(state), inputActions:{insertText:(_text,span)=>{
+    // Official rc.1 projection treats the quote as one character plus trailing space.
+    if(span.end>2) return false
+    writes++; return true
+  }}})
+  await f.click('未发送草稿'); await f.click('追加到当前输入框')
+  assert.equal(writes,0)
+  assert.equal(state.draft,'> quote ')
+  assert.match(document.body.textContent,/含无法定位的引用块/)
+  await f.click('复制原文'); assert.deepEqual(f.copied,['recovered'])
+})
+
+test('missing input hook or insertText refuses before obtaining storage',async t=>{
+  const f=await setup(t,'unknown')
+  Object.defineProperty(window,'localStorage',{get(){assert.fail('no storage access')}})
+  await f.render({}); assert.match(document.body.textContent,/缺少 useInput/)
+  await f.render({useInput:select=>select(input),inputActions:{}})
+  await f.click('未发送草稿'); assert.match(document.body.textContent,/缺少 insertText/)
 })
 
 test('durable title and workspace come from session list or current projection; displayTitle is never used', async t => {

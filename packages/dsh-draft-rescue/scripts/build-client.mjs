@@ -10,4 +10,4 @@ await build({
   legalComments: 'inline',
 })
 const upstreamLicense = (await readFile('LICENSE', 'utf8')).replace('Copyright (c) 2026 hzopc1031', 'Copyright (c) 2026 DeepSeek')
-await writeFile('THIRD_PARTY_NOTICES.md', '# Third-party notice\n\nDraft decoding follows DeepSeek Harness dsh-v0.2.1-rc.5 (MIT):\nhttps://github.com/deepseek-ai/deepseek-harness/tree/dsh-v0.2.1-rc.5\n\n' + upstreamLicense)
+await writeFile('THIRD_PARTY_NOTICES.md', '# Third-party notice\n\nDraft decoding follows DeepSeek Harness dsh-v0.2.1-rc.5 and dsh-v0.2.2-rc.1 (MIT):\nhttps://github.com/deepseek-ai/deepseek-harness/tree/dsh-v0.2.1-rc.5\nhttps://github.com/deepseek-ai/deepseek-harness/tree/dsh-v0.2.2-rc.1\n\n' + upstreamLicense)

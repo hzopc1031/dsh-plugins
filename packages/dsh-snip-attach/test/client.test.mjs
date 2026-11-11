@@ -6,7 +6,7 @@ import { createRoot } from 'react-dom/client'
 import { createRequire } from 'node:module'
 import { readFileSync } from 'node:fs'
 import vm from 'node:vm'
-import { abortable, requireDesktop, shotUrl, fileInputFor, injectFile, FALLBACK } from '../lib/intake.js'
+import { abortable, requireDesktop, requireCaptureCapabilities, shotUrl, fileInputFor, injectFile, FALLBACK } from '../lib/intake.js'
 
 const require = createRequire(import.meta.url)
 const url = 'http://127.0.0.1:12345/shot/31234567-1234-4123-8123-123456789abc'
@@ -23,17 +23,23 @@ test('abortable preserves successful and failed RPC results', async () => {
   assert.equal(await abortable(Promise.resolve(42), new AbortController().signal), 42)
   await assert.rejects(abortable(Promise.reject(new Error('transport')), new AbortController().signal), /transport/)
 })
-test('version and desktop origin fail closed', () => {
-  requireDesktop(boot, { protocol: 'dsh-app:', hostname: 'app' })
-  for (const data of [undefined, {}, { release: { version: '0.2.2-rc.1' } }]) assert.throws(() => requireDesktop(data, { protocol: 'dsh-app:', hostname: 'app' }))
-  for (const location of [{ protocol: 'https:', hostname: 'app' }, { protocol: 'dsh-app:', hostname: 'shell' }]) assert.throws(() => requireDesktop(boot, location))
+test('desktop origin and actual input/remote/session shapes fail closed', () => {
+  requireDesktop({ protocol: 'dsh-app:', hostname: 'app' })
+  for (const location of [{ protocol: 'https:', hostname: 'app' }, { protocol: 'dsh-app:', hostname: 'shell' }]) assert.throws(() => requireDesktop(location))
+  const state={phase:'plain',attachmentIds:[]}, session={removed:false,subagent:null}
+  requireCaptureCapabilities(state,session,()=>{},'a')
+  for(const args of [[undefined,session,()=>{},'a'],[{...state,attachmentIds:[3]},session,()=>{},'a'],
+    [{...state,phase:'future'},session,()=>{},'a'],[state,{},()=>{},'a'],[state,session,undefined,'a'],[state,session,()=>{},'']]) {
+    assert.throws(()=>requireCaptureCapabilities(...args),/已拒绝截图/)
+  }
 })
+
 test('server URL parser accepts only exact IPv4 loopback, valid port and UUID', () => {
   assert.equal(shotUrl('截图就绪 ' + url), url)
   for (const value of [undefined, url, '截图就绪 ' + url + '?file=x', '截图就绪 ' + url.replace('127.0.0.1', 'evil.example'), '截图就绪 ' + url.replace('12345', '99999'), '截图就绪 ' + url.replace('12345', '0')]) assert.throws(() => shotUrl(value))
 })
 
-async function setup(t) {
+async function setup(t, version = '0.2.1-rc.5') {
   const dom = new JSDOM('<div data-composer-card><input type="file" multiple hidden><div id="root"></div></div><input id="unrelated" type="file" multiple hidden>', { url: 'dsh-app://app/' })
   const saved = new Map()
   function set(key, value) { saved.set(key, Object.getOwnPropertyDescriptor(globalThis, key)); Object.defineProperty(globalThis, key, { configurable: true, writable: true, value }) }
@@ -45,7 +51,7 @@ async function setup(t) {
     fetches++; assert.equal(address, url); assert.equal(opts.credentials, 'omit'); assert.equal(opts.redirect, 'error')
     return response
   })
-  window.__DSH_BOOT__ = boot
+  window.__DSH_BOOT__ = {release:{version}}
   window.DataTransfer = class {
     constructor() {
       const files = []
@@ -134,8 +140,8 @@ test('unrelated attachment growth is never reported as confirmed screenshot succ
   assert.doesNotMatch(document.body.textContent,/截图已加入/)
   assert.match(document.body.textContent,/图片已在剪贴板，可按 Ctrl\+V/)
 })
-test('camera executes scoped command, blob becomes PNG File, correct composer receives change and success toast', async t => {
-  const f = await setup(t)
+for (const version of ['0.2.1-rc.5', '0.2.2-rc.1', 'unknown']) test(version + ' camera executes scoped command, blob becomes PNG File, correct composer receives change and success toast', async t => {
+  const f = await setup(t, version)
   await f.click()
   assert.deepEqual(JSON.parse(JSON.stringify(f.calls)), [['session-A', '/screenshot', []]])
   assert.equal(f.fetches(), 1)
@@ -149,16 +155,44 @@ test('camera executes scoped command, blob becomes PNG File, correct composer re
 })
 test('busy, claimed, removed and subagent inputs disable capture', async t => {
   const f = await setup(t)
-  for (const phase of ['adjudicating', 'claimed', 'submitting']) {
+  for (const phase of ['adjudicating', 'claimed', 'submitting', 'sending']) {
     await f.state({ phase }); await f.click(0); assert.equal(f.calls.length, 0)
   }
   await f.state({ phase: 'plain' }); await f.session({ removed: true }); await f.click(0); assert.equal(f.calls.length, 0)
   await f.session({ removed: false, subagent: {} }); await f.click(0); assert.equal(f.calls.length, 0)
 })
-test('unsupported version and browser origin disable capture', async t => {
+test('unknown version with unrecognized attachment structure disables capture', async t => {
   const f = await setup(t)
-  window.__DSH_BOOT__ = { release: { version: '0.2.2' } }; await f.render(); await f.click(0)
+  window.__DSH_BOOT__ = { release: { version: 'unknown' } }; await f.state({attachmentIds: [42]}); await f.click(0)
   assert.equal(f.calls.length, 0)
+  assert.match(document.body.textContent,/已拒绝截图/)
+})
+
+test('rc.1 intake acknowledgement does not claim upload readiness, including delayed upload failure',async t=>{
+  const f=await setup(t,'0.2.2-rc.1')
+  await f.click(); await f.press('确认加入')
+  // The normal Session starts uploading at intake; the left slot has no upload receipt.
+  await f.state({uploads:{'new-image':{status:'error',message:'upload refused'}}})
+  assert.match(document.body.textContent,/已提交截图，请核对待发送图片/)
+  assert.doesNotMatch(document.body.textContent,/上传成功|截图已加入|已发送/)
+})
+
+test('missing remote method refuses before capture and missing hooks report a clear error',async t=>{
+  const f=await setup(t,'0.2.2-rc.1')
+  f.props.execute=undefined; await f.render(); await f.click(0)
+  assert.equal(f.calls.length,0); assert.equal(f.fetches(),0)
+  assert.match(document.body.textContent,/remote.commands.execute/)
+  f.props.useInput=undefined; await f.render()
+  assert.match(document.body.textContent,/缺少 useInput/)
+  assert.throws(()=>f.exports.apply({slots:{inject(){},register(){}},remote:{commands:{}}}),/remote.commands.execute/)
+})
+
+test('changing the hidden picker after preview refuses injection',async t=>{
+  const f=await setup(t,'0.2.2-rc.1')
+  await f.click(); f.input.parentElement.append(f.input.cloneNode())
+  await f.press('确认加入',0)
+  assert.equal(f.transferred(),undefined)
+  assert.match(document.body.textContent,/Ctrl\+V/)
 })
 test('204 cancellation adds nothing and shows cancellation notice', async t => {
   const f = await setup(t); f.response({ status: 204 })

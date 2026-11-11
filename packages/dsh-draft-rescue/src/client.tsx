@@ -11,11 +11,10 @@ declare module '@deepseek-ai/dsh-session-projection/types' {
 }
 import { Modal } from '@deepseek-ai/dsh-client-ui-primitives'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { copyText, listDrafts, prepareAppend, requireVersion, type Draft } from './core.js'
+import { copyText, listDrafts, prepareAppend, requireCapabilities, type Draft } from './core.js'
 
 export const inject = ['slots']
 type Props = PropsRuntime<'conversation.session.header.actions'>
-function boot(): unknown { return (window as unknown as { __DSH_BOOT__?: unknown }).__DSH_BOOT__ }
 
 /** Only durable title and recorded cwd; never displayTitle (it falls back to id/basename). */
 type SessionRow = { title?: string; cwd?: string }
@@ -23,7 +22,12 @@ function formatMeta(meta: { title?: string; workspace?: string }): string {
   return '标题：' + (meta.title ?? '未知') + '；工作区：' + (meta.workspace ?? '未知')
 }
 
-export function DraftRescue({ sessionId, useInput, inputActions, useSessions, useProjection }: Props) {
+export function DraftRescue(props: Props) {
+  if (typeof props.useInput !== 'function') return <span role="status">宿主缺少 useInput 输入接口，已拒绝读取草稿。</span>
+  return <DraftRescueReady {...props} />
+}
+
+function DraftRescueReady({ sessionId, useInput, inputActions, useSessions, useProjection }: Props) {
   const input = useInput(value => value)
   const sessionsById = (useSessions ?? ((select: (state: { byId: Record<string, SessionRow | undefined> }) => unknown) => select({ byId: {} })))(state => state.byId) as Record<string, SessionRow | undefined>
   const projectedTitle = (useProjection ?? ((_key: 'title' | 'workingDirectory') => null))('title')
@@ -65,8 +69,8 @@ export function DraftRescue({ sessionId, useInput, inputActions, useSessions, us
     generation.current++
     setPage(0); setPreview(null)
     try {
-      requireVersion(boot()) // Do not even obtain localStorage until release is checked.
-      setDrafts(listDrafts(window.localStorage, boot()))
+      requireCapabilities(live.current, inputActions) // Check the public input face before obtaining localStorage.
+      setDrafts(listDrafts(window.localStorage))
       setNotice('')
     } catch (error) {
       setDrafts([])
@@ -76,16 +80,16 @@ export function DraftRescue({ sessionId, useInput, inputActions, useSessions, us
   async function copy(draft: Draft) {
     const revision = generation.current
     try {
-      requireVersion(boot())
+      requireCapabilities(live.current, inputActions)
       await navigator.clipboard.writeText(copyText(draft))
       if (generation.current === revision) setNotice('已复制原文。')
-    } catch { if (generation.current === revision) setNotice('复制失败；请刷新并检查版本、剪贴板权限，或从预览手动复制。') }
+    } catch { if (generation.current === revision) setNotice('复制失败；请刷新并检查输入接口、剪贴板权限，或从预览手动复制。') }
   }
   function append(draft: Draft) {
     try {
-      requireVersion(boot())
+      requireCapabilities(live.current, inputActions)
       const prepared = prepareAppend(draft, live.current)
-      if (!inputActions.insertText(prepared.text, prepared.span)) throw new Error('输入框已变化或暂不可编辑，请重试。')
+      if (!inputActions.insertText(prepared.text, prepared.span)) throw new Error('输入框已变化、含无法定位的引用块或暂不可编辑；请复制原文后手动粘贴。')
       setNotice('已追加到当前输入框，尚未发送。')
     } catch (error) { setNotice(error instanceof Error ? error.message : '追加失败。') }
   }
@@ -110,7 +114,7 @@ export function DraftRescue({ sessionId, useInput, inputActions, useSessions, us
             <button type="button" onClick={() => setPreview(preview === draft.sessionId ? null : draft.sessionId)}>预览原文</button>
             {preview === draft.sessionId && <pre style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', userSelect: 'text' }}>{draft.text}</pre>}
             <button type="button" onClick={() => { void copy(draft) }}>复制原文</button>{' '}
-            <button type="button" disabled={input.phase !== 'plain'} onClick={() => append(draft)}>追加到当前输入框</button>
+            <button type="button" disabled={input?.phase !== 'plain'} onClick={() => append(draft)}>追加到当前输入框</button>
           </section>
         })}
       </div>
@@ -119,6 +123,7 @@ export function DraftRescue({ sessionId, useInput, inputActions, useSessions, us
 }
 
 export function apply(ctx: Context): void {
+  if (typeof ctx.slots?.inject !== 'function' || typeof ctx.slots?.register !== 'function') throw new Error('宿主缺少会话槽位接口，已拒绝启用草稿找回。')
   ctx.slots.inject('conversation.session.header.actions', () => ctx.slots.register({
     name: 'conversation.session.header.actions', id: 'dsh-draft-rescue', order: 150,
   }, DraftRescue))

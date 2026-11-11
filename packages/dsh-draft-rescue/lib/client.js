@@ -30,35 +30,60 @@ var import_dsh_client_ui_primitives = require("@deepseek-ai/dsh-client-ui-primit
 var import_react = require("react");
 
 // src/core.ts
-var SUPPORTED_VERSION = "0.2.1-rc.5";
 var STORAGE_PREFIX = "dsh.conversation.";
 function object(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
-function requireVersion(boot2) {
-  const version = object(boot2) && object(boot2.release) ? boot2.release.version : void 0;
-  if (version !== SUPPORTED_VERSION) throw new Error("\u4EC5\u652F\u6301 DSH 0.2.1-rc.5\uFF1B\u7248\u672C\u4E0D\u7B26\u6216\u65E0\u6CD5\u8BC6\u522B\uFF0C\u5DF2\u62D2\u7EDD\u8BFB\u53D6\u8349\u7A3F\u3002");
+function keys(value, allowed) {
+  return Object.keys(value).every((key) => allowed.includes(key));
 }
 function draftText(value) {
   if (typeof value === "string") return value;
-  if (!object(value) || typeof value.text !== "string" || !Array.isArray(value.references)) return void 0;
+  if (!object(value) || !keys(value, ["text", "references", "command", "quotes"]) || typeof value.text !== "string" || !Array.isArray(value.references)) return void 0;
   const text = value.text;
   let end = 0;
   if (value.command !== void 0) {
-    if (!object(value.command) || typeof value.command.token !== "string") return void 0;
+    if (!object(value.command) || !keys(value.command, ["token"]) || typeof value.command.token !== "string") return void 0;
     const spelling = value.command.token.trimEnd();
     if (!/^\/\S/u.test(spelling) || !text.startsWith(spelling)) return void 0;
     end = spelling.length;
   }
   for (const ref of value.references) {
-    if (!object(ref) || typeof ref.source !== "string" || typeof ref.ref !== "string" || typeof ref.label !== "string" || typeof ref.clipboardText !== "string" || typeof ref.offset !== "number" || !Number.isInteger(ref.offset) || ref.offset < end || typeof ref.length !== "number" || !Number.isInteger(ref.length) || ref.length <= 0 || ref.length !== ref.clipboardText.length || ref.appearance !== void 0 && !["session", "file", "folder"].includes(String(ref.appearance)) || ref.invalid !== void 0 && typeof ref.invalid !== "boolean") return void 0;
+    if (!object(ref) || !keys(ref, ["source", "ref", "label", "clipboardText", "offset", "length", "appearance", "invalid"]) || typeof ref.source !== "string" || typeof ref.ref !== "string" || typeof ref.label !== "string" || typeof ref.clipboardText !== "string" || typeof ref.offset !== "number" || !Number.isInteger(ref.offset) || ref.offset < end || typeof ref.length !== "number" || !Number.isInteger(ref.length) || ref.length <= 0 || ref.length !== ref.clipboardText.length || ref.appearance !== void 0 && (typeof ref.appearance !== "string" || !["session", "file", "folder"].includes(ref.appearance)) || ref.invalid !== void 0 && typeof ref.invalid !== "boolean") return void 0;
     end = ref.offset + ref.length;
     if (end > text.length || text.slice(ref.offset, end) !== ref.clipboardText) return void 0;
   }
+  if (value.quotes !== void 0 && !Array.isArray(value.quotes)) return void 0;
+  const spans = [...value.references];
+  for (const quote of value.quotes ?? []) {
+    if (!object(quote) || !keys(quote, ["offset", "length", "text"]) || typeof quote.text !== "string" || !quote.text.trim() || !Number.isSafeInteger(quote.offset) || quote.offset < 0 || !Number.isSafeInteger(quote.length) || quote.length <= 0) return void 0;
+    const formatted = quote.text.replace(/\r\n?/gu, "\n").split("\n").map((line) => `> ${line}`).join("\n");
+    if (quote.length !== formatted.length || text.slice(quote.offset, quote.offset + formatted.length) !== formatted) return void 0;
+    spans.push(quote);
+  }
+  end = object(value.command) ? value.command.token.trimEnd().length : 0;
+  for (const span of spans.sort((a, b) => a.offset - b.offset)) {
+    if (span.offset < end) return void 0;
+    end = span.offset + span.length;
+    if (end > text.length) return void 0;
+  }
   return text;
 }
-function listDrafts(storage, boot2) {
-  requireVersion(boot2);
+function requireInput(input) {
+  if (!object(input) || typeof input.draft !== "string" || !Number.isSafeInteger(input.draftRev) || input.draftRev < 0 || typeof input.phase !== "string" || !["plain", "adjudicating", "claimed", "submitting", "sending"].includes(input.phase) || !Array.isArray(input.occurrences) || draftText({ text: input.draft, references: input.occurrences.map((ref) => {
+    if (!object(ref)) return ref;
+    const { occurrenceId: _id, ...semantic } = ref;
+    return semantic;
+  }) }) === void 0) throw new Error("\u65E0\u6CD5\u8BC6\u522B\u5BBF\u4E3B\u8F93\u5165\u6846\u7ED3\u6784\uFF0C\u5DF2\u62D2\u7EDD\u8BFB\u53D6\u8349\u7A3F\u6216\u8FFD\u52A0\u3002");
+}
+function requireCapabilities(input, actions) {
+  requireInput(input);
+  if (!object(actions) || typeof actions.insertText !== "function") throw new Error("\u5BBF\u4E3B\u7F3A\u5C11 insertText \u8F93\u5165\u63A5\u53E3\uFF0C\u5DF2\u62D2\u7EDD\u8BFB\u53D6\u8349\u7A3F\u6216\u8FFD\u52A0\u3002");
+}
+function listDrafts(storage) {
+  if (!Number.isSafeInteger(storage.length) || storage.length < 0 || typeof storage.key !== "function" || typeof storage.getItem !== "function") {
+    throw new Error("\u65E0\u6CD5\u8BC6\u522B\u672C\u673A\u8349\u7A3F\u5B58\u50A8\u63A5\u53E3\uFF0C\u5DF2\u62D2\u7EDD\u8BFB\u53D6\u8349\u7A3F\u3002");
+  }
   const result = [];
   for (let i = 0; i < storage.length; i++) {
     const key = storage.key(i);
@@ -69,10 +94,13 @@ function listDrafts(storage, boot2) {
     try {
       value = JSON.parse(raw);
     } catch {
-      continue;
+      throw new Error("\u8349\u7A3F\u5B58\u50A8 JSON \u635F\u574F\uFF0C\u5DF2\u62D2\u7EDD\u8BFB\u53D6\u8349\u7A3F\uFF1B\u672A\u4FEE\u6539\u539F\u8BB0\u5F55\u3002");
     }
-    if (!object(value)) continue;
+    if (!object(value) || !keys(value, ["draft", "view", "viewRequest"]) || !(value.view === null || typeof value.view === "string") || !(value.viewRequest === null || object(value.viewRequest) && keys(value.viewRequest, ["view", "focus"]) && typeof value.viewRequest.view === "string" && typeof value.viewRequest.focus === "string")) {
+      throw new Error("\u65E0\u6CD5\u8BC6\u522B\u8349\u7A3F\u5B58\u50A8\u7ED3\u6784\uFF0C\u5DF2\u62D2\u7EDD\u8BFB\u53D6\u8349\u7A3F\uFF1B\u672A\u4FEE\u6539\u539F\u8BB0\u5F55\u3002");
+    }
     const text = draftText(value.draft);
+    if (text === void 0) throw new Error("\u65E0\u6CD5\u8BC6\u522B\u8349\u7A3F\u683C\u5F0F\uFF0C\u5DF2\u62D2\u7EDD\u8BFB\u53D6\u8349\u7A3F\uFF1B\u672A\u4FEE\u6539\u539F\u8BB0\u5F55\u3002");
     if (text?.trim()) result.push({ sessionId: key.slice(STORAGE_PREFIX.length), text });
   }
   return result.sort((a, b) => a.sessionId.localeCompare(b.sessionId));
@@ -81,6 +109,7 @@ function copyText(draft) {
   return draft.text;
 }
 function prepareAppend(draft, input) {
+  requireInput(input);
   if (input.phase !== "plain") throw new Error("\u5F53\u524D\u8F93\u5165\u6846\u5FD9\u788C\u6216\u5904\u4E8E\u547D\u4EE4\u6A21\u5F0F\uFF0C\u8BF7\u56DE\u5230\u666E\u901A\u8F93\u5165\u540E\u8FFD\u52A0\u3002");
   const end = input.draft.length - input.occurrences.reduce((sum, ref) => sum + ref.length - 1, 0);
   if (end < 0) throw new Error("\u8F93\u5165\u6846\u72B6\u6001\u65E0\u6548\uFF0C\u8BF7\u91CD\u8BD5\u3002");
@@ -93,13 +122,14 @@ function prepareAppend(draft, input) {
 // src/client.tsx
 var import_jsx_runtime = require("react/jsx-runtime");
 var inject = ["slots"];
-function boot() {
-  return window.__DSH_BOOT__;
-}
 function formatMeta(meta) {
   return "\u6807\u9898\uFF1A" + (meta.title ?? "\u672A\u77E5") + "\uFF1B\u5DE5\u4F5C\u533A\uFF1A" + (meta.workspace ?? "\u672A\u77E5");
 }
-function DraftRescue({ sessionId, useInput, inputActions, useSessions, useProjection }) {
+function DraftRescue(props) {
+  if (typeof props.useInput !== "function") return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { role: "status", children: "\u5BBF\u4E3B\u7F3A\u5C11 useInput \u8F93\u5165\u63A5\u53E3\uFF0C\u5DF2\u62D2\u7EDD\u8BFB\u53D6\u8349\u7A3F\u3002" });
+  return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DraftRescueReady, { ...props });
+}
+function DraftRescueReady({ sessionId, useInput, inputActions, useSessions, useProjection }) {
   const input = useInput((value) => value);
   const sessionsById = (useSessions ?? ((select) => select({ byId: {} })))((state) => state.byId);
   const projectedTitle = (useProjection ?? ((_key) => null))("title");
@@ -155,8 +185,8 @@ function DraftRescue({ sessionId, useInput, inputActions, useSessions, useProjec
     setPage(0);
     setPreview(null);
     try {
-      requireVersion(boot());
-      setDrafts(listDrafts(window.localStorage, boot()));
+      requireCapabilities(live.current, inputActions);
+      setDrafts(listDrafts(window.localStorage));
       setNotice("");
     } catch (error) {
       setDrafts([]);
@@ -166,18 +196,18 @@ function DraftRescue({ sessionId, useInput, inputActions, useSessions, useProjec
   async function copy(draft) {
     const revision = generation.current;
     try {
-      requireVersion(boot());
+      requireCapabilities(live.current, inputActions);
       await navigator.clipboard.writeText(copyText(draft));
       if (generation.current === revision) setNotice("\u5DF2\u590D\u5236\u539F\u6587\u3002");
     } catch {
-      if (generation.current === revision) setNotice("\u590D\u5236\u5931\u8D25\uFF1B\u8BF7\u5237\u65B0\u5E76\u68C0\u67E5\u7248\u672C\u3001\u526A\u8D34\u677F\u6743\u9650\uFF0C\u6216\u4ECE\u9884\u89C8\u624B\u52A8\u590D\u5236\u3002");
+      if (generation.current === revision) setNotice("\u590D\u5236\u5931\u8D25\uFF1B\u8BF7\u5237\u65B0\u5E76\u68C0\u67E5\u8F93\u5165\u63A5\u53E3\u3001\u526A\u8D34\u677F\u6743\u9650\uFF0C\u6216\u4ECE\u9884\u89C8\u624B\u52A8\u590D\u5236\u3002");
     }
   }
   function append(draft) {
     try {
-      requireVersion(boot());
+      requireCapabilities(live.current, inputActions);
       const prepared = prepareAppend(draft, live.current);
-      if (!inputActions.insertText(prepared.text, prepared.span)) throw new Error("\u8F93\u5165\u6846\u5DF2\u53D8\u5316\u6216\u6682\u4E0D\u53EF\u7F16\u8F91\uFF0C\u8BF7\u91CD\u8BD5\u3002");
+      if (!inputActions.insertText(prepared.text, prepared.span)) throw new Error("\u8F93\u5165\u6846\u5DF2\u53D8\u5316\u3001\u542B\u65E0\u6CD5\u5B9A\u4F4D\u7684\u5F15\u7528\u5757\u6216\u6682\u4E0D\u53EF\u7F16\u8F91\uFF1B\u8BF7\u590D\u5236\u539F\u6587\u540E\u624B\u52A8\u7C98\u8D34\u3002");
       setNotice("\u5DF2\u8FFD\u52A0\u5230\u5F53\u524D\u8F93\u5165\u6846\uFF0C\u5C1A\u672A\u53D1\u9001\u3002");
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "\u8FFD\u52A0\u5931\u8D25\u3002");
@@ -244,13 +274,14 @@ function DraftRescue({ sessionId, useInput, inputActions, useSessions, useProjec
             void copy(draft);
           }, children: "\u590D\u5236\u539F\u6587" }),
           " ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", disabled: input.phase !== "plain", onClick: () => append(draft), children: "\u8FFD\u52A0\u5230\u5F53\u524D\u8F93\u5165\u6846" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", disabled: input?.phase !== "plain", onClick: () => append(draft), children: "\u8FFD\u52A0\u5230\u5F53\u524D\u8F93\u5165\u6846" })
         ] }, draft.sessionId);
       })
     ] }) })
   ] });
 }
 function apply(ctx) {
+  if (typeof ctx.slots?.inject !== "function" || typeof ctx.slots?.register !== "function") throw new Error("\u5BBF\u4E3B\u7F3A\u5C11\u4F1A\u8BDD\u69FD\u4F4D\u63A5\u53E3\uFF0C\u5DF2\u62D2\u7EDD\u542F\u7528\u8349\u7A3F\u627E\u56DE\u3002");
   ctx.slots.inject("conversation.session.header.actions", () => ctx.slots.register({
     name: "conversation.session.header.actions",
     id: "dsh-draft-rescue",

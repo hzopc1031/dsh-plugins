@@ -53,10 +53,17 @@ function abortable(work, signal) {
     });
   });
 }
-function requireDesktop(boot2, location) {
-  const version = boot2?.release?.version;
-  if (version !== "0.2.1-rc.5" || location.protocol !== "dsh-app:" || location.hostname !== "app") {
-    throw new Error("\u4EC5\u652F\u6301 DSH 0.2.1-rc.5 \u684C\u9762\u9875\u9762\u3002");
+function requireDesktop(location) {
+  if (location.protocol !== "dsh-app:" || location.hostname !== "app") {
+    throw new Error("\u622A\u56FE\u9644\u4EF6\u4EC5\u652F\u6301 DSH \u684C\u9762\u9875\u9762\uFF08dsh-app://app\uFF09\u3002");
+  }
+}
+function object(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+function requireCaptureCapabilities(input, session, execute, sessionId) {
+  if (typeof execute !== "function" || typeof sessionId !== "string" || !sessionId || !object(input) || typeof input.phase !== "string" || !["plain", "adjudicating", "claimed", "submitting", "sending"].includes(input.phase) || !Array.isArray(input.attachmentIds) || !input.attachmentIds.every((id) => typeof id === "string" && id.length > 0) || !object(session) || typeof session.removed !== "boolean" || !(session.subagent === null || object(session.subagent))) {
+    throw new Error("\u5BBF\u4E3B\u7F3A\u5C11\u622A\u56FE\u6240\u9700\u7684\u4F1A\u8BDD\u3001\u9644\u4EF6\u72B6\u6001\u6216 remote.commands.execute \u63A5\u53E3\uFF0C\u5DF2\u62D2\u7EDD\u622A\u56FE\u3002");
   }
 }
 function shotUrl(text) {
@@ -83,7 +90,6 @@ function injectFile(input, file) {
 // src/client.tsx
 var import_jsx_runtime = require("react/jsx-runtime");
 var inject = ["slots", "remote", "remote.commands"];
-var boot = () => window.__DSH_BOOT__;
 function previewUrl(blob) {
   try {
     if (typeof URL !== "undefined" && typeof URL.createObjectURL === "function") return URL.createObjectURL(blob);
@@ -97,13 +103,19 @@ function releaseUrl(url) {
   } catch {
   }
 }
-function SnipButton({ sessionId, useInput, useSession, execute }) {
+function SnipButton(props) {
+  if (typeof props.useInput !== "function" || typeof props.useSession !== "function") {
+    return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { role: "status", children: "\u5BBF\u4E3B\u7F3A\u5C11 useInput / useSession \u63A5\u53E3\uFF0C\u5DF2\u62D2\u7EDD\u622A\u56FE\u3002" });
+  }
+  return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SnipReady, { ...props });
+}
+function SnipReady({ sessionId, useInput, useSession, execute }) {
   const input = useInput((value) => value);
-  const unavailable = useSession((value) => value.removed || value.subagent !== null);
+  const session = useSession((value) => value);
   const live = (0, import_react.useRef)(input);
   live.current = input;
-  const available = (0, import_react.useRef)(!unavailable);
-  available.current = !unavailable;
+  const liveSession = (0, import_react.useRef)(session);
+  liveSession.current = session;
   const [busy, setBusy] = (0, import_react.useState)(false);
   const [notice, setNotice] = (0, import_react.useState)("");
   const [preview, setPreview] = (0, import_react.useState)(null);
@@ -135,13 +147,22 @@ function SnipButton({ sessionId, useInput, useSession, execute }) {
   }, [notice]);
   const allowed = () => {
     const state = live.current;
-    return available.current && state.phase === "plain";
+    try {
+      requireCaptureCapabilities(state, liveSession.current, execute, sessionId);
+    } catch {
+      return false;
+    }
+    return !liveSession.current.removed && liveSession.current.subagent === null && state.phase === "plain";
   };
-  let supported = true;
+  const requireSupport = () => {
+    requireDesktop(window.location);
+    requireCaptureCapabilities(live.current, liveSession.current, execute, sessionId);
+  };
+  let unsupported = "";
   try {
-    requireDesktop(boot(), window.location);
-  } catch {
-    supported = false;
+    requireSupport();
+  } catch (error) {
+    unsupported = error instanceof Error ? error.message : "\u65E0\u6CD5\u8BC6\u522B\u622A\u56FE\u63A5\u53E3\u3002";
   }
   async function take(button) {
     if (pending.current || previewRef.current || !allowed()) return;
@@ -154,7 +175,7 @@ function SnipButton({ sessionId, useInput, useSession, execute }) {
       controller.abort();
     }, 16e4);
     try {
-      requireDesktop(boot(), window.location);
+      requireSupport();
       const fileInput = fileInputFor(button);
       const execution = await abortable(execute(sessionId, "/screenshot", []), controller.signal);
       if (controller.signal.aborted) return;
@@ -170,11 +191,11 @@ function SnipButton({ sessionId, useInput, useSession, execute }) {
       const blob = await response.blob();
       captured = true;
       if (!blob.size) throw new Error(FALLBACK);
-      requireDesktop(boot(), window.location);
+      requireSupport();
       if (controller.signal.aborted) return;
       if (!allowed() || fileInputFor(button) !== fileInput) throw new Error(FALLBACK);
       const file = new File([blob], `screenshot-${Date.now()}.png`, { type: "image/png" });
-      const next = { url: previewUrl(blob), file, fileInput };
+      const next = { url: previewUrl(blob), file, fileInput, button };
       previewRef.current = next;
       setPreview(next);
       setNotice("\u8BF7\u9884\u89C8\u622A\u56FE\uFF0C\u786E\u8BA4\u540E\u518D\u52A0\u5165\u5F85\u53D1\u9001\u9644\u4EF6\u3002");
@@ -196,8 +217,8 @@ function SnipButton({ sessionId, useInput, useSession, execute }) {
     pending.current = controller;
     setBusy(true);
     try {
-      requireDesktop(boot(), window.location);
-      if (!allowed() || !current.fileInput.isConnected) throw new Error(FALLBACK);
+      requireSupport();
+      if (!allowed() || fileInputFor(current.button) !== current.fileInput) throw new Error(FALLBACK);
       const before = new Set(live.current.attachmentIds);
       injectFile(current.fileInput, current.file);
       const deadline = Date.now() + 2e3;
@@ -231,8 +252,8 @@ function SnipButton({ sessionId, useInput, useSession, execute }) {
       {
         type: "button",
         "aria-label": "\u622A\u56FE\u5E76\u6DFB\u52A0\u9644\u4EF6",
-        title: "\u622A\u56FE\u5E76\u6DFB\u52A0\u9644\u4EF6\uFF08Windows\uFF09",
-        disabled: !supported || busy || !!preview || !allowed(),
+        title: unsupported || "\u622A\u56FE\u5E76\u6DFB\u52A0\u9644\u4EF6\uFF08Windows\uFF09",
+        disabled: !!unsupported || busy || !!preview || !allowed(),
         onMouseDown: (event) => event.preventDefault(),
         onClick: (event) => {
           void take(event.currentTarget);
@@ -244,7 +265,7 @@ function SnipButton({ sessionId, useInput, useSession, execute }) {
         ] })
       }
     ),
-    (notice || preview) && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { role: "status", "aria-live": "polite", style: { position: "absolute", bottom: "100%", left: 0, zIndex: 30, width: 260, padding: 10, borderRadius: 8, background: "var(--dsw-static-neutral-100, #eee)", color: "var(--dsw-static-neutral-900, #222)", boxShadow: "0 2px 12px #0003" }, children: [
+    (notice || preview || unsupported) && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { role: "status", "aria-live": "polite", style: { position: "absolute", bottom: "100%", left: 0, zIndex: 30, width: 260, padding: 10, borderRadius: 8, background: "var(--dsw-static-neutral-100, #eee)", color: "var(--dsw-static-neutral-900, #222)", boxShadow: "0 2px 12px #0003" }, children: [
       preview && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
         preview.url && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", { src: preview.url, alt: "\u622A\u56FE\u9884\u89C8", style: { display: "block", width: "100%", maxHeight: 160, objectFit: "contain", marginBottom: 8 } }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { style: { margin: "0 0 8px" }, children: "\u8BF7\u786E\u8BA4\u540E\u518D\u52A0\u5165\u5F85\u53D1\u9001\u9644\u4EF6\u3002" }),
@@ -254,11 +275,13 @@ function SnipButton({ sessionId, useInput, useSession, execute }) {
         " ",
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", disabled: busy, onClick: cancel, children: "\u53D6\u6D88" })
       ] }),
-      notice && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { style: { margin: preview ? "8px 0 0" : 0 }, children: notice })
+      (notice || unsupported) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { style: { margin: preview ? "8px 0 0" : 0 }, children: notice || unsupported })
     ] })
   ] });
 }
 function apply(ctx) {
+  if (typeof ctx.slots?.inject !== "function" || typeof ctx.slots?.register !== "function") throw new Error("\u5BBF\u4E3B\u7F3A\u5C11\u8F93\u5165\u6846\u69FD\u4F4D\u63A5\u53E3\uFF0C\u5DF2\u62D2\u7EDD\u542F\u7528\u622A\u56FE\u9644\u4EF6\u3002");
+  if (typeof ctx.remote?.commands?.execute !== "function") throw new Error("\u5BBF\u4E3B\u7F3A\u5C11 remote.commands.execute\uFF0C\u5DF2\u62D2\u7EDD\u542F\u7528\u622A\u56FE\u9644\u4EF6\u3002");
   const Button = (props) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SnipButton, { ...props, execute: (...args) => ctx.remote.commands.execute(...args) });
   ctx.slots.inject("conversation.input.left", () => ctx.slots.register({
     name: "conversation.input.left",

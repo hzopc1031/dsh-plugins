@@ -1,5 +1,4 @@
 import type { InputState, TokenSpan } from '@deepseek-ai/dsh-client-ui-conversation/client';
-export declare const SUPPORTED_VERSION = "0.2.1-rc.5";
 export declare const STORAGE_PREFIX = "dsh.conversation.";
 export interface Draft {
     readonly sessionId: string;
@@ -10,12 +9,13 @@ export interface StorageReader {
     key(index: number): string | null;
     getItem(key: string): string | null;
 }
-/** Exact boot release identity, never inferred from the draft's shape. */
-export declare function requireVersion(boot: unknown): void;
-/** Validate rc.5 semantic spans, but recover only their plain text projection. */
+/** Recognize both audited semantic formats, never guess at unknown fields. */
 export declare function draftText(value: unknown): string | undefined;
+/** Validate the public input shape before scanning storage or preparing an edit. */
+export declare function requireInput(input: unknown): asserts input is Pick<InputState, 'draft' | 'draftRev' | 'occurrences' | 'phase'>;
+export declare function requireCapabilities(input: unknown, actions: unknown): void;
 /** Enumerate storage independently of session-list visibility; never writes or deletes. */
-export declare function listDrafts(storage: StorageReader, boot: unknown): Draft[];
+export declare function listDrafts(storage: StorageReader): Draft[];
 export declare function copyText(draft: Draft): string;
 /** Append in detect coordinates (a reference chip counts as ONE character). */
 export declare function prepareAppend(draft: Draft, input: Pick<InputState, 'draft' | 'draftRev' | 'occurrences' | 'phase'>): {

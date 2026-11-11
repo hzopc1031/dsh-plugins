@@ -11,7 +11,7 @@ import { TOOL_NAMES } from '../lib/tools.js'
 import { fixtureFetch } from './fixture-http.mjs'
 import { osvFixtureFetch } from './osv-fixture-http.mjs'
 
-async function host(t, config = {}) {
+async function host(t, config = {}, web = false) {
   const root = await mkdtemp(path.join(os.tmpdir(), 'advisory-host-'))
   t.after(() => rm(root, { recursive: true, force: true }))
   t.mock.method(os, 'homedir', () => root)
@@ -35,6 +35,15 @@ async function host(t, config = {}) {
     constructor(ctx) { super(ctx, 'commands') }
     register(definition) { definitions.set(definition.name, definition); return () => definitions.delete(definition.name) }
   }
+  const routes = new Map()
+  class WebServer extends Service {
+    constructor(ctx) { super(ctx, 'webServer') }
+    register(route) { routes.set(route.path, route); return () => routes.delete(route.path) }
+  }
+  class Connection extends Service {
+    constructor(ctx) { super(ctx, 'connection') }
+    requestRejection() { return undefined }
+  }
   const originalGuard = Tools.prototype.guard, originalRestrict = Tools.prototype.restrict
   t.mock.method(Tools.prototype, 'guard', function (guard) {
     guards.push({ owner: scopeOf(this.ctx), guard })
@@ -45,6 +54,7 @@ async function host(t, config = {}) {
     return originalRestrict.call(this, filter)
   })
   for (const dependency of [Prompt, Tools, Agents, Commands]) disposals.push(await ctx.plugin(dependency))
+  if (web) for (const dependency of [WebServer, Connection]) disposals.push(await ctx.plugin(dependency))
   let scope
   const agent = { session: { header: { cwd: root } } }
   disposals.push(await ctx.plugin(Object.assign(inner => { scope = createScope(inner, agent); agent.ctx = scope.ctx }, { inject: ['tools'] })))
@@ -64,8 +74,16 @@ async function host(t, config = {}) {
     if (reason) throw new Error(reason)
     return JSON.parse(await definition.execute(args, exec))
   }
-  return { ctx, root, agent, definitions, fork, command, execute, calls, guards, restrictions }
+  return { ctx, root, agent, definitions, fork, command, execute, calls, guards, restrictions, routes }
 }
+
+test('web profile registers and disposes the native panel host route without fetching or requiring a chat turn', async t => {
+  const h = await host(t, {}, true)
+  assert.equal(h.routes.get('/advisory-impact/api').kind, 'exact')
+  assert.deepEqual(h.calls, [])
+  await h.fork.dispose()
+  assert.equal(h.routes.size, 0)
+})
 
 test('bundle registers Chinese-first help with every required caveat, no locale assumption or network call', async t => {
   assert.equal(plugin.name, 'advisory-impact')

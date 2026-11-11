@@ -80,3 +80,33 @@ const result = await evaluatePins({ config, projectDirectory, cache, osv, force:
 `createViewModel(Evaluation)` 是报告/后续原生 UI 的共享 JSON 证据模型：三态 label、原文范围/修复版本、notes、每个 pin、官方来源/UTC+8 时间/页面时间、来源错误/陈旧状态，以及独立 suppressions / OSV-only / OSV comparison。`advisories: null`、`source: null/error` 表示不可用，不能把计数 0 当成成功空清单。`renderReport` 不生成当前时间，只消费证据时间，因此固定输入给出确定的章节结构与正文；不调用模型。
 
 验证使用真实 Cordis Context、`createScope` 和已安装最低 dev peer `dsh-tools@0.2.1-rc.5` 注册器（其余宿主服务为小型测试替身），实际安装 restrict/guard 并检查跨调用者拒绝、清理及不影响其他工具。guard 回调在测试执行 helper 中调用，不冒充完整宿主工具执行管线。HTTP 全部使用带 provenance 的录制夹具；这不是启动 DSH 的 live load，也没有测试原生页面。上述 API 在最低 dev peers 下 build/typecheck 通过，engines 不需要提高；真实 CLI 加载/页面及实时来源冒烟仍留最终任务。
+
+## Task 5 原生公告影响面板（已接入）
+
+本节取代前文「后续 / 尚未接入」的阶段说明。复用 Task 4 的 `AdvisoryService`、`createViewModel` 与既有判定管线，没有第二套版本判定器，没有独立 HTML 产品页面。
+
+源码依据仍为只读 `fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159`：
+
+| 已用 API | 源码文件 + 符号 | 本包用法 |
+| --- | --- | --- |
+| 浏览器包发现 | `packages/client/modules/src/index.ts`：`clientExportOf`、`ClientModuleRegistry.resolveMeta`；`src/client/manifest.ts`：`ClientModuleLoader` 的 lazy factory 合同 | `exports["./client"]` 指向真实 `lib/client.js`；`dsh.client.platform: web`，inject layout/sidebar 两个包。`window.__ModuleLoader__.load({ id, factory })` 注册工厂，工厂内只从宿主 require React，避免第二份 React。 |
+| 原生页面 | `packages/client/ui-layout/src/client/index.ts`：`SlotMap['main']` | 注册 key `advisory-impact`。root 级主页面不需要 Session、Agent、聊天轮次或模型 key。 |
+| 侧栏入口 | `packages/client/ui-sidebar/src/client/contract/slots.ts`：`SlotMap['sidebar.panellist']`；`src/client/index.ts`：`apply` 的 `syncPanels` | 注册同名 id，中文 label「公告影响」。宿主提供导航按钮，不覆盖 sidebar owner。 |
+| slot 生命周期 | `packages/client/ui-renderer/src/client/registry.ts`：`SlotRegistry.inject`、`register`（委托 `SlotCore.register`）；`packages/client/ui-slots/src/index.ts`：`SlotCore.register`、`SlotLabel` | `ctx.slots.inject` 等待 owner 声明，再注册对应条目；卸载交还宿主管理的贡献。组件不接收 Context；CSS 注入由 Cordis `ctx.effect` 清理。 |
+| 本地 HTTP 路由 | `packages/host/webserver/src/index.ts`：`WebRoute`、`WebServer.register` | 仅注册 exact `/advisory-impact/api`，POST JSON，64 KiB 上限；`ctx.inject(['webServer', 'connection'], ...)` 保留无 web 服务 CLI 中的命令/工具能力。无需 Remote API、无上传。 |
+| 浏览器请求鉴权 | `packages/client/connection/src/rpc-host.ts`：`HostConnectionService.requestRejection`、`admit`；`src/rpc.ts`：`ConnectionTrustRequest` | 每次读取请求前调用宿主 Host/Origin 与活跃浏览器凭据检查，401/403 直接拒绝。客户端相对 URL，same-origin cookie；不读取或保存凭据。 |
+| 主题 | `packages/client/ui-theme/src/client/index.ts`：主题服务；`src/styles/design-platform.css`：`--dsw-alias-*`；`packages/client/ui-layout/src/client/theme-presenter.ts`：`ThemePresenter` | 背景/字体/边框/阴影使用 DSH tokens；单一 business accent，error/success/warn 三态语义色。没有插件级主题切换器。 |
+
+新宿主 peers `dsh-host-webserver`、`dsh-client-connection` 仍用 optional peer + 精确 devDependency `0.2.1-rc.5`；最小版本声明中已有 `register` / `requestRejection`，build/typecheck 通过，故不提高 engines 下限。React 18.3.1 是宿主提供的 optional peer，开发测试使用同一实例。TypeScript 现有依赖完成 JSX 编译和两模块工厂封装，无新增运行时依赖或浏览器依赖。
+
+原生面板的使用路径：侧栏「公告影响」→ 输入本机已有项目的绝对路径并读取 → 填写运行版本/关注列表 → 点击「核对 / 刷新」（强制抓取）或「使用缓存核对」（TTL）。读取配置不联网；无默认 pin。变更配置后清除旧判定，要求重新核对。项目目录作为本机 UI 的显式选择传入；拒绝未知参数、`..`、符号链接，配置/报告仍沿用固定文件名和现有边界。模型工具的 scoped restrict/guard 继续生效，未放宽。
+
+总览以公告 × 项目计数，附全部相关来源链接、最早成功抓取时间 chip 和各来源详细状态。来源不可用显示「—」，部分清单明确标注部分；OSV 未进行 Maven 查询不显示成 0。`panelOverview` 不重判 CVE，只汇总已有语义、判断 TTL 与失败。官方卡片保留原文范围/修复版本、逐 pin 结果、官方原文和 UTC+8 抓取时间，限制语言可展开；OSV 404/失败/分歧独立可见。Suppressions 与 OSV-only 始终独立，未知项目显示无适配器。长列表按需展开，刷新中保留上次结果，来源失败显示最后成功时间与错误。可在面板查看/复制中文 Markdown；命令/工具继续支持保存报告。
+
+参考仅借鉴模式与视觉组织，界面和脚本为本包重新编写：
+
+- `dsh-context`（Apache-2.0）：`insightPage.ts` 的 main + sidebar seats、`base.css` / `overview.css` 的主题卡片、层级字体、统计卡与分段按钮、empty/error/retry 状态、窄容器响应式布局。采用更宽的阅读间距，不复制其分析业务、图表或源码。
+- `dsh-context-effort`（MIT）：`slots.inject/register` 生命周期、host React 的 lazy factory、紧凑 chips、可展开说明和 disabled/loading 控件；不引入模型选择逻辑。
+- `dsh-media-desk` 参考克隆与已安装副本（MIT）：相同 manifest/host 路由注册方式、每请求 `connection.requestRejection`、相对 URL 请求；借鉴原生主题 token、圆角、留白及空状态组织。不使用其模型/图片/账号功能或素材，不复制源码。
+
+离线验证：真实 Cordis 插件注册/卸载测试覆盖 optional web route；结构化 slot harness 验证原生条目和清理；在 Node VM 按宿主工厂协议加载实际打包的客户端，使用同一 React 的 test renderer 驱动面板交互；所有 HTTP 由带 provenance 的录制夹具或故障注入回放。未启动真实 DSH、未做浏览器像素/明暗主题截图或实时来源烟测，这些仍由 Task 6 完成。

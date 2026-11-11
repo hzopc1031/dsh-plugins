@@ -6,6 +6,7 @@ import { OsvClient } from './osv.js';
 import { createHttpClient, createOsvHttpClient } from './http.js';
 import { AdvisoryService, parseInput } from './surface.js';
 import { argumentError, directoryError, toolDefinitions, TOOL_NAMES } from './tools.js';
+import { registerPanel } from './panel-host.js';
 export { evaluateProject, parseAffectedRanges } from './verdicts.js';
 export { Config, DEFAULT_WATCH, DEFAULT_TTL_MS, PIN_FILE, parseSettings, loadSettings, saveSettings } from './config.js';
 export { SourceCache } from './cache.js';
@@ -88,5 +89,5 @@ export function apply(ctx, config = {}) {
         fibers.clear();
         await Promise.all(pending.map(fiber => fiber.dispose()));
     });
-    // Native UI hook: docs/dsh-api.md specifies main + sidebar.panellist; no chat/model dependency.
+    registerPanel(ctx, service);
 }

@@ -11,7 +11,8 @@
       "default": "./index.js"
     },
     "./locale/*.json": "./locale/*.json",
-    "./icon": "./icon.svg"
+    "./icon": "./icon.svg",
+    "./client": "./lib/client.js"
   },
   "files": [
     "index.js",
@@ -33,6 +34,13 @@
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-layout",
+        "@deepseek-ai/dsh-client-ui-sidebar"
+      ]
     }
   },
   "license": "MIT",
@@ -52,7 +60,7 @@
     "url": "https://github.com/hzopc1031/dsh-plugins/issues"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node scripts/build-client.mjs",
     "typecheck": "tsc --noEmit",
     "test": "npm run build && node --test --test-isolation=none test/*.test.mjs",
     "verify-pack": "node scripts/verify-pack.mjs"
@@ -63,10 +71,13 @@
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": ">=4.0.5 <4.2.0",
+    "@deepseek-ai/dsh-agent": ">=0.2.1-rc.5 <0.3.0",
+    "@deepseek-ai/dsh-client-connection": ">=0.2.1-rc.5 <0.3.0",
     "@deepseek-ai/dsh-commands": ">=0.2.1-rc.5 <0.3.0",
-    "@deepseek-ai/schemastery": ">=3.18.5 <3.20.0",
+    "@deepseek-ai/dsh-host-webserver": ">=0.2.1-rc.5 <0.3.0",
     "@deepseek-ai/dsh-tools": ">=0.2.1-rc.5 <0.3.0",
-    "@deepseek-ai/dsh-agent": ">=0.2.1-rc.5 <0.3.0"
+    "@deepseek-ai/schemastery": ">=3.18.5 <3.20.0",
+    "react": "^18.3.1"
   },
   "peerDependenciesMeta": {
     "@deepseek-ai/cordis": {
@@ -83,15 +94,29 @@
     },
     "@deepseek-ai/dsh-agent": {
       "optional": true
+    },
+    "@deepseek-ai/dsh-host-webserver": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-client-connection": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
     }
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "4.0.5",
     "@deepseek-ai/dsh-agent": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-client-connection": "0.2.1-rc.5",
     "@deepseek-ai/dsh-commands": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-host-webserver": "0.2.1-rc.5",
     "@deepseek-ai/dsh-tools": "0.2.1-rc.5",
     "@deepseek-ai/schemastery": "3.18.5",
     "@types/node": "22.19.0",
+    "@types/react": "18.3.27",
+    "react": "18.3.1",
+    "react-test-renderer": "18.3.1",
     "typescript": "5.9.3"
   }
 }

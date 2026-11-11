@@ -1,9 +1,9 @@
 import { loadSettings, parseSettings, saveSettings, PIN_FILE, type ProductPin } from './config.js'
 import { evaluatePins, type EvaluateOptions } from './evaluate.js'
-import { createViewModel, osvView, summarize } from './view-model.js'
+import { createViewModel, osvView, summarize, type AdvisoryViewModel } from './view-model.js'
 import { openReport, renderReport, saveReport } from './report.js'
 
-export const HELP = `官方公告影响核对（开发中：原生面板尚未接入）
+export const HELP = `官方公告影响核对
 针对你自行填写的运行版本，在本地核对官方安全公告。
 官方页面为判定依据；OSV 仅作第二来源，可能返回未收录（HTTP 404），分歧并列保留。
 官方 suppressions 单列为「扫描器报了，但官方说明不适用」，并引用 ASF 依赖漏洞说明。
@@ -27,11 +27,11 @@ Flink 的 ASF 列表为实验性，覆盖 2023 年以来的公告，可能滞后
 pin/watch 写入当前项目 .advisory-impact.json；修改 pin 不会自动加入关注列表。
 工具 advisory_impact_pin/watch/refresh/report/open/lookup 默认返回摘要，清单最多 20 条并标明截断；report 工具保存报告，open 工具返回已校验路径和大小。
 所有项目文件使用固定文件名；缓存位于插件自有 ~/.cache/dsh-advisory-impact，官方判定旁保留来源与 UTC+8 抓取时间。
-命令可直接运行，无需聊天模型；DSH 原生面板仍在开发中。`
+命令可直接运行，无需聊天模型；也可从 DSH 侧栏打开「公告影响」原生面板，选择本地项目后填写版本并核对。`
 
-export type Action = 'help' | 'pin' | 'watch' | 'refresh' | 'report' | 'open' | 'lookup'
+export type Action = 'help' | 'pin' | 'watch' | 'refresh' | 'report' | 'open' | 'lookup' | 'view'
 export interface ActionArgs { project?: string; version?: string; component?: string; maven?: string; remove?: boolean; watch?: string[]; save?: boolean; id?: string }
-export interface SurfaceResult { text: string; summary: unknown }
+export interface SurfaceResult { text: string; summary: unknown; view?: AdvisoryViewModel }
 
 export function parseInput(input: string): { action: Action; args: ActionArgs } {
   const [verb = 'help', ...parts] = input.trim().split(/\s+/).filter(Boolean)
@@ -56,7 +56,7 @@ export function parseInput(input: string): { action: Action; args: ActionArgs } 
   return bad()
 }
 
-/** The command, tools and later native UI share this model-free service. */
+/** The command, tools and native UI share this model-free service. */
 export class AdvisoryService {
   private chain: Promise<unknown> = Promise.resolve()
   constructor(private readonly options: Omit<EvaluateOptions, 'projectDirectory' | 'force'>) {}
@@ -97,7 +97,7 @@ export class AdvisoryService {
     const evaluation = await evaluatePins({ ...this.options, projectDirectory: directory, force: action === 'refresh', signal })
     signal.throwIfAborted()
     const view = createViewModel(evaluation)
-    if (action === 'refresh') return respond(summarize(view), '来源刷新完成，请核对各来源的失败/陈旧状态：')
+    if (action === 'refresh' || action === 'view') return { ...respond(summarize(view), '来源核对完成，请核对各来源的失败/陈旧状态：'), view }
     if (action === 'lookup') {
       const official = view.projects.flatMap(p => (p.advisories ?? []).filter(a => a.id === id).map(a => ({ project: p.project, ...a })))
       const osv = official[0]?.osv.lookup ?? osvView(await this.options.osv.lookup(id!, evaluation.settings.cacheTtlMs))

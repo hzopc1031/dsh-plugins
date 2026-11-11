@@ -1,9 +1,12 @@
+import type { SecurityReport } from './security.js';
 import type { Context } from '@deepseek-ai/cordis';
 import type { RadarAction, RadarArgs } from './radar.js';
 import type { CountsReport } from './counts.js';
 import type { FeedSource, FeedWindow } from './feeds.js';
 import type { itemSummary } from './radar.js';
 export interface DashboardData {
+    security?: SecurityReport;
+    pins?: Record<string, string>;
     directories: string[];
     directory?: string;
     watchList?: string[];

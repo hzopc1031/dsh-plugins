@@ -1,3 +1,4 @@
+import type { SecurityReport } from './security.js'
 import type { Context } from '@deepseek-ai/cordis'
 import type { RadarAction, RadarArgs } from './radar.js'
 import type { CountsReport } from './counts.js'
@@ -6,6 +7,8 @@ import type { itemSummary } from './radar.js'
 import { validDirectory } from './local-files.js'
 
 export interface DashboardData {
+  security?: SecurityReport
+  pins?: Record<string, string>
   directories: string[]
   directory?: string
   watchList?: string[]
@@ -30,9 +33,9 @@ export function dashboardHandler(run: Run, directories: () => string[]) {
     try {
       const body = await request.json() as Record<string, unknown>
       if (!body || Array.isArray(body) || typeof body !== 'object'
-        || Object.keys(body).some(key => !['directory', 'action', 'project'].includes(key))) throw new Error('无效的面板请求。')
+        || Object.keys(body).some(key => !['directory', 'action', 'project', 'version', 'cve'].includes(key))) throw new Error('无效的面板请求。')
       const { directory, action = 'read', project } = body
-      if (typeof action !== 'string' || !['read', 'refresh', 'brief', 'add', 'remove', 'file'].includes(action)) throw new Error('未知操作。')
+      if (typeof action !== 'string' || !['read', 'refresh', 'brief', 'add', 'remove', 'file', 'pin', 'osv'].includes(action)) throw new Error('未知操作。')
       if (directory !== undefined && !validDirectory(directory)) throw new Error('请选择本地绝对目录，不能包含 ..。')
       const available = directories()
       const target = directory ?? (available.length === 1 ? available[0] : undefined)
@@ -43,6 +46,9 @@ export function dashboardHandler(run: Run, directories: () => string[]) {
       if (action === 'file') {
         const saved = JSON.parse(await run(target, 'open', { includeMarkdown: true }))
         return new Response(saved.markdown, { headers: { 'content-type': 'text/markdown; charset=utf-8', 'cache-control': 'no-store' } })
+      }
+      if (action === 'pin' || action === 'osv') {
+        await run(target, action, { project: body.project as string, version: body.version as string, cve: body.cve as string })
       }
       if (action === 'add' || action === 'remove') {
         if (typeof project !== 'string') throw new Error('请输入项目 id。')

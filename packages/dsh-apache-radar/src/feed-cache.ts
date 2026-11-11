@@ -8,8 +8,11 @@ function validate(value: unknown): FeedCacheEntry {
   const entry = value as Partial<FeedCacheEntry>
   if (typeof entry.url !== 'string' || publicSourceUrl(entry.url) !== entry.url
     || typeof entry.payload !== 'string' || typeof entry.fetchedAt !== 'string' || !Number.isFinite(Date.parse(entry.fetchedAt))
+    || (entry.cacheError !== undefined && typeof entry.cacheError !== 'string')
+    || (entry.status !== undefined && ![200, 404].includes(entry.status))
+    || (entry.status === 404 && !entry.url.startsWith('https://api.osv.dev/v1/vulns/'))
     || (entry.sourceTimestamp !== undefined && typeof entry.sourceTimestamp !== 'string')) throw new Error('Invalid feed cache metadata')
-  return { url: entry.url, fetchedAt: entry.fetchedAt, payload: entry.payload, sourceTimestamp: entry.sourceTimestamp }
+  return { url: entry.url, fetchedAt: entry.fetchedAt, payload: entry.payload, sourceTimestamp: entry.sourceTimestamp, ...(entry.cacheError === undefined ? {} : { cacheError: entry.cacheError }), ...(entry.status === undefined ? {} : { status: entry.status }) }
 }
 
 export async function loadFeedCache(directory: string): Promise<FeedCache> {
@@ -51,7 +54,7 @@ export async function readCachedSource<T extends { sourceTimestamp?: string }>(
     return { ...parsed, url, fetchedAt: response.fetchedAt, sourceTimestamp: parsed.sourceTimestamp ?? response.sourceTimestamp }
   }
   try {
-    if (previous && age >= 0 && age < ttlMs) return { ...await parse(previous), cacheStatus: 'cached' }
+    if (previous && age >= 0 && age < ttlMs) return { ...await parse(previous), cacheStatus: previous.cacheError ? 'stale' : 'cached', cacheError: previous.cacheError }
     const response = await http(url)
     const result = await parse(response)
     options.cache?.set(url, { ...response, sourceTimestamp: result.sourceTimestamp })
@@ -59,7 +62,11 @@ export async function readCachedSource<T extends { sourceTimestamp?: string }>(
   } catch (cause) {
     const cacheError = `${url}: ${cause instanceof Error ? cause.message : String(cause)}`
     if (previous) {
-      try { return { ...await parse(previous), cacheStatus: 'stale', cacheError } }
+      try {
+        const result = await parse(previous)
+        options.cache?.set(url, { ...previous, cacheError })
+        return { ...result, cacheStatus: 'stale', cacheError }
+      }
       catch { throw new Error(`${cacheError}; 上次缓存也不可解析，未使用。`, { cause }) }
     }
     throw new Error(cacheError, { cause })

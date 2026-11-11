@@ -218,7 +218,7 @@ test('TTL cache retains raw payload/URL/fetch time and last-good data on HTTP, t
     assert.equal(source.status, 'stale')
     assert.equal(source.fetchedAt, before.fetchedAt)
     assert.match(source.error, /503|timeout|Truncated/)
-    assert.deepEqual(cache.get(PROPOSAL_SOURCES.kafka), before)
+    assert.deepEqual(cache.get(PROPOSAL_SOURCES.kafka), { ...before, cacheError: source.error })
     assert.deepEqual(stale.undatedItems.filter(i => i.kind === 'proposal'), first.undatedItems.filter(i => i.kind === 'proposal'))
   }
   const refreshed = await collectWatchFeeds(replay({ at: '2026-11-11T06:00:00.000Z' }), {
@@ -295,7 +295,7 @@ test('notes failures preserve catalogued releases and existing notes cache', asy
   const failed = await collectWatchFeeds(replay({ fail: url => url === KAFKA_DOWNLOADS }), { ...settings, now: new Date('2026-10-21T00:00:01+08:00') })
   assert.deepEqual(failed.items, first.items)
   assert.equal(failed.sources.find(s => s.kind === 'release-notes').status, 'stale')
-  assert.deepEqual(cache.get(KAFKA_DOWNLOADS), original)
+  assert.deepEqual(cache.get(KAFKA_DOWNLOADS), { ...original, cacheError: failed.sources.find(s => s.kind === 'release-notes').error })
   const noCache = await collectWatchFeeds(replay({ fail: url => url === KAFKA_DOWNLOADS }), { ...settings, cache: new Map() })
   assert.ok(noCache.items.length > 0)
   assert.ok(noCache.items.every(i => i.kind === 'release' && i.notesStatus === 'failed' && i.url === SOURCES.releases))

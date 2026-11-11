@@ -63,7 +63,7 @@ export interface FeedReport {
   items: FeedItem[]
   undatedItems: FeedItem[]
 }
-export interface FeedCacheEntry extends SourceResponse { sourceTimestamp?: string }
+export interface FeedCacheEntry extends SourceResponse { sourceTimestamp?: string; cacheError?: string }
 export type FeedCache = Map<string, FeedCacheEntry>
 interface Parsed<T> { data: T; sourceTimestamp?: string; warnings: string[] }
 

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { MarkdownText } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { DashboardData } from './dashboard.js'
 import type { Citation, CountRow } from './counts.js'
+import type { ProjectSecurity, SecurityReport, SecuritySource } from './security.js'
 import type { FeedSource } from './feeds.js'
 
 type Item = NonNullable<DashboardData['items']>[number]
@@ -11,6 +12,21 @@ const time = (value?: string | null) => value ? new Intl.DateTimeFormat('sv-SE',
   year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(value)) : '尚未成功抓取'
 const statusName = (value: string) => ({ ok: '已更新', cached: '缓存', stale: '上次成功缓存', failed: '抓取失败', unavailable: '暂无来源' })[value] ?? value
 const labels = { code: { copyLabel: '复制', copiedLabel: '已复制' }, footnotes: '注释' }
+
+export function securityOverview(report: SecurityReport) {
+  const affected = report.projects.filter(p => p.advisories.some(a => a.verdict === 'affected'))
+  return { watched: report.projects.length, affected: affected.map(p => p.project), unpinned: report.projects.filter(p => !p.pin).length,
+    incomplete: report.projects.filter(p => !p.source?.data || p.source.status === 'stale').length }
+}
+export function jiraCves(title: string, security: boolean, project?: ProjectSecurity) {
+  if (!security) return []
+  return [...new Set(title.match(/CVE-\d{4}-\d{4,}/gi)?.map(id => id.toUpperCase()) ?? [])].map(id => {
+    const advisory = project?.advisories.find(a => a.id === id)
+    return { id, status: advisory ? 'published' : project?.source?.data ? 'not_published' : 'unknown',
+      label: advisory ? '官方已公布' : project?.source?.data ? '官方尚未公布' : '官方列表不可用，无法核对',
+      url: advisory?.url, fetchedAt: project?.source?.fetchedAt, stale: project?.source?.status === 'stale' }
+  })
+}
 
 export function groupIssues(items: Item[]): { label: string; items: Item[] }[] {
   const groups = new Map<string, Item[]>()
@@ -42,13 +58,13 @@ export function CountCard({ row, title, featured = false }: { row: CountRow; tit
     <p className="ar-note">{row.status === 'error' ? row.error : row.note}</p>
     {row.sources.map((source, i) => <SourceChip key={i} source={source}/>)}</article>
 }
-export function Overview({ data }: { data: DashboardData }) {
+export function Overview({ data, jump }: { data: DashboardData; jump?: (project: string) => void }) {
   const counts = data.counts!
   const titles = ['当前列示', '顶级项目 · TLP', '孵化项目 · Podlings', '项目委员会 · PMC', '全部委员会']
   const mismatches = counts.comparisons.filter(c => c.status !== 'match')
   return <>
     <div className="ar-section-heading"><div><h2>从不同口径，看 Apache</h2><p>项目、委员会与孵化项目各有定义，数字保留各自的出处。</p></div><Badge>官方公开来源</Badge></div>
-    <div className="ar-metrics">{counts.counts.slice(0, 5).map((row, i) => <CountCard key={row.id} row={row} title={titles[i]} featured={i === 0}/>)}</div>
+    <div className="ar-metrics">{counts.counts.slice(0, 5).map((row, i) => <CountCard key={row.id} row={row} title={titles[i]} featured={i === 0}/>)}{data.security && <SecurityCard report={data.security} jump={jump}/>}</div>
     <div className="ar-two-col">
       <section className="ar-card ar-section"><div className="ar-card-heading"><h3>退休口径，放在一起看</h3><Badge tone="warn">不合并为总数</Badge></div><p className="ar-muted">退休委员会、Attic 项目与子项目，范围并不相同。</p>
         <div className="ar-retired">{counts.retired.map(row => <div key={row.id} className="ar-retired-cell"><span>{({ 'retired-whimsy': 'Whimsy 委员会', 'retired-projects': 'Projects 委员会', 'attic-pmcs': 'Attic PMC', 'attic-subprojects': 'Attic 子项目' })[row.id] ?? row.label}</span>
@@ -69,20 +85,24 @@ export function Overview({ data }: { data: DashboardData }) {
     </details>
   </>
 }
-function ItemRow({ item }: { item: Item }) {
+function ItemRow({ item, security }: { item: Item; security?: ProjectSecurity }) {
   const kind = ({ release: '发布', jira: 'JIRA', proposal: '提案' })[item.kind]
   return <article className={`ar-item ${item.security ? 'ar-security' : ''}`}>
     <div className="ar-item-meta"><Badge tone={item.security ? 'danger' : ''}>{item.security ? `安全 · ${kind}` : kind}</Badge>
       {item.status && <Badge tone={['accepted', 'implemented', 'released'].includes(item.status) ? 'good' : ''}>{item.statusText ?? item.status}</Badge>}
       <span>{item.kind === 'jira' ? item.id : item.version}</span><time>{item.date ? time(item.date).slice(0, 10) : '日期未知 · 参考条目'}</time></div>
     <a className="ar-item-title" href={item.url} target="_blank" rel="noreferrer">{item.title}<span aria-label="打开原文"> ↗</span></a>
+    {!!item.security && jiraCves(item.title, true, security).map(cve => <div className="ar-cve-chip" key={cve.id}>
+      {cve.status === 'published' ? <button onClick={() => revealAdvisory(`${item.project}-${cve.id}`)}>{cve.id} · {cve.label} ↗</button> : <Badge>{cve.id} · {cve.label}</Badge>}
+      <span className="ar-footnote">按已抓取官方列表核对 · {time(cve.fetchedAt)}{cve.stale ? ' · 旧缓存' : ''}</span>
+    </div>)}
     {!!item.fixVersions?.length && <p className="ar-footnote">目标版本 {item.fixVersions.join('、')} · 不代表已经发布</p>}
     <div className="ar-item-links"><a href={item.sourceUrl} target="_blank" rel="noreferrer">采集来源 ↗</a>{item.notesUrl && <a href={item.notesUrl} target="_blank" rel="noreferrer">版本说明 ↗</a>}</div>
   </article>
 }
-function ItemList({ items, empty }: { items: Item[]; empty: string }) {
+function ItemList({ items, empty, security }: { items: Item[]; empty: string; security?: ProjectSecurity }) {
   const [expanded, setExpanded] = useState(false)
-  return <>{items.length ? (expanded ? items : items.slice(0, 4)).map(item => <ItemRow key={item.url} item={item}/>) : <p className="ar-empty-inline">{empty}</p>}
+  return <>{items.length ? (expanded ? items : items.slice(0, 4)).map(item => <ItemRow key={item.url} item={item} security={security}/>) : <p className="ar-empty-inline">{empty}</p>}
     {items.length > 4 && <button className="ar-more" onClick={() => setExpanded(!expanded)} aria-expanded={expanded}>{expanded ? '收起' : '展开其余条目'}</button>}</>
 }
 function Sources({ sources }: { sources: FeedSource[] }) {
@@ -91,10 +111,12 @@ function Sources({ sources }: { sources: FeedSource[] }) {
       <p className="ar-footnote">{time(s.fetchedAt)}{s.sourceTimestamp ? ` · 源时间 ${s.sourceTimestamp}` : ''}</p>
       {s.error && <p className="ar-error-text">{s.error}</p>}{s.warnings.map((w, n) => <p className="ar-footnote" key={n}>{w}</p>)}</div></div>)}</div>
 }
-export function Watch({ data, mutate, busy }: { data: DashboardData; mutate: (action: string, project?: string) => void; busy: boolean }) {
-  const [selected, setSelected] = useState(data.watchList?.[0] ?? '')
+type Mutate = (action: string, project?: string, extra?: { version?: string; cve?: string }) => void
+export function Watch({ data, mutate, busy, focusProject }: { data: DashboardData; mutate: Mutate; busy: boolean; focusProject?: string }) {
+  const [selected, setSelected] = useState(focusProject ?? data.watchList?.[0] ?? '')
   const [newId, setNewId] = useState('')
   const project = data.watchList?.includes(selected) ? selected : data.watchList?.[0] ?? ''
+  const security = data.security?.projects.find(p => p.project === project)
   const items = data.items?.filter(i => i.project === project) ?? []
   const undated = data.undatedItems?.filter(i => i.project === project) ?? []
   const sources = data.sources?.filter(s => !s.project || s.project === project) ?? []
@@ -103,21 +125,76 @@ export function Watch({ data, mutate, busy }: { data: DashboardData; mutate: (ac
     <div className="ar-watch-toolbar"><div className="ar-segment" role="group" aria-label="关注项目">{data.watchList?.map(id => <button aria-pressed={project === id} key={id} onClick={() => setSelected(id)}>{projectName(id)}</button>)}</div>
       <form onSubmit={e => { e.preventDefault(); mutate('add', newId); setNewId('') }}><input aria-label="添加项目 id" placeholder="项目 id，如 spark" pattern="[a-zA-Z][a-zA-Z0-9-]*" required value={newId} onChange={e => setNewId(e.target.value)}/><button disabled={busy}>＋ 关注</button></form>
       {project && <button disabled={busy} onClick={() => mutate('remove', project)} aria-label={`取消关注 ${projectName(project)}`}>取消关注</button>}</div>
-    {project ? <><div className="ar-two-col"><section className="ar-card ar-section"><div className="ar-card-heading"><h3>{projectName(project)} · 正式发布</h3><Badge>官方发布目录</Badge></div>
+    {project ? <><SecurityStrip key={project + (security?.pin ?? "")} project={project} security={security} report={data.security} mutate={mutate} busy={busy} expanded={focusProject === project}/><div className="ar-two-col"><section className="ar-card ar-section"><div className="ar-card-heading"><h3>{projectName(project)} · 正式发布</h3><Badge>官方发布目录</Badge></div>
       <ItemList key={project + 'release'} items={items.filter(i => i.kind === 'release')} empty="窗口内无已收录发布；请同时核对下方来源状态。"/>
     </section><section className="ar-card ar-section"><div className="ar-card-heading"><h3>{project === 'kafka' ? 'Kafka · KIP' : project === 'flink' ? 'Flink · FLIP' : projectName(project) + ' · 提案'}</h3><Badge>保留来源状态</Badge></div>
       <ItemList key={project + 'proposal'} items={items.filter(i => i.kind === 'proposal')} empty={project === 'hadoop' ? 'Hadoop 没有已验证的通用 HIP 索引。' : '窗口内暂无已收录提案；日期未知条目在下方单列。'}/>
     </section></div>
     <section className="ar-card ar-section"><div className="ar-card-heading"><h3>JIRA · 按类型与状态整理</h3><Badge>工单 ≠ 已发布功能</Badge></div>
       <p className="ar-muted">仅抓取关注项目的首个响应页；New Feature 和目标版本不证明已经发布。</p>
-      {groupIssues(items).length ? groupIssues(items).map(group => <details className="ar-issue-group" key={project + group.label} open={group.label === '安全'}><summary>{group.label}</summary><ItemList items={group.items} empty=""/></details>) : <p className="ar-empty-inline">窗口内暂无已收录 JIRA；来源失败时不能解释为零更新。</p>}
+      {groupIssues(items).length ? groupIssues(items).map(group => <details className="ar-issue-group" key={project + group.label} open={group.label === '安全'}><summary>{group.label}</summary><ItemList items={group.items} empty="" security={security}/></details>) : <p className="ar-empty-inline">窗口内暂无已收录 JIRA；来源失败时不能解释为零更新。</p>}
     </section>
     <details className="ar-card ar-section"><summary>日期未知的提案与参考条目 · 不计为本周新增</summary><ItemList key={project + 'undated'} items={undated} empty="暂无日期未知的参考条目。"/></details>
     <details className="ar-card ar-section"><summary>采集窗口与来源状态</summary><p className="ar-muted">{data.window?.label}</p><Sources sources={sources}/></details></> : <div className="ar-card ar-empty"><h3>关注列表是空的</h3><p>添加一个项目 id，开始整理它的动态。</p></div>}
   </>
 }
+
+const verdictName = { affected: '受影响', not_affected: '不受影响', unknown: '无法判断' }
+const verdictTone = { affected: 'danger', not_affected: 'good', unknown: '' }
+function revealAdvisory(id: string) {
+  const row = document.getElementById(id)
+  for (let node = row; node; node = node.parentElement) if (node instanceof HTMLDetailsElement) node.open = true
+  row?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  row?.focus({ preventScroll: true })
+}
+function SecurityCitation({ source }: { source?: SecuritySource<unknown> }) {
+  if (!source) return null
+  return <div className="ar-citation"><a href={source.url} target="_blank" rel="noreferrer">{new URL(source.url).hostname} ↗</a><span>抓取 {time(source.fetchedAt)} · UTC+8{source.status === 'stale' ? ' · 上次成功缓存' : ''}</span>{source.sourceTimestamp && <span>源时间 {source.sourceTimestamp}</span>}
+    {source.error && <details className="ar-source-error"><summary>来源失败 · 查看原因</summary><span className="ar-error-text">{source.error}</span></details>}</div>
+}
+export function SecurityCard({ report, jump }: { report: SecurityReport; jump?: (project: string) => void }) {
+  const summary = securityOverview(report)
+  return <article className="ar-card ar-metric ar-security-card"><div className="ar-eyebrow">关注组件 · 版本与安全</div>
+    <strong className="ar-number">{summary.incomplete ? summary.affected.length ? `≥${summary.affected.length}` : '—' : summary.affected.length}<small> / {summary.watched}</small></strong>
+    <p className="ar-note">当前版本有官方公告影响的组件<br/>{summary.unpinned} 个未填运行版本{summary.incomplete ? ` · ${summary.incomplete} 个来源待核对` : ''}</p>
+    {report.projects.map(p => <div className="ar-security-scope" key={p.project}><button className="ar-project-jump" onClick={() => jump?.(p.project)}>{projectName(p.project)}{summary.affected.includes(p.project) ? ' · 受影响' : !p.pin ? ' · 未填版本' : ''} ↗</button>
+      {p.source && <><a className="ar-footnote" href={p.source.url} title={p.source.url} target="_blank" rel="noreferrer">官方来源 ↗</a><span className="ar-footnote">{time(p.source.fetchedAt)} · UTC+8{p.source.status === 'stale' ? ' · 旧缓存' : ''}</span>{p.source.sourceTimestamp && <span className="ar-footnote">源时间 {p.source.sourceTimestamp}</span>}{p.source.error && <details className="ar-source-error"><summary>来源失败</summary><span>{p.source.error}</span></details>}</>}{p.error && <p className="ar-error-text">{p.error}</p>}</div>)}
+  </article>
+}
+export function SecurityStrip({ project, security, report, mutate, busy, expanded = false }: {
+  project: string; security?: ProjectSecurity; report?: SecurityReport; mutate: Mutate; busy: boolean; expanded?: boolean
+}) {
+  const [version, setVersion] = useState(security?.pin ?? '')
+  const affected = security?.advisories.filter(a => a.verdict === 'affected').length ?? 0
+  const unknown = security?.advisories.filter(a => a.verdict === 'unknown').length ?? 0
+  const supported = ['kafka', 'hadoop', 'flink'].includes(project)
+  return <section className="ar-card ar-section ar-security-strip">
+    <div className="ar-card-heading"><div><h3>{projectName(project)} · 版本与安全</h3><p className="ar-muted">{security?.pin ? `你在用 ${security.pin} · ${security.source?.data ? `${affected} 个已收录官方公告影响此版本 · ${unknown} 个无法判断 · 官方修复逐项见下方` : '官方列表不可用，无法判断'}` : '填写你实际运行的版本，按官方范围立即核对。'}{security?.source?.status === 'stale' ? ' · 上次成功缓存' : ''}</p></div><Badge tone={affected ? 'danger' : ''}>{security?.pin ? '官方范围匹配' : '未填版本 · 无法判断'}</Badge></div>
+    {supported && <form className="ar-pin-form" onSubmit={e => { e.preventDefault(); mutate('pin', project, { version }) }}><label htmlFor={`ar-pin-${project}`}>运行版本</label><input id={`ar-pin-${project}`} aria-label={`${projectName(project)} 运行版本`} placeholder="输入实际版本，如 3.9.0" value={version} maxLength={200} onChange={e => setVersion(e.target.value)}/><button disabled={busy} className="ar-primary">保存版本并判断</button>{security?.pin && <button type="button" disabled={busy} onClick={() => mutate('pin', project, { version: '' })}>清除</button>}</form>}
+    <SecurityCitation source={security?.source}/>
+    {security?.error && <p className="ar-error-text">{security.error}</p>}
+    {security?.notices.map(n => <p className="ar-footnote" key={n}>{n}</p>)}
+    {project === 'flink' && <SecurityCitation source={report?.flinkPointer}/>}
+    <details className="ar-advisories" open={expanded || undefined}><summary>官方安全公告 · 展开逐项判定与修复版本</summary>
+      <p className="ar-footnote">不同公告的修复版本分别列出；组件、配置与限制条件须逐项核对。判定不构成生产安全或升级结论。</p>
+      {security?.advisories.map(a => <details className="ar-advisory" id={`${project}-${a.id}`} key={a.id} tabIndex={-1} onToggle={e => {
+        if (e.currentTarget.open && a.osv.status === 'unqueried') mutate('osv', project, { cve: a.id })
+      }}><summary><Badge tone={verdictTone[a.verdict]}>{verdictName[a.verdict]}</Badge><b>{a.id}</b><span>{a.title}</span><span className="ar-advisory-source"><a href={a.url} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}>官方原文 ↗</a> · 抓取 {time(a.fetchedAt)} · UTC+8{a.sourceTimestamp ? ` · 源时间 ${a.sourceTimestamp}` : ""}</span></summary>
+        <div className="ar-advisory-body"><p>{a.reason}</p><dl><dt>官方受影响范围</dt><dd>{a.affectedText}</dd><dt>官方修复版本</dt><dd>{a.fixedText ?? '官方未明确列出'}</dd></dl>
+        <SecurityCitation source={{ url: a.url, fetchedAt: a.fetchedAt, sourceTimestamp: a.sourceTimestamp, status: security.source!.status, data: null }}/>
+        <details className="ar-limits"><summary>官方原文与限制条件</summary>{a.notes.map((note, i) => <p key={i}>{note}</p>)}</details>
+        <div className="ar-osv"><h4>OSV · 第二来源</h4><p>{a.osv.data?.label ?? (a.osv.status === 'unqueried' ? '展开后按需查询，不用于官方判定。' : '查询失败，不影响官方判定。')}</p>{a.osvDifference && <p className="ar-error-text">OSV 与官方范围表述不同；官方判定保持不变，请分别核对组件和范围。</p>}<SecurityCitation source={a.osv}/>{a.osv.status === 'failed' && <button disabled={busy} onClick={() => mutate('osv', project, { cve: a.id })}>重试 OSV</button>}{a.osv.data?.record && <pre>{JSON.stringify(a.osv.data.record.affected, null, 2)}</pre>}</div>
+        </div></details>)}
+      {!security?.advisories.length && <p className="ar-empty-inline">{security?.error ?? '尚未采集官方列表，请刷新；不能据此认定没有公告。'}</p>}
+      {project === 'kafka' && <details className="ar-suppressions"><summary>扫描器报了，但官方说明不适用 · 单独查看</summary><p className="ar-footnote">官方 suppressions 不计为影响 Kafka 的公告。</p><SecurityCitation source={report?.suppressions}/>{report?.suppressions?.data?.suppressions.map(a => <article key={a.id}><b>{a.id}</b><p>{a.notes}</p><SecurityCitation source={{ ...report.suppressions!, url: a.url, fetchedAt: a.fetchedAt }}/></article>)}
+        <p><a href="https://security.apache.org/report-dependency/" target="_blank" rel="noreferrer">ASF：如何报告依赖库安全问题 ↗</a></p><SecurityCitation source={report?.guidance}/></details>}
+    </details>
+  </section>
+}
+
 function BriefSection({ part }: { part: string }) {
   if (part.startsWith('## 关注项目动态')) return <><h2 className="ar-brief-title">关注项目动态</h2>{part.split('\n').slice(1).join('\n').trim().split(/\n(?=### )/).map((project, i) => <BriefSection part={project} key={i}/>)}</>
+  if (part.startsWith('## 本周新公告')) return <article className="ar-card ar-section"><MarkdownText text={part} labels={labels} omitHtml/></article>
   if (part.startsWith('## ')) return <details className="ar-card ar-section"><summary>{part.split('\n')[0]!.replace(/^## /, '')} · 展开明细</summary><MarkdownText text={part} labels={labels} omitHtml/></details>
   const lines = part.split('\n')
   const preview = part.startsWith('### ') && lines.length > 4
@@ -155,14 +232,15 @@ export function Dashboard() {
   })
   const [choosing, setChoosing] = useState(false)
   const [view, setView] = useState('overview')
+  const [focusProject, setFocusProject] = useState<string>()
   const [busy, setBusy] = useState(true)
   const [error, setError] = useState('')
   const generation = useRef(0)
-  async function request(action = 'read', project?: string, target = directory) {
+  async function request(action = 'read', project?: string, target = directory, extra?: { version?: string; cve?: string }) {
     const version = ++generation.current
     setBusy(true); setError('')
     try {
-      const response = await fetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...(target ? { directory: target } : {}), action, ...(project ? { project } : {}) }) })
+      const response = await fetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...(target ? { directory: target } : {}), action, ...extra, ...(project ? { project } : {}) }) })
       const result = await response.json()
       if (!response.ok) throw new Error(result.error ?? `HTTP ${response.status}`)
       if (generation.current !== version) return
@@ -177,9 +255,10 @@ export function Dashboard() {
   }, [])
   const [clock, setClock] = useState(Date.now())
   const countSources = data.counts ? [...data.counts.counts, ...data.counts.retired].flatMap(r => r.sources) : []
-  const stale = countSources.some(s => s.cacheStatus === 'stale' || (s.fetchedAt && clock - Date.parse(s.fetchedAt) >= 3_600_000))
+  const securitySources = data.security ? [...data.security.projects.map(p => p.source), data.security.suppressions, data.security.guidance, data.security.flinkPointer].filter(Boolean) : []
+  const stale = securitySources.some(s => s?.status === 'stale' || s?.fetchedAt && clock - Date.parse(s.fetchedAt) >= 3_600_000) || countSources.some(s => s.cacheStatus === 'stale' || (s.fetchedAt && clock - Date.parse(s.fetchedAt) >= 3_600_000))
     || data.sources?.some(s => s.status === 'stale' || (s.fetchedAt && clock - Date.parse(s.fetchedAt) >= 3_600_000))
-  const failed = data.counts && [...data.counts.counts, ...data.counts.retired].some(r => r.status === 'error') || data.sources?.some(s => s.status === 'failed')
+  const failed = securitySources.some(s => s?.status === 'failed') || data.counts && [...data.counts.counts, ...data.counts.retired].some(r => r.status === 'error') || data.sources?.some(s => s.status === 'failed')
   const ready = !!data.counts
   return <div className="ar-root" aria-busy={busy}>
     <style>{css}</style><div className="ar-shell">
@@ -188,11 +267,11 @@ export function Dashboard() {
     <div className="ar-projectbar">{data.directory && !choosing ? <div className="ar-directory"><span className="ar-dot"/><span title={data.directory}>本地项目 · {data.directory.split(/[\\/]/).filter(Boolean).at(-1)}</span><button disabled={busy} onClick={() => setChoosing(true)}>切换目录</button></div> : <form onSubmit={e => { e.preventDefault(); void request('read') }}><label htmlFor="ar-directory">项目目录</label>
       <input id="ar-directory" list="ar-directories" value={directory} placeholder="输入本地项目的绝对路径" onChange={e => setDirectory(e.target.value)} required disabled={busy}/><datalist id="ar-directories">{data.directories.map(d => <option value={d} key={d}/>)}</datalist><button disabled={busy}>打开</button></form>}
       <div className="ar-actions"><span className="ar-last">上次采集 {time(data.collectedAt)}</span><button className="ar-primary" disabled={busy || !data.directory} onClick={() => void request('refresh', undefined, data.directory)}><span className={busy ? 'ar-spin' : ''}>↻</span> {busy ? '正在读取…' : '刷新数据'}</button></div></div>
-    <nav className="ar-tabs" aria-label="雷达页面">{[['overview', '概览', '01'], ['watch', '关注动态', '02'], ['brief', '每周简报', '03']].map(([id, title, num]) => <button key={id} aria-current={view === id ? 'page' : undefined} onClick={() => setView(id!)}><span>{num}</span>{title}</button>)}</nav>
+    <nav className="ar-tabs" aria-label="雷达页面">{[['overview', '概览', '01'], ['watch', '关注动态', '02'], ['brief', '每周简报', '03']].map(([id, title, num]) => <button key={id} aria-current={view === id ? 'page' : undefined} onClick={() => { setView(id!); setFocusProject(undefined) }}><span>{num}</span>{title}</button>)}</nav>
     {error && <div className="ar-notice danger" role="alert"><strong>操作失败</strong><span>{error} {ready ? '仍保留当前画面中的上次数据。' : ''}</span><button disabled={busy} onClick={() => void request('read')}>重试读取</button></div>}
     {(stale || failed) && <div className="ar-notice warn" role="status"><strong>{stale ? '正在显示上次成功缓存' : '部分来源未能取得数据'}</strong><span>{stale ? '数据已过期或刷新失败；请核对每个来源的时间。' : '失败不代表没有动态。'} 已保留来源错误。</span></div>}
     {busy && <div role="status" className="ar-loading"><span className="ar-spin">◌</span> 正在读取公开来源与本地缓存，请稍候…</div>}
-    {ready ? view === 'overview' ? <Overview data={data}/> : view === 'watch' ? <Watch data={data} mutate={(action, project) => void request(action, project, data.directory)} busy={busy}/> : <Brief data={data} request={action => void request(action, undefined, data.directory)} busy={busy}/>
+    {ready ? view === 'overview' ? <Overview data={data} jump={project => { setFocusProject(project); setView("watch") }}/> : view === 'watch' ? <Watch data={data} focusProject={focusProject} mutate={(action, project, extra) => void request(action, project, data.directory, extra)} busy={busy}/> : <Brief data={data} request={action => void request(action, undefined, data.directory)} busy={busy}/>
       : view === 'brief' && data.directory ? <Brief data={data} request={action => void request(action, undefined, data.directory)} busy={busy}/> : !busy && <div className="ar-card ar-empty"><Icon size={44}/><h2>{data.directory ? '雷达已就绪，等待第一次采集' : '为你的项目，打开一扇社区窗口'}</h2><p>{data.directory ? '点击「刷新数据」获取官方计数与关注动态。只读取公开来源，无需模型或登录。' : '选择已有目录，或在上方输入一个本地项目路径。不需要创建聊天或配置模型。'}</p></div>}
     <footer className="ar-footer"><span>Apache Radar <span className="ar-divider">/</span> 本地 Apache 社区雷达</span><span>统计口径并列展示 · reporter.apache.org 不使用</span></footer>
     </div></div>
@@ -211,6 +290,34 @@ export function apply(ctx: ClientContext) {
 }
 
 const css = `
+.ar-security-scope{display:flex;flex-wrap:wrap;gap:0 8px;font-size:10px}
+.ar-security-scope>span{flex-basis:100%;font-size:10px}
+.ar-security-card .ar-number small{font-size:14px;letter-spacing:0;color:var(--ar-faint)}
+.ar-root .ar-project-jump{border:0;padding:0;background:transparent;font-size:11px;justify-content:flex-start;white-space:normal;color:var(--ar-accent)}
+.ar-security-strip{border-top:2px solid color-mix(in srgb,var(--ar-accent) 45%,var(--ar-line))}
+.ar-pin-form{display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin:16px 0;font-size:12px}
+.ar-pin-form input{width:190px;max-width:100%}
+.ar-advisories{margin-top:16px;border-top:1px solid var(--ar-line);padding-top:12px}
+.ar-advisory{padding:13px 0;border-top:1px solid var(--ar-line);scroll-margin-top:20px}
+.ar-advisory:first-of-type{margin-top:12px}
+.ar-advisory>summary{position:relative;padding-right:22px;display:flex;align-items:flex-start;gap:10px;list-style:none;flex-wrap:wrap}
+.ar-advisory>summary:after{content:'＋';position:absolute;right:0;top:0;color:var(--ar-faint)}
+.ar-advisory[open]>summary:after{content:'−'}
+.ar-advisory>summary b{font-size:12px;color:var(--ar-text)}
+.ar-advisory>summary>span:nth-of-type(2){flex:1;min-width:140px}
+.ar-advisory-source{flex-basis:100%;font-size:10px;color:var(--ar-faint);overflow-wrap:anywhere}
+.ar-advisory-body{padding:12px 0 4px;font-size:12px;overflow-wrap:anywhere}
+.ar-advisory-body dl{display:grid;grid-template-columns:105px minmax(0,1fr);gap:8px;padding:14px;background:var(--ar-bg);border-radius:8px}
+.ar-advisory-body dt{color:var(--ar-faint)}
+.ar-advisory-body dd{margin:0;white-space:pre-line}
+.ar-advisory-body pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:11px;max-height:200px;overflow:auto}
+.ar-advisory-body .ar-citation{margin:10px 0}
+.ar-limits p,.ar-suppressions p{margin:10px 0}
+.ar-suppressions{border-top:1px solid var(--ar-line);margin-top:15px;padding-top:15px}
+.ar-suppressions article{padding:14px 0;border-bottom:1px solid var(--ar-line);font-size:12px;overflow-wrap:anywhere}
+.ar-cve-chip{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:8px 0}
+.ar-root .ar-cve-chip button{padding:2px 6px;font-size:11px;color:var(--ar-accent)}
+
 .ar-root {
   --ar-bg:var(--dsw-alias-bg-module-platform);
   --ar-card:var(--dsw-alias-bg-layer-1);
@@ -458,7 +565,7 @@ const css = `
 }
 .ar-metrics {
   display:grid;
-  grid-template-columns:1.2fr repeat(4,1fr);
+  grid-template-columns:1.2fr repeat(5,minmax(0,1fr));
   gap:12px;
   margin-bottom:22px
 }

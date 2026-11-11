@@ -13,7 +13,7 @@ export const Config = z.object({
     watchList: z.array(z.string()).default([...DEFAULT_WATCH_LIST]).description(message('config.watchList')),
 });
 export const HELP = message('command.help');
-const actions = ['refresh', 'counts', 'watch', 'brief', 'open', 'lookup'];
+const actions = ['refresh', 'counts', 'watch', 'brief', 'open', 'lookup', 'security'];
 const toolNames = actions.map(action => `apache_radar_${action}`);
 export function apply(ctx, config = {}) {
     const watchList = resolveWatchList(config.watchList);
@@ -37,7 +37,7 @@ export function apply(ctx, config = {}) {
     for (const action of actions) {
         const parameters = action === 'watch' ? {
             operation: { type: 'string', enum: ['get', 'add', 'remove'] }, project: { type: 'string' },
-        } : action === 'lookup' ? { query: { type: 'string', required: true }, project: { type: 'string' } }
+        } : action === 'security' ? { project: { type: 'string' }, query: { type: 'string' } } : action === 'lookup' ? { query: { type: 'string', required: true }, project: { type: 'string' } }
             : action === 'open' ? { includeMarkdown: { type: 'boolean' } } : {};
         ctx.effect(() => ctx.tools.register(defineTool({
             name: `apache_radar_${action}`,
@@ -91,6 +91,11 @@ export function apply(ctx, config = {}) {
                 if (!rest.length)
                     return { kind: 'error', text: message('command.lookupUsage') };
                 args = { query: rest.join(' ') };
+            }
+            else if (action === 'security') {
+                if (rest.length > 1 || rest[0] && !/^[a-z][a-z0-9-]*$/i.test(rest[0]))
+                    return { kind: 'error', text: '/apache-radar security [project]' };
+                args = { project: rest[0] };
             }
             else if (rest.length)
                 return { kind: 'error', text: message('command.noArgs') };

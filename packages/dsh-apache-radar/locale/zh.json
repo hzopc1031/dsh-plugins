@@ -1,12 +1,12 @@
 {
   "meta": {
     "title": "Apache 社区雷达",
-    "description": "多来源 Apache 官方数量口径、关注项目动态与本地中文周报；无需模型 API key。"
+    "description": "多来源 Apache 官方口径、关注项目动态、运行版本的官方安全公告判定与本地中文周报；无需模型 API key。"
   },
   "messages": {
     "command.description": "Apache 多来源口径、关注列表与本地中文周报",
-    "command.hint": "help | counts | watch [add|remove 项目id] | refresh | brief | open | lookup 关键词",
-    "command.help": "Apache 社区雷达：本地查看 Apache 官方口径与关注项目动态。\n\n/apache-radar counts：查看多来源数量、退休口径差异和官方多标签分类。\n/apache-radar watch：查看关注列表；watch add spark / watch remove spark：添加或移除项目 id。\n/apache-radar refresh：按一小时缓存 TTL 采集数量和关注动态，过期才请求来源；不生成周报。\n/apache-radar brief：生成可复制的中文 Markdown 周报；open：读取最新周报；lookup KIP-1356：查询已采集原文。\n/apache-radar help：显示此帮助。\n\n项目数量必须并列展示多来源口径，每项附来源 URL + 抓取时间（Asia/Singapore，UTC+8），有源文件时间时一并显示；退休口径也并列，保留已知差异。\n默认关注 Kafka / Hadoop / Flink，默认周报窗口为滚动最近 7 天；失败保留旧缓存的成功时间及错误，来源失败不等于没有更新。\n发布以官方目录和项目原文为依据，GitHub Releases 不作为权威来源。JIRA / fixVersion 和已接受提案不证明已发布；Hadoop 没有已验证的通用 HIP 索引。\n缓存、关注列表覆盖值和周报保存在会话当前目录的 .apache-radar-* 文件；watch 覆盖值优先于插件配置。目录服务缺失时回退初始项目目录；拒绝路径逃逸和符号链接。\n聊天工具 apache_radar_refresh / counts / watch / brief / open / lookup 默认返回摘要、状态、路径和原文链接；工具 open 的 includeMarkdown 可显式取全文。lookup 不发起网络请求，不作生产升级判断。\n不使用 reporter.apache.org，无需模型 API key，无需模型调用。",
+    "command.hint": "help | counts | watch [add|remove 项目id] | refresh | brief | open | lookup 关键词 | security [project]",
+    "command.help": "Apache 社区雷达：本地查看 Apache 官方口径与关注项目动态。\n\n/apache-radar counts：查看多来源数量、退休口径差异和官方多标签分类。\n/apache-radar watch：查看关注列表；watch add spark / watch remove spark：添加或移除项目 id。\n/apache-radar refresh：按一小时缓存 TTL 采集数量和关注动态，过期才请求来源；不生成周报。\n/apache-radar brief：生成可复制的中文 Markdown 周报；open：读取最新周报；lookup KIP-1356：查询已采集原文。\n/apache-radar help：显示此帮助。\n\n项目数量必须并列展示多来源口径，每项附来源 URL + 抓取时间（Asia/Singapore，UTC+8），有源文件时间时一并显示；退休口径也并列，保留已知差异。\n默认关注 Kafka / Hadoop / Flink，默认周报窗口为滚动最近 7 天；失败保留旧缓存的成功时间及错误，来源失败不等于没有更新。\n发布以官方目录和项目原文为依据，GitHub Releases 不作为权威来源。JIRA / fixVersion 和已接受提案不证明已发布；Hadoop 没有已验证的通用 HIP 索引。\n缓存、关注列表覆盖值和周报保存在会话当前目录的 .apache-radar-* 文件；watch 覆盖值优先于插件配置。目录服务缺失时回退初始项目目录；拒绝路径逃逸和符号链接。\n聊天工具 apache_radar_refresh / counts / watch / brief / open / lookup / security 默认返回摘要、状态、路径和原文链接；工具 open 的 includeMarkdown 可显式取全文。lookup 不发起网络请求，不作生产升级判断。\n不使用 reporter.apache.org，无需模型 API key，无需模型调用。\n/apache-radar security [project]：查看已缓存官方公告与运行版本判定。项目页「版本与安全」填写运行版本；无 pin 为无法判断，官方来源优先，OSV 仅作第二来源，suppressions 单列；不是锁文件扫描器，不给生产安全结论。",
     "command.unknown": "未知操作，请使用 /apache-radar help。",
     "command.noArgs": "此操作不接受额外参数或路径，请使用 /apache-radar help。",
     "command.watchUsage": "用法：/apache-radar watch [add|remove 项目id]；例如 watch add spark。",

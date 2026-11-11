@@ -17,8 +17,10 @@ export declare function itemSummary(item: FeedItem): {
     fixVersions: string[] | undefined;
     notesUrl: string | undefined;
 };
-export type RadarAction = 'refresh' | 'counts' | 'watch' | 'brief' | 'open' | 'lookup' | 'dashboard';
+export type RadarAction = 'refresh' | 'counts' | 'watch' | 'brief' | 'open' | 'lookup' | 'dashboard' | 'security' | 'pin' | 'osv';
 export interface RadarArgs {
+    version?: string;
+    cve?: string;
     operation?: 'get' | 'add' | 'remove';
     project?: string;
     query?: string;

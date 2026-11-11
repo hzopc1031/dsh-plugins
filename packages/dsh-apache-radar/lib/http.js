@@ -1,3 +1,4 @@
+import { SOURCES as ADVISORY_SOURCES, osvUrl } from './advisory/http.js';
 import { setTimeout as delay } from 'node:timers/promises';
 export const USER_AGENT = 'dsh-apache-radar/0.1.0 (+https://github.com/hzopc1031/dsh-plugins)';
 const hosts = new Set(['projects.apache.org', 'whimsy.apache.org', 'attic.apache.org',
@@ -8,6 +9,10 @@ export function publicSourceUrl(input) {
     if (url.hostname === 'reporter.apache.org' || url.hostname.endsWith('.reporter.apache.org')) {
         throw new Error('reporter.apache.org is forbidden');
     }
+    const advisory = Object.values(ADVISORY_SOURCES).includes(input)
+        || (url.hostname === 'api.osv.dev' && input.startsWith('https://api.osv.dev/v1/vulns/') && osvUrl(input.slice('https://api.osv.dev/v1/vulns/'.length)) === input);
+    if (advisory)
+        return input;
     if (url.protocol !== 'https:' || !hosts.has(url.hostname) || url.username || url.password || url.port) {
         throw new Error('Only documented public ASF HTTPS hosts are allowed');
     }
@@ -44,7 +49,8 @@ export function createHttpClient(options = {}) {
                     headers: { 'User-Agent': USER_AGENT, Accept: 'application/json, text/html, application/xml;q=0.9' },
                     signal: AbortSignal.timeout(timeoutMs), redirect: 'error', credentials: 'omit',
                 });
-                if (!response.ok) {
+                const osvNotIndexed = url.startsWith('https://api.osv.dev/v1/vulns/') && response.status === 404;
+                if (!response.ok && !osvNotIndexed) {
                     if (response.status === 429) {
                         const retry = response.headers.get('retry-after');
                         const until = retry && /^\d+$/.test(retry)
@@ -54,8 +60,33 @@ export function createHttpClient(options = {}) {
                     await response.body?.cancel();
                     throw new HttpError(url, response.status, response.status === 429 ? new Date(blockedUntil).toISOString() : undefined);
                 }
-                const payload = await response.text();
-                return { url, fetchedAt: now().toISOString(), payload };
+                if (osvNotIndexed && !response.body)
+                    return { url, fetchedAt: now().toISOString(), payload: '', status: 404 };
+                const reader = response.body?.getReader();
+                if (!reader)
+                    throw new Error('Empty response body');
+                const chunks = [];
+                let bytes = 0;
+                try {
+                    for (;;) {
+                        const { done, value } = await reader.read();
+                        if (done)
+                            break;
+                        bytes += value.byteLength;
+                        if (bytes > 8 * 1024 * 1024)
+                            throw new Error('Response exceeds size limit');
+                        chunks.push(value);
+                    }
+                }
+                catch (error) {
+                    await reader.cancel().catch(() => { });
+                    throw error;
+                }
+                finally {
+                    reader.releaseLock();
+                }
+                const payload = new TextDecoder('utf-8', { fatal: true }).decode(Buffer.concat(chunks));
+                return { url, fetchedAt: now().toISOString(), payload, ...(url.startsWith('https://api.osv.dev/') ? { status: response.status } : {}) };
             }
             catch (cause) {
                 if (cause instanceof HttpError)

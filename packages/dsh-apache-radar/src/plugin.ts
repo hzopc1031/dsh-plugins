@@ -19,7 +19,7 @@ export const Config: z<Config> = z.object({
 })
 export const HELP = message('command.help')
 
-const actions: RadarAction[] = ['refresh', 'counts', 'watch', 'brief', 'open', 'lookup']
+const actions: RadarAction[] = ['refresh', 'counts', 'watch', 'brief', 'open', 'lookup', 'security']
 const toolNames = actions.map(action => `apache_radar_${action}`)
 export function apply(ctx: Context, config: Config = {}): void {
   const watchList = resolveWatchList(config.watchList)
@@ -41,7 +41,7 @@ export function apply(ctx: Context, config: Config = {}): void {
   for (const action of actions) {
     const parameters: ParameterSchemaSpec = action === 'watch' ? {
       operation: { type: 'string' as const, enum: ['get', 'add', 'remove'] as const }, project: { type: 'string' as const },
-    } : action === 'lookup' ? { query: { type: 'string' as const, required: true as const }, project: { type: 'string' as const } }
+    } : action === 'security' ? { project: { type: 'string' as const }, query: { type: 'string' as const } } : action === 'lookup' ? { query: { type: 'string' as const, required: true as const }, project: { type: 'string' as const } }
       : action === 'open' ? { includeMarkdown: { type: 'boolean' as const } } : {}
     ctx.effect(() => ctx.tools.register(defineTool({
       name: `apache_radar_${action}`,
@@ -87,6 +87,9 @@ export function apply(ctx: Context, config: Config = {}): void {
       } else if (action === 'lookup') {
         if (!rest.length) return { kind: 'error', text: message('command.lookupUsage') }
         args = { query: rest.join(' ') }
+      } else if (action === 'security') {
+        if (rest.length > 1 || rest[0] && !/^[a-z][a-z0-9-]*$/i.test(rest[0])) return { kind: 'error', text: '/apache-radar security [project]' }
+        args = { project: rest[0] }
       } else if (rest.length) return { kind: 'error', text: message('command.noArgs') }
       let directory: string | undefined
       try {

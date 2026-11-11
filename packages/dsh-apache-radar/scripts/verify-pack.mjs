@@ -5,7 +5,7 @@ import { execFileSync } from 'node:child_process'
 const pkg = JSON.parse(await readFile('package.json', 'utf8'))
 for (const hook of ['preinstall', 'install', 'postinstall', 'prepare', 'prepack', 'postpack']) assert.equal(pkg.scripts[hook], undefined)
 assert.notEqual(pkg.private, true)
-assert.deepEqual(pkg.dependencies, { parse5: '7.3.0' })
+assert.deepEqual(pkg.dependencies, { parse5: '7.3.0', 'node-html-parser': '7.0.1', saxes: '6.0.0' })
 for (const peer of Object.keys(pkg.peerDependencies)) {
   assert.equal(pkg.peerDependenciesMeta[peer].optional, true)
   assert.ok(pkg.devDependencies[peer])
@@ -26,6 +26,6 @@ const [pack] = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json', '-
 const expected = ['package.json', 'index.js', 'cordis.patch.yml', 'locale/en.json', 'locale/zh.json',
   'icon.svg', 'README.md', 'LICENSE', 'CHANGELOG.md', 'docs/decisions.md',
   'docs/images/overview-light.png', 'docs/images/overview-dark.png', 'docs/images/watch-kafka.png',
-  ...['plugin', 'http', 'fetchers', 'counts', 'watch', 'feeds', 'feed-cache', 'local-files', 'brief', 'radar', 'messages', 'command', 'dashboard', 'client'].flatMap(name => [`lib/${name}.js`, `lib/${name}.d.ts`])]
+  ...['plugin', 'http', 'fetchers', 'counts', 'watch', 'feeds', 'feed-cache', 'local-files', 'brief', 'radar', 'messages', 'command', 'dashboard', 'client', 'security', 'advisory/types', 'advisory/http', 'advisory/fetchers', 'advisory/verdicts', 'advisory/osv'].flatMap(name => [`lib/${name}.js`, `lib/${name}.d.ts`])]
 assert.deepEqual(pack.files.map(f => f.path).sort(), expected.sort())
 console.log(`PASS: ${pack.filename}, ${pack.entryCount} files, prebuilt lib, no lifecycle hooks or internal fixtures`)

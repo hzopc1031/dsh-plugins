@@ -27,10 +27,11 @@ test('local cache persists URL/time/payload/source timestamp and reloads last go
     assert.equal(report.sources[0].status, 'stale')
     assert.equal(report.sources[0].fetchedAt, FETCHED_AT)
     assert.match(report.sources[0].error, /timeout/)
+    assert.deepEqual(reloaded.get(SOURCES.releases), { ...original, cacheError: report.sources[0].error })
     await saveFeedCache(directory, reloaded)
-    assert.deepEqual(await loadFeedCache(directory), cache)
+    assert.deepEqual(await loadFeedCache(directory), reloaded)
     await assert.rejects(saveFeedCache(directory, new Map([[SOURCES.releases, { ...original, url: 'https://reporter.apache.org/' }]])), /forbidden/)
-    assert.deepEqual(await loadFeedCache(directory), cache)
+    assert.deepEqual(await loadFeedCache(directory), reloaded)
     await writeFile(join(directory, filename), '{')
     await assert.rejects(loadFeedCache(directory), /JSON/)
   } finally { await rm(directory, { recursive: true, force: true }) }
@@ -97,10 +98,12 @@ test('counts share persistent TTL caching with feeds; expiry refetches and malfo
       assert.equal(source.cacheStatus, 'stale')
       assert.equal(source.fetchedAt, FETCHED_AT)
       assert.match(source.cacheError, /timeout|Invalid source payload/)
-      assert.deepEqual(disk.get(SOURCES.chooser), before)
+      assert.deepEqual(disk.get(SOURCES.chooser), { ...before, cacheError: source.cacheError })
       assert.match(renderCountsMarkdown(report), /刷新失败/)
     }
     await saveFeedCache(directory, disk)
-    assert.deepEqual((await loadFeedCache(directory)).get(SOURCES.chooser), before)
+    const { cacheError, ...lastGood } = (await loadFeedCache(directory)).get(SOURCES.chooser)
+    assert.deepEqual(lastGood, before)
+    assert.match(cacheError, /Invalid source payload/)
   } finally { await rm(directory, { recursive: true, force: true }) }
 })

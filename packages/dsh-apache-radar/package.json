@@ -13,8 +13,6 @@
   },
   "files": [
     "index.js",
-    "lib/*.js",
-    "lib/*.d.ts",
     "cordis.patch.yml",
     "locale/*.json",
     "icon.svg",
@@ -22,7 +20,8 @@
     "LICENSE",
     "CHANGELOG.md",
     "docs/decisions.md",
-    "docs/images/*.png"
+    "docs/images/*.png",
+    "lib/"
   ],
   "engines": {
     "node": ">=22",
@@ -54,16 +53,18 @@
     "verify-pack": "node scripts/verify-pack.mjs"
   },
   "dependencies": {
-    "parse5": "7.3.0"
+    "node-html-parser": "7.0.1",
+    "parse5": "7.3.0",
+    "saxes": "6.0.0"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": ">=4.0.5 <4.2.0",
-    "@deepseek-ai/dsh-commands": ">=0.2.1-rc.5 <0.3.0",
-    "@deepseek-ai/schemastery": ">=3.18.5 <3.20.0",
-    "@deepseek-ai/dsh-tools": ">=0.2.1-rc.5 <0.3.0",
     "@deepseek-ai/dsh-agent": ">=0.2.1-rc.5 <0.3.0",
-    "react": "^18.3.1",
-    "@deepseek-ai/dsh-client-ui-primitives": ">=0.2.2-rc.1 <0.3.0"
+    "@deepseek-ai/dsh-client-ui-primitives": ">=0.2.2-rc.1 <0.3.0",
+    "@deepseek-ai/dsh-commands": ">=0.2.1-rc.5 <0.3.0",
+    "@deepseek-ai/dsh-tools": ">=0.2.1-rc.5 <0.3.0",
+    "@deepseek-ai/schemastery": ">=3.18.5 <3.20.0",
+    "react": "^18.3.1"
   },
   "peerDependenciesMeta": {
     "@deepseek-ai/cordis": {
@@ -90,17 +91,17 @@
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "4.1.0",
+    "@deepseek-ai/dsh-agent": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-client-ui-primitives": "0.2.2-rc.1",
     "@deepseek-ai/dsh-commands": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-tools": "0.2.2-rc.1",
     "@deepseek-ai/schemastery": "3.18.5",
     "@types/node": "22.19.0",
-    "typescript": "5.9.3",
-    "@deepseek-ai/dsh-tools": "0.2.2-rc.1",
-    "@deepseek-ai/dsh-agent": "0.2.2-rc.1",
-    "react": "18.3.1",
-    "@deepseek-ai/dsh-client-ui-primitives": "0.2.2-rc.1",
     "@types/react": "18.3.31",
+    "@types/react-dom": "18.3.7",
+    "react": "18.3.1",
     "react-dom": "18.3.1",
-    "@types/react-dom": "18.3.7"
+    "typescript": "5.9.3"
   },
   "repository": {
     "type": "git",

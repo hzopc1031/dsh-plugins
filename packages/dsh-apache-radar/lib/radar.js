@@ -1,3 +1,4 @@
+import { collectSecurity, validatePin, validatePins, securitySummary } from './security.js';
 import { fetchCountsReport } from './counts.js';
 import { collectWatchFeeds, isSecurityItem } from './feeds.js';
 import { loadFeedCache, saveFeedCache } from './feed-cache.js';
@@ -14,10 +15,13 @@ async function loadState(directory) {
     const state = JSON.parse(text);
     if (!state || typeof state !== 'object' || Array.isArray(state))
         throw new Error('Invalid radar state');
-    const { watchList, collectedAt } = state;
+    const { watchList, collectedAt, pins, advisoryFirstSeen } = state;
+    if (advisoryFirstSeen !== undefined && (!advisoryFirstSeen || typeof advisoryFirstSeen !== 'object' || Array.isArray(advisoryFirstSeen)
+        || Object.entries(advisoryFirstSeen).some(([key, time]) => !/^[a-z][a-z0-9-]*:CVE-\d{4}-\d{4,}$/.test(key) || typeof time !== 'string' || !Number.isFinite(Date.parse(time)))))
+        throw new Error('Invalid advisory first-seen state');
     if (collectedAt !== undefined && (typeof collectedAt !== 'string' || !Number.isFinite(Date.parse(collectedAt))))
         throw new Error('Invalid collection time');
-    return { ...(watchList === undefined ? {} : { watchList: resolveWatchList(watchList) }), collectedAt };
+    return { ...(watchList === undefined ? {} : { watchList: resolveWatchList(watchList) }), collectedAt, pins: validatePins(pins), advisoryFirstSeen: advisoryFirstSeen ?? {} };
 }
 function countsSummary(report) {
     const member = ({ id, name }) => ({ id, name });
@@ -47,9 +51,22 @@ export async function runRadar(directory, action, args = {}, options = {}) {
                 if (index !== -1)
                     watchList.splice(index, 1);
             }
-            await writeLocal(directory, stateFile, JSON.stringify({ watchList }));
+            await writeLocal(directory, stateFile, JSON.stringify({ ...state, watchList, collectedAt: undefined }));
         }
         return JSON.stringify({ watchList, path: await localPath(directory, stateFile) });
+    }
+    if (action === 'pin') {
+        const project = resolveWatchList([args.project])[0];
+        if (!watchList.includes(project))
+            throw new Error(message('errors.unwatched'));
+        const pin = validatePin(args.version);
+        const pins = { ...state.pins };
+        if (pin)
+            pins[project] = pin;
+        else
+            delete pins[project];
+        await writeLocal(directory, stateFile, JSON.stringify({ ...state, pins }));
+        return JSON.stringify({ project, pin: pins[project] });
     }
     if (action === 'open') {
         const content = await readLocal(directory, '.apache-radar-brief.md');
@@ -81,11 +98,29 @@ export async function runRadar(directory, action, args = {}, options = {}) {
         return JSON.stringify({ collectedAt: state.collectedAt, window: feeds.window, items: matches.slice(0, 20).map(itemSummary),
             hasMore: matches.length > 20, sources: feeds.sources, note: message('lookup.note') });
     }
+    const firstSeen = { ...state.advisoryFirstSeen };
+    if (action === 'security' || action === 'osv') {
+        if (args.project && !watchList.includes(args.project))
+            throw new Error(message('errors.unwatched'));
+        if (action === 'osv' && (!args.cve || !/^CVE-\d{4}-\d{4,}$/.test(args.cve)))
+            throw new Error('无效 CVE id。');
+        const offline = async () => { throw new Error('请先刷新官方来源。'); };
+        const security = await collectSecurity(offline, watchList, state.pins ?? {}, firstSeen, { cache, now, ttlMs: options.ttlMs, offline: true });
+        if (action === 'osv') {
+            if (!security.projects.some(p => p.advisories.some(a => a.id === args.cve)))
+                throw new Error('CVE 不在已采集的官方列表中。');
+            const target = args.cve;
+            const http = options.http ?? createHttpClient({ now: options.now });
+            await collectSecurity(url => url.endsWith('/' + target) ? http(url) : offline(), watchList, state.pins ?? {}, firstSeen, { cache, now, ttlMs: Number.MAX_SAFE_INTEGER, lookup: target });
+            await saveFeedCache(directory, cache);
+        }
+        return JSON.stringify(securitySummary(security, args.project, args.query));
+    }
     const dashboard = action === 'dashboard';
     const offline = dashboard && !args.refresh && !args.saveBrief;
     const brief = dashboard ? await readLocal(directory, '.apache-radar-brief.md') : undefined;
     if (offline && !cache.size)
-        return JSON.stringify({ watchList, empty: true, markdown: brief });
+        return JSON.stringify({ watchList, pins: state.pins ?? {}, empty: true, markdown: brief });
     const http = offline ? async () => { throw new Error('缓存已过期；点击刷新重试。'); }
         : options.http ?? createHttpClient({ now: options.now });
     const ttlMs = dashboard && args.refresh ? 0 : options.ttlMs;
@@ -95,21 +130,22 @@ export async function runRadar(directory, action, args = {}, options = {}) {
         return JSON.stringify(countsSummary(counts));
     }
     const feeds = await collectWatchFeeds(http, { watchList, now, windowEnd: offline && state.collectedAt ? new Date(state.collectedAt) : undefined, cache, ttlMs });
+    const security = await collectSecurity(http, watchList, state.pins ?? {}, firstSeen, { cache, now, ttlMs, offline });
     if (dashboard) {
         if (!offline) {
             await saveFeedCache(directory, cache);
-            await writeLocal(directory, stateFile, JSON.stringify({ ...state, collectedAt: now.toISOString() }));
+            await writeLocal(directory, stateFile, JSON.stringify({ ...state, advisoryFirstSeen: firstSeen, collectedAt: now.toISOString() }));
         }
-        const path = args.saveBrief ? await writeWeeklyBrief(directory, counts, feeds, now.toISOString()) : undefined;
-        return JSON.stringify({ watchList, counts, sources: feeds.sources, window: feeds.window,
+        const path = args.saveBrief ? await writeWeeklyBrief(directory, counts, feeds, now.toISOString(), security) : undefined;
+        return JSON.stringify({ watchList, security, pins: state.pins ?? {}, counts, sources: feeds.sources, window: feeds.window,
             collectedAt: offline ? state.collectedAt : now.toISOString(), items: feeds.items.map(itemSummary),
             undatedItems: feeds.undatedItems.map(itemSummary), path,
             markdown: args.saveBrief ? await readLocal(directory, '.apache-radar-brief.md') : brief });
     }
     await saveFeedCache(directory, cache);
-    await writeLocal(directory, stateFile, JSON.stringify({ ...state, collectedAt: now.toISOString() }));
-    const path = action === 'brief' ? await writeWeeklyBrief(directory, counts, feeds, now.toISOString()) : undefined;
+    await writeLocal(directory, stateFile, JSON.stringify({ ...state, advisoryFirstSeen: firstSeen, collectedAt: now.toISOString() }));
+    const path = action === 'brief' ? await writeWeeklyBrief(directory, counts, feeds, now.toISOString(), security) : undefined;
     return JSON.stringify({ watchList, window: feeds.window, generatedAt: now.toISOString(), path,
-        counts: countsSummary(counts), sources: feeds.sources,
+        counts: countsSummary(counts), security: securitySummary(security), sources: feeds.sources,
         note: message('collection.note') });
 }

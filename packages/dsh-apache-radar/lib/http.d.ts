@@ -2,6 +2,7 @@ export interface SourceResponse {
     url: string;
     fetchedAt: string;
     payload: string;
+    status?: number;
 }
 export type HttpClient = (url: string) => Promise<SourceResponse>;
 export declare const USER_AGENT = "dsh-apache-radar/0.1.0 (+https://github.com/hzopc1031/dsh-plugins)";

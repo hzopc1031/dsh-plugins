@@ -5,10 +5,10 @@ export function dashboardHandler(run, directories) {
         try {
             const body = await request.json();
             if (!body || Array.isArray(body) || typeof body !== 'object'
-                || Object.keys(body).some(key => !['directory', 'action', 'project'].includes(key)))
+                || Object.keys(body).some(key => !['directory', 'action', 'project', 'version', 'cve'].includes(key)))
                 throw new Error('无效的面板请求。');
             const { directory, action = 'read', project } = body;
-            if (typeof action !== 'string' || !['read', 'refresh', 'brief', 'add', 'remove', 'file'].includes(action))
+            if (typeof action !== 'string' || !['read', 'refresh', 'brief', 'add', 'remove', 'file', 'pin', 'osv'].includes(action))
                 throw new Error('未知操作。');
             if (directory !== undefined && !validDirectory(directory))
                 throw new Error('请选择本地绝对目录，不能包含 ..。');
@@ -22,6 +22,9 @@ export function dashboardHandler(run, directories) {
             if (action === 'file') {
                 const saved = JSON.parse(await run(target, 'open', { includeMarkdown: true }));
                 return new Response(saved.markdown, { headers: { 'content-type': 'text/markdown; charset=utf-8', 'cache-control': 'no-store' } });
+            }
+            if (action === 'pin' || action === 'osv') {
+                await run(target, action, { project: body.project, version: body.version, cve: body.cve });
             }
             if (action === 'add' || action === 'remove') {
                 if (typeof project !== 'string')

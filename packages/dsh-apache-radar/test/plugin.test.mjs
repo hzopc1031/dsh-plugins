@@ -21,7 +21,7 @@ test('bundle exports prefixed typed tools, commands and honest help; unload disp
   const host = pluginContext()
   apply(host.ctx)
   assert.equal(host.command.name, 'apache-radar')
-  assert.deepEqual([...host.tools.keys()], ['refresh', 'counts', 'watch', 'brief', 'open', 'lookup'].map(a => `apache_radar_${a}`))
+  assert.deepEqual([...host.tools.keys()], ['refresh', 'counts', 'watch', 'brief', 'open', 'lookup', 'security'].map(a => `apache_radar_${a}`))
   for (const tool of host.tools.values()) {
     assert.equal(tool.output.schema.type, 'string')
     assert.deepEqual(tool.output.render({}, 'summary'), [{ type: 'text', text: 'summary' }])

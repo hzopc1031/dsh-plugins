@@ -2,6 +2,7 @@ import { execFile } from 'node:child_process'
 import { EnvHttpProxyAgent, fetch as proxyFetch, type Dispatcher } from 'undici'
 import { repoName, limitSchema, type Item } from './types.js'
 import { SafeText } from './safety.js'
+import { BusinessReadError, clip, FILE_SNIPPET_LIMIT, MAX_CONTEXT_FILES } from './business.js'
 
 export type Fetcher = (url: string, init: {
   method: string; headers: Record<string,string>; signal: AbortSignal; redirect: 'error'; dispatcher?: Dispatcher
@@ -56,7 +57,7 @@ export class Github {
     if (now < this.#cooldown) throw new GithubError(429, this.#cooldown)
     const combined = AbortSignal.any([AbortSignal.timeout(this.#options.timeoutMs ?? 20000), ...(signal ? [signal] : [])])
     await this.auth(combined)
-    const headers: Record<string,string> = { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', 'User-Agent': 'dsh-github-triage/0.1.0' }
+    const headers: Record<string,string> = { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', 'User-Agent': 'dsh-github-triage/0.2.0' }
     if (this.#token) headers.Authorization = 'Bearer ' + this.#token
     if (!this.#options.fetch && !this.#dispatcher) this.#dispatcher = new EnvHttpProxyAgent()
     try {
@@ -92,6 +93,7 @@ export class Github {
     const repo = repoName.parse(repoInput); limitSchema.parse(limit)
     // Refresh capabilities on each run: only explicitly false flags disable an API.
     this.#featureWarnings = []
+    this.#trees.delete(repo)
     const metadata = await this.request<RepositoryWire>('/repos/' + repo, 'GET', signal)
     this.#repositories.set(repo, metadata)
     const issuesDisabled = mode !== 'prs' && metadata.has_issues === false
@@ -113,6 +115,32 @@ export class Github {
     return {number:i.number,kind:'issue',title:i.title.slice(0,500),body:(i.body ?? '').slice(0,16000),updated_at:i.updated_at,
       url:'https://github.com/' + repo + '/issues/' + i.number}
   }
+  async contents(repo:string,file:string,maxBytes:number,signal?:AbortSignal):Promise<string> {
+    repo=repoName.parse(repo)
+    if (!file || file.length>4096 || file.startsWith('/') || /[\\\x00-\x1f]/.test(file) || file.split('/').some(p=>!p||p==='.'||p==='..')) throw new BusinessReadError('仓库文件路径、类型或大小不符合只读限制')
+    // Without ref, GitHub contents reads the default branch. Never follow download_url.
+    const data=await this.request<{type:string;size:number;encoding:string;content:string}>(
+      '/repos/'+repo+'/contents/'+file.split('/').map(encodeURIComponent).join('/'),'GET',signal)
+    if(data.type!=='file'||data.encoding!=='base64'||!Number.isSafeInteger(data.size)||data.size<0||data.size>maxBytes||typeof data.content!=='string'||data.content.length>Math.ceil(maxBytes/3)*4+2048)throw new BusinessReadError('仓库文件路径、类型或大小不符合只读限制')
+    const bytes=Buffer.from(data.content,'base64')
+    if(bytes.length>maxBytes||bytes.includes(0))throw new BusinessReadError('仓库文件路径、类型或大小不符合只读限制')
+    try { return this.safe.text(new TextDecoder('utf-8',{fatal:true}).decode(bytes)) }
+    catch { throw new BusinessReadError('仓库文件不是有效 UTF-8 文本') }
+  }
+  private async snippets(repo:string,item:Item,paths:string[],signal?:AbortSignal):Promise<void> {
+    item.snippets=[]
+    const candidates=[...new Set(paths)].filter(p=>/\.(?:[cm]?[jt]sx?|py|rs|go|java|c|cpp|h|cs|rb|md|rst|txt|ya?ml|json|toml)$/i.test(p)&&
+      !/(?:^|\/)(?:\.env|credentials?|secrets?|id_rsa|id_ed25519)(?:[.\/]|$)/i.test(p)).slice(0,MAX_CONTEXT_FILES)
+    for(const file of candidates){
+      try {
+        const text=await this.contents(repo,file,64*1024,signal)
+        item.snippets.push({path:file,text:clip(text,FILE_SNIPPET_LIMIT),truncated:Buffer.byteLength(text)>FILE_SNIPPET_LIMIT})
+      } catch(e) {
+        if(signal?.aborted || e instanceof GithubError && e.retryAt)throw e
+        item.notes!.push('相关文件片段不可用：'+file+'（不存在、非文本、超过 64KB 或读取失败）')
+      }
+    }
+  }
   async enrich(repo: string, item: Item, signal?: AbortSignal): Promise<Item> {
     repoName.parse(repo)
     const result: Item = {...item,notes:[]}
@@ -131,7 +159,12 @@ export class Github {
         return (tree?.tree ?? []).filter(t=>t.type==='blob').slice(0,5000).map(t=>t.path)
       })())
       const words = (item.title.toLowerCase().match(/[a-z][a-z0-9_-]{3,}/g) ?? []).filter(w=>!['issue','error','failed','please','with','when','does','support','feature','request','crash'].includes(w))
-      result.locations = (await this.#trees.get(repo)!).filter(p => words.some(w=>p.toLowerCase().includes(w))).slice(0,5)
+      const tree=await this.#trees.get(repo)!
+      const stack=(item.body??'').match(/(?:[\w.-]+\/)+[\w.-]+\.[a-zA-Z]+(?::\d+(?::\d+)?)?/g)??[]
+      const stackPaths=stack.map(p=>p.replace(/:\d+(?::\d+)?$/,''))
+      result.locations = [...new Set([...tree.filter(p=>stackPaths.some(s=>s===p||s.endsWith('/'+p))),
+        ...tree.filter(p=>words.some(w=>p.toLowerCase().includes(w)))])].slice(0,5)
+      await this.snippets(repo,result,result.locations,signal)
       return result
     }
     const base = '/repos/' + repo
@@ -163,6 +196,7 @@ export class Github {
       const linked = await optional<IssueWire>(base+'/issues/'+Number(match[1]))
       if (linked && !linked.pull_request) result.linked.push({number:linked.number,title:linked.title,body:(linked.body??'').slice(0,2000)})
     }
+    await this.snippets(repo,result,result.files.map(f=>f.path),signal)
     return result
   }
   async close(): Promise<void> { await this.#dispatcher?.close() }

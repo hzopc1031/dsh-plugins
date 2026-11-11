@@ -8,24 +8,22 @@ export const scheduleSchema = z.discriminatedUnion('kind', [
 export const repoSchema = z.object({
     repo: repoName, mode: z.enum(['issues', 'prs', 'both']).default('both'),
     schedule: scheduleSchema.optional(), limit: limitSchema.optional(),
+    business: z.string().max(100000).optional(), businessFile: z.string().max(4096).optional(),
 });
 const common = {
-    priority: z.enum(['高', '中', '低']), reason: z.string().min(1).max(1200),
+    reason: z.string().trim().min(1).max(1200), businessReason: z.string().trim().min(1).max(1200),
     evidence: z.array(z.string().min(1).max(800)).min(1).max(40),
 };
-export const issueJudgment = z.object({
-    kind: z.literal('issue'), type: z.enum(['bug', '需求', '提问', '重复', '无效']),
-    real: z.enum(['是', '待证实', '否']), worth: z.enum(['值得修', '待补充', '不值得修']),
-    impact: z.string().min(1).max(400), severity: z.string().min(1).max(400), cost: z.string().min(1).max(400), ...common,
-}).strict();
-export const prJudgment = z.object({
-    kind: z.literal('pr'), verdict: z.enum(['值得合并', '改完再合', '不建议合']),
-    risk: z.enum(['高', '中', '低']), suspicious: z.boolean(), ...common,
-}).strict();
+export const issueJudgment = z.object({ kind: z.literal('issue'), type: z.enum(['bug', '需求', '提问', '重复', '无效']),
+    exists: z.enum(['confirmed', 'likely', 'unclear', 'not_a_bug']), worthFixing: z.enum(['值得修', '待补充', '不值得修']),
+    priority: z.enum(['高', '中', '低']), ...common }).strict();
+export const prJudgment = z.object({ kind: z.literal('pr'), verdict: z.enum(['值得合并', '改完再合', '不建议合']),
+    fitsDirection: z.enum(['yes', 'unclear', 'no']), risk: z.enum(['高', '中', '低']), testing: z.string().trim().min(1).max(1200), ...common }).strict();
 export const judgmentSchema = z.discriminatedUnion('kind', [issueJudgment, prJudgment]);
 export const resultSchema = z.object({
     number: z.number().int().positive(), title: z.string(), url: z.string(),
-    judgment: judgmentSchema, source: z.enum(['rules', 'model', 'correction']), modelNote: z.string().optional(),
+    kind: z.enum(['issue', 'pr']), judgment: judgmentSchema.optional(), evidence: z.array(z.string()),
+    observation: z.string().optional(), source: z.enum(['rules', 'model', 'correction']), modelNote: z.string().optional(),
 });
 export const correctionSchema = z.object({
     repo: repoName, number: z.number().int().positive(), judgment: judgmentSchema,
@@ -34,8 +32,10 @@ export const correctionSchema = z.object({
 export const reportSchema = z.object({
     repo: repoName, at: z.number(), results: z.array(resultSchema), analyzed: z.number(), reused: z.number(),
     changed: z.array(z.number()), briefing: z.string().optional(), warnings: z.array(z.string()),
+    businessStatus: z.string(), modelStatus: z.string().optional(),
 });
-export const stateSchema = z.object({
+const currentStateSchema = z.object({
+    formatVersion: z.literal(2),
     overrides: z.record(z.string(), repoSchema), removed: z.array(repoName),
     cache: z.record(z.string(), z.object({ fingerprint: z.string(), result: resultSchema })),
     corrections: z.array(correctionSchema),
@@ -43,4 +43,22 @@ export const stateSchema = z.object({
     lastRun: z.record(z.string(), z.number()),
     pending: z.record(z.string(), z.string()),
 });
-export function emptyState() { return { overrides: {}, removed: [], cache: {}, corrections: [], reports: {}, lastRun: {}, pending: {} }; }
+export function emptyState() { return { formatVersion: 2, overrides: {}, removed: [], cache: {}, corrections: [], reports: {}, lastRun: {}, pending: {} }; }
+// Preserve authoritative 0.1.0 settings/corrections, discard derived rule conclusions.
+const legacyJudgment = z.object({ kind: z.enum(['issue', 'pr']), type: z.enum(['bug', '需求', '提问', '重复', '无效']).optional(),
+    real: z.enum(['是', '待证实', '否']).optional(), worth: z.enum(['值得修', '待补充', '不值得修']).optional(),
+    verdict: z.enum(['值得合并', '改完再合', '不建议合']).optional(), risk: z.enum(['高', '中', '低']).optional(),
+    priority: z.enum(['高', '中', '低']), reason: z.string(), evidence: z.array(z.string()) });
+export const stateSchema = z.preprocess(value => {
+    if (!value || typeof value !== 'object' || 'formatVersion' in value)
+        return value;
+    const old = z.object({ overrides: z.record(z.string(), repoSchema), removed: z.array(repoName), lastRun: z.record(z.string(), z.number()),
+        corrections: z.array(z.object({ repo: repoName, number: z.number().int().positive(), judgment: legacyJudgment, reason: z.string(), at: z.number(), title: z.string() })) }).parse(value);
+    const corrections = old.corrections.map(c => ({ ...c, judgment: c.judgment.kind === 'issue' ? {
+            kind: 'issue', type: c.judgment.type, exists: c.judgment.real === '是' ? 'confirmed' : c.judgment.real === '否' ? 'not_a_bug' : 'unclear',
+            worthFixing: c.judgment.worth, priority: c.judgment.priority, reason: c.judgment.reason, evidence: c.judgment.evidence,
+            businessReason: '0.1.0 用户纠正；未提供业务说明，按通用标准判断',
+        } : { kind: 'pr', verdict: c.judgment.verdict, fitsDirection: 'unclear', risk: c.judgment.risk, testing: '0.1.0 用户纠正；测试情况待核实',
+            reason: c.judgment.reason, evidence: c.judgment.evidence, businessReason: '0.1.0 用户纠正；未提供业务说明，按通用标准判断' } }));
+    return { ...emptyState(), overrides: old.overrides, removed: old.removed, corrections, lastRun: old.lastRun };
+}, currentStateSchema);

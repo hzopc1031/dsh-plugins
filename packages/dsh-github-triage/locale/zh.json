@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "GitHub 仓库研判",
-    "description": "只读研判 GitHub issues 和 PR，支持定时检查、证据与用户纠正"
+    "description": "AI 结合业务说明，只读判断 GitHub 问题真实性、修复与 PR 合入价值；支持定时简报和用户纠正"
   }
 }

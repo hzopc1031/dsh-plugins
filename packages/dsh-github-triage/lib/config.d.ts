@@ -1,6 +1,8 @@
 import { type Repo, type State } from './types.js';
 export declare function repositories(config: Repo[], state: State): Repo[];
-export declare function repoCommand(raw: string, state: State): string;
+/** Shell-like quoting without expansion; preserve Windows path backslashes. */
+export declare function tokens(raw: string): string[];
+export declare function repoCommand(raw: string, state: State, config?: Repo[]): string;
 export declare function runArguments(raw: string): {
     repo?: string;
     limit?: number;

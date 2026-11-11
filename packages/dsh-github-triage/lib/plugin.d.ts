@@ -6,12 +6,16 @@ export declare const inject: string[];
 export declare const Config: z<Schemastery.ObjectS<NoInfer<{
     repositories: z<({
         repo?: string | null | undefined;
+        business?: string | null | undefined;
+        businessFile?: string | null | undefined;
         mode?: "issues" | "prs" | "both" | null | undefined;
         daily?: string | null | undefined;
         everyHours?: number | null | undefined;
         limit?: number | null | undefined;
     } & import("@deepseek-ai/cosmokit").Dict)[], Schemastery.ObjectT<NoInfer<{
         repo: z<string, string, "defined">;
+        business: z<string, string, "defined">;
+        businessFile: z<string, string, "defined">;
         mode: z<"issues" | "prs" | "both", "issues" | "prs" | "both", "defined">;
         daily: z<string, string, "defined">;
         everyHours: z<number, number, "defined">;
@@ -24,12 +28,16 @@ export declare const Config: z<Schemastery.ObjectS<NoInfer<{
 }>>, Schemastery.ObjectT<NoInfer<{
     repositories: z<({
         repo?: string | null | undefined;
+        business?: string | null | undefined;
+        businessFile?: string | null | undefined;
         mode?: "issues" | "prs" | "both" | null | undefined;
         daily?: string | null | undefined;
         everyHours?: number | null | undefined;
         limit?: number | null | undefined;
     } & import("@deepseek-ai/cosmokit").Dict)[], Schemastery.ObjectT<NoInfer<{
         repo: z<string, string, "defined">;
+        business: z<string, string, "defined">;
+        businessFile: z<string, string, "defined">;
         mode: z<"issues" | "prs" | "both", "issues" | "prs" | "both", "defined">;
         daily: z<string, string, "defined">;
         everyHours: z<number, number, "defined">;
@@ -47,6 +55,8 @@ export interface Input {
         daily?: string;
         everyHours?: number;
         limit?: number;
+        business?: string;
+        businessFile?: string;
     }[];
     limit?: number;
     modelEnabled?: boolean;

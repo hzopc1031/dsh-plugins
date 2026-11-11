@@ -42,6 +42,8 @@ export declare class Github {
     private pages;
     list(repoInput: string, mode: 'issues' | 'prs' | 'both', limit: number, signal?: AbortSignal): Promise<Item[]>;
     private issue;
+    contents(repo: string, file: string, maxBytes: number, signal?: AbortSignal): Promise<string>;
+    private snippets;
     enrich(repo: string, item: Item, signal?: AbortSignal): Promise<Item>;
     close(): Promise<void>;
 }

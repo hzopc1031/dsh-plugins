@@ -1,7 +1,7 @@
 {
   "name": "dsh-github-triage",
-  "version": "0.1.0",
-  "description": "Read-only GitHub issue and PR triage for DeepSeek Harness",
+  "version": "0.2.0",
+  "description": "AI-led read-only GitHub issue and PR triage with business context for DeepSeek Harness",
   "type": "module",
   "main": "index.js",
   "types": "lib/plugin.d.ts",

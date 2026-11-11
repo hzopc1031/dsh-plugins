@@ -5,6 +5,8 @@ import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { initProfile, loadProfileDirectory, boot } from '@deepseek-ai/dsh-app-boot'
 import { Github } from '../lib/github.js'
+import LlmRuntime, { LlmAdapter } from '@deepseek-ai/dsh-llm'
+import { model } from './fixtures.mjs'
 import { SessionId } from '@deepseek-ai/dsh-session'
 const project=fileURLToPath(new URL('../',import.meta.url))
 test('temporary official profile loads prebuilt plugin, commands persist only in own storage domain, unload/reload',async(t)=>{
@@ -31,25 +33,40 @@ test('temporary official profile loads prebuilt plugin, commands persist only in
       '- name: '+pluginPath('dsh-session'),
       '- name: '+pluginPath('dsh-commands'),
     ].join('\n'))
-    const start=()=>boot('github-triage-test',config,composed.layers.flatMap(l=>l.patches),undefined,pathToFileURL(path.join(profile,'package.json')).href)
+    const patches=composed.layers.flatMap(l=>l.patches)
+    for(const patch of patches)for(const entry of patch.insert??[])if(entry.id==='github-triage')entry.config={provider:'test',model:'test-model'}
+    const prompts=[]
+    class MockAdapter extends LlmAdapter {
+      async listModels(provider){return [{provider,id:'test-model',name:'模拟模型'}]}
+      async *stream(request){prompts.push(JSON.parse(request.messages[0].content[0].text));yield {type:'text-delta',text:await model(request.messages[0].content[0].text)};yield {type:'finish',reason:{kind:'stop'}}}
+    }
+    const start=async()=>{
+      const context=await boot('github-triage-test',config,patches,c=>{c.plugin(LlmRuntime)},pathToFileURL(path.join(profile,'package.json')).href)
+      context.llm.registerAdapter(['test'],new MockAdapter())
+      return context
+    }
     const composeBefore=await readFile(config,'utf8')
     ctx=await start()
     let session=ctx.sessions.create(SessionId('github-triage-test'),{meta:{cwd:root}})
     let agent={id:session.id,session,ctx,status:'idle'}
     const execute=async line=>(await ctx.commands.execute(agent,line,[],new AbortController().signal)).result
-    assert.deepEqual(ctx.commands.list(agent).map(c=>c.name).filter(n=>n.startsWith('triage')).sort(),['triage','triage-fix','triage-repo','triage-report'])
+    assert.deepEqual(ctx.commands.list(agent).map(c=>c.name).filter(n=>n.startsWith('triage')).sort(),['triage','triage-fix','triage-models','triage-repo','triage-report'])
     assert.match((await execute('/triage')).text,/未配置仓库/)
-    assert.match((await execute('/triage-repo add O/R --prs --limit 5')).text,/已保存/)
+    assert.match((await execute('/triage-repo add O/R --prs --limit 5 --business "核心 登录业务"')).text,/已保存/)
     assert.match((await execute('/triage-repo list')).text,/o\/r · prs/)
     assert.equal((await execute('/triage-repo add o/r --daily 25:00')).kind,'error')
     assert.match((await execute('/triage-report')).text,/暂无报告/)
     assert.equal((await execute('/triage-fix o/r#1 不建议合')).kind,'error')
-    assert.match((await execute('/triage o/r --limit 1')).text,/renderer startup fails/)
+    assert.match((await execute('/triage-models')).text,/provider: "test"  model: "test-model"/)
+    const triage=(await execute('/triage o/r --limit 1')).text
+    assert.match(triage,/renderer startup fails/);assert.match(triage,/业务说明：已使用/);assert.match(triage,/结合业务：/)
+    assert.equal(prompts[0].business.text,'核心 登录业务')
     assert.match((await execute('/triage-fix o/r#1 不值得修 已解决')).text,/已保存纠正/)
     assert.match((await execute('/triage-report o/r')).text,/已解决/)
     assert.match((await execute('/triage-repo remove o/r')).text,/已移除/)
     // Re-add without schedule so the startup timer never makes a network request.
     await execute('/triage-repo add o/r --issues --limit 4')
+    assert.match((await execute('/triage-repo business o/r "核心 功能"')).text,/已更新业务说明/)
     await ctx.fiber.dispose();ctx=undefined
     assert.equal(await readFile(config,'utf8'),composeBefore)
     const stored=await readdir(storage)
@@ -59,7 +76,20 @@ test('temporary official profile loads prebuilt plugin, commands persist only in
     agent={id:session.id,session,ctx,status:'idle'}
     assert.match((await execute('/triage-repo list')).text,/o\/r · issues/)
     assert.match((await execute('/triage-repo list')).text,/上限 4/)
+    assert.match((await execute('/triage-repo list')).text,/业务说明：内联文本/)
+    await execute('/triage-repo business o/r --clear')
+    assert.match((await execute('/triage-repo list')).text,/业务说明：未配置/)
     assert.match((await execute('/triage-report o/r')).text,/已解决/)
+    await ctx.fiber.dispose();ctx=undefined
+    for(const patch of patches)for(const entry of patch.insert??[])if(entry.id==='github-triage')entry.config={}
+    ctx=await start()
+    session=ctx.sessions.create(SessionId('github-triage-test-3'),{meta:{cwd:root}})
+    agent={id:session.id,session,ctx,status:'idle'}
+    const unconfigured=(await execute('/triage o/r')).text
+    assert.ok(unconfigured.startsWith('**未配置模型'))
+    assert.match(unconfigured,/仅规则预筛，未经 AI 研判/)
+    assert.ok(!/值得修|真实存在：/.test(unconfigured))
+    assert.match((await execute('/triage-report o/r')).text,/业务说明：未配置/)
     await execute('/triage-repo remove o/r')
     assert.match((await execute('/triage-repo list')).text,/未配置仓库/)
   } finally {

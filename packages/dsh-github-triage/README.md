@@ -1,10 +1,12 @@
-# dsh-github-triage
+﻿# dsh-github-triage 0.2.0
 
-GitHub 仓库 issue / PR **只读自动研判**，适用于 DeepSeek Harness **0.2.1-rc.5**。默认仓库清单为空。手动或在 DSH 运行期间定时检查，先用规则整理证据，再可选调用 DSH 自身的模型做最终判断；没有可用模型也能运行。
+自动拉取指定 GitHub 仓库的 issues 和 PR，由 AI 结合你的业务说明，判断问题是否真实存在、值不值得修，PR 是否值得合入。
 
-issue 输出 bug / 需求 / 提问 / 重复 / 无效、真问题状态、修复价值、影响/严重度/成本、优先级与理由。PR 输出值得合并 / 改完再合 / 不建议合、风险、测试、CI、关联 issue 和敏感文件证据。结果按风险与优先级排列，理由、证据和原链接附在会话命令卡片中。
+适用于 DeepSeek Harness **0.2.1-rc.5**。默认没有仓库，也没有模型路由；先完成下面三步。
 
-## 安装
+## 3 步快速上手
+
+### ① 安装
 
 先**完全退出桌面版 DSH（含托盘）**，再在 PowerShell 运行：
 
@@ -12,125 +14,160 @@ issue 输出 bug / 需求 / 提问 / 重复 / 无效、真问题状态、修复�
 & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-github-triage"
 ```
 
-安装后重启。此地址须等本包由维护者提交、推送并合入 main 后才可用；本次没有执行提交、推送或 npm 发布。包内包含预构建 lib/、index.js 和 bundle patch，无安装期编译脚本。
+重新打开 DSH。上面的 main 地址在维护者合入此版本后才会安装 0.2.0；合入前可用包含此次改动的 ref。包已带编译好的 lib，不需要安装时编译。本次源码改版没有执行提交、推送、npm 发布或用户安装。
 
-## 命令
+### ② 配模型
 
-注册给 rc.5 的命令名不带斜杠；用户在 DSH 输入时带斜杠：
+先在 DSH 的模型/服务商设置中启用你要使用的模型。然后运行：
 
 ```text
-/triage-repo add owner/repo --both --daily 09:30
-/triage-repo add owner/another --prs --every 6 --limit 10
-/triage-repo add owner/issues-only --issues
-/triage-repo remove owner/repo
-/triage-repo list
-/triage owner/repo --limit 5
-/triage
-/triage-report owner/repo
-/triage-report
-/triage-fix owner/repo#123 不值得修 已由其他模块解决
-/triage-fix owner/repo#456 改完再合 先补回归测试
+/triage-models
 ```
 
-- add 可选 --issues / --prs / --both（默认 both），--daily HH:MM / --every N（二选一，N 为小时，最小 0.001），--limit N（1–100）。不指定调度时仅手动运行。再次 add 替换该仓库的设置。
-- /triage 无仓库参数时处理全部已配置仓库；带仓库可临时运行，无须加入清单。--limit 同时限制本次获取候选与分析总数，issues/PR 合计，默认 20。仓库配置可覆盖全局值。
-- /triage-report 显示最近一次窗口内的完整结果，包括缓存复用项。
-- /triage-fix 先要求条目已被拉取。issue 可纠正类型（bug、需求、提问、重复、无效）或价值（值得修、待补充、不值得修）；PR 可纠正三种合并结论。可附理由。同一条目后续更新也直接采用纠正；同仓库同种条目的最近 8 条纠正作为模型参考。每个条目持久保留最新一次纠正。
-- 命令增删数据写插件独立存储域，不改 DSH 全局配置。remove 也能屏蔽静态配置中的仓库；再次 add 恢复。报告和纠正仍保留。
+把输出中的 **provider** 和 **model** 分别复制到「插件 → dsh-github-triage → 配置」的同名字段，启用 `modelEnabled`。两个字段默认都是空字符串。
 
-## 配置
+rc.5 的真实接口使用两个独立字符串：`provider` 是已注册的服务商路由 **id**，`model` 是该路由下的模型 **id**，不是显示名称，也不是 API key。**不要把 `provider/model` 整串填进 model**，也不要从当前聊天选择猜测它们。
 
-在插件配置中设置。首次安装相当于 repositories: []，不会自行选择仓库、调用 GitHub 或模型。
+举例：若 `/triage-models` 输出 `provider: "my-route"  model: "my-model"`，就填写：
 
 ```yaml
-repositories: []
-limit: 20
 modelEnabled: true
-provider: ""
-model: ""
+provider: "my-route"  # 示例；换成命令列出的真实 provider id
+model: "my-model"    # 示例；换成对应的真实 model id
+limit: 20
+repositories: []
 ```
 
-需要静态仓库时可将 repositories 改为：
+`/triage-models` 调用官方只读 `llm.listProviders()` / `llm.listModels(provider)`，不请求模型生成。目录由适配器提供，可能为空或读取失败；此时去 DSH 的模型设置查看配置的精确 ID。目录不是路由有效性的完整名单，插件不会因为未列出就阻止调用。
+
+**未配置模型时，卡片顶部会明确提示「未配置模型，无法 AI 研判：请在插件配置中填写 model（DSH 已注册的 provider/model）」并补充两个字段分别填写。** 模型禁用、服务不可用、调用失败或 JSON 不合要求时也会显示对应原因。只附「仅规则预筛，未经 AI 研判」的证据列表，不给修复或合并结论，也不把这些条目写入已研判缓存；配好模型后会重新判断。简报遵循相同规则。
+
+### ③ 加仓库和业务说明，运行或设定时
+
+内联说明，含空格请加英文引号：
+
+```text
+/triage-repo add owner/repo --both --business "项目提供企业登录服务；核心是认证与会话隔离，优先处理登录失败和权限绕过"
+/triage owner/repo --limit 6
+```
+
+从仓库默认分支读取说明文件，并在每天 09:30 检查：
+
+```text
+/triage-repo add owner/repo --both --business-file docs/business.md --daily 09:30 --limit 10
+/triage-repo add owner/another --prs --every 6 --business "插件框架，重点关注生命周期与依赖隔离"
+```
+
+也可以只读本机文件（路径有空格请加引号）：
+
+```text
+/triage-repo business owner/repo --file "C:\my docs\business.md"
+/triage-repo business owner/repo "新的业务方向：优先保障核心登录流程"
+/triage-repo business owner/repo --clear
+/triage-repo list
+/triage-report owner/repo
+```
+
+路径区分很直接：**相对路径**（`docs/business.md`）使用 GitHub contents API 读取该仓库默认分支；**本机绝对路径**（`C:\docs\business.md`，Linux 可用 `/home/me/business.md`）读取本机普通文件。无需加前缀。拒绝目录、设备路径、UNC/网络共享、Windows 备用数据流；仓库路径拒绝 `..` 和反斜杠。文件只接受 UTF-8 文本，最多 **16KB**；超限或不可读会显示「读取失败」。本机路径中的 `~`、环境变量不会展开。
+
+业务说明可以写项目做什么、核心功能、高风险模块、哪些问题优先。内联文字与文件都配置时会合并；`business` 命令的文本/`--file` 会替换该仓库的两项业务设置，`--clear` 同时清除。其他仓库设置保持原值。文件读取失败但有内联文本时仍使用内联内容，并显示失败状态。未提供可用说明时，模型的理由必须说明「未提供业务说明，按通用标准判断」。
+
+也可在插件配置中设置仓库：
 
 ```yaml
+modelEnabled: true
+provider: "my-route"  # 从 /triage-models 复制
+model: "my-model"    # 从 /triage-models 复制
+limit: 20
 repositories:
   - repo: owner/repo
     mode: both
+    business: "企业登录服务；认证、会话隔离是核心业务"
+    businessFile: docs/business.md
     daily: "09:30"
+    limit: 10
   - repo: owner/another
     mode: prs
+    businessFile: 'C:\my docs\business.md'
     everyHours: 6
-    limit: 10
-limit: 20
-modelEnabled: true
-provider: ""   # 填 DSH 中已经注册的 provider route ID
-model: ""      # 填该 route 的模型 ID；不是 API key
 ```
 
-daily 与 everyHours 二选一，均不设置则不定时。最多 50 个仓库。命令保存的配置优先于静态仓库设置，删除标记优先级最高。
+`daily` 与 `everyHours` 二选一；都不填则仅手动运行。命令的 `--every` 单位为小时。`--issues` / `--prs` / `--both` 选择条目类型；`--limit` 是 issues 与 PR **合计**的候选上限，范围 1–100，默认 20。最多 50 个仓库。再次 `add` 会替换该仓库的全部设置；`business` 子命令只改业务说明。
 
-## 模型、展示和调度
+命令增改清除只保存到插件自己的 `github_triage` 存储域，不改全局配置。命令设置优先于静态配置。`/triage-repo remove owner/repo` 移除/屏蔽仓库；再次 add 恢复。`/triage` 不带仓库则处理全部已配置仓库；带仓库可临时运行。
 
-模型走官方 @deepseek-ai/dsh-llm 的 ctx.llm.stream({ provider, model, system, messages, tools: [], signal })。provider/model 显式选择已有 DSH route，凭据完全由宿主适配器处理；插件不会读取任何 DSH 密钥文件，也不接收 API key。空 route、服务缺失、调用失败或超时均回退规则；默认空 route 因而使用纯规则。此版本不会自动推断当前会话的模型选择。
+## 示例输出
 
-每个新增/更新条目最多一次模型调用，45 秒超时，输出严格 JSON。接受完整 JSON 或 JSON 代码块，缺字段/多字段/枚举错误/畸形 JSON 都回退，并标“模型不可用”或“模型解析失败”。模型证据与规则证据合并，不能抹掉敏感文件标记或直接放行规则阻塞项。仓库正文和 diff 视为不可信数据；模型没有任何工具。纠正记录只代表用户意见，不作为已验证事实。
+以下是格式示例，不是真实仓库研判：
 
-展示沿用 heartbeat-monitor / task-review：ctx.commands.register() 返回 CommandResult.text，经 command/run、command/done 进入会话命令卡片。理由、证据直接附在卡片文字中，用命令查看/纠正；没有单独的展开按钮、webview 或自定义面板。rc.5 实际有 browser factory + UI slots 扩展机制，本包选择共享命令展示路径，未实现专用前端。渲染效果以桌面宿主为准。
+```text
+GitHub 仓库研判 · owner/repo
+业务说明：已使用（docs/business.md，1.2KB）
 
-rc.5 有面向会话提醒的 schedule 服务（daily/every/cron 等），会将 prompt 交给会话处理，不是任意插件 callback scheduler。本包用 ctx.effect 拥有的原生 setInterval（每 30 秒检查一次）和启动 setTimeout 执行自己的只读流水线；卸载时取消请求、清除计时器并关闭存储域。纯函数 dueSlot(schedule, lastRun, now) 可注入时钟。
+#123 登录后会话意外失效
+高 · bug · 真实存在：likely · 值得修
+结合业务：影响核心登录流程，应优先核实并修复。
+理由：复现描述与会话清理代码线索对应，但尚未实际复现。
+- 有复现步骤、有版本信息
+- 相关片段：src/session.ts；说明文件要求优先保障登录
+来源：model
+原链接：https://github.com/owner/repo/issues/123
 
-只在 **DSH 运行且插件已加载**时调度，本地时区按进程 Date 解释。成功后持久化上次运行时间；启动时把错过的多次合并补跑一次。首次启用调度也立即补跑最近一轮；随后等待下一次。不会因短时轮询重复触发。失败不推进成功时间，通常 5 分钟后重试；GitHub 限流按响应头延后。间隔按上次成功运行开始时间计算，长任务可造成漂移，30 秒检查精度不是实时保证。
+#124 调整插件卸载处理
+改完再合 · 符合业务方向：yes · 风险：中
+测试：缺少重复卸载场景的回归测试。
+结合业务：符合生命周期隔离方向，但需补测再合。
+- CI 失败：unit-test
+原链接：https://github.com/owner/repo/pull/124
+```
 
-定时任务在有新增/更新或首次发现仓库功能关闭时生成简报，经 ctx.commands.execute() 推到最近可用的根会话。没有可用会话时持久化待发简报，下次会话创建/轮询再投递；同仓库只保留最新待发简报。无新增/更新且功能关闭提示与上次相同时不推送。默认不发送操作系统通知。并发操作串行化，避免手动研判、定时和纠正互相覆盖。
+`/triage`、`/triage-report` 和新内容简报都会显示业务说明是否使用、来源及大小，或未配置/读取失败。卡片显示结合业务的理由、证据和链接。
 
-数据通过官方 storageDomain.open() 写 github_triage 独立域，由宿主 storage-domain 的 backend/routes 决定位置（JSON 后端位于其配置 root 下的 github_triage.json，其他后端遵循宿主布局）。插件不猜测桌面安装路径，不读取会话密钥文件，不修改全局 cordis.yml。最多缓存 5000 条派生结论。
+## 其他特性
 
-## 拉取、增量和规则边界
+- **只分析新增和有变化的内容，省时间和费用。** 已有 AI 结论才可缓存；模型路由、业务文本或文件内容变化后重新处理。没有 AI 结论的条目会重试，同一失败预筛不重复推送简报。
+- **只读取。** 不会在 GitHub 上评论、改标签、关闭条目或合并 PR，所有 GitHub 请求都是 GET，固定 API 主机并禁止重定向。
+- **每次最多处理多少条可设置。** 全局 limit、仓库 limit 和手动 `--limit` 依次覆盖。
+- **可以纠正结论，以后会参考。** 先得到 AI 研判，再运行 `/triage-fix owner/repo#123 不值得修 已由其他模块解决`。issue 可改类型（bug/需求/提问/重复/无效）或价值（值得修/待补充/不值得修）；PR 可改值得合并/改完再合/不建议合。同项使用用户纠正，后续同仓库同类条目参考最近 8 条纠正。纠正会明确标注来源，不当作已验证事实。
+- **定时跑完有新内容才发简报。** DSH 和插件运行时才调度，每 30 秒检查一次；重启合并补跑最近一轮。首次发现仓库关闭 Issues/PR 也会提示，重复提示保持安静。没可用会话就存在自身域里，之后再投递。
+- **GitHub 登录复用本机 gh 或环境变量，不保存 token。** 顺序为 GH_TOKEN → GITHUB_TOKEN → `gh auth token` → 匿名；匿名额度较低。token 只在私有内存中用于请求头，不送模型、不写报告或日志。输入命令不记入 command/run；插件不会读取 DSH 密钥文件，也不接收模型 API key。
 
-- 每轮先 GET /repos/{owner}/{repo} 读取 has_issues / has_pull_requests。仅显式 false 表示关闭，字段缺失视为开启；关闭时跳过对应列表（及已关闭 Issues 的关联 issue 拉取），在报告和简报中明确提示“该仓库已关闭 Issues/PR 功能”。首次发现关闭即使没有条目也生成一次简报，同样的关闭状态后续保持静默；元数据请求本身失败仍报告真实错误。
-- 仅开放 issues/PR，按最近更新时间取有界窗口；issues 用 GitHub search/issues，PR 用 pulls，最多获取指定 N 条各类型候选，再按更新时间截为合计 N 条。大仓库首次也只分析最近 N 条。不是全仓库历史扫描。
-- 缓存键是仓库+number，指纹为 number+updated_at，PR 再加 head SHA。只有变化才补拉详情、文件、CI 和模型判断。未变条目复用原结论；窗口外旧结果仍在有界缓存内，最近报告只显示本轮窗口。启用模型或改规则不会强制刷新未变条目。
-- PR 文件列表最多 3 页、每页 100；CI statuses/check-runs 各最多 100；关联 issue 最多 3 个，只取同仓库引用。证据不全会明确提示并保守降级。拉取过程中 PR head/updated_at 改变则拒绝缓存混合快照。
-- 关键词定位读取默认分支仓库树，最多 5000 个 blob 路径，报告粗略匹配或“未定位”。不下载/执行仓库代码。关联 issue 以 Fixes/Closes/Resolves 引用与文本相似度粗看对应性，不能证明修复有效。
-- 重复检测用标题/正文字符 bigram 相似度，只比较本次窗口里的较早 issue。模板检查是通用分段启发式，不声称校验仓库专属表单。复现、版本、日志检查也可能误判。
-- CI 单独变化可能不更新 PR 的 updated_at/head SHA，因此缓存可能保留旧 CI 证据；展示的是分析时观察值。此版本没有监听 webhook。
-- 敏感路径包括依赖清单/lockfile、脚本、权限目录、workflows、二进制等。规则提供线索，不替代安全审计、实际代码审查和回归测试。“值得合并”始终是建议，不会触发合并。
+## 限制
 
-## 严格只读与认证
+AI 提供建议，不能证明问题已复现或修复有效。仓库内容、业务说明和用户纠正均当作不可信上下文；模型没有工具。规则只整理缺模板/复现/版本/日志、重复候选、粗略路径、PR 规模、敏感文件、CI、测试与关联 issue 的证据，最终判断由模型给出。规则可能误判，模型可能遗漏问题。
 
-GitHub 客户端在代码层拒绝所有非 GET 方法；GraphQL 仅允许单一显式 query，拒绝 mutation/subscription/多操作文档。请求固定 api.github.com，禁止重定向，不接受任意主机；插件没有评论、打标签、关闭、合并、提交 review 或 reaction 功能。
+每条最多取 **3 个相关文件**，片段每文件最多 **3KB**。issue 用关键词树匹配和报错栈路径找候选文件；PR 保留少量 patch，并取改动文件在默认分支的内容（新文件可能不存在）。只接受不超过 64KB 的普通文本文件，超限/不可读会留下证据缺口提示。仓库树最多 5000 条，PR 文件列表最多 300 个、CI 检查各最多 100 个、关联 issue 最多 3 个。不是完整 diff/代码审查。
 
-认证顺序：GH_TOKEN → GITHUB_TOKEN → 固定 argv 的 gh auth token → 匿名。gh 不存在、未登录或 5 秒超时则回退匿名，并提示限流。token 只驻留私有内存用于请求头；不保存、不输出、不记录日志，不送模型。命令输入不记入 command/run；公开文本和持久化还有凭据脱敏边界。原始网络、模型、OS 异常不回显。
+业务说明送入模型最多 **8KB**，超过会标注截断；整个模型请求最多 **48KB UTF-8**（含 schema、正文、patch、片段、纠正参考），达到上限会删减并提示。每条最多一次模型生成，45 秒超时，输出最多 1800 tokens。JSON 接受普通文本或代码块；必填字段缺失（包括 businessReason）、错误枚举、多余字段或无效 JSON 都不形成结论。issue 必填 type、exists、worthFixing、priority、businessReason、reason、evidence；PR 必填 verdict、fitsDirection、risk、testing、businessReason、reason、evidence，均含 kind。
 
-请求可取消，单次 20 秒超时；403/429 根据 Retry-After / X-RateLimit-Reset 设置冷却，不循环重试。新增运行时依赖 undici 用 EnvHttpProxyAgent 支持 HTTP_PROXY / HTTPS_PROXY / NO_PROXY（也遵循其小写变量规则）；Node 22 内建 fetch 默认不会读取这些代理变量。undici 6 的该 Agent 有实验性警告；不修改全局 dispatcher。zod 4.4.3 与 rc.5 storage-domain 一致，用于存储和模型输出校验；其余 DSH 包是宿主 peer 与本地开发依赖。
+仅处理最近更新的开放条目窗口。缓存指纹包含更新时间、PR head SHA、模型路由和业务内容哈希；**CI 独立变化或相关代码变化**可能不更新条目时间，因而不会单独触发重判。缓存上限 5000 条。0.1.0 升级保留仓库设置与用户纠正，清除旧规则结论、报告和待发简报，下一轮重建。
 
-## 验证与真实 smoke
+本机文件配置应只指向你愿意发送给当前模型服务商的业务文本。已知 GitHub token 有脱敏边界，但不会识别所有任意机密。未配置模型时不会发送文本给模型。
+
+单次 GitHub 请求 20 秒超时；限流按响应头冷却，不循环重试。支持 HTTP_PROXY/HTTPS_PROXY/NO_PROXY；undici 的代理 Agent 可能提示实验性警告。没有 webhook、全历史扫描或后台常驻服务。桌面渲染、真实 provider、长时间调度及 Node 22 实机兼容仍需验收；当前测试环境为 Windows / Node 24。临时 profile 验证不等同于用户桌面安装。
+
+## 参考来源与许可
+
+本包 MIT，原创实现。参考 [dsh-github-flow](https://github.com/ItQianChen/dsh-github-flow)（MIT）的凭据复用和证据组织，以及 [dsh-github-bot](https://github.com/PerryLink/dsh-github-bot)（Apache-2.0）的有界拉取、轮询、PR/CI 证据思路；未直接移植代码，未引入写操作。见 [THIRD_PARTY_NOTICES](THIRD_PARTY_NOTICES)。
+
+官方接口固定核对 [dsh-v0.2.1-rc.5 / b830ec9](https://github.com/deepseek-ai/deepseek-harness/tree/b830ec950faba0a46dda564be3e2d854afed94f1)，模型路由与目录接口见 [llm/src/index.ts](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/packages/llm/llm/src/index.ts)、[types.ts](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/packages/llm/llm/src/types.ts)。
+
+## 开发说明
 
 ```powershell
 npm --prefix packages/dsh-github-triage ci --ignore-scripts
 npm --prefix packages/dsh-github-triage run typecheck
 npm --prefix packages/dsh-github-triage test
 npm --prefix packages/dsh-github-triage run verify-pack
-node packages/dsh-github-triage/scripts/smoke-real.mjs
-node packages/dsh-github-triage/scripts/smoke-real.mjs --schedule-only
+node packages/dsh-github-triage/scripts/smoke-real.mjs cordiverse/cordis --limit 6 --mock-model --business "插件框架，核心是生命周期和依赖隔离"
 ```
 
-smoke 用法：`node packages/dsh-github-triage/scripts/smoke-real.mjs [owner/repo] [--limit 5]`。不经过 DSH，默认仓库 **cordiverse/cordis**（DSH 底层框架，Issues/PR 均开启）；--limit 为 issues/PR 合计候选上限，范围 1–100、默认 5，不要求仓库必须有固定数量的开放条目。可显式验证功能关闭：
+smoke 默认仓库 cordiverse/cordis、合计上限 5；可用 `--business "文本"` / `--business-file <路径>`。**默认无模型**只输出「未配置模型，仅规则预筛」，不输出结论、不缓存为已研判。`--mock-model` 使用确定性**模拟模型**演示完整模型流程与格式，所有模拟理由和输出均标注“模拟模型”，不调用真实 AI，也不证明真实研判准确。`--model-adapter <本地 mjs>` 沿用 default(prompt, signal) 适配器接口，不能与 mock 同用；凭据由适配器负责，脚本不读取模型密钥。
 
-```powershell
-node packages/dsh-github-triage/scripts/smoke-real.mjs cordiverse/cordis --limit 5
-node packages/dsh-github-triage/scripts/smoke-real.mjs deepseek-ai/deepseek-harness --limit 5
-```
+脚本只对 GitHub GET，状态暂存系统 TEMP 并在结束删除；同一真实快照第二轮检查持久化缓存，只有成功研判项命中。另有 `--schedule-only` 离线时钟演示和 `--help`。接口关闭时明确提示并跳过，不把关闭误报为网络失败。
 
-**DSH 官方仓库 deepseek-ai/deepseek-harness 已关闭 Issues 和 PR**（has_issues=false、has_pull_requests=false）。此前 issues 空列表、pulls HTTP 404 的原因已明确，实际数据验收改用 cordiverse/cordis；对官方仓库运行 smoke 会提示关闭并跳过拉取，正常退出。
+`npm test` 会重建 lib，包含规则证据、模型/业务上下文、只读与脱敏，以及使用官方 Loader、storage-domain、commands、llm 的独立临时 profile 加载/重载测试；网络和模型由测试替身提供，不安装到用户 DSH。`verify-pack` 使用 npm pack dry-run 精确白名单检查。如默认 npm cache 不可写，可仅为当前命令设置 `npm_config_cache` 到本 worktree 的 `.tmp/npm-cache`。
 
-脚本默认无模型，逐条打印结论与前两条证据；缓存写系统 TEMP 临时目录，再读取**同一真实快照**，断言 0 条重新分析、实际条数全部命中缓存、无重复简报，结束删除临时目录。还以注入时钟触发两轮 3.6 秒间隔后退出；--schedule-only 仅运行离线调度演示，--help 查看用法。可用 --model-adapter <本地 mjs> 显式提供 default(prompt, signal) 适配器；脚本本身没有外部模型凭据逻辑。
+实际验证结果和未测风险见 [STATUS.md](STATUS.md)。
 
-2026-11-11 在沙箱内真实验收通过：cordiverse/cordis --limit 5 返回 2 issues + 3 PR，第二轮 5 条缓存命中、0 重分析；DSH 官方仓库提示功能关闭、0 条目、退出 0。typecheck、115 项测试（含改名后的临时 rc.5 profile 加载/持久化重载）和 verify-pack 通过。详情见 [STATUS.md](STATUS.md)。未安装进用户 DSH，未测试 Electron 桌面视觉和真实模型请求。
-
-## 参考与许可
-
-本包 MIT，原创实现。参考 [dsh-github-flow](https://github.com/ItQianChen/dsh-github-flow)（MIT）的 gh 凭据复用、分层工具/审查规则思路，以及 [dsh-github-bot](https://github.com/PerryLink/dsh-github-bot)（Apache-2.0）的有界拉取、轮询、PR 文件/测试/CI 证据组织。没有直接移植两者代码片段；未引入其中任何 GitHub 写能力。声明见 [THIRD_PARTY_NOTICES](THIRD_PARTY_NOTICES)。
-
-官方接口核对固定于 [dsh-v0.2.1-rc.5 / b830ec9](https://github.com/deepseek-ai/deepseek-harness/tree/dsh-v0.2.1-rc.5)，更细的路径与签名在 STATUS.md。
-
+English: Read-only GitHub issue/PR triage led by the configured DSH model, using your business context. Rules supply evidence only. Unconfigured or failed models produce clearly labeled pre-screening evidence without judgments or assessed-cache entries. Targets DSH 0.2.1-rc.5 only.

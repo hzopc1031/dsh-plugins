@@ -4,7 +4,8 @@ export declare const domainSpec: {
     version: number;
     tables: {};
     global: {
-        schema: import("zod").ZodObject<{
+        schema: import("zod").ZodPreprocess<import("zod").ZodObject<{
+            formatVersion: import("zod").ZodLiteral<2>;
             overrides: import("zod").ZodRecord<import("zod").ZodString, import("zod").ZodObject<{
                 repo: import("zod").ZodPipe<import("zod").ZodString, import("zod").ZodTransform<string, string>>;
                 mode: import("zod").ZodDefault<import("zod").ZodEnum<{
@@ -20,6 +21,8 @@ export declare const domainSpec: {
                     hours: import("zod").ZodNumber;
                 }, import("zod/v4/core").$strict>], "kind">>;
                 limit: import("zod").ZodOptional<import("zod").ZodNumber>;
+                business: import("zod").ZodOptional<import("zod").ZodString>;
+                businessFile: import("zod").ZodOptional<import("zod").ZodString>;
             }, import("zod/v4/core").$strip>>;
             removed: import("zod").ZodArray<import("zod").ZodPipe<import("zod").ZodString, import("zod").ZodTransform<string, string>>>;
             cache: import("zod").ZodRecord<import("zod").ZodString, import("zod").ZodObject<{
@@ -28,13 +31,13 @@ export declare const domainSpec: {
                     number: import("zod").ZodNumber;
                     title: import("zod").ZodString;
                     url: import("zod").ZodString;
-                    judgment: import("zod").ZodDiscriminatedUnion<[import("zod").ZodObject<{
-                        priority: import("zod").ZodEnum<{
-                            高: "高";
-                            中: "中";
-                            低: "低";
-                        }>;
+                    kind: import("zod").ZodEnum<{
+                        issue: "issue";
+                        pr: "pr";
+                    }>;
+                    judgment: import("zod").ZodOptional<import("zod").ZodDiscriminatedUnion<[import("zod").ZodObject<{
                         reason: import("zod").ZodString;
+                        businessReason: import("zod").ZodString;
                         evidence: import("zod").ZodArray<import("zod").ZodString>;
                         kind: import("zod").ZodLiteral<"issue">;
                         type: import("zod").ZodEnum<{
@@ -44,26 +47,25 @@ export declare const domainSpec: {
                             重复: "重复";
                             无效: "无效";
                         }>;
-                        real: import("zod").ZodEnum<{
-                            是: "是";
-                            待证实: "待证实";
-                            否: "否";
+                        exists: import("zod").ZodEnum<{
+                            confirmed: "confirmed";
+                            likely: "likely";
+                            unclear: "unclear";
+                            not_a_bug: "not_a_bug";
                         }>;
-                        worth: import("zod").ZodEnum<{
+                        worthFixing: import("zod").ZodEnum<{
                             值得修: "值得修";
                             待补充: "待补充";
                             不值得修: "不值得修";
                         }>;
-                        impact: import("zod").ZodString;
-                        severity: import("zod").ZodString;
-                        cost: import("zod").ZodString;
-                    }, import("zod/v4/core").$strict>, import("zod").ZodObject<{
                         priority: import("zod").ZodEnum<{
                             高: "高";
                             中: "中";
                             低: "低";
                         }>;
+                    }, import("zod/v4/core").$strict>, import("zod").ZodObject<{
                         reason: import("zod").ZodString;
+                        businessReason: import("zod").ZodString;
                         evidence: import("zod").ZodArray<import("zod").ZodString>;
                         kind: import("zod").ZodLiteral<"pr">;
                         verdict: import("zod").ZodEnum<{
@@ -71,13 +73,20 @@ export declare const domainSpec: {
                             改完再合: "改完再合";
                             不建议合: "不建议合";
                         }>;
+                        fitsDirection: import("zod").ZodEnum<{
+                            unclear: "unclear";
+                            yes: "yes";
+                            no: "no";
+                        }>;
                         risk: import("zod").ZodEnum<{
                             高: "高";
                             中: "中";
                             低: "低";
                         }>;
-                        suspicious: import("zod").ZodBoolean;
-                    }, import("zod/v4/core").$strict>], "kind">;
+                        testing: import("zod").ZodString;
+                    }, import("zod/v4/core").$strict>], "kind">>;
+                    evidence: import("zod").ZodArray<import("zod").ZodString>;
+                    observation: import("zod").ZodOptional<import("zod").ZodString>;
                     source: import("zod").ZodEnum<{
                         rules: "rules";
                         model: "model";
@@ -90,12 +99,8 @@ export declare const domainSpec: {
                 repo: import("zod").ZodPipe<import("zod").ZodString, import("zod").ZodTransform<string, string>>;
                 number: import("zod").ZodNumber;
                 judgment: import("zod").ZodDiscriminatedUnion<[import("zod").ZodObject<{
-                    priority: import("zod").ZodEnum<{
-                        高: "高";
-                        中: "中";
-                        低: "低";
-                    }>;
                     reason: import("zod").ZodString;
+                    businessReason: import("zod").ZodString;
                     evidence: import("zod").ZodArray<import("zod").ZodString>;
                     kind: import("zod").ZodLiteral<"issue">;
                     type: import("zod").ZodEnum<{
@@ -105,26 +110,25 @@ export declare const domainSpec: {
                         重复: "重复";
                         无效: "无效";
                     }>;
-                    real: import("zod").ZodEnum<{
-                        是: "是";
-                        待证实: "待证实";
-                        否: "否";
+                    exists: import("zod").ZodEnum<{
+                        confirmed: "confirmed";
+                        likely: "likely";
+                        unclear: "unclear";
+                        not_a_bug: "not_a_bug";
                     }>;
-                    worth: import("zod").ZodEnum<{
+                    worthFixing: import("zod").ZodEnum<{
                         值得修: "值得修";
                         待补充: "待补充";
                         不值得修: "不值得修";
                     }>;
-                    impact: import("zod").ZodString;
-                    severity: import("zod").ZodString;
-                    cost: import("zod").ZodString;
-                }, import("zod/v4/core").$strict>, import("zod").ZodObject<{
                     priority: import("zod").ZodEnum<{
                         高: "高";
                         中: "中";
                         低: "低";
                     }>;
+                }, import("zod/v4/core").$strict>, import("zod").ZodObject<{
                     reason: import("zod").ZodString;
+                    businessReason: import("zod").ZodString;
                     evidence: import("zod").ZodArray<import("zod").ZodString>;
                     kind: import("zod").ZodLiteral<"pr">;
                     verdict: import("zod").ZodEnum<{
@@ -132,12 +136,17 @@ export declare const domainSpec: {
                         改完再合: "改完再合";
                         不建议合: "不建议合";
                     }>;
+                    fitsDirection: import("zod").ZodEnum<{
+                        unclear: "unclear";
+                        yes: "yes";
+                        no: "no";
+                    }>;
                     risk: import("zod").ZodEnum<{
                         高: "高";
                         中: "中";
                         低: "低";
                     }>;
-                    suspicious: import("zod").ZodBoolean;
+                    testing: import("zod").ZodString;
                 }, import("zod/v4/core").$strict>], "kind">;
                 reason: import("zod").ZodString;
                 at: import("zod").ZodNumber;
@@ -150,13 +159,13 @@ export declare const domainSpec: {
                     number: import("zod").ZodNumber;
                     title: import("zod").ZodString;
                     url: import("zod").ZodString;
-                    judgment: import("zod").ZodDiscriminatedUnion<[import("zod").ZodObject<{
-                        priority: import("zod").ZodEnum<{
-                            高: "高";
-                            中: "中";
-                            低: "低";
-                        }>;
+                    kind: import("zod").ZodEnum<{
+                        issue: "issue";
+                        pr: "pr";
+                    }>;
+                    judgment: import("zod").ZodOptional<import("zod").ZodDiscriminatedUnion<[import("zod").ZodObject<{
                         reason: import("zod").ZodString;
+                        businessReason: import("zod").ZodString;
                         evidence: import("zod").ZodArray<import("zod").ZodString>;
                         kind: import("zod").ZodLiteral<"issue">;
                         type: import("zod").ZodEnum<{
@@ -166,26 +175,25 @@ export declare const domainSpec: {
                             重复: "重复";
                             无效: "无效";
                         }>;
-                        real: import("zod").ZodEnum<{
-                            是: "是";
-                            待证实: "待证实";
-                            否: "否";
+                        exists: import("zod").ZodEnum<{
+                            confirmed: "confirmed";
+                            likely: "likely";
+                            unclear: "unclear";
+                            not_a_bug: "not_a_bug";
                         }>;
-                        worth: import("zod").ZodEnum<{
+                        worthFixing: import("zod").ZodEnum<{
                             值得修: "值得修";
                             待补充: "待补充";
                             不值得修: "不值得修";
                         }>;
-                        impact: import("zod").ZodString;
-                        severity: import("zod").ZodString;
-                        cost: import("zod").ZodString;
-                    }, import("zod/v4/core").$strict>, import("zod").ZodObject<{
                         priority: import("zod").ZodEnum<{
                             高: "高";
                             中: "中";
                             低: "低";
                         }>;
+                    }, import("zod/v4/core").$strict>, import("zod").ZodObject<{
                         reason: import("zod").ZodString;
+                        businessReason: import("zod").ZodString;
                         evidence: import("zod").ZodArray<import("zod").ZodString>;
                         kind: import("zod").ZodLiteral<"pr">;
                         verdict: import("zod").ZodEnum<{
@@ -193,13 +201,20 @@ export declare const domainSpec: {
                             改完再合: "改完再合";
                             不建议合: "不建议合";
                         }>;
+                        fitsDirection: import("zod").ZodEnum<{
+                            unclear: "unclear";
+                            yes: "yes";
+                            no: "no";
+                        }>;
                         risk: import("zod").ZodEnum<{
                             高: "高";
                             中: "中";
                             低: "低";
                         }>;
-                        suspicious: import("zod").ZodBoolean;
-                    }, import("zod/v4/core").$strict>], "kind">;
+                        testing: import("zod").ZodString;
+                    }, import("zod/v4/core").$strict>], "kind">>;
+                    evidence: import("zod").ZodArray<import("zod").ZodString>;
+                    observation: import("zod").ZodOptional<import("zod").ZodString>;
                     source: import("zod").ZodEnum<{
                         rules: "rules";
                         model: "model";
@@ -212,11 +227,14 @@ export declare const domainSpec: {
                 changed: import("zod").ZodArray<import("zod").ZodNumber>;
                 briefing: import("zod").ZodOptional<import("zod").ZodString>;
                 warnings: import("zod").ZodArray<import("zod").ZodString>;
+                businessStatus: import("zod").ZodString;
+                modelStatus: import("zod").ZodOptional<import("zod").ZodString>;
             }, import("zod/v4/core").$strip>>;
             lastRun: import("zod").ZodRecord<import("zod").ZodString, import("zod").ZodNumber>;
             pending: import("zod").ZodRecord<import("zod").ZodString, import("zod").ZodString>;
-        }, import("zod/v4/core").$strip>;
+        }, import("zod/v4/core").$strip>>;
         initial: {
+            formatVersion: 2;
             overrides: Record<string, {
                 repo: string;
                 mode: "issues" | "prs" | "both";
@@ -228,6 +246,8 @@ export declare const domainSpec: {
                     hours: number;
                 } | undefined;
                 limit?: number | undefined;
+                business?: string | undefined;
+                businessFile?: string | undefined;
             }>;
             removed: string[];
             cache: Record<string, {
@@ -236,27 +256,29 @@ export declare const domainSpec: {
                     number: number;
                     title: string;
                     url: string;
-                    judgment: {
-                        priority: "高" | "中" | "低";
+                    kind: "issue" | "pr";
+                    evidence: string[];
+                    source: "rules" | "model" | "correction";
+                    judgment?: {
                         reason: string;
+                        businessReason: string;
                         evidence: string[];
                         kind: "issue";
                         type: "bug" | "需求" | "提问" | "重复" | "无效";
-                        real: "是" | "待证实" | "否";
-                        worth: "值得修" | "待补充" | "不值得修";
-                        impact: string;
-                        severity: string;
-                        cost: string;
-                    } | {
+                        exists: "confirmed" | "likely" | "unclear" | "not_a_bug";
+                        worthFixing: "值得修" | "待补充" | "不值得修";
                         priority: "高" | "中" | "低";
+                    } | {
                         reason: string;
+                        businessReason: string;
                         evidence: string[];
                         kind: "pr";
                         verdict: "值得合并" | "改完再合" | "不建议合";
+                        fitsDirection: "unclear" | "yes" | "no";
                         risk: "高" | "中" | "低";
-                        suspicious: boolean;
-                    };
-                    source: "rules" | "model" | "correction";
+                        testing: string;
+                    } | undefined;
+                    observation?: string | undefined;
                     modelNote?: string | undefined;
                 };
             }>;
@@ -264,24 +286,23 @@ export declare const domainSpec: {
                 repo: string;
                 number: number;
                 judgment: {
-                    priority: "高" | "中" | "低";
                     reason: string;
+                    businessReason: string;
                     evidence: string[];
                     kind: "issue";
                     type: "bug" | "需求" | "提问" | "重复" | "无效";
-                    real: "是" | "待证实" | "否";
-                    worth: "值得修" | "待补充" | "不值得修";
-                    impact: string;
-                    severity: string;
-                    cost: string;
-                } | {
+                    exists: "confirmed" | "likely" | "unclear" | "not_a_bug";
+                    worthFixing: "值得修" | "待补充" | "不值得修";
                     priority: "高" | "中" | "低";
+                } | {
                     reason: string;
+                    businessReason: string;
                     evidence: string[];
                     kind: "pr";
                     verdict: "值得合并" | "改完再合" | "不建议合";
+                    fitsDirection: "unclear" | "yes" | "no";
                     risk: "高" | "中" | "低";
-                    suspicious: boolean;
+                    testing: string;
                 };
                 reason: string;
                 at: number;
@@ -294,34 +315,38 @@ export declare const domainSpec: {
                     number: number;
                     title: string;
                     url: string;
-                    judgment: {
-                        priority: "高" | "中" | "低";
+                    kind: "issue" | "pr";
+                    evidence: string[];
+                    source: "rules" | "model" | "correction";
+                    judgment?: {
                         reason: string;
+                        businessReason: string;
                         evidence: string[];
                         kind: "issue";
                         type: "bug" | "需求" | "提问" | "重复" | "无效";
-                        real: "是" | "待证实" | "否";
-                        worth: "值得修" | "待补充" | "不值得修";
-                        impact: string;
-                        severity: string;
-                        cost: string;
-                    } | {
+                        exists: "confirmed" | "likely" | "unclear" | "not_a_bug";
+                        worthFixing: "值得修" | "待补充" | "不值得修";
                         priority: "高" | "中" | "低";
+                    } | {
                         reason: string;
+                        businessReason: string;
                         evidence: string[];
                         kind: "pr";
                         verdict: "值得合并" | "改完再合" | "不建议合";
+                        fitsDirection: "unclear" | "yes" | "no";
                         risk: "高" | "中" | "低";
-                        suspicious: boolean;
-                    };
-                    source: "rules" | "model" | "correction";
+                        testing: string;
+                    } | undefined;
+                    observation?: string | undefined;
                     modelNote?: string | undefined;
                 }[];
                 analyzed: number;
                 reused: number;
                 changed: number[];
                 warnings: string[];
+                businessStatus: string;
                 briefing?: string | undefined;
+                modelStatus?: string | undefined;
             }>;
             lastRun: Record<string, number>;
             pending: Record<string, string>;

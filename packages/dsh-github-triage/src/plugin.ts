@@ -9,7 +9,7 @@ import { Github, GithubError } from './github.js'
 import { repoCommand, repositories, runArguments } from './config.js'
 import { correct, render, run } from './pipeline.js'
 import { dueSlot } from './schedule.js'
-import { dshModel } from './model.js'
+import { dshModel, listModels, modelWarning } from './model.js'
 import { SafeText } from './safety.js'
 
 export const name='github-triage'
@@ -17,6 +17,8 @@ export const inject=['commands','storageDomain']
 export const Config = z.object({
   repositories:z.array(z.object({
     repo:z.string().required(),
+    business:z.string().default('').description('项目业务说明：核心功能、高风险模块、优先级原则；与文件内容一同交给 AI'),
+    businessFile:z.string().default('').description('相对路径读 GitHub 默认分支，如 docs/business.md；本机绝对路径只读普通文件，限 16KB，拒绝 UNC/设备路径'),
     mode:z.union(['issues','prs','both']).default('both'),
     daily:z.string().default('').description('本地时间 HH:MM，与 everyHours 二选一'),
     everyHours:z.number().min(0).max(8760).default(0),
@@ -24,21 +26,21 @@ export const Config = z.object({
   })).default([]).description('默认空仓库清单'),
   limit:z.number().min(1).max(100).step(1).default(20),
   modelEnabled:z.boolean().default(true),
-  provider:z.string().default('').description('DSH 已注册的 provider route；空值使用纯规则'),
-  model:z.string().default('').description('该 route 的模型 ID；不接收 API key'),
+  provider:z.string().default('').description('DSH 已注册的服务商路由 ID，运行 /triage-models 复制 provider 值；与 model 分开填，不是密钥；默认空值无法 AI 研判'),
+  model:z.string().default('').description('DSH 已注册服务商下的模型 ID，运行 /triage-models 复制 model 值；不填 provider/model 组合；默认空值无法 AI 研判'),
 })
 export interface Input {
-  repositories?: {repo:string;mode?:'issues'|'prs'|'both';daily?:string;everyHours?:number;limit?:number}[]
+  repositories?: {repo:string;mode?:'issues'|'prs'|'both';daily?:string;everyHours?:number;limit?:number;business?:string;businessFile?:string}[]
   limit?:number;modelEnabled?:boolean;provider?:string;model?:string
 }
 export function settings(input: Input): Settings {
   const repositories=(input.repositories??[]).map(r=>{
     if (r.daily && r.everyHours) throw new Error('daily 与 everyHours 不能同时设置')
-    return repoSchema.parse({repo:r.repo,mode:r.mode??'both',limit:r.limit,
+    return repoSchema.parse({repo:r.repo,mode:r.mode??'both',limit:r.limit,business:r.business,businessFile:r.businessFile,
       schedule:r.daily?{kind:'daily',time:r.daily}:r.everyHours?{kind:'every',hours:r.everyHours}:undefined})
   })
   if (repositories.length>50) throw new Error('最多配置 50 个仓库')
-  return {repositories,limit:limitSchema.parse(input.limit??20),modelEnabled:input.modelEnabled??true,provider:input.provider??'',model:input.model??''}
+  return {repositories,limit:limitSchema.parse(input.limit??20),modelEnabled:input.modelEnabled??true,provider:input.provider?.trim()??'',model:input.model?.trim()??''}
 }
 export async function apply(ctx: Context, input: Input = {}): Promise<void> {
   const config=settings(input), domain=await ctx.storageDomain.open(domainSpec)
@@ -79,7 +81,7 @@ export async function apply(ctx: Context, input: Input = {}): Promise<void> {
     const client=new Github({safe})
     try {
       const next=structuredClone(state),now=Date.now()
-      const report=await run(client,repo,next,{limit,now,model:dshModel(ctx,config),signal})
+      const report=await run(client,repo,next,{limit,now,model:dshModel(ctx,config),modelRoute:JSON.stringify([config.modelEnabled,config.provider,config.model]),modelNote:modelWarning(ctx,config),signal})
       // Credentials learned from gh must also be redacted at the durable boundary.
       const clean=client.safe.value(next)
       if (scheduled) {
@@ -109,11 +111,15 @@ export async function apply(ctx: Context, input: Input = {}): Promise<void> {
   }
   command('triage-repo','增删、列出只读研判 GitHub 仓库',async i=>serialize(async()=>{
     const raw=safe.text(i.rawInput).trim()
-    if (raw==='list') return repositories(config.repositories,state).map(r=>r.repo+' · '+r.mode+' · '+(r.schedule?JSON.stringify(r.schedule):'仅手动')+' · 上限 '+(r.limit??config.limit)).join('\n')||'未配置仓库。'
-    const next=structuredClone(state),message=repoCommand(raw,next)
+    if (raw==='list') return repositories(config.repositories,state).map(r=>r.repo+' · '+r.mode+' · '+(r.schedule?JSON.stringify(r.schedule):'仅手动')+' · 上限 '+(r.limit??config.limit)+' · 业务说明：'+(r.businessFile||(r.business?'内联文本':'未配置'))).join('\n')||'未配置仓库。'
+    const next=structuredClone(state),message=repoCommand(raw,next,config.repositories)
     if (repositories(config.repositories,next).length>50) throw new Error('最多 50 个仓库')
     await save(next);return message
   }))
+  command('triage-models','列出 DSH 已注册的 provider 和 model（只读）',async i=>{
+    if(i.rawInput.trim())throw new Error('无参数')
+    return listModels(ctx)
+  })
   command('triage','只读研判 GitHub issues/PR',async i=>{
     const {repo,limit}=runArguments(safe.text(i.rawInput)),signal=AbortSignal.any([i.signal,lifetime.signal])
     return serialize(async()=>{

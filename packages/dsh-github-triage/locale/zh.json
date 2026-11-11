@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "GitHub 仓库研判",
+    "description": "只读研判 GitHub issues 和 PR，支持定时检查、证据与用户纠正"
+  }
+}

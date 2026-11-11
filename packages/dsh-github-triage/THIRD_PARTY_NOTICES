@@ -1,0 +1,24 @@
+dsh-github-triage 0.1.0
+
+This package is an original implementation, licensed under MIT (see LICENSE).
+
+Implementation ideas were studied from:
+- ItQianChen/dsh-github-flow — MIT
+  https://github.com/ItQianChen/dsh-github-flow
+  Studied gh credential reuse and repository review rule separation.
+- PerryLink/dsh-github-bot — Apache-2.0
+  https://github.com/PerryLink/dsh-github-bot
+  Studied bounded read-only fetching, polling and PR-level evidence organization.
+
+No source code snippets from either project were transplanted, copied or
+modified into this package. No upstream NOTICE content is incorporated.
+Their licenses continue to apply to their respective original projects.
+
+Runtime dependencies are distributed separately by npm:
+- undici (MIT) — https://github.com/nodejs/undici
+- zod (MIT) — https://github.com/colinhacks/zod
+Their distributed packages retain their own copyright and license notices.
+
+Official DeepSeek Harness rc.5 packages are host peers/development dependencies.
+Local monorepo package conventions were followed under this repository's MIT license.
+

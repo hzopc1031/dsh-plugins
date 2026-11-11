@@ -2,11 +2,12 @@ import { CommandDefinitionId } from '@deepseek-ai/dsh-commands';
 import { defineTool } from '@deepseek-ai/dsh-tools';
 import z from '@deepseek-ai/schemastery';
 import { randomUUID } from 'node:crypto';
-import { realpath } from 'node:fs/promises';
+import { constants } from 'node:fs';
+import { lstat, mkdtemp, open, realpath, rename, rm, writeFile } from 'node:fs/promises';
 import { isAbsolute } from 'node:path';
-import { ingest, readOriginal, fieldNames } from './ingest.js';
+import { ingest, readOriginal } from './ingest.js';
 import { reconcile } from './reconcile.js';
-import { exportPack } from './export.js';
+import { exportPack, packDisclaimer } from './export.js';
 export const name = 'invoice-gate';
 export const inject = ['commands', 'tools'];
 export const Config = z.object({});
@@ -21,7 +22,31 @@ function keys(value, allowed) {
 }
 function path(value) {
     if (typeof value !== 'string' || !value || isAbsolute(value) || value.includes('\0') || value.split(/[\\/]/).includes('..'))
-        fail('Use project-relative paths without traversal. Paths outside the project are rejected.');
+        fail(`路径 ${typeof value === 'string' ? JSON.stringify(value) : '（未提供有效路径）'}：已拒绝越界或无效路径。请使用项目内、无 .. 的相对路径。Use project-relative paths without traversal.`);
+}
+async function readDocument(root, file) {
+    let data;
+    try {
+        data = await readOriginal(root, file);
+    }
+    catch (error) {
+        fail(`文件 ${JSON.stringify(file)}：${error instanceof Error && error.message === 'path-outside-project'
+            ? '路径越界或符号链接不安全，已拒绝读取。请将普通文件放入所选项目。'
+            : '文件不存在或无法读取。请检查相对路径、读取权限并提供普通文件。'}`);
+    }
+    let text;
+    try {
+        text = new TextDecoder('utf-8', { fatal: true }).decode(data);
+    }
+    catch {
+        fail(`文件 ${JSON.stringify(file)}：不是有效 UTF-8。请另存为 UTF-8 JSON；清单和人工确认文件不使用 GB18030 回退。`);
+    }
+    try {
+        return JSON.parse(text);
+    }
+    catch {
+        fail(`文件 ${JSON.stringify(file)}：JSON 格式损坏或已截断。请检查语法并重新提供完整 JSON。`);
+    }
 }
 const help = [
     'dsh-invoice-gate — local verification gate / 本地票据核对闸门',
@@ -29,7 +54,7 @@ const help = [
     '/invoice-gate ingest | check | export <new-directory> | status | stop | help',
     'Tools: invoice_gate_ingest {}, invoice_gate_check {}, invoice_gate_export {"directory":"SAMPLE-pack"}.',
     'Native tools only during a run; PTC run_code is blocked. Slash commands work without a model.',
-    'Results contain counts, ids, status and paths only. Open report files locally for details. See docs/tools.md for the manifest schema.',
+    '命令回执和项目内状态 Markdown 提供中文摘要；工具仅返回计数、ID、状态及路径。请打开状态文件与证据包。清单格式见 docs/tools.md。',
     'No OCR or tax-bureau verification (不做 OCR／税局验真).',
     'The model must never invent or change amounts, tax, totals or identifiers. No rewrite tool. 模型不得编造或改写金额、税额、合计、票号。',
     'No model calls or automatic uploads; no outbound network. 不调用模型、不自动上传、不联网。',
@@ -38,7 +63,8 @@ const help = [
 ].join('\n');
 function summary(run) {
     return {
-        runId: run.id, status: run.checked ? (run.checked.fullyConfirmed ? 'locally-confirmed' : 'draft') : run.extracted ? 'ingested' : 'started',
+        runId: run.id, status: run.stopped ? 'stopped' : run.checked ? (run.checked.fullyConfirmed ? 'locally-confirmed' : 'draft') : run.extracted ? 'ingested' : 'started',
+        statusFile: run.statusFile,
         manifest: run.manifest, project: run.root, externalVerification: 'not-checked',
         counts: {
             files: run.extracted?.files.length ?? 0, records: run.extracted?.records.length ?? 0,
@@ -50,8 +76,74 @@ function summary(run) {
         ...(run.pack ? { pack: run.pack } : {}),
     };
 }
+const markdown = (text) => text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replace(/[\\`*_[\]]/g, '\\$&').replace(/\r\n|\r|\n/g, ' ');
+function readableStatus(run) {
+    const info = summary(run);
+    const exceptions = run.extracted?.inventory.filter(item => ['failed', 'refused', 'partial'].includes(item.status)) ?? [];
+    return [
+        '# 票据核对运行状态 / Invoice Gate', '',
+        `- 运行 ID：${run.id}`,
+        `- 运行阶段：${run.stopped ? '已停止（工具限制已恢复）' : { started: '已开始，等待导入', ingested: '已导入，等待检查', draft: '已检查', 'locally-confirmed': '已检查' }[info.status]}`,
+        `- 核对状态：${run.checked?.fullyConfirmed ? '本地字段核对完成（locally-confirmed）；外部核验未执行' : '草稿（draft）：本地核对未完成'}`,
+        `- 文件数：${info.counts.files}；记录数：${info.counts.records}；异常清单项数：${info.counts.exceptions}（含文件及页／行，非去重文件数）`,
+        `- 差异数：${info.counts.mismatches}；无法检查规则数：${info.counts.unchecked}；待核关键字段数：${info.counts.pendingKeyFields}`,
+        `- 项目目录：${markdown(run.root)}`,
+        `- 输入清单：${markdown(run.manifest)}`,
+        `- 状态文件（项目相对路径）：${run.statusFile}`, '',
+        '外部核验：未执行（not-checked）；不做 OCR／税局验真。', '',
+        '## 导入异常', '',
+        ...(exceptions.length ? exceptions.map(item => `- ${markdown(item.message ?? '请查看证据包导入清单。')} [${item.fileId} / ${item.unit} / ${item.status} / ${item.reason}]`) : ['当前无已记录的导入异常；未导入或未检查不代表通过。']), '',
+        '## 证据包路径（相对于项目目录）', '',
+        ...(run.pack ? [
+            `- 导出目录：${markdown(run.pack.directory)}`,
+            `- Markdown 报告：${markdown(run.pack.files.markdown)}`,
+            `- XLSX 报告：${markdown(run.pack.files.xlsx)}`,
+            `- JSON 报告：${markdown(run.pack.files.json)}`,
+        ] : ['尚未导出当前快照的证据包。']), '',
+        '仅使用命令的 DSH 会话可能不显示结果卡片。请在所选项目中打开此状态文件及证据包查看结果；本文件不含金额表或原文。', '',
+        packDisclaimer, '',
+    ].join('\n');
+}
+async function writeStatus(run) {
+    const text = readableStatus(run);
+    const parent = await open(run.root, constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW);
+    let stage;
+    try {
+        const anchor = `/proc/self/fd/${parent.fd}`;
+        if (await realpath(anchor) !== run.root)
+            fail('状态文件目录已改变，请恢复所选项目目录后重试。');
+        stage = await mkdtemp(`${anchor}/.invoice-gate-status-`);
+        await writeFile(`${stage}/status.md`, text, { flag: 'wx', mode: 0o600 });
+        const identity = await lstat(`${stage}/status.md`);
+        let existing;
+        try {
+            existing = await lstat(`${anchor}/${run.statusFile}`);
+        }
+        catch (error) {
+            if (error.code !== 'ENOENT')
+                throw error;
+        }
+        if (existing ? !existing.isFile() || existing.dev !== run.statusIdentity?.dev || existing.ino !== run.statusIdentity?.ino : run.statusIdentity !== undefined)
+            fail('状态文件已被替换、删除或变为符号链接；为保护文件已拒绝覆盖，请停止后重新开始。');
+        if (await realpath(anchor) !== run.root)
+            fail('状态文件目录已改变，请恢复所选项目目录后重试。');
+        // shortcut: single-operator rename, as with evidence packs; add coordination before concurrent writers.
+        await rename(`${stage}/status.md`, `${anchor}/${run.statusFile}`);
+        run.statusIdentity = { dev: identity.dev, ino: identity.ino };
+        return text;
+    }
+    finally {
+        try {
+            if (stage)
+                await rm(stage, { recursive: true, force: true });
+        }
+        finally {
+            await parent.close();
+        }
+    }
+}
 export function apply(ctx) {
-    let run, busy = false;
+    let run, stopped, busy = false;
     const lifecycle = new AbortController();
     const directory = (agent) => {
         const service = ctx.get('workingDirectory');
@@ -67,9 +159,9 @@ export function apply(ctx) {
     };
     const errorText = (error, signal) => signal.aborted || lifecycle.signal.aborted
         ? 'Command cancelled / 命令已取消。'
-        : error instanceof GateError ? error.message : 'Local operation failed. Check confined paths, file permissions, manifest and correction schema. No financial details are logged.';
-    ctx.effect(() => () => { lifecycle.abort(); run?.release(); run = undefined; });
-    async function perform(verb, args, agent, signal) {
+        : error instanceof GateError ? error.message : '本地操作失败。请检查项目内路径、文件权限、清单及人工确认文件格式；未记录财务明细。Local operation failed.';
+    ctx.effect(() => () => { lifecycle.abort(); run?.release(); run = undefined; stopped = undefined; });
+    async function perform(verb, args, agent, signal, command = false) {
         const control = AbortSignal.any([signal, lifecycle.signal]);
         try {
             control.throwIfAborted();
@@ -106,7 +198,8 @@ export function apply(ctx) {
                 }
                 else
                     fail('Unsupported action. Amount/identifier rewrite is not available.');
-                return JSON.stringify(summary(active));
+                const text = await writeStatus(active);
+                return command ? text : JSON.stringify(summary(active));
             }
             finally {
                 busy = false;
@@ -157,19 +250,31 @@ export function apply(ctx) {
                 const [, verb = 'help', arg = ''] = /^(\S+)?(?:\s+([\s\S]*))?$/.exec(rawInput.trim()) ?? [];
                 if (verb === 'help' && !arg)
                     return { kind: 'success', text: help };
-                if (verb === 'status' && !arg)
-                    return { kind: 'success', text: JSON.stringify(run ? summary(current(agent)) : { status: 'stopped' }) };
-                if (verb === 'start' || verb === 'stop') {
+                if (['start', 'stop', 'status'].includes(verb)) {
                     if (busy)
                         fail('A local operation is still running; wait before retrying or stopping.');
                     busy = true;
                     try {
+                        if (verb === 'status' && !arg) {
+                            const active = run ? current(agent) : stopped?.agent === agent ? stopped : undefined;
+                            return { kind: 'success', text: active ? await writeStatus(active) : '票据核对已停止；尚无本会话的运行状态文件。请使用 /invoice-gate start <manifest.json> 开始。' };
+                        }
                         if (verb === 'stop' && !arg) {
-                            if (run) {
-                                current(agent).release();
-                                run = undefined;
+                            const active = run ? current(agent) : stopped?.agent === agent ? stopped : undefined;
+                            if (!active)
+                                return { kind: 'success', text: '票据核对已停止；尚无本会话的运行状态文件。' };
+                            active.stopped = true;
+                            try {
+                                return { kind: 'success', text: await writeStatus(active) };
                             }
-                            return { kind: 'success', text: 'Stopped. Tool restrictions restored; exported files retained. 已停止。' };
+                            finally {
+                                if (run) {
+                                    run.release();
+                                    run = undefined;
+                                }
+                                ;
+                                stopped = active;
+                            }
                         }
                         if (verb !== 'start')
                             fail('Use /invoice-gate stop without arguments.');
@@ -177,7 +282,7 @@ export function apply(ctx) {
                             fail('Only one run is allowed. Stop the current run first.');
                         path(arg);
                         const root = await realpath(directory(agent));
-                        const manifest = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(await readOriginal(root, arg)));
+                        const manifest = await readDocument(root, arg);
                         keys(manifest, ['schemaVersion', 'inputs', 'rules', 'corrections']);
                         if (manifest.schemaVersion !== 1 || !Array.isArray(manifest.inputs) || !manifest.inputs.length)
                             fail('Manifest requires schemaVersion 1 and a nonempty inputs array.');
@@ -190,18 +295,13 @@ export function apply(ctx) {
                                 path(input.ocrJson);
                             if (input.sheet !== undefined && typeof input.sheet !== 'string')
                                 fail('Input sheet must be a string.');
-                            if (input.mapping !== undefined) {
-                                keys(input.mapping, [...fieldNames]);
-                                if (Object.values(input.mapping).some(value => typeof value !== 'string' || !value))
-                                    fail('Column mapping requires nonempty header strings.');
-                            }
                         }
                         const rules = (manifest.rules === undefined ? {} : manifest.rules);
                         reconcile({ files: [], inventory: [], records: [] }, rules);
                         let corrections;
                         if (manifest.corrections !== undefined) {
                             path(manifest.corrections);
-                            corrections = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(await readOriginal(root, manifest.corrections)));
+                            corrections = await readDocument(root, manifest.corrections);
                         }
                         control.throwIfAborted();
                         const restore = agent.ctx.tools.restrict({ allow: toolNames });
@@ -218,15 +318,25 @@ export function apply(ctx) {
                             restore();
                             throw error;
                         }
-                        run = { id: randomUUID(), agent, root, manifest: arg, inputs: manifest.inputs, rules, corrections, release: () => { unguard?.(); restore(); unwatch(); } };
-                        return { kind: 'success', text: JSON.stringify(summary(run)) };
+                        const id = randomUUID();
+                        run = { id, agent, root, manifest: arg, statusFile: `invoice-gate-${id}-status.md`, inputs: manifest.inputs, rules, corrections, release: () => { unguard?.(); restore(); unwatch(); } };
+                        try {
+                            const text = await writeStatus(run);
+                            stopped = undefined;
+                            return { kind: 'success', text };
+                        }
+                        catch (error) {
+                            run.release();
+                            run = undefined;
+                            throw error;
+                        }
                     }
                     finally {
                         busy = false;
                     }
                 }
                 if ((['ingest', 'check'].includes(verb) && !arg) || (verb === 'export' && arg)) {
-                    return { kind: 'success', text: await perform(verb, verb === 'export' ? { directory: arg } : {}, agent, control) };
+                    return { kind: 'success', text: await perform(verb, verb === 'export' ? { directory: arg } : {}, agent, control, true) };
                 }
                 fail('Unsupported action. Amount/identifier rewrite hooks are rejected. Use /invoice-gate help.');
             }

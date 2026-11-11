@@ -32,6 +32,7 @@ export interface ExtractedField {
   source: Source | null
   review: 'pending' | 'unreadable'
   issue?: string
+  message?: string
 }
 export interface ExtractedRecord {
   id: string
@@ -48,6 +49,7 @@ export interface InventoryEntry {
   unit: 'file' | 'sheet' | 'page' | 'row'
   status: Status
   reason?: string
+  message?: string
   encoding?: 'utf-8' | 'gb18030'
   sheet?: string
   row?: number
@@ -59,6 +61,7 @@ export interface OriginalFile {
   sha256: string | null
   status: Status
   reason?: string
+  message?: string
   originalFileId?: string
 }
 export interface IngestResult {
@@ -68,7 +71,72 @@ export interface IngestResult {
 }
 
 class Refusal extends Error {}
+class InputFailure extends Error {}
 function refuse(message: string): never { throw new Refusal(message) }
+const reasonMessages: Record<string, string> = {
+  'ofd-out-of-mvp-use-xml-pdf-or-ocr-json': '不支持 OFD。请提供电子发票 XML、带文本层的 PDF，或按 docs/inputs.md 提供 OCR JSON。',
+  'raster-image-provide-ocr-json': '图片不能直接提取票据字段。请自行识别后提供 OCR JSON，并用 ocrJson 指定；本插件不做 OCR。',
+  'no-text-layer-provide-ocr-json': 'PDF 此页没有可用文本层，可能为扫描页。请提供 OCR JSON 并用 ocrJson 指定；本插件不做 OCR。',
+  'unrecognized-pdf-labels-provide-ocr-json': 'PDF 此页有文本，但无法识别票据字段标签。请按 docs/inputs.md 提供 OCR JSON，勿猜测金额。',
+  'ambiguous-pdf-label': 'PDF 此页存在重复字段标签，无法唯一取值。请人工核对并提供 OCR JSON。',
+  'pdf-page-read-failed': 'PDF 此页读取失败。请检查原文件是否损坏或加密，重新导出可读 PDF 或提供 OCR JSON。',
+  'pdf-read-failed': 'PDF 无法解析。请检查文件是否损坏或加密，重新导出完整可读的 PDF。',
+  'truncated-pdf': 'PDF 缺少结束标记，可能已截断。请重新复制或导出完整 PDF。',
+  'unknown-xml-structure': '无法识别 XML 票据结构。请按 docs/inputs.md 的 Invoice schemaVersion="1" 结构转换，或提供字段 JSON。',
+  'malformed-xml': 'XML 格式损坏或未闭合。请重新导出完整 XML，并检查标签是否配对。',
+  'xml-dtd-and-entities-refused': 'XML 含 DTD 或实体声明，已拒绝解析。请提供不含这些声明的票据 XML 或字段 JSON。',
+  'unknown-xml-line-items': 'XML 明细结构不受支持。请按 docs/inputs.md 的 lineItems/item 结构提供。',
+  'unknown-xml-fields': 'XML 字段结构不受支持。请按 docs/inputs.md 提供平铺的文本字段。',
+  'invalid-xml-label': 'XML 示例标签不是文本。请将 Label 改为文本后重新导入。',
+  'unsupported-format': '不支持此文件格式。请提供 CSV、XLSX、文档规定的 JSON、文本层 PDF 或电子发票 XML。',
+  'path-outside-project': '路径越界或符号链接不安全，已拒绝读取。请将普通文件放入所选项目，使用无 .. 的项目相对路径，勿使用文件符号链接。',
+  'not-a-regular-file': '输入不是普通文件。请提供项目内的普通文件，勿选择目录、管道或设备。',
+  'input-unreadable': '文件不存在或无法读取。请检查项目相对路径、读取权限，以及父目录是否存在。',
+  'input-read-or-parse-failed': '文件读取或解析失败。请检查读取权限、文件完整性及 docs/inputs.md 中的格式要求。',
+  'malformed-json': 'JSON 格式损坏或已截断。请检查 JSON 语法并重新导出完整文件。',
+  'malformed-xlsx': 'XLSX 无法解析，可能损坏、截断或格式不符。请重新导出完整的 .xlsx 文件。',
+  'explicit-column-mapping-required': '缺少明确列映射。请在清单 mapping 中指定字段和对应表头，插件不会猜列。',
+  'invalid-column-mapping': '列映射无效。请使用 docs/inputs.md 中的字段名，并将 mapping 值设为非空表头文本。',
+  'missing-or-ambiguous-mapped-header': '映射的表头不存在或重复。请核对 mapping 与所选工作表表头，使每个表头唯一匹配。',
+  'empty-table': '表格为空。请提供含表头与数据行的表格并指定 mapping。',
+  'empty-workbook': 'XLSX 没有工作表。请重新导出包含数据工作表的 .xlsx 文件。',
+  'selected-sheet-not-found': '找不到指定工作表。请核对清单 sheet 的完整名称，或移除 sheet 以导入所有工作表。',
+  'csv-encoding-invalid-utf8-or-gb18030': 'CSV 编码无效：无法严格按 UTF-8／GB18030 解码（UTF-8 BOM 文件必须为 UTF-8）。请重新另存为 UTF-8 CSV，勿混用编码。',
+  'input-encoding-invalid-utf8': '文件不是有效 UTF-8。请将 JSON／XML 另存为 UTF-8；GB18030 回退仅适用于 CSV。',
+  'identifier-must-be-text': '票号为数值类型，已拒绝作为标识符使用。请从原件核对完整票号，在 XLSX 中存为文本或在 JSON 中使用带引号的字符串；勿转换已丢失精度的数值。',
+  'fields-must-be-strings-or-null': '字段必须为字符串或 null。请按 docs/inputs.md 将金额等字段写为文本，缺失值用 null，勿猜填。',
+  'formula-without-cache': '公式没有可用缓存值，未执行也未猜算。请人工核对原件，另行提供已核对的静态值。',
+  'unexpected-date-cell': '日期单元格类型与映射不符或日期无效。请核对列映射和日期格式。',
+  'unsupported-cell-value': '单元格不是受支持的存储值。请核对原件后提供文本或静态值。',
+  'unreadable-fields': '本行有无法读取的字段。请按字段说明核对原件后重新提供输入。',
+  'truncated-csv': 'CSV 引号未闭合，文件可能截断。请重新导出完整 CSV。',
+  'malformed-csv': 'CSV 引号格式错误。请重新导出正确转义的 CSV。',
+  'csv-column-count': 'CSV 本行列数与表头不一致。请检查分隔符、引号及文件完整性。',
+  'invalid-input': '输入条目无效。请在清单 inputs 中提供含 path、kind 的对象。',
+  'invalid-input-kind': '输入 kind 无效。请使用 ticket 或 ledger。',
+  'invalid-input-options': '输入选项无效。请将 sheet、ocrJson 设为字符串。',
+  'invalid-json-fields': 'JSON fields 含未知字段或不是对象。请按 docs/inputs.md 提供字段对象。',
+  'invalid-json-record': 'JSON 记录结构无效。请按 docs/inputs.md 检查 fields、lineItems 和 label。',
+  'invalid-ocr-field': 'OCR 字段结构无效。请提供 raw 及可选 page、box，勿添加未知字段。',
+  'invalid-ocr-page': 'OCR 页码无效。请提供从 1 开始的整数页码。',
+  'invalid-ocr-box': 'OCR 坐标无效。请提供四个非负数且右下坐标不小于左上坐标，勿编造位置。',
+  'unsupported-json-schema': 'JSON 文档结构不受支持。请按 docs/inputs.md 提供 schemaVersion 1、type 和 records。',
+  'empty-json-records': 'JSON records 为空。请提供实际提取的记录，勿编造字段。',
+  'invalid-line-items': 'JSON lineItems 必须为数组。请按 docs/inputs.md 修正结构。',
+  'ocr-sidecar-must-be-json': 'OCR 附件必须为 .json 文件。请用 ocrJson 指向字段 JSON。',
+  'ocr-sidecar-only-for-pdf-or-images': 'OCR 附件仅能关联 PDF 或图片。请移除该关联并直接导入结构化文件。',
+  'sidecar-requires-ocr-schema': 'OCR 附件的 type 必须为 ocr。请按 docs/inputs.md 提供 OCR JSON。',
+  'ocr-sidecar-failed': '关联 OCR JSON 导入失败。请查看该附件的清单说明并修正后重新导入。',
+  'see-unit-inventory': '文件含拒绝、失败或待核单元。请逐项查看下列工作表／页／行说明，修正后重新导入。',
+  'sheet-not-selected': '此工作表或行未被选中。若需导入，请修改清单 sheet。',
+  'explicit-ocr-sidecar': '已选择 OCR JSON，此原件页不直接提取字段。请查看关联 JSON 的导入结果。',
+  'header': '表头行，仅用于明确列映射。',
+  'blank-row': '空行，未生成票据记录。',
+}
+function inputMessage(file: Pick<OriginalFile, 'path'>, entry: { sheet?: string; row?: number; page?: number; cell?: string; path?: string }, reason: string): string {
+  const unit = [entry.sheet === undefined ? '' : `工作表 ${JSON.stringify(entry.sheet)}`, entry.page === undefined ? '' : `第 ${entry.page} 页`, entry.row === undefined ? '' : `第 ${entry.row} 行`, entry.cell ?? '', entry.path ?? ''].filter(Boolean).join('，')
+  return `文件 ${JSON.stringify(file.path)}${unit ? `（${unit}）` : ''}：${reasonMessages[reason] ?? '此单元无法处理。请按 docs/inputs.md 检查输入结构后重新导入。'}`
+}
 const object = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value)
 const inside = (root: string, path: string) => { const rel = relative(root, path); return rel !== '..' && !rel.startsWith('..' + sep) && !isAbsolute(rel) }
 
@@ -112,7 +180,7 @@ export async function readOriginal(root: string, path: string): Promise<Buffer> 
     child.on('close', code => {
       if (code === 0) accept(Buffer.concat(chunks))
       else if (code === 2 || code === 3) reject(new Refusal(code === 2 ? 'path-outside-project' : 'not-a-regular-file'))
-      else reject(new Error('input-read-or-parse-failed'))
+      else reject(new InputFailure('input-unreadable'))
     })
   })
 }
@@ -125,7 +193,7 @@ function emptyFields(): Record<FieldName, ExtractedField> {
   return Object.fromEntries(fieldNames.map(name => [name, field(null, null)])) as Record<FieldName, ExtractedField>
 }
 function unreadable(source: Source, issue: string): ExtractedField {
-  return { raw: null, source, review: 'unreadable', issue }
+  return { raw: null, source, review: 'unreadable', issue, message: inputMessage({ path: source.file }, source, issue) }
 }
 const hasIssue = (fields: Record<FieldName, ExtractedField>) => Object.values(fields).some(value => value.issue)
 
@@ -208,7 +276,7 @@ function parseTable(rows: ExcelJS.CellValue[][], file: OriginalFile, input: Inpu
       const source: Source = { file: file.path, raw: null, row: index + 1, ...(sheet ? { sheet, cell: `${columnName(column + 1)}${index + 1}` } : { path: `/rows/${index + 1}/columns/${column + 1}` }) }
       fields[name] = tableCell(row[column] ?? null, source, name)
     }
-    if (hasIssue(fields)) { entry.status = 'partial'; entry.reason = 'unreadable-fields' }
+    if (hasIssue(fields)) { entry.status = 'partial'; entry.reason = 'unreadable-fields'; entry.message = Object.values(fields).flatMap(value => value.message ? [value.message] : []).join('；') }
     result.records.push({ id: `${file.id}:${sheet ?? 'csv'}:${index + 1}`, fileId: file.id, kind: input.kind, fields })
   }
 }
@@ -239,13 +307,16 @@ function jsonFields(value: unknown, file: OriginalFile, path: string): Record<Fi
         source.box = entry.box as Source['box']
       }
     }
+    if (name === 'number' && typeof raw === 'number') refuse('identifier-must-be-text')
     fields[name as FieldName] = field(raw, { ...source, raw: typeof raw === 'string' ? raw : null })
   }
   return fields
 }
 
 function parseJson(data: Buffer, file: OriginalFile, result: IngestResult): void {
-  const doc: unknown = JSON.parse(decode(data))
+  const text = decode(data)
+  let doc: unknown
+  try { doc = JSON.parse(text) } catch { throw new InputFailure('malformed-json') }
   if (!object(doc) || doc.schemaVersion !== 1 || !['tickets', 'ocr', 'ledger'].includes(doc.type as string)
     || !Array.isArray(doc.records) || Object.keys(doc).some(key => !['schemaVersion', 'type', 'label', 'records'].includes(key))
     || (doc.label !== undefined && typeof doc.label !== 'string')) refuse('unsupported-json-schema')
@@ -335,10 +406,14 @@ async function parsePdf(data: Buffer, file: OriginalFile, result: IngestResult, 
         result.records.push({ id: `${file.id}:pdf:${page}`, fileId: file.id, kind: 'ticket', fields })
       } catch { entry.status = 'failed'; entry.reason = 'pdf-page-read-failed' }
     }
-  } finally { await task.destroy() }
+  } catch { throw new InputFailure('pdf-read-failed') }
+  finally { await task.destroy() }
 }
 
-function decode(data: Buffer): string { return new TextDecoder('utf-8', { fatal: true }).decode(data).replace(/^\uFEFF/, '') }
+function decode(data: Buffer): string {
+  try { return new TextDecoder('utf-8', { fatal: true }).decode(data).replace(/^\uFEFF/, '') }
+  catch { refuse('input-encoding-invalid-utf8') }
+}
 
 function decodeCsv(data: Buffer): { text: string; encoding: 'utf-8' | 'gb18030' } {
   const bom = data.subarray(0, 3).equals(Buffer.from([0xef, 0xbb, 0xbf]))
@@ -370,6 +445,8 @@ export async function ingest(projectDir: string, inputs: readonly InputFile[]): 
       if (!['ticket', 'ledger'].includes(input.kind)) refuse('invalid-input-kind')
       if ((input.sheet !== undefined && typeof input.sheet !== 'string') || (input.ocrJson !== undefined && typeof input.ocrJson !== 'string')) refuse('invalid-input-options')
       const ext = extname(file.path).toLowerCase()
+      if (!['.csv', '.xlsx'].includes(ext) && input.mapping !== undefined && (!object(input.mapping)
+        || Object.entries(input.mapping).some(([name, label]) => !fieldNames.includes(name as FieldName) || typeof label !== 'string' || !label))) refuse('invalid-column-mapping')
       if (originalFileId && ext !== '.json') refuse('ocr-sidecar-must-be-json')
       const original = originalFileId ? result.files.find(file => file.id === originalFileId) : file
       if ((input.ocrJson !== undefined || originalFileId) && !['.pdf', '.png', '.jpg', '.jpeg', '.tif', '.tiff', '.bmp', '.webp'].includes(extname(original!.path).toLowerCase())) refuse('ocr-sidecar-only-for-pdf-or-images')
@@ -380,9 +457,10 @@ export async function ingest(projectDir: string, inputs: readonly InputFile[]): 
         parseTable(rows.map(row => row.cells), file, input, result, undefined, new Map(rows.flatMap((row, i) => row.issue ? [[i + 1, row.issue] as const] : [])))
       } else if (ext === '.xlsx') {
         const workbook = new ExcelJS.Workbook()
-        await workbook.xlsx.load(data as unknown as ExcelJS.Buffer)
+        try { await workbook.xlsx.load(data as unknown as ExcelJS.Buffer) }
+        catch { throw new InputFailure('malformed-xlsx') }
         if (!workbook.worksheets.length) refuse('empty-workbook')
-        if (input.sheet !== undefined && !workbook.getWorksheet(input.sheet)) result.inventory.push({ fileId: id, unit: 'sheet', status: 'refused', reason: 'selected-sheet-not-found' })
+        if (input.sheet !== undefined && !workbook.getWorksheet(input.sheet)) result.inventory.push({ fileId: id, unit: 'sheet', sheet: input.sheet, status: 'refused', reason: 'selected-sheet-not-found' })
         for (const sheet of workbook.worksheets) {
           const selected = input.sheet === undefined || sheet.name === input.sheet
           result.inventory.push({ fileId: id, unit: 'sheet', sheet: sheet.name, status: selected ? 'parsed' : 'skipped', ...(selected ? {} : { reason: 'sheet-not-selected' }) })
@@ -399,7 +477,8 @@ export async function ingest(projectDir: string, inputs: readonly InputFile[]): 
       } else refuse('unsupported-format')
     } catch (error) {
       file.status = error instanceof Refusal ? 'refused' : 'failed'
-      file.reason = error instanceof Refusal ? error.message : 'input-read-or-parse-failed'
+      file.reason = error instanceof Refusal || error instanceof InputFailure ? error.message
+        : ['ENOENT', 'EACCES', 'EPERM', 'ENOTDIR'].includes((error as NodeJS.ErrnoException)?.code ?? '') ? 'input-unreadable' : 'input-read-or-parse-failed'
     }
     const entries = result.inventory.slice(start)
     if (file.status === 'parsed' && entries.some(entry => ['failed', 'refused', 'partial'].includes(entry.status))) {
@@ -415,6 +494,10 @@ export async function ingest(projectDir: string, inputs: readonly InputFile[]): 
         const entry = result.inventory.find(entry => entry.fileId === id && entry.unit === 'file')!
         entry.status = file.status; entry.reason = file.reason
       }
+    }
+    if (file.reason) file.message = inputMessage(file, {}, file.reason)
+    for (const entry of result.inventory.slice(start).filter(entry => entry.fileId === id)) {
+      if (entry.reason && !entry.message) entry.message = inputMessage(file, entry, entry.reason)
     }
   }
   for (const [index, input] of inputs.entries()) await load(input, `file-${index + 1}`)

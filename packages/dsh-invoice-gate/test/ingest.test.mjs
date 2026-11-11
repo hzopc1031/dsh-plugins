@@ -110,7 +110,8 @@ test('invalid mixed CSV bytes and invalid UTF-8 after a BOM are refused, hashed 
     ['file', 'refused', 'csv-encoding-invalid-utf8-or-gb18030', undefined],
     ['file', 'refused', 'csv-encoding-invalid-utf8-or-gb18030', undefined],
   ])
-  assert.equal(result.files[2].status, 'failed')
+  assert.equal(result.files[2].status, 'refused')
+  assert.equal(result.files[2].reason, 'input-encoding-invalid-utf8')
 })
 
 test('XLSX preserves text identifiers, cached values and formula-only fields; inventories blank and unselected rows', async () => {
@@ -382,6 +383,80 @@ test('missing, unreadable, malformed and truncated inputs are inventoried withou
   assert.equal(result.records[0].fields.number.raw, 'SAMPLE-OK')
   assert.ok(!JSON.stringify(result.inventory).includes('SAMPLE-PRIVATE'))
   assert.ok(!JSON.stringify(result.files).includes('SAMPLE-PRIVATE'))
+})
+
+test('every known refusal has a file/unit-specific Chinese explanation and next step', async t => {
+  const root = await temp(t)
+  for (const name of ['sample.ofd', 'scan.png', 'scan.pdf', 'unknown.xml', 'ledger.xlsx', 'clean.csv']) await copyFile(fixtures + name, root + '/' + name)
+  const pdf = (await readFile(fixtures + 'text.pdf')).toString('latin1')
+  const unlabelled = pdf.replace(/(?:Date|Number|Buyer|Seller|Amount|Tax|Total|Currency|MaterialType):/g, label => 'Z'.repeat(label.length - 1) + ':')
+  assert.equal(Buffer.byteLength(unlabelled, 'latin1'), Buffer.byteLength(pdf, 'latin1'))
+  await writeFile(root + '/SAMPLE-labels.pdf', Buffer.from(unlabelled, 'latin1'))
+  for (const [name, data] of [
+    ['SAMPLE-malformed.xml', '<Invoice><Label>SAMPLE 非真实票据</Label>'],
+    ['SAMPLE-unsupported.bin', 'SAMPLE 非真实票据'],
+    ['SAMPLE-truncated.pdf', '%PDF-1.4 SAMPLE non-real invoice'],
+    ['SAMPLE-bad.json', '{"label":"SAMPLE 非真实票据",'],
+    ['SAMPLE-bad.xlsx', 'SAMPLE 非真实票据 truncated zip'],
+    ['SAMPLE-truncated.csv', '票号,金额\nSAMPLE,"1'],
+    ['SAMPLE-invalid.csv', Buffer.from([0xff, 0x81])],
+    ['SAMPLE-invalid.json', Buffer.from([0xff])],
+    ['SAMPLE-invalid.xml', Buffer.from([0xff])],
+    ['SAMPLE-unreadable.json', 'SAMPLE 非真实票据'],
+    ['SAMPLE-number.json', JSON.stringify({ schemaVersion: 1, type: 'ocr', label: 'SAMPLE 非真实票据', records: [{ fields: { number: 123 } }] })],
+  ]) await writeFile(root + '/' + name, data)
+  await chmod(root + '/SAMPLE-unreadable.json', 0)
+  await mkdir(root + '/project')
+  await symlink(root + '/clean.csv', root + '/project/SAMPLE-link.csv')
+  const cases = [
+    [input('sample.ofd'), 'file', 'ofd-out-of-mvp-use-xml-pdf-or-ocr-json', /不支持 OFD.*请提供/],
+    [input('scan.png'), 'page', 'raster-image-provide-ocr-json', /图片.*请.*OCR JSON/],
+    [input('scan.pdf'), 'page', 'no-text-layer-provide-ocr-json', /第 1 页.*没有可用文本层.*请提供 OCR JSON/],
+    [input('SAMPLE-labels.pdf'), 'page', 'unrecognized-pdf-labels-provide-ocr-json', /第 1 页.*无法识别票据字段标签.*请.*OCR JSON/],
+    [input('unknown.xml'), 'file', 'unknown-xml-structure', /无法识别 XML 票据结构.*请/],
+    [input('SAMPLE-malformed.xml'), 'file', 'malformed-xml', /XML 格式损坏或未闭合.*请/],
+    [input('SAMPLE-unsupported.bin'), 'file', 'unsupported-format', /不支持此文件格式.*请提供 CSV/],
+    [input('SAMPLE-missing.json'), 'file', 'input-unreadable', /文件不存在或无法读取.*请检查/],
+    [input('SAMPLE-unreadable.json'), 'file', 'input-unreadable', /无法读取.*读取权限/],
+    [input('SAMPLE-truncated.pdf'), 'file', 'truncated-pdf', /PDF 缺少结束标记.*请重新/],
+    [input('SAMPLE-bad.json'), 'file', 'malformed-json', /JSON 格式损坏或已截断.*请/],
+    [input('SAMPLE-bad.xlsx'), 'file', 'malformed-xlsx', /XLSX 无法解析.*请重新/],
+    [input('SAMPLE-truncated.csv', { mapping: { number: '票号' } }), 'row', 'truncated-csv', /第 2 行.*引号未闭合.*请重新/],
+    [input('clean.csv'), 'file', 'explicit-column-mapping-required', /缺少明确列映射.*请.*mapping/],
+    [input('clean.csv', { mapping: { unknown: '金额' } }), 'file', 'invalid-column-mapping', /列映射无效.*请/],
+    [input('clean.csv', { mapping: { number: '' } }), 'file', 'invalid-column-mapping', /列映射无效.*请/],
+    [input('clean.csv', { mapping: { number: '不存在 SAMPLE' } }), 'file', 'missing-or-ambiguous-mapped-header', /表头不存在或重复.*请核对/],
+    [input('SAMPLE-invalid.csv', { mapping }), 'file', 'csv-encoding-invalid-utf8-or-gb18030', /UTF-8／GB18030.*请重新另存/],
+    [input('SAMPLE-invalid.json'), 'file', 'input-encoding-invalid-utf8', /不是有效 UTF-8.*请.*UTF-8/],
+    [input('SAMPLE-invalid.xml'), 'file', 'input-encoding-invalid-utf8', /不是有效 UTF-8.*请.*UTF-8/],
+    [input('SAMPLE-number.json'), 'row', 'identifier-must-be-text', /第 1 行.*票号为数值类型.*请从原件核对完整票号/],
+    [input('ledger.xlsx', { mapping, sheet: '示例台账 SAMPLE' }), 'row', 'unreadable-fields', /工作表.*第 4 行.*B4.*票号为数值类型.*请从原件核对/],
+    [input('ledger.xlsx', { mapping, sheet: '不存在 SAMPLE' }), 'sheet', 'selected-sheet-not-found', /工作表.*不存在 SAMPLE.*找不到指定工作表.*请核对/],
+  ]
+  const result = await ingest(root, cases.map(([spec]) => spec))
+  assert.equal(result.files.length, cases.length)
+  for (const [i, [spec, unit, reason, message]] of cases.entries()) {
+    const file = result.files[i]
+    assert.ok(['refused', 'failed', 'partial'].includes(file.status), spec.path)
+    assert.ok(file.message.includes(spec.path), spec.path)
+    const entry = result.inventory.find(entry => entry.fileId === file.id && entry.unit === unit && entry.reason === reason)
+    assert.ok(entry, `${spec.path}: ${reason} is inventoried`)
+    assert.match(entry.message, message)
+    assert.ok(entry.message.includes(spec.path))
+    assert.ok(result.inventory.some(entry => entry.fileId === file.id && entry.unit === 'file'))
+  }
+  for (const spec of [input('../clean.csv'), input(root + '/clean.csv'), input('SAMPLE-link.csv')]) {
+    const refused = await ingest(root + '/project', [spec])
+    assert.equal(refused.inventory.length, 1)
+    assert.equal(refused.inventory[0].reason, 'path-outside-project')
+    assert.equal(refused.files[0].sha256, null)
+    assert.ok(refused.inventory[0].message.includes(spec.path))
+    assert.match(refused.inventory[0].message, /路径越界或符号链接不安全.*请将普通文件放入所选项目/)
+  }
+  for (const entry of result.inventory) if (entry.reason) assert.ok(entry.message, entry.reason)
+  const unreadable = result.records.flatMap(record => Object.values(record.fields)).filter(field => field.issue)
+  assert.ok(unreadable.some(field => field.issue === 'identifier-must-be-text' && field.message.includes('票号为数值类型')))
+  for (const field of unreadable) assert.ok(field.message)
 })
 
 test('ledger and ticket fixtures share string ids; parser leaves unmatched sides and mismatches intact', async () => {

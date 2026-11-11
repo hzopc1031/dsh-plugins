@@ -1,6 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { copyFile, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises'
+import fs from 'node:fs/promises'
+import { copyFile, lstat, mkdir, mkdtemp, readFile, readdir, rename, rm, symlink, writeFile } from 'node:fs/promises'
+import { syncBuiltinESMExports } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import http from 'node:http'
 import https from 'node:https'
@@ -50,9 +52,152 @@ async function fixture(t, directoryOf) {
   }
 }
 const value = result => { assert.equal(result.isError, false, JSON.stringify(result)); return JSON.parse(result.value) }
-const success = result => { assert.equal(result.kind, 'success', result.text); return JSON.parse(result.text) }
+const success = result => { assert.equal(result.kind, 'success', result.text); return result.text }
 const failure = result => { assert.equal(result.isError, true, JSON.stringify(result)); return JSON.stringify(result) }
 const dummy = name => ({ name, description: 'SAMPLE inert tool', parameters: { type: 'object', properties: {} }, output: { schema: { type: 'string' }, render: (_args, text) => [{ type: 'text', text }] }, execute: async () => 'SAMPLE' })
+
+test('all six commands atomically refresh one Chinese Markdown status file and return its exact text', async t => {
+  const f = await fixture(t)
+  await copyFile(new URL('./fixtures/sample.ofd', import.meta.url), f.project + '/SAMPLE.ofd')
+  await writeFile(f.project + '/SAMPLE-run.json', JSON.stringify({ ...manifest, inputs: [input, { path: 'SAMPLE.ofd', kind: 'ticket' }, { path: 'SAMPLE-missing.json', kind: 'ticket' }] }))
+  let file, previousInode
+  for (const command of ['start SAMPLE-run.json', 'ingest', 'check', 'export SAMPLE-pack', 'status', 'stop', 'status']) {
+    const text = success(await f.call(command))
+    const selected = /状态文件（项目相对路径）：(invoice-gate-[\da-f-]{36}-status\.md)/.exec(text)?.[1]
+    assert.ok(selected, text)
+    file ??= selected
+    assert.equal(selected, file)
+    assert.equal(await readFile(f.project + '/' + file, 'utf8'), text)
+    const stat = await lstat(f.project + '/' + file)
+    assert.notEqual(stat.ino, previousInode, 'atomic replace creates a new inode')
+    previousInode = stat.ino
+    assert.equal(stat.mode & 0o777, 0o600)
+    for (const token of ['运行 ID：', '草稿（draft）', '文件数：', '异常清单项数：', '仅使用命令的 DSH 会话可能不显示结果卡片', '打开此状态文件及证据包', '不证明票据真实、已付款或可报销']) assert.ok(text.includes(token), token)
+    if (!command.startsWith('start')) {
+      assert.match(text, /文件数：3；记录数：1；异常清单项数：2/)
+      assert.match(text, /SAMPLE\.ofd.*不支持 OFD.*请提供/)
+      assert.match(text, /SAMPLE-missing\.json.*文件不存在或无法读取.*请检查/)
+    }
+    if (['export SAMPLE-pack', 'status', 'stop'].includes(command)) {
+      for (const path of ['SAMPLE-pack/report.md', 'SAMPLE-pack/report.xlsx', 'SAMPLE-pack/export-report.json']) assert.ok(text.includes(path), path)
+    }
+    if (command === 'stop') assert.match(text, /已停止（工具限制已恢复）/)
+    assert.doesNotMatch(text, /100\.00|108\.00|12345678901234567890|SAMPLE 示例买方/)
+    assert.ok(!(await readdir(f.project)).some(name => name.startsWith('.invoice-gate-status-')))
+  }
+})
+
+test('native tools update the local status path while keeping refusal details and evidence out of model results', async t => {
+  const f = await fixture(t)
+  await copyFile(new URL('./fixtures/scan.pdf', import.meta.url), f.project + '/SAMPLE-scan.pdf')
+  await writeFile(f.project + '/SAMPLE-run.json', JSON.stringify({ ...manifest, inputs: [input, { path: 'SAMPLE-scan.pdf', kind: 'ticket' }] }))
+  success(await f.call('start SAMPLE-run.json'))
+  let statusFile
+  for (const verb of ['ingest', 'check', 'export']) {
+    const response = await f.tool(verb, verb === 'export' ? { directory: 'SAMPLE-pack' } : {})
+    const info = value(response)
+    statusFile ??= info.statusFile
+    assert.equal(info.statusFile, statusFile)
+    assert.equal(info.counts.files, 2)
+    assert.equal(info.counts.exceptions, 2)
+    assert.deepEqual(Object.keys(info).sort(), ['runId', 'status', 'statusFile', 'manifest', 'project', 'externalVerification', 'counts', ...(verb === 'export' ? ['pack'] : [])].sort())
+    const status = await readFile(f.project + '/' + info.statusFile, 'utf8')
+    assert.match(status, /SAMPLE-scan\.pdf.*第 1 页.*没有可用文本层.*OCR JSON/)
+    assert.equal(success(await f.call('status')), status)
+    for (const forbidden of ['没有可用文本层', 'message', 'inventory', '100.00', '108.00', '12345678901234567890', 'SAMPLE 示例买方', 'raw', 'lineItems']) assert.ok(!JSON.stringify(response).includes(forbidden), forbidden)
+    if (verb === 'export') {
+      assert.match(status, /SAMPLE-pack\/report\.md/)
+      assert.match(await readFile(f.project + '/SAMPLE-pack/report.md', 'utf8'), /没有可用文本层/)
+    }
+  }
+})
+
+test('invalid manifest column mappings are inventoried on ingest instead of guessed', async t => {
+  const f = await fixture(t)
+  await copyFile(new URL('./fixtures/clean.csv', import.meta.url), f.project + '/SAMPLE.csv')
+  for (const mapping of [undefined, { number: '' }, { unknown: '金额' }, { number: '不存在 SAMPLE' }]) {
+    await writeFile(f.project + '/SAMPLE-run.json', JSON.stringify({ ...manifest, inputs: [{ path: 'SAMPLE.csv', kind: 'ledger', mapping }] }))
+    success(await f.call('start SAMPLE-run.json'))
+    const text = success(await f.call('ingest'))
+    assert.match(text, /SAMPLE\.csv.*(?:缺少明确列映射|列映射无效|表头不存在或重复)/)
+    assert.match(text, /记录数：0；异常清单项数：1/)
+    success(await f.call('stop'))
+  }
+})
+
+test('manifest and correction read/decode failures name the file and give safe Chinese next steps', async t => {
+  const f = await fixture(t)
+  for (const [path, data, expected] of [
+    ['SAMPLE-invalid.json', Buffer.from([0xff]), /不是有效 UTF-8.*请另存为 UTF-8 JSON/],
+    ['SAMPLE-invalid.json', '{"label":"SAMPLE-PRIVATE 非真实票据",', /JSON 格式损坏或已截断.*请检查语法/],
+    ['SAMPLE-missing.json', undefined, /文件不存在或无法读取.*请检查相对路径/],
+  ]) {
+    if (data !== undefined) await writeFile(f.project + '/' + path, data)
+    const refused = await f.call('start ' + path)
+    assert.equal(refused.kind, 'error')
+    assert.ok(refused.text.includes(path))
+    assert.match(refused.text, expected)
+    assert.doesNotMatch(refused.text, /SAMPLE-PRIVATE/)
+  }
+  await writeFile(f.project + '/SAMPLE-confirmations.json', Buffer.from([0xff]))
+  await writeFile(f.project + '/SAMPLE-run.json', JSON.stringify({ ...manifest, corrections: 'SAMPLE-confirmations.json' }))
+  assert.match((await f.call('start SAMPLE-run.json')).text, /SAMPLE-confirmations\.json.*不是有效 UTF-8.*请另存为 UTF-8 JSON/)
+  await symlink(f.root, f.project + '/SAMPLE-escape')
+  await writeFile(f.root + '/SAMPLE-outside.json', JSON.stringify(manifest))
+  assert.match((await f.call('start SAMPLE-escape/SAMPLE-outside.json')).text, /SAMPLE-escape\/SAMPLE-outside\.json.*符号链接不安全.*请将普通文件/)
+})
+
+test('status replacement refuses symlinks and other files; stop still restores tools after a write failure', async t => {
+  const f = await fixture(t)
+  f.host.tools.register(dummy('SAMPLE_global'))
+  success(await f.call('start SAMPLE-run.json'))
+  const info = value(await f.tool('ingest'))
+  const target = f.project + '/' + info.statusFile
+  const original = await readFile(f.project + '/SAMPLE.json')
+  await rm(target)
+  await symlink(f.project + '/SAMPLE.json', target)
+  const refused = await f.call('status')
+  assert.equal(refused.kind, 'error')
+  assert.match(refused.text, /符号链接.*拒绝覆盖/)
+  assert.deepEqual(await readFile(f.project + '/SAMPLE.json'), original)
+  assert.equal((await f.call('stop')).kind, 'error')
+  assert.ok(f.host.tools.schemas(f.agent).some(tool => tool.name === 'SAMPLE_global'))
+  success(await f.call('start SAMPLE-run.json'))
+  const next = value(await f.tool('ingest'))
+  assert.notEqual(next.statusFile, info.statusFile)
+  await writeFile(f.project + '/SAMPLE-replacement.md', 'SAMPLE 非真实票据 — keep this file')
+  await rename(f.project + '/SAMPLE-replacement.md', f.project + '/' + next.statusFile)
+  assert.equal((await f.call('status')).kind, 'error')
+  assert.equal(await readFile(f.project + '/' + next.statusFile, 'utf8'), 'SAMPLE 非真实票据 — keep this file')
+  assert.ok(!(await readdir(f.project)).some(name => name.startsWith('.invoice-gate-status-')))
+})
+
+test('late status write failure preserves the previous recap and cleans staging files', async t => {
+  const f = await fixture(t)
+  success(await f.call('start SAMPLE-run.json'))
+  const info = value(await f.tool('ingest'))
+  const before = await readFile(f.project + '/' + info.statusFile)
+  const hook = t.mock.method(fs, 'rename', async () => { throw new Error('SAMPLE injected write failure') })
+  syncBuiltinESMExports()
+  t.after(syncBuiltinESMExports)
+  assert.equal((await f.call('check')).kind, 'error')
+  assert.deepEqual(await readFile(f.project + '/' + info.statusFile), before)
+  assert.ok(!(await readdir(f.project)).some(name => name.startsWith('.invoice-gate-status-')))
+  hook.mock.restore(); syncBuiltinESMExports()
+  assert.match(success(await f.call('status')), /差异数：1/)
+})
+
+test('status escapes filenames as Markdown and never includes rejected file contents', async t => {
+  const f = await fixture(t)
+  const path = 'SAMPLE_<script>_[x]*.bin'
+  await writeFile(f.project + '/' + path, 'SAMPLE-PRIVATE 非真实票据 — original text')
+  await writeFile(f.project + '/SAMPLE-run.json', JSON.stringify({ ...manifest, inputs: [{ path, kind: 'ticket' }] }))
+  success(await f.call('start SAMPLE-run.json'))
+  const text = success(await f.call('ingest'))
+  assert.match(text, /&lt;script&gt;/)
+  assert.ok(text.includes('\\[x\\]\\*'))
+  assert.doesNotMatch(text, /<script>|SAMPLE-PRIVATE|original text/)
+})
 
 test('metadata, three prefixed tools, command input suppression and disposal', async t => {
   const f = await fixture(t)
@@ -80,7 +225,7 @@ test('help and errors state boundaries without reflecting untrusted financial in
     assert.equal(result.kind, 'error'); assert.ok(!result.text.includes(input))
   }
   assert.match((await f.call('help', AbortSignal.abort())).text, /cancelled/)
-  assert.equal(success(await f.call('status')).status, 'stopped')
+  assert.match(success(await f.call('status')), /已停止/)
   assert.match(failure(await f.tool('check')), /Start a confined run/)
 })
 
@@ -89,8 +234,8 @@ test('command and native tool pipeline ingest/check/export return only summaries
   for (const [object, key] of [[http, 'request'], [https, 'request'], [net, 'connect'], [net, 'createConnection'], [globalThis, 'fetch']]) t.mock.method(object, key, () => { throw new Error('network forbidden') })
   const before = await readFile(f.project + '/SAMPLE.json')
   const started = success(await f.call('start SAMPLE-run.json'))
-  assert.equal(started.status, 'started')
-  assert.match(started.runId, /^[\da-f-]{36}$/)
+  assert.match(started, /已开始，等待导入/)
+  const runId = /运行 ID：([\da-f-]{36})/.exec(started)[1]
   assert.match(failure(await f.tool('check')), /ingest before check/)
   assert.match(failure(await f.tool('export', { directory: 'SAMPLE-pack' })), /check before export/)
   const ingested = await f.tool('ingest'), checked = await f.tool('check')
@@ -108,13 +253,14 @@ test('command and native tool pipeline ingest/check/export return only summaries
   assert.ok(JSON.stringify(report).includes('108.00'))
   assert.match(await readFile(f.project + '/SAMPLE-pack/report.md', 'utf8'), /2\.00/)
   assert.deepEqual(await readFile(f.project + '/SAMPLE.json'), before)
-  assert.equal(success(await f.call('status')).runId, started.runId)
+  assert.ok(success(await f.call('status')).includes(runId))
   success(await f.call('ingest'))
   success(await f.call('check'))
   const commandExport = success(await f.call('export SAMPLE-command-pack'))
-  assert.equal(commandExport.pack.status, 'draft')
+  assert.match(commandExport, /草稿（draft）/)
+  assert.match(commandExport, /SAMPLE-command-pack\/report\.md/)
   assert.equal((await f.call('stop')).kind, 'success')
-  assert.equal(success(await f.call('status')).status, 'stopped')
+  assert.match(success(await f.call('status')), /已停止/)
   assert.ok(await readFile(f.project + '/SAMPLE-pack/report.md'))
 })
 
@@ -148,10 +294,10 @@ test('clean command run passes arithmetic and exports a draft until human field 
   success(await f.call('start SAMPLE-run.json'))
   success(await f.call('ingest'))
   const checked = success(await f.call('check'))
-  assert.equal(checked.counts.mismatches, 0)
-  assert.equal(checked.counts.exceptions, 0)
-  assert.ok(checked.counts.pendingKeyFields > 0)
-  assert.equal(checked.status, 'draft')
+  assert.match(checked, /差异数：0/)
+  assert.match(checked, /异常清单项数：0/)
+  assert.match(checked, /待核关键字段数：[1-9]/)
+  assert.match(checked, /草稿（draft）/)
   value(await f.tool('export', { directory: 'SAMPLE-clean' }))
   const report = JSON.parse(await readFile(f.project + '/SAMPLE-clean/export-report.json', 'utf8'))
   assert.ok(report.results.some(rule => rule.ruleId === 'amount-tax-total' && rule.outcome === 'pass'))
@@ -232,7 +378,7 @@ test('effective cwd changes fail closed and agent/plugin disposal clears run and
   assert.match(failure(await f.tool('ingest')), /Project directory changed/)
   changed = false
   await f.scope.dispose()
-  assert.equal(success(await f.call('status')).status, 'stopped')
+  assert.match(success(await f.call('status')), /已停止/)
   assert.match(failure(await f.host.tools.execute({ name: 'SAMPLE_other', agent: f.agent, arguments: {}, signal, callId: 'SAMPLE' })), /unknown tool/)
   f.dispose()
   assert.equal(f.host.tools.schemas(f.agent).length, 0)

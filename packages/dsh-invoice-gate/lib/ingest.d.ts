@@ -25,6 +25,7 @@ export interface ExtractedField {
     source: Source | null;
     review: 'pending' | 'unreadable';
     issue?: string;
+    message?: string;
 }
 export interface ExtractedRecord {
     id: string;
@@ -41,6 +42,7 @@ export interface InventoryEntry {
     unit: 'file' | 'sheet' | 'page' | 'row';
     status: Status;
     reason?: string;
+    message?: string;
     encoding?: 'utf-8' | 'gb18030';
     sheet?: string;
     row?: number;
@@ -52,6 +54,7 @@ export interface OriginalFile {
     sha256: string | null;
     status: Status;
     reason?: string;
+    message?: string;
     originalFileId?: string;
 }
 export interface IngestResult {

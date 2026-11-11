@@ -13,7 +13,7 @@ assert.deepEqual(files, [
   'icon.svg', 'index.d.ts', 'index.js', 'lib/plugin.d.ts', 'lib/plugin.js', 'lib/ingest.d.ts', 'lib/ingest.js',
   'locale/en.json', 'locale/zh.json', 'package.json',
   'lib/reconcile.d.ts', 'lib/reconcile.js',
-  'lib/export.d.ts', 'lib/export.js', 'docs/exports.md', 'docs/tools.md',
+  'lib/export.d.ts', 'lib/export.js', 'lib/write.d.ts', 'lib/write.js', 'docs/exports.md', 'docs/tools.md',
 ].sort(), 'package allowlist mismatch')
 assert.equal(pkg.name, 'dsh-invoice-gate')
 assert.equal(pkg.version, '0.1.0')

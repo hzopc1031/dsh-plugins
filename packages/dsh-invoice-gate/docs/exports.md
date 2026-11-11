@@ -1,6 +1,6 @@
 # Local evidence pack writer
 
-`exportPack(projectDir, directory, reconciliationResult, options?)` writes a new pack directory inside the project. It uses the installed ExcelJS dependency, local filesystem and SHA-256 only. No model, DSH service or network connection is needed. The DSH command/tools/UI are not wired to this library yet.
+`exportPack(projectDir, directory, reconciliationResult, options?)` writes a new pack directory inside the project. It uses the installed ExcelJS dependency, local filesystem and SHA-256 only. No model, DSH service or network connection is needed. DSH commands and tools call this library; see [tools.md](tools.md).
 
 ```js
 import { ingest, reconcile, exportPack } from 'dsh-invoice-gate'
@@ -15,7 +15,7 @@ const summary = await exportPack(project, 'SAMPLE-pack-01', run, {
 // Keep data, run and the report files local; they contain financial evidence.
 ```
 
-The directory must be a **new relative path**; its parent must already exist. Absolute paths, `..`, escaping symlinks, non-directory parents and existing destinations (including symlinks and empty directories) are refused. Use a new name for each export. Outputs never overwrite originals or a previous pack. Linux descriptor checks through `/proc/self/fd` confine both the output parent and copied inputs to the real project directory. The final parent and copied source leaf must not be symlinks.
+The directory must be a **new relative path**; its parent must already exist. Absolute paths, `..`, escaping symlinks, non-directory parents and existing destinations (including symlinks and empty directories) are refused. Use a new name for each export. Outputs never overwrite originals or a previous pack. Private Node processes pin ancestors in their working directory without `/proc/self/fd` or `/dev/fd`. The writer checks directory device/inode across entry, its canonical location and all ancestor identities before publishing by rename; copied originals use the confined read-only reader and must match their ingest SHA-256. Staging is removed on failure. Tests force both fd paths to fail on Linux; native macOS/Windows have not been tested. The final parent and copied source leaf must not be symlinks.
 
 The writer creates a private staging directory beside the destination, writes all three reports and optional originals there, then publishes the completed directory with one rename. Errors remove staging and leave existing packs unchanged. This is single-operator publication, not a concurrent multi-writer protocol or power-loss durability guarantee; do not move project directories while an export runs. XLSX's row/cell limits cause an explicit failure rather than silent truncation.
 

@@ -3,12 +3,12 @@ import { CommandDefinitionId, type CommandInvocation } from '@deepseek-ai/dsh-co
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import z from '@deepseek-ai/schemastery'
 import { randomUUID } from 'node:crypto'
-import { constants } from 'node:fs'
-import { lstat, mkdtemp, open, realpath, rename, rm, writeFile } from 'node:fs/promises'
+import { realpath } from 'node:fs/promises'
 import { isAbsolute } from 'node:path'
 import { ingest, readOriginal, type InputFile, type IngestResult } from './ingest.js'
 import { reconcile, type ReconcileOptions, type ReconciliationResult } from './reconcile.js'
 import { exportPack, packDisclaimer, type ExportSummary } from './export.js'
+import { writeConfined } from './write.js'
 
 export const name = 'invoice-gate'
 export const inject = ['commands', 'tools']
@@ -115,26 +115,14 @@ function readableStatus(run: Run): string {
 
 async function writeStatus(run: Run): Promise<string> {
   const text = readableStatus(run)
-  const parent = await open(run.root, constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW)
-  let stage: string | undefined
   try {
-    const anchor = `/proc/self/fd/${parent.fd}`
-    if (await realpath(anchor) !== run.root) fail('状态文件目录已改变，请恢复所选项目目录后重试。')
-    stage = await mkdtemp(`${anchor}/.invoice-gate-status-`)
-    await writeFile(`${stage}/status.md`, text, { flag: 'wx', mode: 0o600 })
-    const identity = await lstat(`${stage}/status.md`)
-    let existing
-    try { existing = await lstat(`${anchor}/${run.statusFile}`) }
-    catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error }
-    if (existing ? !existing.isFile() || existing.dev !== run.statusIdentity?.dev || existing.ino !== run.statusIdentity?.ino : run.statusIdentity !== undefined) fail('状态文件已被替换、删除或变为符号链接；为保护文件已拒绝覆盖，请停止后重新开始。')
-    if (await realpath(anchor) !== run.root) fail('状态文件目录已改变，请恢复所选项目目录后重试。')
-    // shortcut: single-operator rename, as with evidence packs; add coordination before concurrent writers.
-    await rename(`${stage}/status.md`, `${anchor}/${run.statusFile}`)
-    run.statusIdentity = { dev: identity.dev, ino: identity.ino }
-    return text
-  } finally {
-    try { if (stage) await rm(stage, { recursive: true, force: true }) } finally { await parent.close() }
+    run.statusIdentity = await writeConfined(run.root, run.statusFile, [['status.md', Buffer.from(text)]], true, run.statusIdentity)
+  } catch (error) {
+    if (error instanceof Error && error.message === 'status-file-replaced') fail('状态文件已被替换、删除或变为符号链接；为保护文件已拒绝覆盖，请停止后重新开始。')
+    if (error instanceof Error && error.message === 'path-outside-project') fail('状态文件目录已改变，请恢复所选项目目录后重试。')
+    throw error
   }
+  return text
 }
 
 export function apply(ctx: Context): void {

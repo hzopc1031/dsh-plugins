@@ -1,10 +1,11 @@
 import { createHash } from 'node:crypto'
 import { constants } from 'node:fs'
-import { lstat, mkdir, mkdtemp, open, realpath, rename, rm, writeFile } from 'node:fs/promises'
-import { basename, dirname, extname, isAbsolute, relative, resolve, sep } from 'node:path'
+import { open, realpath } from 'node:fs/promises'
+import { dirname, extname, isAbsolute, relative, resolve, sep } from 'node:path'
 import ExcelJS from 'exceljs'
-import { fieldNames, type Source } from './ingest.js'
+import { fieldNames, readOriginal, type Source } from './ingest.js'
 import { reconcile, rulesVersion, type ReconciliationResult } from './reconcile.js'
+import { writeConfined } from './write.js'
 
 export const packDisclaimer = '本包不证明票据真实、已付款或可报销，不是会计档案合规认证。SHA-256 仅用于检测文件变化，不证明票据真实。This pack does not prove authenticity, payment or reimbursability and is not an accounting-archive certification. SHA-256 only detects file change.'
 const noSource = '无来源／待核'
@@ -19,10 +20,6 @@ export interface ExportSummary {
 const inside = (root: string, path: string) => { const rel = relative(root, path); return rel !== '..' && !rel.startsWith('..' + sep) && !isAbsolute(rel) }
 function localPath(path: string): void {
   if (typeof path !== 'string' || !path || isAbsolute(path) || path.includes('\0') || path.split(/[\\/]/).includes('..')) throw new Error('path-outside-project')
-}
-async function absent(path: string): Promise<void> {
-  try { await lstat(path) } catch (error) { if ((error as NodeJS.ErrnoException).code === 'ENOENT') return; throw error }
-  throw new Error('export-directory-exists-use-new-directory')
 }
 function sourceText(source: Source | null): string {
   if (!source) return noSource
@@ -43,35 +40,22 @@ export async function exportPack(projectDir: string, directory: string, input: R
   const root = await realpath(projectDir)
   const destination = resolve(root, directory)
   if (destination === root || !inside(root, destination)) throw new Error('path-outside-project')
-  const parentPath = dirname(destination)
-  if (!inside(root, await realpath(parentPath))) throw new Error('path-outside-project')
-  const parent = await open(parentPath, constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW)
-  let stage: string | undefined
+  if (!inside(root, await realpath(dirname(destination)))) throw new Error('path-outside-project')
+  // Keep the parent pinned while originals and reports are prepared.
+  const parent = await open(dirname(destination), constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW)
   try {
-    if (!inside(root, await realpath(`/proc/self/fd/${parent.fd}`))) throw new Error('path-outside-project')
-    const anchoredParent = `/proc/self/fd/${parent.fd}`
-    const target = `${anchoredParent}/${basename(destination)}`
-    await absent(target)
-    stage = await mkdtemp(`${anchoredParent}/.invoice-gate-`)
+    const files: [string, Buffer][] = []
     const originals: { fileId: string; sourcePath: string; sha256: string | null; packPath: string | null }[] = []
-    if (options.includeOriginals) await mkdir(`${stage}/originals`)
     for (const [index, file] of run.extracted.files.entries()) {
       let packPath: string | null = null
       if (options.includeOriginals) {
         localPath(file.path)
         if (!file.sha256) throw new Error('original-hash-unavailable')
-        const original = resolve(root, file.path)
-        if (!inside(root, await realpath(original))) throw new Error('path-outside-project')
-        const handle = await open(original, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK)
-        let bytes: Buffer
-        try {
-          if (!(await handle.stat()).isFile() || !inside(root, await realpath(`/proc/self/fd/${handle.fd}`))) throw new Error('unsafe-original-path')
-          bytes = await handle.readFile()
-        } finally { await handle.close() }
+        const bytes = await readOriginal(root, file.path)
         if (createHash('sha256').update(bytes).digest('hex') !== file.sha256) throw new Error('original-changed-since-ingest')
         const extension = extname(file.path)
         packPath = `originals/${String(index + 1).padStart(4, '0')}${/^\.[a-z0-9]{1,10}$/i.test(extension) ? extension : '.bin'}`
-        await writeFile(`${stage}/${packPath}`, bytes, { flag: 'wx', mode: 0o600 })
+        files.push([packPath, bytes])
       }
       originals.push({ fileId: file.id, sourcePath: file.path, sha256: file.sha256, packPath })
     }
@@ -112,9 +96,9 @@ export async function exportPack(projectDir: string, directory: string, input: R
       { name: 'Unexecuted', headers: ['Rule id', 'Outcome', 'Record ids', 'Reason'], rows: run.unexecutedRules.map(rule => [rule.ruleId, rule.outcome, JSON.stringify(rule.recordIds), rule.reason ?? '']) },
     ]
     const report = { schemaVersion: 1, packKind, status, statusText, packDisclaimer, ...run, counts, originals, evidence, mismatches }
-    await writeFile(`${stage}/export-report.json`, JSON.stringify(report, null, 2) + '\n', { flag: 'wx', mode: 0o600 })
+    files.push(['export-report.json', Buffer.from(JSON.stringify(report, null, 2) + '\n')])
     const markdown = `# Invoice Gate verification pack\n\n**${statusText}**\n\n${packDisclaimer}\n\n` + tables.map(table => `## ${table.name}\n\n| ${table.headers.map(md).join(' | ')} |\n| ${table.headers.map(() => '---').join(' | ')} |\n` + table.rows.map(row => `| ${row.map(md).join(' | ')} |`).join('\n')).join('\n\n') + '\n'
-    await writeFile(`${stage}/report.md`, markdown, { flag: 'wx', mode: 0o600 })
+    files.push(['report.md', Buffer.from(markdown)])
     const workbook = new ExcelJS.Workbook()
     for (const table of tables) {
       if (table.rows.length >= 1048576) throw new Error('xlsx-row-limit-exceeded')
@@ -127,15 +111,9 @@ export async function exportPack(projectDir: string, directory: string, input: R
       sheet.views = [{ state: 'frozen', ySplit: 1 }]
       sheet.columns.forEach(column => { column.width = 28 })
     }
-    await writeFile(`${stage}/report.xlsx`, Buffer.from(await workbook.xlsx.writeBuffer()), { flag: 'wx', mode: 0o600 })
-    if (!inside(root, await realpath(anchoredParent))) throw new Error('path-outside-project')
-    await absent(target)
-    // shortcut: single-operator rename; add no-replace coordination before supporting concurrent writers.
-    await rename(stage, target)
-    stage = undefined
+    files.push(['report.xlsx', Buffer.from(await workbook.xlsx.writeBuffer())])
+    await writeConfined(root, directory, files, false, undefined, parent)
     const relativeDir = relative(root, destination).split(sep).join('/')
     return { directory: relativeDir, files: { markdown: `${relativeDir}/report.md`, xlsx: `${relativeDir}/report.xlsx`, json: `${relativeDir}/export-report.json` }, packKind, status, counts }
-  } finally {
-    try { if (stage) await rm(stage, { recursive: true, force: true }) } finally { await parent.close() }
-  }
+  } finally { await parent.close() }
 }

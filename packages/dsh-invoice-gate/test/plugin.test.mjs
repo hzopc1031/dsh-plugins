@@ -1,8 +1,7 @@
 import test from 'node:test'
+import { childHook, withoutFdPaths } from './portable.mjs'
 import assert from 'node:assert/strict'
-import fs from 'node:fs/promises'
 import { copyFile, lstat, mkdir, mkdtemp, readFile, readdir, rename, rm, symlink, writeFile } from 'node:fs/promises'
-import { syncBuiltinESMExports } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import http from 'node:http'
 import https from 'node:https'
@@ -57,6 +56,7 @@ const failure = result => { assert.equal(result.isError, true, JSON.stringify(re
 const dummy = name => ({ name, description: 'SAMPLE inert tool', parameters: { type: 'object', properties: {} }, output: { schema: { type: 'string' }, render: (_args, text) => [{ type: 'text', text }] }, execute: async () => 'SAMPLE' })
 
 test('all six commands atomically refresh one Chinese Markdown status file and return its exact text', async t => {
+  withoutFdPaths(t)
   const f = await fixture(t)
   await copyFile(new URL('./fixtures/sample.ofd', import.meta.url), f.project + '/SAMPLE.ofd')
   await writeFile(f.project + '/SAMPLE-run.json', JSON.stringify({ ...manifest, inputs: [input, { path: 'SAMPLE.ofd', kind: 'ticket' }, { path: 'SAMPLE-missing.json', kind: 'ticket' }] }))
@@ -148,6 +148,7 @@ test('manifest and correction read/decode failures name the file and give safe C
 })
 
 test('status replacement refuses symlinks and other files; stop still restores tools after a write failure', async t => {
+  withoutFdPaths(t)
   const f = await fixture(t)
   f.host.tools.register(dummy('SAMPLE_global'))
   success(await f.call('start SAMPLE-run.json'))
@@ -155,6 +156,7 @@ test('status replacement refuses symlinks and other files; stop still restores t
   const target = f.project + '/' + info.statusFile
   const original = await readFile(f.project + '/SAMPLE.json')
   await rm(target)
+  assert.equal((await f.call('status')).kind, 'error')
   await symlink(f.project + '/SAMPLE.json', target)
   const refused = await f.call('status')
   assert.equal(refused.kind, 'error')
@@ -173,17 +175,16 @@ test('status replacement refuses symlinks and other files; stop still restores t
 })
 
 test('late status write failure preserves the previous recap and cleans staging files', async t => {
+  withoutFdPaths(t)
   const f = await fixture(t)
   success(await f.call('start SAMPLE-run.json'))
   const info = value(await f.tool('ingest'))
   const before = await readFile(f.project + '/' + info.statusFile)
-  const hook = t.mock.method(fs, 'rename', async () => { throw new Error('SAMPLE injected write failure') })
-  syncBuiltinESMExports()
-  t.after(syncBuiltinESMExports)
+  const hook = childHook(t, `require('node:fs').renameSync = () => { throw new Error('SAMPLE injected write failure') }`, true)
   assert.equal((await f.call('check')).kind, 'error')
   assert.deepEqual(await readFile(f.project + '/' + info.statusFile), before)
   assert.ok(!(await readdir(f.project)).some(name => name.startsWith('.invoice-gate-status-')))
-  hook.mock.restore(); syncBuiltinESMExports()
+  hook.mock.restore()
   assert.match(success(await f.call('status')), /差异数：1/)
 })
 
@@ -402,4 +403,33 @@ test('invalid manifests and malformed private errors stay redacted; abort and ov
   success(await f.call('start SAMPLE-run.json'))
   f.dispose()
   assert.match(failure(await f.host.tools.execute({ name: 'SAMPLE_other', agent: f.agent, arguments: {}, signal, callId: 'SAMPLE' })), /unknown tool/)
+})
+
+test('fd paths disabled: status refuses ancestor substitution and relocation, preserving the previous recap', async t => {
+  withoutFdPaths(t)
+  for (const when of ['before', 'after']) {
+    const f = await fixture(t)
+    success(await f.call('start SAMPLE-run.json'))
+    const info = value(await f.tool('ingest'))
+    const before = await readFile(f.project + '/' + info.statusFile)
+    const outside = f.root + '/SAMPLE-outside'
+    await mkdir(outside)
+    await writeFile(outside + '/' + info.statusFile, 'SAMPLE 非真实票据 — outside status')
+    const hook = childHook(t, `(() => {
+      const fs = require('node:fs')
+      const replace = () => { fs.renameSync(${JSON.stringify(f.project)}, ${JSON.stringify(outside + '/pinned')}); fs.symlinkSync(${JSON.stringify(outside)}, ${JSON.stringify(f.project)}) }
+      if (${JSON.stringify(when)} === 'before') {
+        const chdir = process.chdir.bind(process)
+        process.chdir = part => { if (part === 'project') replace(); chdir(part) }
+      } else {
+        const write = fs.writeFileSync
+        fs.writeFileSync = (name, ...args) => { const result = write(name, ...args); if (String(name).endsWith('/status.md')) replace(); return result }
+      }
+    })()`, true)
+    assert.equal((await f.call('status')).kind, 'error')
+    hook.mock.restore()
+    assert.deepEqual(await readFile(outside + '/pinned/' + info.statusFile), before)
+    assert.equal(await readFile(outside + '/' + info.statusFile, 'utf8'), 'SAMPLE 非真实票据 — outside status')
+    assert.ok(!(await readdir(outside + '/pinned')).some(name => name.startsWith('.invoice-gate-')))
+  }
 })

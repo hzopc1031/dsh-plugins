@@ -1,6 +1,7 @@
 import test from 'node:test'
+import { childHook, withoutFdPaths } from './portable.mjs'
 import assert from 'node:assert/strict'
-import { copyFile, mkdir, mkdtemp, readFile, readdir, rm, symlink, writeFile } from 'node:fs/promises'
+import { copyFile, mkdir, mkdtemp, readFile, readdir, rm, stat, symlink, writeFile } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import http from 'node:http'
@@ -254,6 +255,7 @@ test('missing/refused inputs remain in summary inventory; originals export fails
 })
 
 test('read/write path confinement rejects traversal, absolute paths and symlink escape', async t => {
+  withoutFdPaths(t)
   const root = await project(t)
   const outside = await project(t)
   const run = reconcile(await load(root))
@@ -272,6 +274,7 @@ test('read/write path confinement rejects traversal, absolute paths and symlink 
 })
 
 test('existing packs are immutable and late XLSX failure leaves no partial pack or staging directory', async t => {
+  withoutFdPaths(t)
   const root = await project(t)
   const data = await load(root)
   const run = reconcile(data)
@@ -288,6 +291,7 @@ test('existing packs are immutable and late XLSX failure leaves no partial pack 
 })
 
 test('changed or removed originals abort copying and preserve a previous good pack', async t => {
+  withoutFdPaths(t)
   const root = await project(t)
   const run = reconcile(await load(root))
   await exportPack(root, 'SAMPLE-good', run, { includeOriginals: true })
@@ -295,7 +299,7 @@ test('changed or removed originals abort copying and preserve a previous good pa
   await writeFile(`${root}/mismatch.json`, 'SAMPLE changed synthetic file')
   await assert.rejects(exportPack(root, 'SAMPLE-changed', run, { includeOriginals: true }), /original-changed-since-ingest/)
   await rm(`${root}/mismatch.json`)
-  await assert.rejects(exportPack(root, 'SAMPLE-removed', run, { includeOriginals: true }), /ENOENT/)
+  await assert.rejects(exportPack(root, 'SAMPLE-removed', run, { includeOriginals: true }), /input-unreadable/)
   assert.deepEqual(await readFile(`${root}/SAMPLE-good/export-report.json`), before)
   assert.deepEqual(await readdir(root), ['SAMPLE-good'])
 })
@@ -327,4 +331,93 @@ test('export is local with a compact return value, repeatable JSON/Markdown, and
   for (const name of ['export-report.json', 'report.md']) assert.deepEqual(await readFile(`${root}/SAMPLE-one/${name}`), await readFile(`${root}/SAMPLE-two/${name}`))
   for (const options of [null, [], { includeOriginals: 'yes' }, { extra: true }]) await assert.rejects(exportPack(root, 'SAMPLE-invalid', run, options), /invalid-export-options/)
   await assert.rejects(exportPack(root, 'SAMPLE-invalid', { ...run, rulesVersion: 'unknown' }), /unsupported-rules-version/)
+})
+
+test('fd paths disabled: nested export copies hash-checked originals and publishes all three private files', async t => {
+  withoutFdPaths(t)
+  const root = await project(t)
+  await mkdir(root + '/nested')
+  await mkdir(root + '/outputs')
+  await copyFile(root + '/mismatch.json', root + '/nested/SAMPLE.json')
+  await symlink('nested', root + '/local')
+  const before = await readFile(root + '/nested/SAMPLE.json'), cwd = process.cwd()
+  const run = reconcile(await load(root, ['local/SAMPLE.json']))
+  const pack = await exportPack(root, 'outputs/SAMPLE-pack', run, { includeOriginals: true })
+  const report = await json(root + '/' + pack.files.json)
+  assert.equal(report.mismatches[0].differenceFen, '200')
+  assert.equal(report.originals[0].sha256, hash(before))
+  assert.deepEqual(await readFile(root + '/outputs/SAMPLE-pack/' + report.originals[0].packPath), before)
+  assert.deepEqual(await readFile(root + '/nested/SAMPLE.json'), before)
+  for (const name of Object.values(pack.files)) assert.equal((await stat(root + '/' + name)).mode & 0o777, 0o600)
+  assert.match(await readFile(root + '/' + pack.files.markdown, 'utf8'), /DRAFT.*草稿/)
+  const book = await workbook(root + '/' + pack.files.xlsx)
+  assert.ok(cells(book.getWorksheet('Fields')).some(row => row.includes(number)))
+  assert.equal(process.cwd(), cwd)
+})
+
+test('fd paths disabled: export refuses parent substitution before entry and relocation before publish', async t => {
+  withoutFdPaths(t)
+  for (const when of ['before', 'moved-before', 'during-copy', 'after']) {
+    const root = await project(t), outside = await project(t)
+    await mkdir(root + '/nested')
+    const run = reconcile(await load(root))
+    const hook = childHook(t, `(() => {
+      const fs = require('node:fs')
+      const replace = () => { fs.renameSync(${JSON.stringify(root + '/nested')}, ${JSON.stringify(outside + '/pinned')}); fs.symlinkSync(${JSON.stringify(outside)} + (${JSON.stringify(when)} === 'moved-before' ? '/pinned' : ''), ${JSON.stringify(root + '/nested')}) }
+      if (${JSON.stringify(when)} === 'during-copy') {
+        if (process.argv[1].endsWith('mismatch.json')) { fs.renameSync(${JSON.stringify(root + '/nested')}, ${JSON.stringify(outside + '/pinned')}); fs.mkdirSync(${JSON.stringify(root + '/nested')}) }
+      } else if (${JSON.stringify(when)} !== 'after') {
+        const chdir = process.chdir.bind(process)
+        process.chdir = part => { if (part === 'nested') replace(); chdir(part) }
+      } else {
+        const write = fs.writeFileSync
+        fs.writeFileSync = (name, ...args) => { const result = write(name, ...args); if (String(name).endsWith('/report.xlsx')) replace(); return result }
+      }
+    })()`, when !== 'during-copy')
+    await assert.rejects(exportPack(root, 'nested/SAMPLE-pack', run, { includeOriginals: true }), /path-outside-project/)
+    hook.mock.restore()
+    assert.deepEqual(await readdir(outside + '/pinned'), [])
+    assert.deepEqual((await readdir(outside)).sort(), ['mismatch.json', 'pinned'])
+  }
+})
+
+test('fd paths disabled: copied-original reads refuse ancestor substitution and stay pinned after entry', async t => {
+  withoutFdPaths(t)
+  for (const when of ['before', 'after']) {
+    const root = await project(t), outside = await project(t)
+    await mkdir(root + '/nested')
+    await copyFile(root + '/mismatch.json', root + '/nested/SAMPLE.json')
+    await writeFile(outside + '/SAMPLE.json', 'SAMPLE OUTSIDE 非真实票据')
+    const before = await readFile(root + '/nested/SAMPLE.json')
+    const run = reconcile(await load(root, ['nested/SAMPLE.json']))
+    const hook = childHook(t, `(() => {
+      const fs = require('node:fs'), chdir = process.chdir.bind(process)
+      process.chdir = part => {
+        if (part !== 'nested') return chdir(part)
+        if (${JSON.stringify(when)} === 'after') chdir(part)
+        fs.renameSync(${JSON.stringify(root + '/nested')}, ${JSON.stringify(root + '/pinned')})
+        fs.symlinkSync(${JSON.stringify(outside)}, ${JSON.stringify(root + '/nested')})
+        if (${JSON.stringify(when)} === 'before') chdir(part)
+      }
+    })()`)
+    if (when === 'before') await assert.rejects(exportPack(root, 'SAMPLE-pack', run, { includeOriginals: true }), /path-outside-project/)
+    else {
+      await exportPack(root, 'SAMPLE-pack', run, { includeOriginals: true })
+      assert.deepEqual(await readFile(root + '/SAMPLE-pack/originals/0001.json'), before)
+    }
+    hook.mock.restore()
+    assert.deepEqual(await readFile(root + '/pinned/SAMPLE.json'), before)
+    assert.equal(await readFile(outside + '/SAMPLE.json', 'utf8'), 'SAMPLE OUTSIDE 非真实票据')
+  }
+})
+
+test('fd paths disabled: late publish failure cleans staged exports and preserves a previous good pack', async t => {
+  withoutFdPaths(t)
+  const root = await project(t), run = reconcile(await load(root))
+  await exportPack(root, 'SAMPLE-good', run, { includeOriginals: true })
+  const before = await readFile(root + '/SAMPLE-good/report.xlsx')
+  childHook(t, `require('node:fs').renameSync = () => { throw new Error('SAMPLE injected publish failure') }`, true)
+  await assert.rejects(exportPack(root, 'SAMPLE-failed', run, { includeOriginals: true }), /SAMPLE injected publish failure/)
+  assert.deepEqual(await readFile(root + '/SAMPLE-good/report.xlsx'), before)
+  assert.deepEqual((await readdir(root)).sort(), ['SAMPLE-good', 'mismatch.json'])
 })

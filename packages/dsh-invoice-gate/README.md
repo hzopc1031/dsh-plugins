@@ -60,7 +60,7 @@ dsh plugin --profile invoice-gate-demo add ./packages/dsh-invoice-gate
 
 读写限制在启动时选定的项目目录，拒绝绝对路径、`..` 和逃逸符号链接。导出父目录必须存在，目标必须是新目录；通过临时目录写完后原子发布，失败不覆盖已有证据包。只支持单操作者，不承诺并发写入协调或断电持久性。运行状态只在内存，停止或会话释放后不会续跑，已导出文件保留。工具限制不是操作系统沙箱。
 
-**平台边界：** 导入原件、清单及确认 JSON 的只读路径不依赖 `/proc/self/fd` 或 `/dev/fd`；Linux 测试已强制这两类路径失败，仍能安全读取并拒绝越界及祖先目录替换。这里没有执行原生 macOS／Windows。导出、附带原件读取和状态文件写入仍依赖 Linux `/proc/self/fd`，不能据此声称整个命令流程可在 Mac／Windows 使用。
+**平台边界：** 导入原件、清单、确认 JSON、导出时复制原件，以及证据包和状态文件写入均不依赖 `/proc/self/fd` 或 `/dev/fd`。Linux 测试强制这两类路径失败，验证读写、越界／符号链接／祖先目录替换拒绝、原子发布和失败保留；隔离 DSH 进程也在禁用这两类路径后完成 GBK、差异和 OFD 拒绝样例。原生 macOS／Windows 未测试，不能据此声称已在这些系统验证。
 
 **本包不证明票据真实、已付款或可报销，不是会计档案合规认证。** 不做多币种换算、拆合付款、红蓝票专门流程、多人审批、付款、记账、报税或抵扣判断；完整约定见 [绑定决策](docs/decisions.md)。
 
@@ -78,7 +78,7 @@ Inputs are UTF-8 (optional BOM), GBK/GB18030 CSV, XLSX, documented structured or
 
 Exports contain Markdown, XLSX text cells and JSON, with optional hash-checked originals and relative paths. Reports show textual expected/actual/difference/rule-id evidence, unexecuted rules and draft status while mismatches or key reviews remain. External verification is always `not-checked`. New destinations are published atomically; previous packs are never overwritten. Reads and writes reject project escapes, including symlinks. Single-run in-memory state has no resume or concurrent-writer protocol. Each successful run command also atomically refreshes `invoice-gate-<run UUID>-status.md` in the project, with Chinese counts, refusal guidance and report paths. The command text equals this file; tools return its `statusFile` path without amount tables. Files survive stop.
 
-The confined ingest/manifest/confirmation reader works without `/proc/self/fd` or `/dev/fd`, exercised by forcing both to fail on Linux. Native macOS and Windows were not run. Export, copied-original reads and status writes still require Linux `/proc/self/fd`; full Mac/Windows operation is not established.
+Confined ingest/manifest/confirmation reads, copied-original reads, export and status writes work without `/proc/self/fd` or `/dev/fd`. Linux tests force both to fail and cover confinement, ancestor replacement, atomic publication and preservation on failure. An isolated DSH process also completed the GBK, mismatch and OFD-refusal samples with both fd paths disabled. Native macOS and Windows were not tested; this does not establish native compatibility.
 
 The plugin makes no outbound network requests, model calls, automatic uploads or financial telemetry. DSH's own session recording/sharing settings remain host-owned. This pack **does not prove authenticity, payment or reimbursability and is not accounting-archive certification**. SHA-256 is not proof of a genuine ticket. Multi-currency, payment workflows, approval, booking and filing are outside this MVP.
 

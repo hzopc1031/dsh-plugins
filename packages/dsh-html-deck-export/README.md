@@ -23,7 +23,8 @@
 **导出的 PPT 是什么样**
 - 每页是一张铺满整页的高清图片，尽量保留浏览器里的字体、排版和背景；字体替换和预览差异会记入报告。
 - 原稿里的演讲稿会放进 PPT 每页的备注栏，中文换行也会保留。
-- 同时生成一份 `export-report.json` 导出报告。它逐页记录：用了什么字体、有没有字体被替换、有没有资源加载失败、有没有内容被裁掉。你可以先看报告再决定能不能发出去。
+- 同时生成 `export-report.json` 逐页报告和 `export-report.md` 中文报告，记录字体回退、实际字体、资源与裁切警告；失败时列出页码、原因和证据截图路径，无法截图时也会明确说明。你可以先看报告再决定能不能发出去。
+- 导出期间可打开输出目录里的 `export-progress.json`，查看当前阶段、当前页／总页数和最后错误；结束后保留成功或失败状态，以及报告路径。
 
 **支持哪些稿子**
 - 歸藏风格的演示稿，杂志风和瑞士风都专门适配过。
@@ -37,7 +38,7 @@
 1. 在 DSH 里安装插件，然后重启 DSH。
 2. 在一个打开了项目目录的会话里输入 `/html-deck-export start`。
 3. 告诉 DSH 要导出哪个文件、放到哪个目录，比如「把 `deck/index.html` 导出到 `exports/review`」。导出目录要先建好。
-4. 拿到 PPTX 和导出报告。用完输入 `/html-deck-export stop` 退出。
+4. 导出期间可查看 `export-progress.json`；完成后拿到 PPTX，先看 `export-report.md` 中文报告。用完输入 `/html-deck-export stop` 退出。
 
 可以调的选项不多：清晰度选 1 倍或 2 倍（默认 2 倍），图片格式选 PNG 或 JPEG（JPEG 可以设压缩质量，文件更小）。
 
@@ -55,16 +56,17 @@
 - 不保证任意 HTML 都能导出，只支持上面列的那几种写法。
 
 **注意事项**
-- 只导出你自己信得过的稿子。截图用的 Chrome 关闭了系统沙箱，不适合打开来路不明的网页。
-- 没联网且本地没有所需字体时，一般会回退到本机已有字体，报告里会记录实际使用的字体和相关警告；王虹必需的手写字体缺失时会导出失败。追求原汁原味的话，把字体放到本地，或者导出时打开网络。
+- 只导出你自己信得过的稿子。Chrome 首次启动保留沙箱；仅识别到沙箱启动失败时，才加 `--no-sandbox` 重试一次，其它启动错误直接报错。报告记录实际启动参数和沙箱结果；路径检查与沙箱不能保证恶意脚本安全。
+- 没联网且本地没有所需字体时，一般会回退到本机已有字体；中文报告会写明请求字体和实际字体，并提醒排版可能不同。王虹缺少必需字体时明确报「缺少王虹必需的手写字体 HanziPen SC，已拒绝导出」，不会把替代字体当作手写风成功导出。请使用有权使用的本地字体，或按需显式开启网络加载素材；本机没有验证真实 HanziPen 的渲染效果。
 - 目前只在 Linux 上实际测过。在 Mac 上需要指定本机 Chrome 的路径，还没有实测。导出的 PPTX 用 LibreOffice 打开过，PowerPoint 和 WPS 还没测。
 
 **当前状态**
-版本 0.1.0，还在 `feat/html-deck-export` 分支上，没有合并到 main，也没有发布到 npm。在真实 DSH 里导出过 4 份示例稿，一共 20 页，52 个自动测试全部通过。开源协议是 MIT。
+版本 0.1.0，还在 `feat/html-deck-export` 分支上，没有合并到 main，也没有发布到 npm。已在 Linux DSH 0.2.2-rc.1 的隔离环境加载，验证离线导出、中文失败报告与进度文件；自动测试覆盖官方样例、沙箱重试、字体和取消清理等行为。开源协议是 MIT。
 
 This DSH plugin registers `html_deck_export` and `/html-deck-export` help/workbench.
 It exports finished local HTML decks in supported formats to **image-based
-16:9 PPTX**, with speaker notes and a per-page `export-report.json`.
+16:9 PPTX**, with speaker notes, per-page `export-report.json`, Chinese
+`export-report.md`, and file-based `export-progress.json` feedback.
 HTML remains the source of truth. Nothing is uploaded automatically.
 It does not generate decks, produce editable shapes, preserve animations,
 or accept every HTML file.
@@ -145,18 +147,24 @@ Only explicit `allowNetwork: true` enables remote HTTP(S) GET/HEAD resource
 reads. Write methods, WebSocket connections, form submissions, remote document
 navigation, workers, popups and downloads remain blocked. No shell, login,
 posting, publishing, model invocation or arbitrary browser callback is exposed.
-Run trusted local decks only; disabled Chrome sandboxing and path checks do
-not make hostile JavaScript safe.
+Run trusted local decks only. Chrome first starts with its sandbox retained;
+only a recognized sandbox startup failure triggers one retry with `--no-sandbox`.
+Other launch errors fail without that retry. Path checks and this launch policy
+do not make hostile JavaScript safe.
 
-The tool returns `pptxPath`, `reportPath` and the full report. Inspect its font,
-resource, clipping and preview warnings before sharing the PPTX. Failed pages
-prevent PPTX publication; inspect `export-report.json` and its evidence paths.
+The tool renders a concise Chinese result with page count, font-fallback warning
+count, failed-page details and output paths. Its structured result includes
+`pptxPath`, `reportPath`, `markdownReportPath`, `progressPath`, `summary` and the
+full report. Inspect font, resource, clipping and preview warnings before sharing
+the PPTX. Failed pages prevent PPTX publication; `export-report.md` lists each
+failed page's reason and relative evidence path, or explicitly states no screenshot
+was available. `export-report.json` retains the detailed per-page diagnostics.
 Use a separate existing directory per job; successful files can replace earlier
 outputs there. `/html-deck-export stop` cancels this workbench's exports and
 releases its tool restriction. Stopping the plugin or disposing the agent also
 cancels captures and removes the restriction. Start again to pick a changed
-project directory. No paths/history/settings are persisted by the plugin;
-PPTX, report and evidence live in the selected user project, outside the
+project directory. The plugin keeps no separate settings or history store;
+PPTX, reports, progress and evidence live in the selected user project, outside the
 installed package, and survive package deletion or replacement.
 
 无参数的 `/html-deck-export` 仅显示帮助。`start` 限制当前会话只用导出工具，
@@ -218,11 +226,15 @@ try {
 ```
 
 Chrome resolves from `CHROME_PATH`, otherwise `/usr/bin/google-chrome`. No user
-profile is reused. `--no-sandbox` and `--disable-gpu` are required in the desktop
-sandboxes on this box; sRGB is forced. Run only trusted local decks: this Chrome
-configuration disables the OS sandbox and is not a security boundary for hostile
-JavaScript. Each engine uses a temporary profile removed on close. Pass an
-`AbortSignal` for cancellation and always close the engine in `finally`.
+profile is reused. `--disable-gpu` and forced sRGB apply to every launch. The first
+attempt omits `--no-sandbox`; a recognized sandbox startup failure permits one
+retry with that flag. Reports record `launchArgs`, `sandboxMode` (`enabled` or
+`disabled-fallback`) and, on fallback, `sandboxFallbackReason`. `enabled` means
+the disabling flag was unnecessary, not an attestation of Chrome's internal
+security mechanisms. On this Linux box, the live load/export check retained the
+sandbox; the fallback is separately tested with an injected sandbox startup error.
+Run only trusted local decks. Each engine uses a temporary profile removed on
+close. Pass an `AbortSignal` for cancellation and always close the engine in `finally`.
 
 The viewport defaults to 1920×1080, deviceScaleFactor 2. A custom `viewport`
 must also be 16:9; use a known fixed design size when appropriate. Neither scale
@@ -248,7 +260,11 @@ page interception. Decks requiring those features are outside this engine's
 current contract. Missing images fail; blocked resources, script errors, font
 load errors and primary-font fallback are explicit warnings. Capture reports
 computed font stacks and actual rendered font families from Chrome's DevTools
-CSS API; these are diagnostics, not a guarantee of glyph coverage. The deck adapter fails 王虹 capture when its required handwritten font is unavailable.
+CSS API. Per-page `fontFallbacks` pairs the requested primary family with the
+actual families used by its text, and Chinese warnings flag possible typography
+differences. These are diagnostics, not a guarantee of glyph coverage or font
+fidelity; even a loaded alias can render a different font. The deck adapter fails
+王虹 capture when its required handwritten font is unavailable.
 
 Results contain status, URL, successful image bytes, warnings, font families,
 elapsed time, and error text/best-effort screenshot evidence on failure. The
@@ -327,23 +343,34 @@ The capture engine also accepts a third `finalize(page)` callback after its
 readiness waits and before font diagnostics/screenshotting; deck adapters use
 this for final-state validation. It is for trusted adapter code only.
 
-Write a captured deck using `dsh-html-deck-export/export`:
+Capture and write with progress using the same `exportDeck()` path as the DSH tool:
 
 ```js
-import { captureDeck } from 'dsh-html-deck-export/adapters'
-import { exportCapturedDeck } from 'dsh-html-deck-export/export'
+import { exportDeck } from 'dsh-html-deck-export/export'
 
 const controller = new AbortController()
-const run = await captureDeck('/absolute/deck/index.html', {
-  scale: 2, format: 'png', signal: controller.signal,
+const result = await exportDeck('/absolute/deck/index.html', '/absolute/existing/export-directory', {
+  scale: 2, format: 'png', signal: controller.signal, fileName: 'deck.pptx',
   // Smaller output: scale: 1, format: 'jpeg', quality: 65
   // Network stays blocked unless allowNetwork: true is explicitly supplied.
 })
-const result = await exportCapturedDeck(run, '/absolute/existing/export-directory', {
-  fileName: 'deck.pptx', signal: controller.signal,
-})
-console.log(result.pptxPath, result.reportPath)
+console.log(result.summary, result.progressPath)
 ```
+
+`export-progress.json` is atomically replaced at launch, before/after each page,
+during assembly, and at completion or failure. `phase` is `launch`, `capture`,
+`assemble`, `done` or `failed`; `currentPage`/`totalPages` show progress (total is
+`null` until detection completes). It also records `lastError`, `failedPages`,
+report paths, `reportsWritten` and `pptxPath` (null on failure). Detection, launch
+or cancellation can fail before this attempt produces reports; when
+`reportsWritten` is false, existing reports may belong to a previous attempt.
+Each output directory holds one job's latest state. This is file progress, with
+no live UI event or Remote API. If progress cannot be written, the export fails
+and preserves the previous PPTX; the filesystem error is surfaced.
+
+The lower-level `captureDeck()` plus `exportCapturedDeck(run, directory, options)`
+APIs remain available for callers that already hold a capture. They write no
+progress file; `exportCapturedDeck()` writes both report sidecars and the PPTX.
 
 Each PPTX page contains one full-bleed image in a 16:9 slide; speaker notes go
 into the notes pane, including Chinese line breaks. Images retain their original
@@ -351,8 +378,8 @@ PNG/JPEG bytes. No existing PPTX is read, merged or used as a source.
 
 The writer accepts only a plain `.pptx` filename, without directory components
 or absolute paths. The export directory must already exist. `export-report.json`
-is fixed within that directory; existing output symlinks are replaced as directory
-entries, never followed. Use a separate export directory per job: the report
+and `export-report.md` are fixed within that directory; existing output symlinks
+are replaced as directory entries, never followed. Use a separate export directory per job: the report
 describes the most recent attempt, including failures, and replaces the previous
 report. The caller must confine the chosen export directory to its authorized
 output boundary; the DSH tool enforces its project-root boundary.
@@ -372,25 +399,32 @@ path. `failedPages` includes reasons and relative evidence paths when available;
 evidence bytes do not count as successful image bytes. Missing screenshot evidence
 does not remove a failed page. Fix the source and export again.
 
-PPTX and report files are staged within the export directory, flushed with
+PPTX, report and progress files are staged within the export directory, flushed with
 `fsync`, and renamed individually. Assembly, report-write and pre-publication
 cancellation failures leave the previous PPTX intact. A failed report sets
 `pptxBytes: 0` even if an older good PPTX remains. These are individual atomic
-file replacements, not a crash-atomic transaction across both files; the report
-is published before the PPTX. Pass the same signal to capture and writing;
-capture cancellation closes Chrome and writer cancellation prevents publication.
+file replacements, not a crash-atomic transaction across all files. Reports and
+terminal progress publish just before the PPTX rename; a handled failure rewrites
+the state, but a hard process kill between renames can leave them out of step.
+Pass the same signal to capture and writing; capture cancellation closes Chrome
+and writer cancellation prevents publication.
 Successful staging directories are removed; failed-page evidence is retained.
 
 Export tests use Python 3's standard-library ZIP and XML parsers to check OOXML,
 relationships, full-bleed images, byte identity/order and multiline Chinese notes.
 Both official 歸藏 examples also round-trip their ordered notes and preview
-differences through the PPTX and report. On this Linux box, the loaded DSH profile
-produced magazine (8 pages), Swiss (8), an owned MIT generic fixture (1), and the
+differences through the PPTX and report. In earlier Linux validation, the loaded
+DSH profile produced magazine (8 pages), Swiss (8), an owned MIT generic fixture (1), and the
 灵感 starter (3), all offline at scale 1 PNG. Each slide's embedded image was
 extracted and contact sheets reviewed. LibreOffice Impress 25.2.3.2 imported all
 four PPTX files and exported PDFs with matching page counts. PowerPoint and WPS
 are unavailable here and were not opened; their application compatibility remains
 unverified. The real 王虹 fixture fails because HanziPen SC is unavailable;
 the synthetic loaded-font alias test verifies the gate, not handwritten fidelity.
+The polish load check re-exported a two-page owned fixture through `exportDeck()`
+with network blocked and sandbox retained, checked its multiline notes and
+LibreOffice PDF page count, and saved Chinese reports/progress/evidence for a
+failed page and the official missing-HanziPen template. Native macOS and Windows
+were not executed.
 
 MIT © 2026 hzopc1031. No fixture themes, scripts, or assets are bundled.

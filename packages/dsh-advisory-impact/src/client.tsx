@@ -1,4 +1,4 @@
-import { NetworkSettings, type NetworkSettingsProps } from './network-settings.js'
+import { NetworkSettings, networkHint, type NetworkSettingsProps } from './network-settings.js'
 import * as React from 'react'
 import { panelOverview, sourceExpired, type PanelSource } from './panel-model.js'
 import type { AdvisoryViewModel } from './view-model.js'
@@ -8,7 +8,7 @@ import type { Settings } from './config.js'
 export const name = 'advisory-impact'
 export const inject = ['slots']
 declare const PANEL_CSS: string
-const sourceError = (error?: string) => error && !error.includes('TLS_KEY_TOO_SMALL') && /fetch failed|NETWORK_ERROR|ECONN|ETIMEDOUT|ENOTFOUND|UND_ERR_|CERT|SIGNATURE|ISSUER|HTTP[ _]\d{3}/i.test(error) ? '来源不可用 · 见网络诊断' : error
+const sourceError = (error?: string) => error && /TLS_KEY_TOO_SMALL|key too (?:small|weak)|fetch failed|NETWORK_ERROR|ECONN|ETIMEDOUT|ENOTFOUND|UND_ERR_|CERT|SIGNATURE|ISSUER|HTTP[ _]\d{3}/i.test(error) ? (error.includes('TLS_KEY_TOO_SMALL') ? '证书密钥过短 · 见网络 / 设置' : '来源不可用 · 见网络 / 设置') : error
 const title = (id: string) => ({ kafka: 'Kafka', hadoop: 'Hadoop', flink: 'Flink' })[id] ?? id
 const safeUrl = (url: string) => (/^https?:\/\//.test(url) ? url : undefined)
 const Link = ({ url, children }: { url: string; children: React.ReactNode }) => (
@@ -48,24 +48,11 @@ function Evidence({
   if (!source) return <span className="ai-muted">{label ?? '来源'}：未获取</span>
   const expired = sourceExpired(source, ttl, now)
   return (
-    <div className="ai-evidence">
-      <span className="ai-chip">
-        <Link url={source.url}>{label ?? new URL(source.url).hostname}</Link>
-      </span>
-      <span className="ai-chip">{source.fetchedTime ? `抓取 ${source.fetchedTime}` : '未取得成功数据'}</span>
-      <span
-        className={`ai-chip ${source.state === 'error' ? 'ai-affected' : source.state === 'stale' || expired ? 'ai-unknown' : ''}`}
-      >
-        {expired && source.state !== 'stale' ? '缓存已过期，待刷新' : source.label}
-      </span>
-      {source.sourceTimestamp && <span className="ai-chip">页面时间 {source.sourceTimestamp}</span>}
-      {(source.error || source.cacheError) && (
-        <p className="ai-error">
-          {sourceError(source.error)}
-          {source.cacheError ? ` · 缓存：${sourceError(source.cacheError)}` : ''}
-        </p>
-      )}
-    </div>
+    <details className="ai-evidence">
+      <summary><Link url={source.url}>{label ?? new URL(source.url).hostname}</Link> · {source.state === 'error' ? '来源失败' : source.state === 'stale' || expired ? '上次成功缓存' : source.label}</summary>
+      <span>{source.fetchedTime ? `抓取 ${source.fetchedTime}` : '未取得成功数据'}{source.sourceTimestamp ? ` · 页面时间 ${source.sourceTimestamp}` : ''}</span>
+      {(source.error || source.cacheError) && <p className="ai-error">{sourceError(source.error || source.cacheError)}</p>}
+    </details>
   )
 }
 
@@ -95,19 +82,14 @@ function AdvisoryCard({
 }) {
   return (
     <article className={`ai-card ai-verdict ai-${item.verdict}`}>
-      <div className="ai-row">
-        <span className={`ai-badge ai-${item.verdict}`}>{item.label}</span>
-        <Link url={item.url}>{item.id}</Link>
-        {item.announcedAt && <span className="ai-muted">{item.announcedAt}</span>}
-      </div>
-      <h3>{item.title}</h3>
+      <details className="ai-advisory-details"><summary><span className={`ai-badge ai-${item.verdict}`}>{item.label}</span><Link url={item.url}>{item.id}</Link><span className="ai-advisory-title">{item.title}</span></summary>
+      <div className="ai-advisory-body">{item.announcedAt && <p className="ai-muted">公布 {item.announcedAt}</p>}
       <p>{item.reason}</p>
       <div className="ai-evidence">
         <span className="ai-chip">
           <Link url={item.url}>官方原文</Link>
         </span>
-        <span className="ai-chip">抓取 {item.fetchedTime}</span>
-        {item.sourceTimestamp && <span className="ai-chip">页面时间 {item.sourceTimestamp}</span>}
+        <span title={item.sourceTimestamp ? `页面时间 ${item.sourceTimestamp}` : undefined}>抓取 {item.fetchedTime}</span>
       </div>
       {item.pins.map((p, i) => (
         <p key={i} className="ai-muted">
@@ -137,11 +119,7 @@ function AdvisoryCard({
       {!!item.suppressions.length && (
         <p className="ai-notice">此项还有官方不适用说明，请核对下方独立分组。</p>
       )}
-      <div className="ai-osv">
-        <div className="ai-row">
-          <strong>OSV · 第二来源</strong>
-          <span className="ai-chip">{item.osv.lookup.statusLabel}</span>
-        </div>
+      <details className="ai-osv"><summary>OSV · 第二来源 <span className="ai-muted">{item.osv.lookup.statusLabel}</span></summary>
         <p
           className={
             ['different_ranges', 'query_disagreement'].includes(item.osv.comparison)
@@ -158,7 +136,7 @@ function AdvisoryCard({
             {q.fetchedTime} · {q.state}
           </p>
         ))}
-      </div>
+      </details></div></details>
     </article>
   )
 }
@@ -170,7 +148,7 @@ function ProjectView({ project, ttl, now }: { project: Project; ttl: number; now
         <div className="ai-section-head">
           <div>
             <h2>
-              {title(project.project)} <span className="ai-muted">官方公告</span>
+              {title(project.project)} <span className="ai-muted">官方公告</span> <span className="ai-heading-count">{project.advisories?.length ?? '—'}</span>
             </h2>
             <p className="ai-muted">
               {project.pins.length
@@ -180,7 +158,7 @@ function ProjectView({ project, ttl, now }: { project: Project; ttl: number; now
           </div>
         </div>
         <Evidence source={project.source} ttl={ttl} now={now} />
-        {project.project === 'kafka' && <p className="ai-muted">Kafka 官方页面不列出其依赖项的安全公告。</p>}
+        <details className="ai-notes"><summary>来源覆盖说明</summary>{project.project === 'kafka' && <p className="ai-muted">Kafka 官方页面不列出其依赖项的安全公告。</p>}
         {project.project === 'flink' && (
           <p className="ai-notice">
             ASF Flink 页面为实验性列表，覆盖 2023 年以来的公告，可能滞后官方 CVE 发布。
@@ -191,7 +169,7 @@ function ProjectView({ project, ttl, now }: { project: Project; ttl: number; now
             {note}
           </p>
         ))}
-        {project.error && (
+        </details>{project.error && (
           <p role="alert" className="ai-error">
             {sourceError(project.error)}
           </p>
@@ -209,8 +187,7 @@ function ProjectView({ project, ttl, now }: { project: Project; ttl: number; now
           />
         </div>
       )}
-      <section className="ai-section">
-        <h2>仅见 OSV，未见官方公告</h2>
+      <details className="ai-card ai-section"><summary>仅见 OSV，未见官方公告 <span className="ai-heading-count">{project.osvOnly.items.length}</span></summary>
         <p className="ai-muted">按所填 Maven 坐标查询。此处不作官方三态判定。</p>
         {project.queries.map((q, i) => (
           <div className="ai-card" key={i}>
@@ -250,7 +227,7 @@ function ProjectView({ project, ttl, now }: { project: Project; ttl: number; now
             </article>
           )}
         />
-      </section>
+      </details>
     </>
   )
 }
@@ -268,6 +245,7 @@ async function request(directory: string, action: string, args: ActionArgs = {})
 }
 
 export function Panel() {
+  const [networkOpen, setNetworkOpen] = React.useState(false)
   const [directory, setDirectory] = React.useState(''),
     [activeDirectory, setActiveDirectory] = React.useState('')
   const [settings, setSettings] = React.useState<Settings | null>(null),
@@ -375,12 +353,12 @@ export function Panel() {
             </button>
           </div>
         </header>
-        {!!view?.diagnostics?.length && <div className="ai-card" role="status"><strong>网络诊断 · 来源获取失败</strong>{view.diagnostics.map(d => <p key={d.code}><b>{d.code} · {d.count} 个来源</b><br/>{d.hintZh}</p>)}<p>运行 /advisory-impact diagnose 查看 DNS / TCP / TLS 与代理来源。</p></div>}
-        <p className="ai-lead">用你实际运行的版本，核对官方安全公告。官方优先，OSV 仅作第二来源。</p>
+        <details className="ai-network" onToggle={e => setNetworkOpen(e.currentTarget.open)}><summary>网络 / 设置</summary><div className="ai-card">{networkOpen && <NetworkSettings endpoint="/api/advisory-impact/network-settings"/>}{!!view?.diagnostics?.length && <details className="ai-notes"><summary>诊断详情</summary>{view.diagnostics.map(d => <p key={d.code}>{d.code} · {d.count} 个来源 · {d.hintZh}</p>)}<p>运行 /advisory-impact diagnose 查看完整诊断。</p></details>}</div></details>
+        {!!view?.diagnostics?.length && <p className="ai-banner ai-notice" role="status">{networkHint(view.diagnostics.find(d => d.code === 'TLS_KEY_TOO_SMALL')?.code ?? view.diagnostics[0]!.code)}</p>}
         <details className="ai-card ai-setup" open={!settings || undefined}>
           <summary>
-            项目与运行版本{' '}
-            <span className="ai-muted">{activeDirectory || '先选择本地项目，没有默认版本'}</span>
+            项目设置{' '}
+            <span className="ai-muted" title={activeDirectory}>{activeDirectory.split(/[\\/]/).filter(Boolean).at(-1) || '选择本地项目'}</span>
           </summary>
           <form className="ai-form" onSubmit={connect}>
             <label className="ai-wide">
@@ -399,9 +377,6 @@ export function Panel() {
           </form>
           {settings && (
             <>
-              <p className="ai-muted">
-                当前项目：{activeDirectory} · 配置保存在 .advisory-impact.json。切换目录请点击「读取项目」。
-              </p>
               <form
                 className="ai-form"
                 onSubmit={e => {
@@ -417,6 +392,10 @@ export function Panel() {
                   保存关注
                 </button>
               </form>
+            </>
+          )}
+        </details>
+        {settings && <section className="ai-card ai-version-editor"><h2>运行版本</h2>
               <form
                 className="ai-form"
                 onSubmit={e => {
@@ -448,7 +427,7 @@ export function Panel() {
                     disabled={!!busy}
                   />
                 </label>
-                <label>
+                <details className="ai-pin-options"><summary>组件与 Maven（可选）</summary><label>
                   组件（可选）
                   <input value={component} onChange={e => setComponent(e.target.value)} disabled={!!busy} />
                 </label>
@@ -461,7 +440,7 @@ export function Panel() {
                     disabled={!!busy}
                   />
                 </label>
-                <button className="ai-button" disabled={!!busy}>
+                </details><button className="ai-button" disabled={!!busy}>
                   保存版本
                 </button>
               </form>
@@ -483,11 +462,9 @@ export function Panel() {
                   </div>
                 ))
               ) : (
-                <p className="ai-notice">未填写运行版本，无法判断。没有默认运行版本。</p>
+                <p className="ai-notice">未填写运行版本，无法判断。</p>
               )}
-            </>
-          )}
-        </details>
+        </section>}
         <div role="status" aria-live="polite">
           {busy && <p className="ai-loading">{busy}</p>}
           {message && <p className="ai-notice">{message}</p>}
@@ -495,15 +472,14 @@ export function Panel() {
         {error && (
           <div role="alert" className="ai-banner ai-affected">
             {error}{' '}
-            {view ? '下方保留上次结果及其原始时间，未刷新成功。' : '尚无可用核对结果，请检查项目目录或重试。'}
+            {view ? '· 下方保留上次结果' : '· 请检查目录或重试'}
           </div>
         )}
         {!view && (
           <div className="ai-card ai-empty">
             <Shield size={32} />
             <h2>{settings ? '运行版本准备好后，开始核对' : '从你的运行版本开始'}</h2>
-            <p>默认关注 Kafka / Hadoop / Flink。读取项目和保存配置不会访问公告来源。</p>
-            <p>点击「核对 / 刷新」后获取公开来源；没有 pin 的公告会标为「无法判断」。</p>
+            <p>{settings ? '保存运行版本，点击「核对 / 刷新」获取官方公告。' : '填写本地项目路径，开始核对 Kafka、Hadoop 与 Flink。'}</p>
             {settings && (
               <button
                 className="ai-button"
@@ -517,20 +493,20 @@ export function Panel() {
         )}
         {view && overview && (
           <>
-            {overview.stale && (
+            {overview.stale && !view.diagnostics?.length && (
               <p className="ai-banner ai-unknown">
-                含陈旧或已过期数据。下方保留各来源最后成功抓取时间；请刷新后再核对。
+                正在显示最后成功缓存，请刷新后核对。
               </p>
             )}
-            {overview.failed && !view.diagnostics?.length && (
+            {overview.failed && !overview.stale && !view.diagnostics?.length && (
               <p role="alert" className="ai-banner ai-affected">
-                部分来源或缓存失败。可用的最后成功数据继续显示；失败不代表没有公告或不受影响。
+                部分来源或缓存失败；保留最后成功数据，无法据此认定安全。
               </p>
             )}
             <section aria-label="核对总览">
               <div className="ai-section-head">
                 <h2>核对总览</h2>
-                <span className="ai-muted">按公告 × 项目计数 · 当前关注列表</span>
+                <span className="ai-muted">按公告 × 项目计数</span>
               </div>
               <div className="ai-metrics">
                 {overview.cards.map(card => (
@@ -542,20 +518,10 @@ export function Panel() {
                         ? '尚无可用数据 / 未查询'
                         : card.partial
                           ? '仅已获取部分'
-                          : '已获取数据中的条目'}
+                          : '已获取条目'}
                     </small>
-                    <div className="ai-evidence">
-                      {[...new Set(card.sources.map(s => s.url))].map(url => (
-                        <span className="ai-chip" key={url}>
-                          <Link url={url}>{new URL(url).hostname}</Link>
-                        </span>
-                      ))}
-                      {card.oldestFetchTime && (
-                        <span className="ai-chip">最早抓取 {card.oldestFetchTime}</span>
-                      )}
-                    </div>
                     <details>
-                      <summary>各来源状态与时间</summary>
+                      <summary>来源与时间</summary>
                       {card.sources.length ? (
                         card.sources.map((s, i) => <Evidence key={i} source={s} ttl={ttl} now={now} />)
                       ) : (
@@ -581,14 +547,10 @@ export function Panel() {
             {project ? (
               <ProjectView key={project.project} project={project} ttl={ttl} now={now} />
             ) : (
-              <p className="ai-card ai-empty">关注列表为空。可在「项目与运行版本」中添加项目。</p>
+              <p className="ai-card ai-empty">关注列表为空。可在「项目设置」中添加项目。</p>
             )}
             {view.settings.watch.includes('kafka') && (
-              <section className="ai-section ai-suppression">
-                <div className="ai-section-head">
-                  <h2>扫描器报了，但官方说明不适用</h2>
-                  <span className="ai-chip">官方说明 · 独立列出</span>
-                </div>
+              <details className="ai-card ai-section ai-suppression"><summary>官方不适用说明 · suppressions <span className="ai-heading-count">{view.suppressions.items?.length ?? '—'}</span></summary>
                 <p className="ai-muted">
                   Kafka 官方 suppressions 文件；不将这些条目标为官方受影响。Hadoop / Flink 未配置官方
                   suppressions 文件。
@@ -612,23 +574,22 @@ export function Panel() {
                     )}
                   />
                 )}
-              </section>
+              </details>
             )}
             {view.settings.watch.includes('flink') && (
-              <section className="ai-section">
-                <h2>Flink 官方入口</h2>
+              <details className="ai-card ai-section"><summary>Flink 官方入口</summary>
                 <p className="ai-muted">
                   项目 security 页仅作指针，不计为第二份公告清单。ASF 列表为实验性，覆盖 2023
                   年以来，可能滞后官方 CVE 发布。
                 </p>
                 <Evidence source={view.flinkPointer} ttl={ttl} now={now} label="Flink security 指针" />
-              </section>
+              </details>
             )}
             <section className="ai-card">
               <div className="ai-section-head">
                 <div>
                   <h2>中文 Markdown 报告</h2>
-                  <p className="ai-muted">官方判定、来源、时间及独立分组均保留。</p>
+
                 </div>
                 <button
                   className="ai-button"
@@ -663,14 +624,14 @@ export function Panel() {
                   >
                     复制报告
                   </button>
-                  <p className="ai-muted">剪贴板不可用时可选中上方全文复制。报告中的抓取时间独立保留。</p>
+
                 </>
               )}
             </section>
           </>
         )}
         <footer className="ai-footer">
-          判定来自官方公告与填写的版本。未解析范围、缺少版本或组件不匹配时保留「无法判断」。
+          官方公告优先 · OSV 为第二来源 · UTC+8
         </footer>
       </div>
     </div>
@@ -697,7 +658,7 @@ export function apply(ctx: ClientContext) {
     return () => style.remove()
   })
   ctx.slots.inject('main', () =>
-    ctx.slots.register({ name: 'main', key: 'advisory-impact' }, () => <Panel />)
+    ctx.slots.register({ name: 'main', key: 'advisory-impact' }, () => <Panel/>)
   )
   ctx.slots.inject('sidebar.panellist', () =>
     ctx.slots.register(
@@ -705,5 +666,5 @@ export function apply(ctx: ClientContext) {
       props => <Shield size={props.size} />
     )
   )
-  ctx.slots.inject('plugins.row.config', () => ctx.slots.register({ name: 'plugins.row.config', key: 'dsh-advisory-impact#advisory-impact' }, props => <NetworkSettings {...props as NetworkSettingsProps}/>))
+  ctx.slots.inject('plugins.row.config', () => ctx.slots.register({ name: 'plugins.row.config', key: 'dsh-advisory-impact#advisory-impact' }, props => <NetworkSettings {...props as NetworkSettingsProps} endpoint="/api/advisory-impact/network-settings"/>))
 }

@@ -1,3 +1,4 @@
+import { registerNetworkSettings } from './network-config.js';
 import { createIntranetHttp } from './intranet-http.js';
 import { CommandDefinitionId } from '@deepseek-ai/dsh-commands';
 import path from 'node:path';
@@ -24,6 +25,7 @@ export function projectDirectory(ctx, agent) {
     return service ? service.get(agent.session) : agent.session.header.cwd;
 }
 export function apply(ctx, config = {}) {
+    registerNetworkSettings(ctx, name);
     const { httpsProxy, noProxy, caBundlePath, insecureSkipTlsVerify, insecureSkipTlsVerifyHosts, systemProxy, timeoutSeconds, offlineOnly, ...settings } = config;
     const cacheRoot = path.join(os.homedir(), '.cache', 'dsh-advisory-impact');
     const networkSettings = { httpsProxy, noProxy, caBundlePath, insecureSkipTlsVerify, insecureSkipTlsVerifyHosts, systemProxy, timeoutSeconds };

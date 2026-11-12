@@ -2,22 +2,24 @@
 
 把你关注的 Apache 项目动态整理成一份带原文链接的中文周报，同时核对你运行版本的官方安全公告，看清“项目数量”的不同官方口径。
 
-- **不发消息也能查看：** 从 DSH 侧栏打开「Apache 雷达」，概览、关注动态和每周简报随宿主切换明暗主题，无需模型 API key。
+- **不发消息也能查看：** 从 DSH 侧栏打开「Apache 雷达」，总览、关注动态和每周简报随宿主切换明暗主题，无需模型 API key。
 - **看清数字为何不同：** 当前列示、顶级项目（TLP）、项目管理委员会（PMC）、全部委员会和孵化项目并列展示；退休委员会与 Attic 的 PMC／子项目保留各自口径和名单差异。
 - **少翻多个页面：** 默认关注 Kafka / Hadoop / Flink，按项目查看发布、JIRA 工单和 KIP / FLIP 提案；在项目页的「版本与安全」填写实际运行版本，查看官方公告的受影响／不受影响／无法判断、修复版本与原文；安全 JIRA 中的 CVE 可跳到对应公告。
 - **把一周留成简报：** 生成可阅读、复制和打开的本地中文 Markdown，附「本周新公告」；来源失败时显示错误与上次成功缓存，保留出处和时间。
 
 ## 界面预览
 
+下图沿用此前版本的布局；当前版本已将网络工具和来源说明折叠，数据口径不变。
+
 以下均为 **DSH 0.2.2-rc.1 内的真实面板截图**，使用历史录制数据演示，**不是实时官方数量**。画面中的「录制回放（非实时）」标明演示项目；抓取时间为此次回放读取时间，示例运行版本仅用于回放，不代表你的集群。原始录制时间与 URL 保存在[官方公告来源记录](test/fixtures/advisory/provenance.json)、[OSV 录制说明](test/fixtures/advisory/osv-provenance.json)、[测试夹具来源记录](test/fixtures/provenance.json)及 [JIRA 来源记录](test/fixtures/jira-provenance.json)。实际使用时显示公开来源的真实抓取时间与可用的源文件时间。
 
-从侧栏「Apache 雷达」进入概览：不同统计口径各有来源与时间，退休名单差异可展开查看。
+从侧栏「Apache 雷达」进入总览：不同统计口径各有来源与时间，退休名单差异可展开查看。
 
-![DSH 内的 Apache 雷达浅色概览，历史数据回放](docs/images/overview-light.png)
+![DSH 内的 Apache 雷达浅色总览，历史数据回放](docs/images/overview-light.png)
 
-深色模式跟随 DSH。概览中的安全卡只统计关注组件，显示未填版本的数量；点组件可跳到它的安全条目。
+深色模式跟随 DSH。总览中的安全卡只统计关注组件，显示未填版本的数量；点组件可跳到它的安全条目。
 
-![DSH 深色概览中的关注组件安全卡，示例版本及历史数据回放](docs/images/overview-dark.png)
+![DSH 深色总览中的关注组件安全卡，示例版本及历史数据回放](docs/images/overview-dark.png)
 
 「关注动态」按项目切换，安全信息就在各项目顶部；输入版本后展开公告，可逐项核对官方范围和修复版本。下图的 Kafka 版本为明确标注的回放示例，不是默认运行版本。
 
@@ -38,11 +40,11 @@
    & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-apache-radar"
    ```
 
-3. **重开 DSH，从侧栏打开「Apache 雷达」。** 确认“Apache 社区雷达”已启用，选择或输入已有本地项目的绝对目录，点击「打开」，再点击「刷新数据」。概览出现带来源和时间的卡片后，可在「关注动态」选择组件、填写实际运行版本并保存判定，再切到「每周简报」生成、复制或打开周报。无需创建聊天或填写账号、令牌、模型配置；首次采集需要访问公开 ASF 网站。原有 `/apache-radar help` 等命令仍可在项目会话使用。
+3. **重开 DSH，从侧栏打开「Apache 雷达」。** 确认“Apache 社区雷达”已启用，选择或输入已有本地项目的绝对目录，点击「打开」，再点击「刷新数据」。总览出现带来源和时间的卡片后，可在「关注动态」选择组件、填写实际运行版本并保存判定，再切到「每周简报」生成、复制或打开周报。无需创建聊天或填写账号、令牌、模型配置；首次采集需要访问公开 ASF 网站。原有 `/apache-radar help` 等命令仍可在项目会话使用。
 
 ## 日常使用
 
-面板的「概览」对照当前列示、TLP、孵化项目、PMC 和委员会，保留退休口径差异与官方多标签分类。「关注动态」切换项目、增删关注，顶部「版本与安全」可填写或清除当前项目的运行版本，展开公告查看三种判定、官方原文、限制条件和抓取时间。没有填写版本时全部为「无法判断」，不会替你选择版本。安全 JIRA 标题包含 CVE 时，仅核对已抓取的官方列表，显示「官方已公布」或「官方尚未公布」；列表不可用时明确说明无法核对，旧缓存也会标明。「每周简报」先显示项目阅读卡片，将详细统计和来源明细折叠，并单列「本周新公告」及针对所填版本的判定；「复制 Markdown」和「打开已保存文件」始终使用已保存的完整周报。打开文件会在浏览器新标签显示保存内容；本地原文件位于所选项目目录。
+面板的「总览」对照当前列示、TLP、孵化项目、PMC 和委员会，保留退休口径差异与官方多标签分类。「关注动态」切换项目，在「管理关注」中增删项目，顶部「版本与安全」可填写或清除当前项目的运行版本，展开公告查看三种判定、官方原文、限制条件和抓取时间。没有填写版本时全部为「无法判断」，不会替你选择版本。安全 JIRA 标题包含 CVE 时，仅核对已抓取的官方列表，显示「官方已公布」或「官方尚未公布」；列表不可用时明确说明无法核对，旧缓存也会标明。「每周简报」先显示项目阅读卡片，将详细统计和来源明细折叠，并单列「本周新公告」及针对所填版本的判定；「复制 Markdown」和「打开已保存文件」始终使用已保存的完整周报。打开文件会在浏览器新标签显示保存内容；本地原文件位于所选项目目录。
 
 打开面板只读本地缓存，不自动请求 ASF；「刷新数据」一起更新社区动态、官方公告、官方 suppressions 及已查询的 OSV 记录。保存运行版本只在本地重算，不发送版本到第三方。OSV 在展开具体公告时按需查询，只发送公告 id；未收录会明确显示 HTTP 404，范围表述有差异时保留两方依据，官方判定不变。生成周报和原有命令沿用一小时缓存。过期和刷新失败会显示提示，错误不会记为零更新。项目目录选择只在当前浏览器保存；面板、命令和工具共用该目录下的关注列表、缓存和周报。命令仍按所在会话的当前目录工作。
 
@@ -82,11 +84,11 @@ The one-hour cache preserves the last good response on failure. JIRA is a capped
 
 Windows 注册表读取由模拟注册表的单元测试覆盖，本次只在 Linux 验证，未在真实公司 PAC、Windows Desktop 上实测。PAC 来自公司网络且本身是代码，Node vm 不是抵御蓄意攻击者的安全边界；无宿主对象、禁止动态代码生成、大小/时间限制和输出转字符串用于降低风险。完整配置及边界见[公司内网配置](../../docs/intranet-network.md)和[PAC 范围说明](../../docs/intranet-pac.md)。
 
-选择项目目录后，点击「从系统检测代理」查看来源、脱敏 PAC 地址、Apache 示例代理、检测时间、30 分钟缓存和有效超时；「重新检测」清缓存。自动使用系统代理后面板会显示提示。官方匿名来源允许至多 5 次 HTTPS 白名单内跳转，拒绝站外、HTTP、凭据、IP、循环及超限跳转。KIP / FLIP 已改用新的 cwiki spaces 页面。
+展开「网络 / 设置」，点击「从系统检测代理」查看来源、脱敏 PAC 地址、Apache 示例代理、检测时间、30 分钟缓存和有效超时；「重新检测」清缓存。自动使用系统代理后，提示也保留在设置内。官方匿名来源允许至多 5 次 HTTPS 白名单内跳转，拒绝站外、HTTP、凭据、IP、循环及超限跳转。KIP / FLIP 已改用新的 cwiki spaces 页面。
 
 Large companies commonly use PAC auto-configuration to select a proxy per website. These plugins read Windows user PAC / static system proxy settings and use the resolved HTTP(S) proxy, reducing the need to find an address and hand-edit `.env`. Explicit plugin or environment proxies bypass detection. No system proxy, PAC DIRECT, or detection failure preserves the original request path; `systemProxy: "off"` disables detection. Nothing writes `.env` or process environment. Requests default to 30 seconds; `timeoutSeconds` clamps to 10–120 seconds (invalid values use 30). Registry/PAC behavior is covered by mocked unit tests and Linux replay only, not a real corporate PAC or Windows Desktop. PAC is network-supplied code; vm is not a security boundary.
 
-选择项目目录后点击「网络诊断」，查看 DNS / TCP / TLS 及代理来源；同原因错误合并显示失败来源数量。「导出快照」「导入快照」可在断网机器复用官方响应，数据标为「本地快照」，保留原抓取时间。`offlineOnly: true` 使刷新也仅使用本地缓存。
+在「网络 / 设置」中点击「网络诊断」，展开「诊断详情」，查看 DNS / TCP / TLS 及代理来源；主页面只显示简短错误提示，失败来源数量和完整原因保留在诊断详情。「导出快照」「导入快照」可在断网机器复用官方响应，数据标为「本地快照」，保留原抓取时间。`offlineOnly: true` 使刷新也仅使用本地缓存。
 
 Weak certificate keys (`CA certificate key too weak`, `CA_KEY_TOO_SMALL`, verify error 67) differ from untrusted certificates: `caBundlePath` / `NODE_EXTRA_CA_CERTS` cannot repair key strength. The opt-in `insecureSkipTlsVerifyHosts` switch defaults to `false` and skips verification only for exact `api.osv.dev` / `api.github.com` origins, including through CONNECT. Other hosts, PAC retrieval and the HTTPS proxy’s own TLS still verify. The existing global `insecureSkipTlsVerify` also defaults to `false` and bypasses verification for all client targets and HTTPS proxies. Both bypasses remove certificate identity protection; prefer replacing the weak interception certificate.
 
@@ -107,7 +109,7 @@ Linux 烟测在隔离 profile 中加载真实 DSH Web，使用录制数据验证
 - 提案保留讨论、接受、实现、发布等来源状态和限制用语；日期未知的条目单列为参考，不能称为本周新增。JIRA `New Feature`、`fixVersion` 和已接受提案均不证明已经发布；安全公告单独标注。输出不作兼容性或“可安全上生产”的判断。
 - 官方公告目前支持 [Kafka](https://kafka.apache.org/community/cve-list/)、[Hadoop](https://hadoop.apache.org/cve_list.html) 和 [ASF Flink](https://security.apache.org/projects/flink/)；新增项目 id 若未适配，显示「尚未支持官方来源」，不会猜测清单。Kafka 页不收录其依赖库公告。Flink [项目安全页](https://flink.apache.org/what-is-flink/security/)只作指向来源，ASF 公告页是实验性列表，覆盖 2023 年以来的公告且可能滞后。
 - 判定严格按官方受影响范围和修复文字匹配点分数字版本；预发布版本、不能完整解析的范围、分支不明确或组件不匹配时为「无法判断」并解释原因。当前每个项目只保存一个产品版本；例如 Flink 产品版本不能代替 Kubernetes Operator 版本。判定不表示漏洞可达、不表示可以安全升级或上生产，不扫描锁文件，不使用 NVD 或需要密钥的接口。
-- Kafka 的 [官方 suppressions](https://raw.githubusercontent.com/apache/kafka/trunk/gradle/resources/dependencycheck-suppressions.xml)在安全条目底部默认折叠，标题为「扫描器报了，但官方说明不适用」，保留原注释、时间及 [ASF 依赖问题指导](https://security.apache.org/report-dependency/)。这些条目不计为官方受影响公告。[OSV](https://api.osv.dev/)只按官方 CVE id 做第二来源查询，不创建 OSV 独有公告库存，不覆盖官方判定。
+- Kafka 的 [官方 suppressions](https://raw.githubusercontent.com/apache/kafka/trunk/gradle/resources/dependencycheck-suppressions.xml)在安全条目底部默认折叠，标题为「官方不适用说明 · suppressions」，保留原注释、时间及 [ASF 依赖问题指导](https://security.apache.org/report-dependency/)。这些条目不计为官方受影响公告。[OSV](https://api.osv.dev/)只按官方 CVE id 做第二来源查询，不创建 OSV 独有公告库存，不覆盖官方判定。
 - 「本周新公告」仅列关注项目窗口内的官方公告，优先使用官方公告日期，否则标为「本地首次发现（非发布日期）」；首次建库时，缺少公告日期的历史条目也可能列入。发现时间持久保存，后续刷新不会每周重复计为新增。suppressions 和 OSV 记录不计为新官方公告。
 - 本插件通过宿主命令注册表直接执行，不发起模型请求。DSH 0.2.2-rc.1 的空白新会话界面在未配置模型时可能无法提交命令；命令可在已有项目会话使用；现在也可直接从侧栏面板操作，不受聊天提交入口影响。界面烟测没有创建会话、配置密钥或发起模型调用。
 - 无自动周报定时器、全基金会每日功能扫描、自动上传、发帖或发布。原始社区雷达边界见[绑定 MVP 决策](docs/decisions.md)；安全公告并入项目页是 2026-11-11 用户后续决定，仍不提供生产安全或升级建议。

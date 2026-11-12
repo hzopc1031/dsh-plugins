@@ -1,3 +1,4 @@
+import { registerNetworkSettings } from './network-config.js'
 import { createIntranetHttp, type IntranetSettings } from './intranet-http.js'
 import type { Context } from '@deepseek-ai/cordis'
 import { CommandDefinitionId } from '@deepseek-ai/dsh-commands'
@@ -38,6 +39,7 @@ export function projectDirectory(ctx: Pick<Context, 'get'>, agent: Agent): strin
 }
 
 export function apply(ctx: Context, config: unknown = {}): void {
+  registerNetworkSettings(ctx, name)
   const { httpsProxy, noProxy, caBundlePath, insecureSkipTlsVerify, insecureSkipTlsVerifyHosts, systemProxy, timeoutSeconds, offlineOnly, ...settings } = config as IntranetSettings & { offlineOnly?: boolean }
   const cacheRoot = path.join(os.homedir(), '.cache', 'dsh-advisory-impact')
   const networkSettings = { httpsProxy, noProxy, caBundlePath, insecureSkipTlsVerify, insecureSkipTlsVerifyHosts, systemProxy, timeoutSeconds }

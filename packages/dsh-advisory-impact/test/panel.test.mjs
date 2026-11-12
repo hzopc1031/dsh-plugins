@@ -147,9 +147,9 @@ async function mount(t, options) {
   t.after(async () => {
     await act(async () => tree.unmount())
   })
-  const input = tree.root.findAllByType('input')[0]
+  const input = tree.root.findByProps({ placeholder: '填写本机已有项目目录' })
   act(() => input.props.onChange({ target: { value: f.root } }))
-  await interaction(tree, () => tree.root.findAllByType('form')[0].props.onSubmit({ preventDefault() {} }))
+  await interaction(tree, () => tree.root.findByProps({ className: 'ai-card ai-setup' }).findAllByType('form')[0].props.onSubmit({ preventDefault() {} }))
   return {
     f,
     service,
@@ -320,7 +320,7 @@ test('native panel runs without chat/model, shows evidence, OSV 404, groups, rep
     '官方修复版本',
     '3.7.1',
     'HTTP 404',
-    '扫描器报了，但官方说明不适用',
+    '官方不适用说明 · suppressions',
     '仅见 OSV，未见官方公告',
     'UTC+8'
   ])
@@ -346,7 +346,7 @@ test('native panel runs without chat/model, shows evidence, OSV 404, groups, rep
   await interaction(tree, () => button(tree, '刷新来源').props.onClick())
   output = textOf(tree.toJSON())
   assert.ok(output.includes('最后成功'))
-  assert.ok(output.includes('部分来源或缓存失败'))
+  assert.ok(output.includes('最后成功缓存'))
   assert.ok(output.includes(beforeTime))
   h.disconnect()
   await interaction(tree, () => button(tree, '刷新来源').props.onClick())
@@ -381,9 +381,9 @@ test('project selector, show more, unavailable custom projects, version editing 
   assert.match(textOf(tree.toJSON()), /实验性列表/)
   act(() => button(tree, 'custom-project').props.onClick())
   assert.match(textOf(tree.toJSON()), /官方清单不可用/)
-  const inputs = tree.root.findAllByType('input')
-  act(() => inputs[3].props.onChange({ target: { value: '3.7.0' } }))
-  await interaction(tree, () => tree.root.findAllByType('form')[2].props.onSubmit({ preventDefault() {} }))
+  const versionInput = tree.root.findAllByType('label').find(n => textOf(n).includes('实际运行版本')).findByType('input')
+  act(() => versionInput.props.onChange({ target: { value: '3.7.0' } }))
+  await interaction(tree, () => tree.root.findByProps({ className: 'ai-card ai-version-editor' }).findByType('form').props.onSubmit({ preventDefault() {} }))
   assert.ok(textOf(tree.toJSON()).includes('配置已保存'))
   assert.equal(count(), 0, 'old verdicts must disappear when pins change')
   assert.ok(h.actions.includes('pin'))
@@ -408,8 +408,8 @@ test('changing the watch list clears the previous verdicts and report before the
   await interaction(tree, () => button(tree, '核对 / 刷新').props.onClick())
   await interaction(tree, () => button(tree, '查看报告').props.onClick())
   assert.ok(tree.root.findAllByType('textarea').length)
-  act(() => tree.root.findAllByType('input')[1].props.onChange({ target: { value: 'flink' } }))
-  await interaction(tree, () => tree.root.findAllByType('form')[1].props.onSubmit({ preventDefault() {} }))
+  act(() => tree.root.findAllByType('label').find(n => textOf(n).includes('关注项目（英文 id')).findByType('input').props.onChange({ target: { value: 'flink' } }))
+  await interaction(tree, () => tree.root.findByProps({ className: 'ai-card ai-setup' }).findAllByType('form')[1].props.onSubmit({ preventDefault() {} }))
   assert.equal(tree.root.findAllByType('textarea').length, 0)
   assert.equal(tree.root.findAll(n => n.type === 'article' && n.props.className?.includes('ai-verdict')).length, 0)
   await interaction(tree, () => button(tree, '核对 / 刷新').props.onClick())
@@ -417,7 +417,7 @@ test('changing the watch list clears the previous verdicts and report before the
   assert.match(output, /Flink 官方公告/)
   assert.match(output, /未填写运行版本，无法判断/)
   assert.ok(!output.includes('Kafka 官方公告'))
-  assert.ok(!output.includes('扫描器报了，但官方说明不适用'))
+  assert.ok(!output.includes('官方不适用说明 · suppressions'))
 })
 
 test('panel does not present unavailable inventories as zero or not affected', async t => {
@@ -435,28 +435,56 @@ test('panel does not present unavailable inventories as zero or not affected', a
 })
 
 
-test('network settings shows the exact hint label, saves one boolean and surfaces write failures', async () => {
+test('advanced settings are folded and running versions remain on the main surface', async t => {
+  const { tree } = await mount(t)
+  const network = tree.root.findByProps({ className: 'ai-network' })
+  assert.equal(network.type, 'details')
+  assert.ok(!network.props.open)
+  assert.equal(network.findAllByType('input').length, 0, 'network form loads only when opened')
+  const versions = tree.root.findByProps({ className: 'ai-card ai-version-editor' })
+  assert.equal(versions.type, 'section')
+  assert.ok(versions.findByType('form'))
+  await interaction(tree, () => button(tree, '核对 / 刷新').props.onClick())
+  for (const detail of tree.root.findAllByProps({ className: 'ai-advisory-details' })) assert.ok(!detail.props.open)
+  assert.ok(!tree.root.findByProps({ className: 'ai-card ai-section ai-suppression' }).props.open)
+})
+
+test('network form reads and writes the confined host route, preserving drafts across TLS changes and surfacing failures', async t => {
   const { NetworkSettings } = await import('../lib/network-settings.js')
   const { API_TLS_SKIP_LABEL } = await import('../lib/intranet-http.js')
-  const calls = []
-  const form = { state: { value: { watch: ['kafka'] }, writable: true, revision: 7 },
-    mutate: async (...args) => { calls.push(args); return true } }
+  let state = { value: { timeoutSeconds: 30 }, writable: true, revision: '{}' }, fail = false
+  const writes = []
+  t.mock.method(globalThis, 'fetch', async (url, init) => {
+    assert.equal(url, '/api/advisory-impact/network-settings')
+    assert.equal(init.credentials, 'same-origin')
+    const body = JSON.parse(init.body)
+    if (body.action === 'save') {
+      writes.push(body)
+      if (fail) return Response.json({ error: '网络设置保存失败，请重试。' }, { status: 400 })
+      state = { ...state, value: { ...state.value, ...body.value }, revision: JSON.stringify(body.value) }
+    }
+    return Response.json(state)
+  })
   let tree
-  act(() => { tree = create(React.createElement(NetworkSettings, { view: 'page', form })) })
-  assert.ok(JSON.stringify(tree.toJSON()).includes(API_TLS_SKIP_LABEL))
-  const input = () => tree.root.findByType('input')
-  assert.equal(input().props.checked, false)
-  assert.equal(input().props.disabled, false)
-  await act(async () => { await input().props.onChange({ target: { checked: true } }) })
-  assert.deepEqual(calls, [[[ { op: 'set', path: ['insecureSkipTlsVerifyHosts'], value: true } ], 7]])
-  form.state.value.insecureSkipTlsVerifyHosts = true
-  act(() => tree.update(React.createElement(NetworkSettings, { view: 'page', form })))
-  assert.equal(input().props.checked, true)
-  form.mutate = async () => false
-  await act(async () => { await input().props.onChange({ target: { checked: false } }) })
-  assert.equal(tree.root.findByProps({ role: 'alert' }).children.join(''), '网络设置保存失败，请重试。')
-  form.state.writable = false
-  act(() => tree.update(React.createElement(NetworkSettings, { view: 'page', form })))
-  assert.equal(input().props.disabled, true)
+  await act(async () => { tree = create(React.createElement(NetworkSettings, { endpoint: '/api/advisory-impact/network-settings' })) })
+  assert.ok(textOf(tree.toJSON()).includes(API_TLS_SKIP_LABEL))
+  const toggle = () => tree.root.findByProps({ name: 'insecureSkipTlsVerifyHosts' })
+  const form = tree.root.findByType('form')
+  assert.equal(toggle().props.checked, false);assert.equal(toggle().props.disabled, false)
+  await act(async () => { await toggle().props.onChange({ target: { checked: true } }) })
+  assert.deepEqual(writes[0], { action: 'save', value: { insecureSkipTlsVerifyHosts: true }, revision: '{}' })
+  assert.equal(toggle().props.checked, true)
+  assert.equal(tree.root.findByType('form'), form, 'TLS changes must not discard unsaved proxy fields')
+  t.mock.method(globalThis, 'FormData', function () { return new Map(Object.entries({ systemProxy: 'off', timeoutSeconds: '45', httpsProxy: 'http://proxy:8080', noProxy: 'localhost', caBundlePath: '/tmp/company.pem' })) })
+  await act(async () => { form.props.onSubmit({ preventDefault() {}, currentTarget: {} }) })
+  assert.deepEqual(writes[1].value, { systemProxy: 'off', timeoutSeconds: 45, httpsProxy: 'http://proxy:8080', noProxy: 'localhost', caBundlePath: '/tmp/company.pem' })
+  t.mock.method(globalThis, 'FormData', function () { return new Map([['timeoutSeconds', 'NaN']]) })
+  await act(async () => { tree.root.findByType('form').props.onSubmit({ preventDefault() {}, currentTarget: {} }) })
+  assert.equal(writes.length, 2)
+  assert.match(textOf(tree.root.findByProps({ role: 'alert' })), /10–120/)
+  fail = true
+  await act(async () => { await toggle().props.onChange({ target: { checked: false } }) })
+  assert.equal(toggle().props.checked, true)
+  assert.match(textOf(tree.root.findByProps({ role: 'alert' })), /保存失败/)
   act(() => tree.unmount())
 })

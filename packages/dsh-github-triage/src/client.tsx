@@ -132,7 +132,7 @@ function Rules({repo,call,onClose}:{repo:string;call:UiCall;onClose:()=>void}) {
 }
 export function Dashboard({call,openSettings}:{call:UiCall;openSettings?:()=>boolean}) {
   const [snapshot,setSnapshot]=useState<Snapshot>(),[error,setError]=useState(''),[edit,setEdit]=useState<Repo|null|undefined>(),[selected,setSelected]=useState(''),[models,setModels]=useState(''),[guide,setGuide]=useState(false)
-  const [networkInfo,setNetworkInfo]=useState('')
+  const [networkInfo,setNetworkInfo]=useState(''),[networkOpen,setNetworkOpen]=useState(false)
   const [ruleRepo,setRuleRepo]=useState(''),[deleting,setDeleting]=useState(''),[busy,setBusy]=useState(false),[scan,setScan]=useState<{repo:Repo;full:boolean}>()
   const [repoSaving,setRepoSaving]=useState(false)
   const [deleteError,setDeleteError]=useState('')
@@ -160,10 +160,9 @@ export function Dashboard({call,openSettings}:{call:UiCall;openSettings?:()=>boo
   const reports=snapshot?.reports??[],results=reports.flatMap(r=>r.results),latest=reports.reduce((n,r)=>Math.max(n,r.at),0),lastJob=snapshot?.jobs.reduce<Job|undefined>((a,b)=>(b.at??0)>=(a?.at??0)?b:a,undefined)
   return <div className="gt-page"><div className="gt-scroll"><div className="gt-content">
     <header className="gt-page-head"><div><div className="gt-eyebrow">GITHUB TRIAGE</div><h1>GitHub 哨兵</h1><p className="gt-muted">从仓库待办到下一步，把判断依据放在一起。</p></div>
-      <div className="gt-head-actions"><Button variant="outline" disabled={busy} onClick={()=>void call<string>({action:'detect-proxy'}).then(setNetworkInfo).catch(e=>setError(message(e)))}>从系统检测代理</Button><Button variant="outline" disabled={busy} onClick={()=>void call<string>({action:'diagnose'}).then(setNetworkInfo).catch(e=>setError(message(e)))}>网络诊断</Button><Button variant="outline" icon={<Settings size={16}/>} onClick={settings}>插件设置</Button>
-      {snapshot&&<Button className={snapshot.model.available?'gt-model-trigger':'gt-model-trigger gt-warn'} variant="outline" onClick={()=>setGuide(v=>!v)}>{snapshot.model.available?snapshot.model.provider+' / '+snapshot.model.model:'模型未配置 · 查看指引'}</Button>}
+      <div className="gt-head-actions">{snapshot&&<Button className={snapshot.model.available?'gt-model-trigger':'gt-model-trigger gt-warn'} variant="outline" onClick={()=>setGuide(v=>!v)}>{snapshot.model.available?snapshot.model.provider+' / '+snapshot.model.model:'模型未配置 · 查看指引'}</Button>}
       <Button variant="primary" disabled={!snapshot?.repositories.length||busy||active} onClick={()=>void all()}>{busy?'提交中…':'全部分析'}</Button></div></header>
-    {networkInfo&&<section className="gt-card gt-network" role="status" aria-label="代理与网络诊断"><h2>代理与网络诊断</h2><pre className="gt-network-text">{networkInfo}</pre><p>需要固定代理时，在插件设置填写 httpsProxy；清空恢复自动检测。</p></section>}
+    <details className="gt-network" onToggle={e=>setNetworkOpen(e.currentTarget.open)}><summary>网络 / 设置</summary><div className="gt-card"><div className="gt-row"><Button variant="outline" disabled={busy} onClick={()=>void call<string>({action:'detect-proxy'}).then(setNetworkInfo).catch(e=>setError(message(e)))}>从系统检测代理</Button><Button variant="outline" disabled={busy} onClick={()=>void call<string>({action:'diagnose'}).then(setNetworkInfo).catch(e=>setError(message(e)))}>网络诊断</Button><Button variant="outline" icon={<Settings size={16}/>} onClick={settings}>插件设置</Button></div>{networkOpen&&<NetworkSettings endpoint="/api/github-triage/network-settings"/>}{networkInfo&&<section role="status" aria-label="代理与网络诊断"><details><summary>诊断详情</summary><pre className="gt-network-text">{networkInfo}</pre></details></section>}</div></details>
     {error&&<div className="gt-error" role="alert"><span>{error}</span><Button onClick={()=>void refresh()}>重试</Button></div>}
     {!snapshot?(!error&&<Skeleton/>):<>
       {(guide||!snapshot.model.available)&&<section className="gt-card gt-model" aria-label="模型状态"><div className="gt-section-head"><h2><Settings size={16}/>模型：{snapshot.model.available?'已配置':'未就绪'}</h2><Button onClick={()=>void call<string>({action:'models'}).then(setModels).catch(e=>setError(message(e)))}>查看可复制的模型 ID</Button></div>
@@ -208,5 +207,5 @@ export function apply(ctx:Context):void {
   ctx.slots.inject('main',()=>ctx.slots.register({name:'main',key:PANEL_ID,locale:NS},Page))
   ctx.slots.inject('sidebar.panellist',()=>ctx.slots.register({name:'sidebar.panellist',id:PANEL_ID,order:25,label:()=>t('title'),locale:NS},props=><Branch size={props.size}/>))
   const settingsSlots=ctx.slots as unknown as {inject(name:string,setup:()=>unknown):unknown;register(options:Record<string,unknown>,component:(props:NetworkSettingsProps)=>ReactNode):unknown}
-  settingsSlots.inject('plugins.row.config',()=>settingsSlots.register({name:'plugins.row.config',key:'dsh-github-triage#github-triage'},props=><NetworkSettings {...props as NetworkSettingsProps}/>))
+  settingsSlots.inject('plugins.row.config',()=>settingsSlots.register({name:'plugins.row.config',key:'dsh-github-triage#github-triage'},props=><NetworkSettings {...props as NetworkSettingsProps} endpoint="/api/github-triage/network-settings"/>))
 }

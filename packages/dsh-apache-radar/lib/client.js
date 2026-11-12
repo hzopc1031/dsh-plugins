@@ -2,32 +2,71 @@ window.__ModuleLoader__.load({ id: 'dsh-apache-radar', factory: hostRequire => {
 const settings = { exports: {} };
 ((module, exports, require) => {"use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.networkHint = void 0;
 exports.NetworkSettings = NetworkSettings;
 // Vendored identically in apache-radar, advisory-impact and github-triage; keep these copies in sync.
 const react_1 = require("react");
-function NetworkSettings({ view, form }) {
-    const [saving, setSaving] = (0, react_1.useState)(false), [error, setError] = (0, react_1.useState)('');
+const networkHint = (code) => /TLS_KEY_TOO_SMALL|key too (?:small|weak)/i.test(code)
+    ? '公司证书密钥过短；请在「网络 / 设置」核对 OSV / GitHub API 的证书校验选项。'
+    : /CERT|SIGNATURE|ISSUER/.test(code) ? '证书校验失败；请在「网络 / 设置」配置公司 CA。'
+        : '来源连接失败；请在「网络 / 设置」检查代理或运行诊断。';
+exports.networkHint = networkHint;
+function NetworkSettings({ view, endpoint }) {
+    const [state, setState] = (0, react_1.useState)({ writable: false });
+    const [saving, setSaving] = (0, react_1.useState)(false), [error, setError] = (0, react_1.useState)(''), [saved, setSaved] = (0, react_1.useState)(false);
+    const value = state.value ?? {}, disabled = !state.writable || saving;
+    async function request(body) {
+        if (!endpoint)
+            throw new Error('宿主配置编辑服务不可用。');
+        const response = await fetch(endpoint, { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+        const result = await response.json();
+        if (!response.ok)
+            throw new Error(result.error ?? '网络设置保存失败，请重试。');
+        return result;
+    }
+    (0, react_1.useEffect)(() => {
+        if (view === 'summary' || !endpoint)
+            return;
+        let active = true;
+        void request({ action: 'read' }).then(result => {
+            if (active)
+                setState(result);
+        }).catch(() => {
+            if (active)
+                setError('无法读取网络设置，请重新打开后重试。');
+        });
+        return () => { active = false; };
+    }, [endpoint, view]);
+    async function write(value) {
+        setSaving(true);
+        setError('');
+        setSaved(false);
+        try {
+            setState(await request({ action: 'save', value, revision: state.revision }));
+            setSaved(true);
+        }
+        catch (error) {
+            setError(error instanceof Error ? error.message : '网络设置保存失败，请重试。');
+        }
+        finally {
+            setSaving(false);
+        }
+    }
     if (view === 'summary')
         return '网络设置';
-    return (0, react_1.createElement)('section', { 'aria-label': '网络设置' }, (0, react_1.createElement)('label', null, (0, react_1.createElement)('input', {
-        type: 'checkbox', checked: form?.state.value?.insecureSkipTlsVerifyHosts === true,
-        disabled: !form?.state.writable || saving,
-        onChange: async (event) => {
-            const value = event.target.checked;
-            setSaving(true);
-            setError('');
-            try {
-                if (!await form?.mutate([{ op: 'set', path: ['insecureSkipTlsVerifyHosts'], value }], form.state.revision))
-                    throw new Error();
+    return (0, react_1.createElement)('section', { className: 'ns-settings', 'aria-label': '网络设置' }, (0, react_1.createElement)('style', null, `.ns-settings{font-size:12px;color:var(--dsw-alias-label-secondary)}.ns-settings form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0}.ns-settings label{display:flex;flex-direction:column;gap:5px;min-width:0}.ns-settings input,.ns-settings select{font:inherit;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-1);border:1px solid var(--dsw-alias-border-l2);border-radius:8px;padding:8px;min-width:0;width:100%}.ns-settings .ns-toggle{flex-direction:row;align-items:flex-start;margin:10px 0}.ns-settings .ns-toggle input{width:16px;height:16px;flex-shrink:0;accent-color:var(--dsw-alias-state-business-primary)}.ns-settings button{font:inherit;padding:8px 12px;border-radius:8px;border:1px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-1);cursor:pointer;justify-self:start}.ns-settings :is(input,select,button):focus-visible{outline:2px solid var(--dsw-alias-state-business-primary);outline-offset:3px}.ns-settings [role=alert]{color:var(--dsw-alias-state-error-primary)}.ns-settings .ns-status{display:block;margin-top:10px}.ns-settings button:disabled{opacity:.5}@container (max-width:600px){.ns-settings form{grid-template-columns:minmax(0,1fr)}}`), (0, react_1.createElement)('form', { key: JSON.stringify([value.systemProxy, value.timeoutSeconds, value.httpsProxy, value.noProxy, value.caBundlePath]), onSubmit: (event) => {
+            event.preventDefault();
+            const fields = new FormData(event.currentTarget);
+            const timeout = Number(fields.get('timeoutSeconds'));
+            if (!Number.isFinite(timeout) || timeout < 10 || timeout > 120) {
+                setError('请求超时须为 10–120 秒。');
+                return;
             }
-            catch {
-                setError('网络设置保存失败，请重试。');
-            }
-            finally {
-                setSaving(false);
-            }
-        },
-    }), '不安全：仅跳过 OSV / GitHub API 证书校验'), error && (0, react_1.createElement)('span', { role: 'alert' }, error));
+            void write(Object.fromEntries(['systemProxy', 'httpsProxy', 'noProxy', 'caBundlePath', 'timeoutSeconds'].map(key => [key, key === 'timeoutSeconds' ? timeout : String(fields.get(key) ?? '')])));
+        } }, (0, react_1.createElement)('label', null, '系统代理', (0, react_1.createElement)('select', { name: 'systemProxy', defaultValue: String(value.systemProxy ?? 'auto'), disabled }, (0, react_1.createElement)('option', { value: 'auto' }, '自动检测（含 PAC）'), (0, react_1.createElement)('option', { value: 'off' }, '关闭自动检测'))), (0, react_1.createElement)('label', null, '请求超时（秒）', (0, react_1.createElement)('input', { name: 'timeoutSeconds', type: 'number', min: 10, max: 120, required: true, defaultValue: Number(value.timeoutSeconds ?? 30), disabled })), ...[['httpsProxy', 'HTTPS 代理', 'http://host:port'], ['noProxy', '绕过代理', 'localhost, .example.com'], ['caBundlePath', '公司 CA 证书路径', 'PEM 文件绝对路径']].map(([key, label, placeholder]) => (0, react_1.createElement)('label', { key }, label, (0, react_1.createElement)('input', { name: key, defaultValue: String(value[key] ?? ''), placeholder, disabled, autoComplete: 'off' }))), (0, react_1.createElement)('button', { type: 'submit', disabled }, saving ? '正在保存…' : '保存网络设置')), ...[['insecureSkipTlsVerifyHosts', '不安全：仅跳过 OSV / GitHub API 证书校验'], ['insecureSkipTlsVerify', '不安全：跳过所有来源的 TLS 证书校验']].map(([key, label]) => (0, react_1.createElement)('label', { key, className: 'ns-toggle' }, (0, react_1.createElement)('input', {
+        name: key, type: 'checkbox', checked: value[key] === true, disabled,
+        onChange: (event) => write({ [key]: event.target.checked }),
+    }), label)), (0, react_1.createElement)('small', null, 'OSV / GitHub API：api.osv.dev / api.github.com。跳过校验会降低连接安全性。'), !state.writable && (0, react_1.createElement)('span', { className: 'ns-status' }, '网络配置暂不可编辑，请检查宿主配置权限。'), error ? (0, react_1.createElement)('span', { role: 'alert', className: 'ns-status' }, error) : saved && (0, react_1.createElement)('span', { role: 'status', className: 'ns-status' }, '网络设置已保存。'));
 }
 
 })(settings, settings.exports, hostRequire);
@@ -89,7 +128,7 @@ const projectName = (id) => ({ kafka: 'Kafka', hadoop: 'Hadoop', flink: 'Flink' 
 const time = (value) => value ? new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Singapore',
     year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(value)) : '尚未成功抓取';
 const statusName = (value) => ({ ok: '已更新', cached: '缓存', stale: '上次成功缓存', failed: '抓取失败', unavailable: '暂无来源' })[value] ?? value;
-const sourceError = (error) => error && !error.includes('TLS_KEY_TOO_SMALL') && /fetch failed|NETWORK_ERROR|ECONN|ETIMEDOUT|ENOTFOUND|UND_ERR_|CERT|SIGNATURE|ISSUER|HTTP[ _]\d{3}/i.test(error) ? '来源不可用 · 见网络诊断' : error;
+const sourceError = (error) => error && /TLS_KEY_TOO_SMALL|key too (?:small|weak)|fetch failed|NETWORK_ERROR|ECONN|ETIMEDOUT|ENOTFOUND|UND_ERR_|CERT|SIGNATURE|ISSUER|HTTP[ _]\d{3}/i.test(error) ? (error.includes('TLS_KEY_TOO_SMALL') ? '证书密钥过短 · 见网络 / 设置' : '来源不可用 · 见网络 / 设置') : error;
 const labels = { code: { copyLabel: '复制', copiedLabel: '已复制' }, footnotes: '注释' };
 function securityOverview(report) {
     const affected = report.projects.filter(p => p.advisories.some(a => a.verdict === 'affected'));
@@ -128,25 +167,30 @@ function Badge({ children, tone = '' }) {
     return react_1.default.createElement("span", { className: `ar-badge ${tone}` }, children);
 }
 function SourceChip({ source }) {
-    return react_1.default.createElement("div", { className: "ar-citation" },
-        react_1.default.createElement("a", { href: source.url, target: "_blank", rel: "noreferrer", title: source.url },
-            new URL(source.url).hostname,
-            " \u2197"),
-        react_1.default.createElement("span", { title: "\u6293\u53D6\u65F6\u95F4 \u00B7 Asia/Singapore (UTC+8)" }, time(source.fetchedAt)),
-        source.sourceTimestamp && react_1.default.createElement("span", null,
-            "\u6E90\u65F6\u95F4 ",
-            source.sourceTimestamp),
-        source.cacheStatus === 'stale' && react_1.default.createElement(Badge, { tone: "warn" }, "\u65E7\u7F13\u5B58"),
-        source.cacheError && react_1.default.createElement("details", { className: "ar-source-error" },
-            react_1.default.createElement("summary", null, "\u6293\u53D6\u5931\u8D25 \u00B7 \u67E5\u770B\u539F\u56E0"),
-            react_1.default.createElement("span", { className: "ar-error-text" }, sourceError(source.cacheError))));
+    return react_1.default.createElement("details", { className: "ar-citation" },
+        react_1.default.createElement("summary", null,
+            react_1.default.createElement("a", { href: source.url, target: "_blank", rel: "noreferrer", title: source.url },
+                new URL(source.url).hostname,
+                " \u2197"),
+            " \u00B7 ",
+            source.fetchedAt ? time(source.fetchedAt).slice(5) : '尚未成功抓取',
+            source.cacheStatus === 'stale' ? ' · 旧缓存' : ''),
+        react_1.default.createElement("span", null,
+            "\u6293\u53D6 ",
+            time(source.fetchedAt),
+            " \u00B7 UTC+8",
+            source.sourceTimestamp ? ` · 源时间 ${source.sourceTimestamp}` : ''),
+        source.cacheError && react_1.default.createElement("span", { className: "ar-error-text" }, sourceError(source.cacheError)));
 }
 function CountCard({ row, title, featured = false }) {
     return react_1.default.createElement("article", { className: `ar-card ar-metric ${featured ? 'ar-featured' : ''}` },
-        react_1.default.createElement("div", { className: "ar-eyebrow" }, title ?? row.label),
+        react_1.default.createElement("h3", { className: "ar-eyebrow" }, title ?? row.label),
         react_1.default.createElement("strong", { className: "ar-number" }, row.status === 'ok' ? row.value : '—'),
-        react_1.default.createElement("p", { className: "ar-note" }, row.status === 'error' ? sourceError(row.error) : row.note),
-        row.sources.map((source, i) => react_1.default.createElement(SourceChip, { key: i, source: source })));
+        row.status === 'error' && react_1.default.createElement("p", { className: "ar-error-text" }, sourceError(row.error)),
+        react_1.default.createElement("details", { className: "ar-metric-detail" },
+            react_1.default.createElement("summary", null, "\u53E3\u5F84\u4E0E\u6765\u6E90"),
+            react_1.default.createElement("p", { className: "ar-note" }, row.note),
+            row.sources.map((source, i) => react_1.default.createElement(SourceChip, { key: i, source: source }))));
 }
 function Overview({ data, jump }) {
     const counts = data.counts;
@@ -154,25 +198,22 @@ function Overview({ data, jump }) {
     const mismatches = counts.comparisons.filter(c => c.status !== 'match');
     return react_1.default.createElement(react_1.default.Fragment, null,
         react_1.default.createElement("div", { className: "ar-section-heading" },
-            react_1.default.createElement("div", null,
-                react_1.default.createElement("h2", null, "\u4ECE\u4E0D\u540C\u53E3\u5F84\uFF0C\u770B Apache"),
-                react_1.default.createElement("p", null, "\u9879\u76EE\u3001\u59D4\u5458\u4F1A\u4E0E\u5B75\u5316\u9879\u76EE\u5404\u6709\u5B9A\u4E49\uFF0C\u6570\u5B57\u4FDD\u7559\u5404\u81EA\u7684\u51FA\u5904\u3002")),
-            react_1.default.createElement(Badge, null, "\u5B98\u65B9\u516C\u5F00\u6765\u6E90")),
+            react_1.default.createElement("h2", null, "\u793E\u533A\u6982\u51B5"),
+            react_1.default.createElement("span", { className: "ar-muted" }, "\u5B98\u65B9\u516C\u5F00\u6765\u6E90 \u00B7 \u7EDF\u8BA1\u53E3\u5F84\u72EC\u7ACB")),
         react_1.default.createElement("div", { className: "ar-metrics" },
             counts.counts.slice(0, 5).map((row, i) => react_1.default.createElement(CountCard, { key: row.id, row: row, title: titles[i], featured: i === 0 })),
             data.security && react_1.default.createElement(SecurityCard, { report: data.security, jump: jump })),
         react_1.default.createElement("div", { className: "ar-two-col" },
             react_1.default.createElement("section", { className: "ar-card ar-section" },
                 react_1.default.createElement("div", { className: "ar-card-heading" },
-                    react_1.default.createElement("h3", null, "\u9000\u4F11\u53E3\u5F84\uFF0C\u653E\u5728\u4E00\u8D77\u770B"),
-                    react_1.default.createElement(Badge, { tone: "warn" }, "\u4E0D\u5408\u5E76\u4E3A\u603B\u6570")),
-                react_1.default.createElement("p", { className: "ar-muted" }, "\u9000\u4F11\u59D4\u5458\u4F1A\u3001Attic \u9879\u76EE\u4E0E\u5B50\u9879\u76EE\uFF0C\u8303\u56F4\u5E76\u4E0D\u76F8\u540C\u3002"),
+                    react_1.default.createElement("h3", null, "\u9000\u4F11\u4E0E Attic"),
+                    react_1.default.createElement("span", { className: "ar-muted" }, "\u53E3\u5F84\u4E0D\u540C\uFF0C\u4E0D\u5408\u8BA1")),
                 react_1.default.createElement("div", { className: "ar-retired" }, counts.retired.map(row => react_1.default.createElement("div", { key: row.id, className: "ar-retired-cell" },
                     react_1.default.createElement("span", null, ({ 'retired-whimsy': 'Whimsy 委员会', 'retired-projects': 'Projects 委员会', 'attic-pmcs': 'Attic PMC', 'attic-subprojects': 'Attic 子项目' })[row.id] ?? row.label),
                     react_1.default.createElement("strong", null, row.status === 'ok' ? row.value : '—'),
                     row.status === 'error' && react_1.default.createElement("p", { className: "ar-error-text" }, sourceError(row.error)),
                     row.sources.map((s, i) => react_1.default.createElement(SourceChip, { key: i, source: s }))))),
-                mismatches.map(c => react_1.default.createElement("details", { className: "ar-difference", key: c.id, open: c.id === 'retired-whimsy-attic' },
+                mismatches.map(c => react_1.default.createElement("details", { className: "ar-difference", key: c.id },
                     react_1.default.createElement("summary", null,
                         react_1.default.createElement("span", { className: "ar-dot warn" }),
                         c.label,
@@ -189,9 +230,10 @@ function Overview({ data, jump }) {
                     c.sources.map((s, i) => react_1.default.createElement(SourceChip, { key: i, source: s }))))),
             react_1.default.createElement("section", { className: "ar-card ar-section" },
                 react_1.default.createElement("div", { className: "ar-card-heading" },
-                    react_1.default.createElement("h3", null, "\u5B98\u65B9\u9886\u57DF\u6807\u7B7E"),
-                    react_1.default.createElement(Badge, null, "\u53EF\u591A\u9009\u5F52\u7C7B")),
-                react_1.default.createElement("p", { className: "ar-muted" }, "\u6CBF\u7528 chooser \u7684\u6807\u7B7E\uFF0C\u4E00\u4E2A\u9879\u76EE\u53EF\u4EE5\u5C5E\u4E8E\u591A\u4E2A\u9886\u57DF\u3002"),
+                    react_1.default.createElement("h3", null,
+                        "\u9886\u57DF\u5206\u5E03 ",
+                        react_1.default.createElement("span", { className: "ar-heading-count" }, counts.categories.status === 'ok' ? counts.categories.rows.length : '—')),
+                    react_1.default.createElement("span", { className: "ar-muted" }, "\u5B98\u65B9\u591A\u6807\u7B7E")),
                 counts.categories.status === 'error' ? react_1.default.createElement("p", { className: "ar-error-text" }, sourceError(counts.categories.error)) : react_1.default.createElement("div", { className: "ar-categories" }, counts.categories.rows.map(row => react_1.default.createElement("details", { key: row.id, className: "ar-category" },
                     react_1.default.createElement("summary", null,
                         row.label,
@@ -199,7 +241,7 @@ function Overview({ data, jump }) {
                     react_1.default.createElement("p", null, row.members?.map(m => m.name).join('、')),
                     row.sources.map((s, i) => react_1.default.createElement(SourceChip, { key: i, source: s }))))),
                 counts.categories.sources.map((s, i) => react_1.default.createElement(SourceChip, { key: i, source: s })),
-                react_1.default.createElement("p", { className: "ar-footnote" }, "\u591A\u6807\u7B7E\u6570\u91CF\u4E0D\u80FD\u76F8\u52A0\u4E3A\u9879\u76EE\u603B\u6570\u3002\u70B9\u6807\u7B7E\u67E5\u770B\u6210\u5458\u53CA\u6765\u6E90\u3002"))),
+                react_1.default.createElement("p", { className: "ar-footnote" }, "\u591A\u6807\u7B7E\u5F52\u7C7B\uFF0C\u6570\u91CF\u4E0D\u5408\u8BA1\u3002"))),
         react_1.default.createElement("details", { className: "ar-card ar-section" },
             react_1.default.createElement("summary", null, "\u5B75\u5316\u9879\u76EE\u4EA4\u53C9\u6838\u5BF9\u4E0E\u7EDF\u8BA1\u8BF4\u660E"),
             react_1.default.createElement("p", null, counts.explanation),
@@ -220,24 +262,19 @@ function ItemRow({ item, security }) {
         react_1.default.createElement("a", { className: "ar-item-title", href: item.url, target: "_blank", rel: "noreferrer" },
             item.title,
             react_1.default.createElement("span", { "aria-label": "\u6253\u5F00\u539F\u6587" }, " \u2197")),
-        !!item.security && jiraCves(item.title, true, security).map(cve => react_1.default.createElement("div", { className: "ar-cve-chip", key: cve.id },
-            cve.status === 'published' ? react_1.default.createElement("button", { onClick: () => revealAdvisory(`${item.project}-${cve.id}`) },
-                cve.id,
-                " \u00B7 ",
-                cve.label,
-                " \u2197") : react_1.default.createElement(Badge, null,
-                cve.id,
-                " \u00B7 ",
-                cve.label),
-            react_1.default.createElement("span", { className: "ar-footnote" },
-                "\u6309\u5DF2\u6293\u53D6\u5B98\u65B9\u5217\u8868\u6838\u5BF9 \u00B7 ",
-                time(cve.fetchedAt),
-                cve.stale ? ' · 旧缓存' : ''))),
-        !!item.fixVersions?.length && react_1.default.createElement("p", { className: "ar-footnote" },
-            "\u76EE\u6807\u7248\u672C ",
-            item.fixVersions.join('、'),
-            " \u00B7 \u4E0D\u4EE3\u8868\u5DF2\u7ECF\u53D1\u5E03"),
+        !!item.security && jiraCves(item.title, true, security).map(cve => react_1.default.createElement("div", { className: "ar-cve-chip", key: cve.id, title: `按已抓取官方列表核对 · ${time(cve.fetchedAt)}${cve.stale ? ' · 旧缓存' : ''}` }, cve.status === 'published' ? react_1.default.createElement("button", { onClick: () => revealAdvisory(`${item.project}-${cve.id}`) },
+            cve.id,
+            " \u00B7 ",
+            cve.label,
+            " \u2197") : react_1.default.createElement(Badge, null,
+            cve.id,
+            " \u00B7 ",
+            cve.label))),
         react_1.default.createElement("div", { className: "ar-item-links" },
+            !!item.fixVersions?.length && react_1.default.createElement("span", null,
+                "\u76EE\u6807 ",
+                item.fixVersions.join('、'),
+                " \u00B7 \u4E0D\u4EE3\u8868\u5DF2\u53D1\u5E03"),
             react_1.default.createElement("a", { href: item.sourceUrl, target: "_blank", rel: "noreferrer" }, "\u91C7\u96C6\u6765\u6E90 \u2197"),
             item.notesUrl && react_1.default.createElement("a", { href: item.notesUrl, target: "_blank", rel: "noreferrer" }, "\u7248\u672C\u8BF4\u660E \u2197")));
 }
@@ -275,40 +312,48 @@ function Watch({ data, mutate, busy, focusProject }) {
     const sources = data.sources?.filter(s => !s.project || s.project === project) ?? [];
     return react_1.default.createElement(react_1.default.Fragment, null,
         react_1.default.createElement("div", { className: "ar-section-heading" },
-            react_1.default.createElement("div", null,
-                react_1.default.createElement("h2", null, "\u53EA\u5173\u6CE8\u4F60\u5728\u7528\u7684\u9879\u76EE"),
-                react_1.default.createElement("p", null, "\u6EDA\u52A8\u6700\u8FD1 7 \u5929 \u00B7 Asia/Singapore\uFF08UTC+8\uFF09"))),
+            react_1.default.createElement("h2", null,
+                "\u9879\u76EE\u52A8\u6001 ",
+                react_1.default.createElement("span", { className: "ar-heading-count" }, data.watchList?.length ?? 0)),
+            react_1.default.createElement("span", { className: "ar-muted" }, "\u6700\u8FD1 7 \u5929 \u00B7 \u6EDA\u52A8\u7A97\u53E3 \u00B7 UTC+8")),
         react_1.default.createElement("div", { className: "ar-watch-toolbar" },
             react_1.default.createElement("div", { className: "ar-segment", role: "group", "aria-label": "\u5173\u6CE8\u9879\u76EE" }, data.watchList?.map(id => react_1.default.createElement("button", { "aria-pressed": project === id, key: id, onClick: () => setSelected(id) }, projectName(id)))),
-            react_1.default.createElement("form", { onSubmit: e => { e.preventDefault(); mutate('add', newId); setNewId(''); } },
-                react_1.default.createElement("input", { "aria-label": "\u6DFB\u52A0\u9879\u76EE id", placeholder: "\u9879\u76EE id\uFF0C\u5982 spark", pattern: "[a-zA-Z][a-zA-Z0-9-]*", required: true, value: newId, onChange: e => setNewId(e.target.value) }),
-                react_1.default.createElement("button", { disabled: busy }, "\uFF0B \u5173\u6CE8")),
-            project && react_1.default.createElement("button", { disabled: busy, onClick: () => mutate('remove', project), "aria-label": `取消关注 ${projectName(project)}` }, "\u53D6\u6D88\u5173\u6CE8")),
+            react_1.default.createElement("details", { className: "ar-manage", open: !project || undefined },
+                react_1.default.createElement("summary", null, "\u7BA1\u7406\u5173\u6CE8"),
+                react_1.default.createElement("form", { onSubmit: e => { e.preventDefault(); mutate('add', newId); setNewId(''); } },
+                    react_1.default.createElement("input", { "aria-label": "\u6DFB\u52A0\u9879\u76EE id", placeholder: "\u9879\u76EE id\uFF0C\u5982 spark", pattern: "[a-zA-Z][a-zA-Z0-9-]*", required: true, value: newId, onChange: e => setNewId(e.target.value) }),
+                    react_1.default.createElement("button", { disabled: busy }, "\uFF0B \u5173\u6CE8")),
+                project && react_1.default.createElement("button", { disabled: busy, onClick: () => mutate('remove', project), "aria-label": `取消关注 ${projectName(project)}` }, "\u53D6\u6D88\u5173\u6CE8"))),
         project ? react_1.default.createElement(react_1.default.Fragment, null,
             react_1.default.createElement(SecurityStrip, { key: project + (security?.pin ?? ""), project: project, security: security, report: data.security, mutate: mutate, busy: busy, expanded: focusProject === project }),
             react_1.default.createElement("div", { className: "ar-two-col" },
                 react_1.default.createElement("section", { className: "ar-card ar-section" },
                     react_1.default.createElement("div", { className: "ar-card-heading" },
                         react_1.default.createElement("h3", null,
-                            projectName(project),
-                            " \u00B7 \u6B63\u5F0F\u53D1\u5E03"),
-                        react_1.default.createElement(Badge, null, "\u5B98\u65B9\u53D1\u5E03\u76EE\u5F55")),
-                    react_1.default.createElement(ItemList, { key: project + 'release', items: items.filter(i => i.kind === 'release'), empty: "\u7A97\u53E3\u5185\u65E0\u5DF2\u6536\u5F55\u53D1\u5E03\uFF1B\u8BF7\u540C\u65F6\u6838\u5BF9\u4E0B\u65B9\u6765\u6E90\u72B6\u6001\u3002" })),
+                            "\u6B63\u5F0F\u53D1\u5E03 ",
+                            react_1.default.createElement("span", { className: "ar-heading-count" }, items.filter(i => i.kind === 'release').length))),
+                    react_1.default.createElement(ItemList, { key: project + 'release', items: items.filter(i => i.kind === 'release'), empty: "\u8FD1 7 \u5929\u6682\u65E0\u5DF2\u6536\u5F55\u53D1\u5E03\u3002" })),
                 react_1.default.createElement("section", { className: "ar-card ar-section" },
                     react_1.default.createElement("div", { className: "ar-card-heading" },
-                        react_1.default.createElement("h3", null, project === 'kafka' ? 'Kafka · KIP' : project === 'flink' ? 'Flink · FLIP' : projectName(project) + ' · 提案'),
-                        react_1.default.createElement(Badge, null, "\u4FDD\u7559\u6765\u6E90\u72B6\u6001")),
-                    react_1.default.createElement(ItemList, { key: project + 'proposal', items: items.filter(i => i.kind === 'proposal'), empty: project === 'hadoop' ? 'Hadoop 没有已验证的通用 HIP 索引。' : '窗口内暂无已收录提案；日期未知条目在下方单列。' }))),
+                        react_1.default.createElement("h3", null,
+                            project === 'kafka' ? 'KIP' : project === 'flink' ? 'FLIP' : '提案',
+                            " ",
+                            react_1.default.createElement("span", { className: "ar-heading-count" }, items.filter(i => i.kind === 'proposal').length))),
+                    react_1.default.createElement(ItemList, { key: project + 'proposal', items: items.filter(i => i.kind === 'proposal'), empty: project === 'hadoop' ? 'Hadoop 没有已验证的通用 HIP 索引。' : '近 7 天暂无已收录提案。' }))),
             react_1.default.createElement("section", { className: "ar-card ar-section" },
                 react_1.default.createElement("div", { className: "ar-card-heading" },
-                    react_1.default.createElement("h3", null, "JIRA \u00B7 \u6309\u7C7B\u578B\u4E0E\u72B6\u6001\u6574\u7406"),
-                    react_1.default.createElement(Badge, null, "\u5DE5\u5355 \u2260 \u5DF2\u53D1\u5E03\u529F\u80FD")),
-                react_1.default.createElement("p", { className: "ar-muted" }, "\u4EC5\u6293\u53D6\u5173\u6CE8\u9879\u76EE\u7684\u9996\u4E2A\u54CD\u5E94\u9875\uFF1BNew Feature \u548C\u76EE\u6807\u7248\u672C\u4E0D\u8BC1\u660E\u5DF2\u7ECF\u53D1\u5E03\u3002"),
+                    react_1.default.createElement("h3", null,
+                        "JIRA ",
+                        react_1.default.createElement("span", { className: "ar-heading-count" }, items.filter(i => i.kind === 'jira').length)),
+                    react_1.default.createElement("span", { className: "ar-muted" }, "\u9996\u4E2A\u54CD\u5E94\u9875 \u00B7 \u5DE5\u5355\u4E0D\u4EE3\u8868\u5DF2\u53D1\u5E03")),
                 groupIssues(items).length ? groupIssues(items).map(group => react_1.default.createElement("details", { className: "ar-issue-group", key: project + group.label, open: group.label === '安全' },
-                    react_1.default.createElement("summary", null, group.label),
-                    react_1.default.createElement(ItemList, { items: group.items, empty: "", security: security }))) : react_1.default.createElement("p", { className: "ar-empty-inline" }, "\u7A97\u53E3\u5185\u6682\u65E0\u5DF2\u6536\u5F55 JIRA\uFF1B\u6765\u6E90\u5931\u8D25\u65F6\u4E0D\u80FD\u89E3\u91CA\u4E3A\u96F6\u66F4\u65B0\u3002")),
+                    react_1.default.createElement("summary", null,
+                        group.label,
+                        " ",
+                        react_1.default.createElement("span", { className: "ar-heading-count" }, group.items.length)),
+                    react_1.default.createElement(ItemList, { items: group.items, empty: "", security: security }))) : react_1.default.createElement("p", { className: "ar-empty-inline" }, "\u8FD1 7 \u5929\u6682\u65E0\u5DF2\u6536\u5F55 JIRA\uFF1B\u8BF7\u6838\u5BF9\u6765\u6E90\u72B6\u6001\u3002")),
             react_1.default.createElement("details", { className: "ar-card ar-section" },
-                react_1.default.createElement("summary", null, "\u65E5\u671F\u672A\u77E5\u7684\u63D0\u6848\u4E0E\u53C2\u8003\u6761\u76EE \u00B7 \u4E0D\u8BA1\u4E3A\u672C\u5468\u65B0\u589E"),
+                react_1.default.createElement("summary", null, "\u53C2\u8003\u63D0\u6848 \u00B7 \u65E5\u671F\u672A\u77E5\uFF0C\u4E0D\u8BA1\u5165\u672C\u5468"),
                 react_1.default.createElement(ItemList, { key: project + 'undated', items: undated, empty: "\u6682\u65E0\u65E5\u671F\u672A\u77E5\u7684\u53C2\u8003\u6761\u76EE\u3002" })),
             react_1.default.createElement("details", { className: "ar-card ar-section" },
                 react_1.default.createElement("summary", null, "\u91C7\u96C6\u7A97\u53E3\u4E0E\u6765\u6E90\u72B6\u6001"),
@@ -330,55 +375,32 @@ function revealAdvisory(id) {
 function SecurityCitation({ source }) {
     if (!source)
         return null;
-    return react_1.default.createElement("div", { className: "ar-citation" },
-        react_1.default.createElement("a", { href: source.url, target: "_blank", rel: "noreferrer" },
-            new URL(source.url).hostname,
-            " \u2197"),
-        react_1.default.createElement("span", null,
-            "\u6293\u53D6 ",
-            time(source.fetchedAt),
-            " \u00B7 UTC+8",
-            source.status === 'stale' ? ' · 上次成功缓存' : ''),
-        source.sourceTimestamp && react_1.default.createElement("span", null,
-            "\u6E90\u65F6\u95F4 ",
-            source.sourceTimestamp),
-        source.error && react_1.default.createElement("details", { className: "ar-source-error" },
-            react_1.default.createElement("summary", null, "\u6765\u6E90\u5931\u8D25 \u00B7 \u67E5\u770B\u539F\u56E0"),
-            react_1.default.createElement("span", { className: "ar-error-text" }, sourceError(source.error))));
+    return react_1.default.createElement(SourceChip, { source: { url: source.url, fetchedAt: source.fetchedAt ?? null, fetchedAtDisplay: time(source.fetchedAt), sourceTimestamp: source.sourceTimestamp, cacheStatus: source.status === 'stale' ? 'stale' : undefined, cacheError: source.error } });
 }
 function SecurityCard({ report, jump }) {
     const summary = securityOverview(report);
     return react_1.default.createElement("article", { className: "ar-card ar-metric ar-security-card" },
-        react_1.default.createElement("div", { className: "ar-eyebrow" }, "\u5173\u6CE8\u7EC4\u4EF6 \u00B7 \u7248\u672C\u4E0E\u5B89\u5168"),
+        react_1.default.createElement("h3", { className: "ar-eyebrow" }, "\u7248\u672C\u4E0E\u5B89\u5168"),
         react_1.default.createElement("strong", { className: "ar-number" },
             summary.incomplete ? summary.affected.length ? `≥${summary.affected.length}` : '—' : summary.affected.length,
             react_1.default.createElement("small", null,
                 " / ",
-                summary.watched)),
+                summary.watched,
+                " \u53D7\u5F71\u54CD")),
         react_1.default.createElement("p", { className: "ar-note" },
-            "\u5F53\u524D\u7248\u672C\u6709\u5B98\u65B9\u516C\u544A\u5F71\u54CD\u7684\u7EC4\u4EF6",
-            react_1.default.createElement("br", null),
             summary.unpinned,
             " \u4E2A\u672A\u586B\u8FD0\u884C\u7248\u672C",
             summary.incomplete ? ` · ${summary.incomplete} 个来源待核对` : ''),
-        report.projects.map(p => react_1.default.createElement("div", { className: "ar-security-scope", key: p.project },
+        react_1.default.createElement("div", { className: "ar-security-projects" }, report.projects.map(p => react_1.default.createElement("div", { className: "ar-security-scope", key: p.project },
             react_1.default.createElement("button", { className: "ar-project-jump", onClick: () => jump?.(p.project) },
                 projectName(p.project),
-                summary.affected.includes(p.project) ? ' · 受影响' : !p.pin ? ' · 未填版本' : '',
-                " \u2197"),
-            p.source && react_1.default.createElement(react_1.default.Fragment, null,
-                react_1.default.createElement("a", { className: "ar-footnote", href: p.source.url, title: p.source.url, target: "_blank", rel: "noreferrer" }, "\u5B98\u65B9\u6765\u6E90 \u2197"),
-                react_1.default.createElement("span", { className: "ar-footnote" },
-                    time(p.source.fetchedAt),
-                    " \u00B7 UTC+8",
-                    p.source.status === 'stale' ? ' · 旧缓存' : ''),
-                p.source.sourceTimestamp && react_1.default.createElement("span", { className: "ar-footnote" },
-                    "\u6E90\u65F6\u95F4 ",
-                    p.source.sourceTimestamp),
-                p.source.error && react_1.default.createElement("details", { className: "ar-source-error" },
-                    react_1.default.createElement("summary", null, "\u6765\u6E90\u5931\u8D25"),
-                    react_1.default.createElement("span", null, sourceError(p.source.error)))),
-            p.error && react_1.default.createElement("p", { className: "ar-error-text" }, sourceError(p.error)))));
+                summary.affected.includes(p.project) ? ' · 受影响' : '',
+                " \u2197")))),
+        react_1.default.createElement("details", { className: "ar-metric-detail" },
+            react_1.default.createElement("summary", null, "\u5B98\u65B9\u6765\u6E90"),
+            report.projects.map(p => react_1.default.createElement("div", { key: p.project },
+                react_1.default.createElement(SecurityCitation, { source: p.source }),
+                p.error && react_1.default.createElement("p", { className: "ar-error-text" }, sourceError(p.error))))));
 }
 function SecurityStrip({ project, security, report, mutate, busy, expanded = false }) {
     const [version, setVersion] = (0, react_1.useState)(security?.pin ?? '');
@@ -387,26 +409,31 @@ function SecurityStrip({ project, security, report, mutate, busy, expanded = fal
     const supported = ['kafka', 'hadoop', 'flink'].includes(project);
     return react_1.default.createElement("section", { className: "ar-card ar-section ar-security-strip" },
         react_1.default.createElement("div", { className: "ar-card-heading" },
-            react_1.default.createElement("div", null,
-                react_1.default.createElement("h3", null,
-                    projectName(project),
-                    " \u00B7 \u7248\u672C\u4E0E\u5B89\u5168"),
-                react_1.default.createElement("p", { className: "ar-muted" },
-                    security?.pin ? `你在用 ${security.pin} · ${security.source?.data ? `${affected} 个已收录官方公告影响此版本 · ${unknown} 个无法判断 · 官方修复逐项见下方` : '官方列表不可用，无法判断'}` : '填写你实际运行的版本，按官方范围立即核对。',
-                    security?.source?.status === 'stale' ? ' · 上次成功缓存' : '')),
-            react_1.default.createElement(Badge, { tone: affected ? 'danger' : '' }, security?.pin ? '官方范围匹配' : '未填版本 · 无法判断')),
+            react_1.default.createElement("h3", null, "\u7248\u672C\u4E0E\u5B89\u5168"),
+            react_1.default.createElement("span", { className: "ar-muted" },
+                security?.pin ? security.source?.data ? react_1.default.createElement(react_1.default.Fragment, null,
+                    react_1.default.createElement(Badge, { tone: affected ? 'danger' : '' },
+                        affected,
+                        " \u9879\u53D7\u5F71\u54CD"),
+                    " \u00B7 ",
+                    unknown,
+                    " \u9879\u65E0\u6CD5\u5224\u65AD") : '官方列表不可用，无法判断' : '未填版本 · 无法判断',
+                security?.source?.status === 'stale' ? ' · 上次成功缓存' : '')),
         supported && react_1.default.createElement("form", { className: "ar-pin-form", onSubmit: e => { e.preventDefault(); mutate('pin', project, { version }); } },
             react_1.default.createElement("label", { htmlFor: `ar-pin-${project}` }, "\u8FD0\u884C\u7248\u672C"),
             react_1.default.createElement("input", { id: `ar-pin-${project}`, "aria-label": `${projectName(project)} 运行版本`, placeholder: "\u8F93\u5165\u5B9E\u9645\u7248\u672C\uFF0C\u5982 3.9.0", value: version, maxLength: 200, onChange: e => setVersion(e.target.value) }),
-            react_1.default.createElement("button", { disabled: busy, className: "ar-primary" }, "\u4FDD\u5B58\u7248\u672C\u5E76\u5224\u65AD"),
+            react_1.default.createElement("button", { disabled: busy, className: "ar-primary" }, "\u4FDD\u5B58\u5E76\u6838\u5BF9"),
             security?.pin && react_1.default.createElement("button", { type: "button", disabled: busy, onClick: () => mutate('pin', project, { version: '' }) }, "\u6E05\u9664")),
         react_1.default.createElement(SecurityCitation, { source: security?.source }),
         security?.error && react_1.default.createElement("p", { className: "ar-error-text" }, sourceError(security.error)),
-        security?.notices.map(n => react_1.default.createElement("p", { className: "ar-footnote", key: n }, n)),
+        !!security?.notices.length && react_1.default.createElement("details", { className: "ar-limits" },
+            react_1.default.createElement("summary", null, "\u6765\u6E90\u8986\u76D6\u8BF4\u660E"),
+            security.notices.map(n => react_1.default.createElement("p", { className: "ar-footnote", key: n }, n))),
         project === 'flink' && react_1.default.createElement(SecurityCitation, { source: report?.flinkPointer }),
         react_1.default.createElement("details", { className: "ar-advisories", open: expanded || undefined },
-            react_1.default.createElement("summary", null, "\u5B98\u65B9\u5B89\u5168\u516C\u544A \u00B7 \u5C55\u5F00\u9010\u9879\u5224\u5B9A\u4E0E\u4FEE\u590D\u7248\u672C"),
-            react_1.default.createElement("p", { className: "ar-footnote" }, "\u4E0D\u540C\u516C\u544A\u7684\u4FEE\u590D\u7248\u672C\u5206\u522B\u5217\u51FA\uFF1B\u7EC4\u4EF6\u3001\u914D\u7F6E\u4E0E\u9650\u5236\u6761\u4EF6\u987B\u9010\u9879\u6838\u5BF9\u3002\u5224\u5B9A\u4E0D\u6784\u6210\u751F\u4EA7\u5B89\u5168\u6216\u5347\u7EA7\u7ED3\u8BBA\u3002"),
+            react_1.default.createElement("summary", null,
+                "\u5B98\u65B9\u5B89\u5168\u516C\u544A ",
+                react_1.default.createElement("span", { className: "ar-heading-count" }, security?.advisories.length ?? '—')),
             security?.advisories.map(a => react_1.default.createElement("details", { className: "ar-advisory", id: `${project}-${a.id}`, key: a.id, tabIndex: -1, onToggle: e => {
                     if (e.currentTarget.open && a.osv.status === 'unqueried')
                         mutate('osv', project, { cve: a.id });
@@ -415,12 +442,7 @@ function SecurityStrip({ project, security, report, mutate, busy, expanded = fal
                     react_1.default.createElement(Badge, { tone: verdictTone[a.verdict] }, verdictName[a.verdict]),
                     react_1.default.createElement("b", null, a.id),
                     react_1.default.createElement("span", null, a.title),
-                    react_1.default.createElement("span", { className: "ar-advisory-source" },
-                        react_1.default.createElement("a", { href: a.url, target: "_blank", rel: "noreferrer", onClick: e => e.stopPropagation() }, "\u5B98\u65B9\u539F\u6587 \u2197"),
-                        " \u00B7 \u6293\u53D6 ",
-                        time(a.fetchedAt),
-                        " \u00B7 UTC+8",
-                        a.sourceTimestamp ? ` · 源时间 ${a.sourceTimestamp}` : "")),
+                    react_1.default.createElement("a", { className: "ar-advisory-link", href: a.url, target: "_blank", rel: "noreferrer", onClick: e => e.stopPropagation() }, "\u5B98\u65B9\u539F\u6587 \u2197")),
                 react_1.default.createElement("div", { className: "ar-advisory-body" },
                     react_1.default.createElement("p", null, a.reason),
                     react_1.default.createElement("dl", null,
@@ -430,7 +452,8 @@ function SecurityStrip({ project, security, report, mutate, busy, expanded = fal
                         react_1.default.createElement("dd", null, a.fixedText ?? '官方未明确列出')),
                     react_1.default.createElement(SecurityCitation, { source: { url: a.url, fetchedAt: a.fetchedAt, sourceTimestamp: a.sourceTimestamp, status: security.source.status, data: null } }),
                     react_1.default.createElement("details", { className: "ar-limits" },
-                        react_1.default.createElement("summary", null, "\u5B98\u65B9\u539F\u6587\u4E0E\u9650\u5236\u6761\u4EF6"),
+                        react_1.default.createElement("summary", null, "\u5B98\u65B9\u8BF4\u660E\u4E0E\u9002\u7528\u6761\u4EF6"),
+                        react_1.default.createElement("p", null, "\u6309\u7EC4\u4EF6\u3001\u914D\u7F6E\u9010\u9879\u6838\u5BF9\uFF1B\u5224\u5B9A\u4E0D\u6784\u6210\u751F\u4EA7\u5B89\u5168\u6216\u5347\u7EA7\u7ED3\u8BBA\u3002"),
                         a.notes.map((note, i) => react_1.default.createElement("p", { key: i }, note))),
                     react_1.default.createElement("div", { className: "ar-osv" },
                         react_1.default.createElement("h4", null, "OSV \u00B7 \u7B2C\u4E8C\u6765\u6E90"),
@@ -438,10 +461,12 @@ function SecurityStrip({ project, security, report, mutate, busy, expanded = fal
                         a.osvDifference && react_1.default.createElement("p", { className: "ar-error-text" }, "OSV \u4E0E\u5B98\u65B9\u8303\u56F4\u8868\u8FF0\u4E0D\u540C\uFF1B\u5B98\u65B9\u5224\u5B9A\u4FDD\u6301\u4E0D\u53D8\uFF0C\u8BF7\u5206\u522B\u6838\u5BF9\u7EC4\u4EF6\u548C\u8303\u56F4\u3002"),
                         react_1.default.createElement(SecurityCitation, { source: a.osv }),
                         a.osv.status === 'failed' && react_1.default.createElement("button", { disabled: busy, onClick: () => mutate('osv', project, { cve: a.id }) }, "\u91CD\u8BD5 OSV"),
-                        a.osv.data?.record && react_1.default.createElement("pre", null, JSON.stringify(a.osv.data.record.affected, null, 2)))))),
+                        a.osv.data?.record && react_1.default.createElement("details", null,
+                            react_1.default.createElement("summary", null, "OSV \u8303\u56F4\u539F\u6587"),
+                            react_1.default.createElement("pre", null, JSON.stringify(a.osv.data.record.affected, null, 2))))))),
             !security?.advisories.length && react_1.default.createElement("p", { className: "ar-empty-inline" }, sourceError(security?.error) ?? '尚未采集官方列表，请刷新；不能据此认定没有公告。'),
             project === 'kafka' && react_1.default.createElement("details", { className: "ar-suppressions" },
-                react_1.default.createElement("summary", null, "\u626B\u63CF\u5668\u62A5\u4E86\uFF0C\u4F46\u5B98\u65B9\u8BF4\u660E\u4E0D\u9002\u7528 \u00B7 \u5355\u72EC\u67E5\u770B"),
+                react_1.default.createElement("summary", null, "\u5B98\u65B9\u4E0D\u9002\u7528\u8BF4\u660E \u00B7 suppressions"),
                 react_1.default.createElement("p", { className: "ar-footnote" }, "\u5B98\u65B9 suppressions \u4E0D\u8BA1\u4E3A\u5F71\u54CD Kafka \u7684\u516C\u544A\u3002"),
                 react_1.default.createElement(SecurityCitation, { source: report?.suppressions }),
                 report?.suppressions?.data?.suppressions.map(a => react_1.default.createElement("article", { key: a.id },
@@ -453,20 +478,25 @@ function SecurityStrip({ project, security, report, mutate, busy, expanded = fal
                 react_1.default.createElement(SecurityCitation, { source: report?.guidance }))));
 }
 function BriefSection({ part }) {
+    if (part.startsWith('# '))
+        return react_1.default.createElement("details", { className: "ar-card ar-section" },
+            react_1.default.createElement("summary", null, "\u5468\u62A5\u4FE1\u606F\u4E0E\u7EDF\u8BA1\u53E3\u5F84"),
+            react_1.default.createElement(dsh_client_ui_primitives_1.MarkdownText, { text: part, labels: labels, omitHtml: true }));
     if (part.startsWith('## 关注项目动态'))
         return react_1.default.createElement(react_1.default.Fragment, null,
             react_1.default.createElement("h2", { className: "ar-brief-title" }, "\u5173\u6CE8\u9879\u76EE\u52A8\u6001"),
             part.split('\n').slice(1).join('\n').trim().split(/\n(?=### )/).map((project, i) => react_1.default.createElement(BriefSection, { part: project, key: i })));
     if (part.startsWith('## 本周新公告'))
         return react_1.default.createElement("article", { className: "ar-card ar-section" },
-            react_1.default.createElement(dsh_client_ui_primitives_1.MarkdownText, { text: part, labels: labels, omitHtml: true }));
+            react_1.default.createElement(dsh_client_ui_primitives_1.MarkdownText, { text: part.split('\n').slice(0, 8).join('\n'), labels: labels, omitHtml: true }),
+            part.split('\n').length > 8 && react_1.default.createElement("details", { className: "ar-brief-more" },
+                react_1.default.createElement("summary", null, "\u5168\u90E8\u65B0\u516C\u544A\u4E0E\u5224\u5B9A"),
+                react_1.default.createElement(dsh_client_ui_primitives_1.MarkdownText, { text: part.split('\n').slice(8).join('\n'), labels: labels, omitHtml: true })));
     if (part.startsWith('## '))
         return react_1.default.createElement("details", { className: "ar-card ar-section" },
-            react_1.default.createElement("summary", null,
-                part.split('\n')[0].replace(/^## /, ''),
-                " \u00B7 \u5C55\u5F00\u660E\u7EC6"),
+            react_1.default.createElement("summary", null, part.split('\n')[0].replace(/^## /, '')),
             react_1.default.createElement(dsh_client_ui_primitives_1.MarkdownText, { text: part, labels: labels, omitHtml: true }));
-    const lines = part.split('\n');
+    const lines = part.replace(/^### (kafka|hadoop|flink)\b/, (_, id) => `### ${projectName(id)}`).split('\n');
     const preview = part.startsWith('### ') && lines.length > 4;
     return react_1.default.createElement("article", { className: "ar-card ar-section" },
         react_1.default.createElement(dsh_client_ui_primitives_1.MarkdownText, { text: preview ? lines.slice(0, 4).join('\n') : part, labels: labels, omitHtml: true }),
@@ -508,14 +538,14 @@ function Brief({ data, request, busy }) {
     return react_1.default.createElement(react_1.default.Fragment, null,
         react_1.default.createElement("div", { className: "ar-section-heading" },
             react_1.default.createElement("div", null,
-                react_1.default.createElement("h2", null, "\u628A\u8FD9\u4E00\u5468\uFF0C\u7559\u6210\u4E00\u4EFD\u7B80\u62A5"),
-                react_1.default.createElement("p", null, "\u5E26\u539F\u6587\u3001\u6765\u6E90\u4E0E\u65F6\u95F4\u7684\u4E2D\u6587 Markdown \u00B7 \u5728\u672C\u5730\u4FDD\u5B58")),
+                react_1.default.createElement("h2", null, "\u6BCF\u5468\u7B80\u62A5"),
+                react_1.default.createElement("p", null, "\u6700\u8FD1 7 \u5929 \u00B7 \u5DF2\u4FDD\u5B58\u7684 Markdown")),
             react_1.default.createElement("div", { className: "ar-actions" },
                 react_1.default.createElement("button", { disabled: busy, onClick: () => request('brief') }, data.markdown ? '重新生成' : '生成本周周报'),
                 data.markdown && react_1.default.createElement(react_1.default.Fragment, null,
                     react_1.default.createElement("button", { className: "ar-primary", onClick: copy }, "\u590D\u5236 Markdown"),
                     react_1.default.createElement("button", { onClick: openFile }, "\u6253\u5F00\u5DF2\u4FDD\u5B58\u6587\u4EF6 \u2197")))),
-        react_1.default.createElement("p", { role: "status", className: "ar-muted" }, notice || '周报无需模型生成。复制和打开操作使用已保存的全文。'),
+        notice && react_1.default.createElement("p", { role: "status", className: "ar-muted" }, notice),
         data.markdown ? react_1.default.createElement("div", { className: "ar-brief" }, briefSections(data.markdown).map((part, i) => react_1.default.createElement(BriefSection, { part: part, key: i }))) : react_1.default.createElement("div", { className: "ar-card ar-empty" },
             react_1.default.createElement(Icon, { size: 40 }),
             react_1.default.createElement("h3", null, "\u7B2C\u4E00\u4EFD\u5468\u62A5\uFF0C\u4ECE\u8FD9\u91CC\u5F00\u59CB"),
@@ -532,6 +562,8 @@ function Dashboard() {
         }
     });
     const [choosing, setChoosing] = (0, react_1.useState)(false);
+    const [networkOpen, setNetworkOpen] = (0, react_1.useState)(false);
+    const [networkRevision, setNetworkRevision] = (0, react_1.useState)(0);
     const [view, setView] = (0, react_1.useState)('overview');
     const [focusProject, setFocusProject] = (0, react_1.useState)();
     const [busy, setBusy] = (0, react_1.useState)(true);
@@ -552,6 +584,8 @@ function Dashboard() {
                 return;
             if (['detect-proxy', 'redetect-proxy', 'apply-proxy', 'clear-proxy'].includes(action)) {
                 setProxyDetection(result);
+                if (action === 'apply-proxy' || action === 'clear-proxy')
+                    setNetworkRevision(revision => revision + 1);
                 return;
             }
             if (action === 'diagnose') {
@@ -618,131 +652,126 @@ function Dashboard() {
                 react_1.default.createElement("span", { className: "ar-local" },
                     react_1.default.createElement("span", { className: "ar-dot" }),
                     "\u672C\u5730\u5DE5\u4F5C\u53F0 \u00B7 \u65E0\u9700\u6A21\u578B")),
-            react_1.default.createElement("div", { className: "ar-intro" },
-                react_1.default.createElement("p", null, "\u5728\u7EB7\u7E41\u7684\u793E\u533A\u52A8\u6001\u4E2D\uFF0C\u627E\u5230\u4F60\u5173\u5FC3\u7684\u53D8\u5316\u3002"),
-                react_1.default.createElement("span", null, "\u516C\u5F00\u6765\u6E90 \u00B7 \u539F\u6587\u53EF\u8FFD\u6EAF \u00B7 UTC+8")),
-            react_1.default.createElement("div", { className: "ar-projectbar" },
-                data.directory && !choosing ? react_1.default.createElement("div", { className: "ar-directory" },
+            react_1.default.createElement("div", { className: "ar-projectbar", "aria-label": "\u65E5\u5E38\u64CD\u4F5C" },
+                data.directory ? react_1.default.createElement("div", { className: "ar-directory" },
                     react_1.default.createElement("span", { className: "ar-dot" }),
-                    react_1.default.createElement("span", { title: data.directory },
-                        "\u672C\u5730\u9879\u76EE \u00B7 ",
-                        data.directory.split(/[\\/]/).filter(Boolean).at(-1)),
-                    react_1.default.createElement("button", { disabled: busy, onClick: () => setChoosing(true) }, "\u5207\u6362\u76EE\u5F55")) : react_1.default.createElement("form", { onSubmit: e => { e.preventDefault(); void request('read'); } },
+                    react_1.default.createElement("span", { title: data.directory }, data.directory.split(/[\\/]/).filter(Boolean).at(-1)),
+                    react_1.default.createElement("span", { className: "ar-last" },
+                        "\u66F4\u65B0 ",
+                        time(data.collectedAt))) : react_1.default.createElement("form", { onSubmit: e => { e.preventDefault(); void request('read'); } },
                     react_1.default.createElement("label", { htmlFor: "ar-directory" }, "\u9879\u76EE\u76EE\u5F55"),
-                    react_1.default.createElement("input", { id: "ar-directory", list: "ar-directories", value: directory, placeholder: "\u8F93\u5165\u672C\u5730\u9879\u76EE\u7684\u7EDD\u5BF9\u8DEF\u5F84", onChange: e => setDirectory(e.target.value), required: true, disabled: busy }),
+                    react_1.default.createElement("input", { id: "ar-directory", list: "ar-directories", value: directory, placeholder: "\u672C\u5730\u9879\u76EE\u7684\u7EDD\u5BF9\u8DEF\u5F84", onChange: e => setDirectory(e.target.value), required: true, disabled: busy }),
                     react_1.default.createElement("datalist", { id: "ar-directories" }, data.directories.map(d => react_1.default.createElement("option", { value: d, key: d }))),
                     react_1.default.createElement("button", { disabled: busy }, "\u6253\u5F00")),
-                react_1.default.createElement("div", { className: "ar-actions" },
-                    react_1.default.createElement("button", { disabled: busy, onClick: () => void request('detect-proxy') }, "\u4ECE\u7CFB\u7EDF\u68C0\u6D4B\u4EE3\u7406"),
-                    react_1.default.createElement("button", { disabled: busy || !data.directory, onClick: () => void request('diagnose') }, "\u7F51\u7EDC\u8BCA\u65AD"),
-                    react_1.default.createElement("button", { disabled: busy || !data.directory, onClick: () => void exportSnapshot() }, "\u5BFC\u51FA\u5FEB\u7167"),
-                    react_1.default.createElement("label", null,
-                        "\u5BFC\u5165\u5FEB\u7167 ",
-                        react_1.default.createElement("input", { type: "file", accept: "application/json,.json", disabled: busy || !data.directory, style: { maxWidth: 170 }, onChange: async (e) => {
-                                const file = e.target.files?.[0];
-                                e.target.value = '';
-                                if (!file)
-                                    return;
-                                if (file.size > 32 * 1024 * 1024) {
-                                    setError('快照超过 32 MiB');
-                                    return;
-                                }
-                                try {
-                                    await request('import', undefined, data.directory, { snapshot: await file.text() });
-                                }
-                                catch {
-                                    setError('无法读取快照文件');
-                                }
-                            } })),
-                    react_1.default.createElement("span", { className: "ar-last" },
-                        "\u4E0A\u6B21\u91C7\u96C6 ",
-                        time(data.collectedAt)),
-                    react_1.default.createElement("button", { className: "ar-primary", disabled: busy || !data.directory, onClick: () => void request('refresh', undefined, data.directory) },
-                        react_1.default.createElement("span", { className: busy ? 'ar-spin' : '' }, "\u21BB"),
-                        " ",
-                        busy ? '正在读取…' : '刷新数据'))),
-            react_1.default.createElement("nav", { className: "ar-tabs", "aria-label": "\u96F7\u8FBE\u9875\u9762" }, [['overview', '概览', '01'], ['watch', '关注动态', '02'], ['brief', '每周简报', '03']].map(([id, title, num]) => react_1.default.createElement("button", { key: id, "aria-current": view === id ? 'page' : undefined, onClick: () => { setView(id); setFocusProject(undefined); } },
-                react_1.default.createElement("span", null, num),
-                title))),
-            error && react_1.default.createElement("div", { className: "ar-notice danger", role: "alert" },
-                react_1.default.createElement("strong", null, "\u64CD\u4F5C\u5931\u8D25"),
-                react_1.default.createElement("span", null,
-                    error,
+                react_1.default.createElement(dsh_client_ui_primitives_1.Button, { variant: "primary", className: "ar-primary", disabled: busy || !data.directory, onClick: () => void request('refresh', undefined, data.directory) },
+                    react_1.default.createElement("span", { className: busy ? 'ar-spin' : '' }, "\u21BB"),
                     " ",
-                    ready ? '仍保留当前画面中的上次数据。' : ''),
-                react_1.default.createElement("button", { disabled: busy, onClick: () => void request('read') }, "\u91CD\u8BD5\u8BFB\u53D6")),
-            data.localSnapshot && react_1.default.createElement("div", { className: "ar-notice warn", role: "status" },
-                react_1.default.createElement("strong", null, "\u672C\u5730\u5FEB\u7167\uFF08\u5BFC\u5165\uFF09"),
-                react_1.default.createElement("span", null, "\u5305\u542B\u5BFC\u5165\u6570\u636E\uFF0C\u975E\u5B9E\u65F6\u5B98\u65B9\u6293\u53D6\uFF1B\u8BF7\u6838\u5BF9\u6765\u6E90\u65F6\u95F4\u3002")),
-            data.proxyNote && react_1.default.createElement("div", { className: "ar-notice", role: "status" }, data.proxyNote),
-            proxyDetection && react_1.default.createElement("div", { className: "ar-card ar-section", role: "status" },
-                react_1.default.createElement("strong", null, "\u4ECE\u7CFB\u7EDF\u68C0\u6D4B\u4EE3\u7406"),
-                react_1.default.createElement("p", null,
-                    "\u6765\u6E90\uFF1A",
-                    proxyDetection.source ?? '插件设置',
-                    " \u00B7 \u8BF7\u6C42\u8D85\u65F6\uFF1A",
-                    proxyDetection.timeoutSeconds ?? 30,
-                    " \u79D2"),
-                proxyDetection.pacUrl && react_1.default.createElement("p", null,
-                    "PAC \u5730\u5740\uFF1A",
-                    proxyDetection.pacUrl),
-                react_1.default.createElement("p", null,
-                    "Apache \u793A\u4F8B\u4EE3\u7406\uFF1A",
-                    proxyDetection.proxy ?? 'DIRECT / 沿用原访问路径'),
-                react_1.default.createElement("p", null,
-                    "\u4E0A\u6B21\u68C0\u6D4B\uFF1A",
-                    proxyDetection.detectedAt ?? '—',
-                    " \u00B7 \u7F13\u5B58\u6709\u6548\u671F\uFF1A",
-                    (proxyDetection.ttlSeconds ?? 1800) / 60,
-                    " \u5206\u949F"),
-                proxyDetection.warning && react_1.default.createElement("p", null, proxyDetection.warning),
-                proxyDetection.note && react_1.default.createElement("p", null, proxyDetection.note),
-                react_1.default.createElement("div", { className: "ar-actions" },
-                    react_1.default.createElement("button", { disabled: busy, onClick: () => void request('redetect-proxy') }, "\u91CD\u65B0\u68C0\u6D4B"),
-                    react_1.default.createElement("button", { disabled: busy || !proxyDetection.proxy, onClick: () => void request('apply-proxy') }, "\u5E94\u7528\u5230\u63D2\u4EF6\u8BBE\u7F6E"),
-                    react_1.default.createElement("button", { disabled: busy, onClick: () => void request('clear-proxy') }, "\u6E05\u7A7A\u63D2\u4EF6\u4EE3\u7406"))),
-            diagnosis !== undefined && react_1.default.createElement("div", { className: "ar-card ar-section", role: "status" },
-                react_1.default.createElement("strong", null, "\u7F51\u7EDC\u8BCA\u65AD"),
-                react_1.default.createElement("pre", { style: { whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' } }, JSON.stringify(diagnosis, null, 2))),
-            !!data.diagnostics?.length && react_1.default.createElement("div", { className: "ar-notice warn", role: "status" },
-                react_1.default.createElement("strong", null, "\u7F51\u7EDC\u8BCA\u65AD \u00B7 \u6765\u6E90\u83B7\u53D6\u5931\u8D25"),
-                react_1.default.createElement("div", null, data.diagnostics.map(d => react_1.default.createElement("p", { key: d.code },
-                    react_1.default.createElement("b", null,
-                        d.code,
-                        " \u00B7 ",
-                        d.count,
-                        " \u4E2A\u6765\u6E90"),
-                    react_1.default.createElement("br", null),
-                    d.hintZh)))),
-            (!data.diagnostics?.length && (stale || failed)) && react_1.default.createElement("div", { className: "ar-notice warn", role: "status" },
-                react_1.default.createElement("strong", null, stale ? '正在显示上次成功缓存' : '部分来源未能取得数据'),
+                    busy ? '正在读取…' : '刷新数据')),
+            react_1.default.createElement("details", { className: "ar-network", onToggle: e => setNetworkOpen(e.currentTarget.open) },
+                react_1.default.createElement("summary", null, "\u7F51\u7EDC / \u8BBE\u7F6E"),
+                react_1.default.createElement("div", { className: "ar-card ar-section ar-network-body" },
+                    react_1.default.createElement("div", null,
+                        react_1.default.createElement("h3", null, "\u8FDE\u63A5\u8BBE\u7F6E"),
+                        networkOpen && react_1.default.createElement(network_settings_js_1.NetworkSettings, { key: networkRevision, endpoint: "/api/apache-radar/network-settings" })),
+                    react_1.default.createElement("div", null,
+                        react_1.default.createElement("h3", null, "\u4EE3\u7406\u4E0E\u8BCA\u65AD"),
+                        react_1.default.createElement("div", { className: "ar-actions" },
+                            react_1.default.createElement("button", { disabled: busy, onClick: () => void request(proxyDetection ? 'redetect-proxy' : 'detect-proxy') }, proxyDetection ? '重新检测' : '从系统检测代理'),
+                            react_1.default.createElement("button", { disabled: busy || !data.directory, onClick: () => void request('diagnose') }, "\u7F51\u7EDC\u8BCA\u65AD")),
+                        data.proxyNote && react_1.default.createElement("p", { className: "ar-muted" }, data.proxyNote),
+                        proxyDetection && react_1.default.createElement("div", { className: "ar-proxy-result", role: "status" },
+                            react_1.default.createElement("p", null,
+                                proxyDetection.source ?? '插件设置',
+                                " \u00B7 \u8D85\u65F6 ",
+                                proxyDetection.timeoutSeconds ?? 30,
+                                " \u79D2"),
+                            proxyDetection.pacUrl && react_1.default.createElement("p", null,
+                                "PAC\uFF1A",
+                                proxyDetection.pacUrl),
+                            react_1.default.createElement("p", null,
+                                "\u793A\u4F8B\u4EE3\u7406\uFF1A",
+                                proxyDetection.proxy ?? 'DIRECT / 沿用原访问路径'),
+                            react_1.default.createElement("p", null,
+                                "\u68C0\u6D4B ",
+                                proxyDetection.detectedAt ?? '—',
+                                " \u00B7 \u7F13\u5B58 ",
+                                (proxyDetection.ttlSeconds ?? 1800) / 60,
+                                " \u5206\u949F"),
+                            proxyDetection.warning && react_1.default.createElement("p", null, proxyDetection.warning),
+                            proxyDetection.note && react_1.default.createElement("p", null, proxyDetection.note),
+                            react_1.default.createElement("div", { className: "ar-actions" },
+                                react_1.default.createElement("button", { disabled: busy || !proxyDetection.proxy, onClick: () => void request('apply-proxy') }, "\u5E94\u7528\u5230\u63D2\u4EF6\u8BBE\u7F6E"),
+                                react_1.default.createElement("button", { disabled: busy, onClick: () => void request('clear-proxy') }, "\u6E05\u7A7A\u63D2\u4EF6\u4EE3\u7406"))),
+                        (diagnosis !== undefined || !!data.diagnostics?.length) && react_1.default.createElement("details", { className: "ar-diagnostics" },
+                            react_1.default.createElement("summary", null, "\u8BCA\u65AD\u8BE6\u60C5"),
+                            data.diagnostics?.map(d => react_1.default.createElement("p", { key: d.code },
+                                d.code,
+                                " \u00B7 ",
+                                d.count,
+                                " \u4E2A\u6765\u6E90 \u00B7 ",
+                                d.hintZh)),
+                            diagnosis !== undefined && react_1.default.createElement("pre", null, JSON.stringify(diagnosis, null, 2))),
+                        react_1.default.createElement("h3", null, "\u672C\u5730\u6570\u636E"),
+                        react_1.default.createElement("div", { className: "ar-actions" },
+                            react_1.default.createElement("button", { disabled: busy || !data.directory, onClick: () => void exportSnapshot() }, "\u5BFC\u51FA\u5FEB\u7167"),
+                            react_1.default.createElement("label", { className: "ar-import" },
+                                "\u5BFC\u5165\u5FEB\u7167 ",
+                                react_1.default.createElement("input", { "aria-label": "\u5BFC\u5165\u5FEB\u7167", type: "file", accept: "application/json,.json", disabled: busy || !data.directory, onChange: async (e) => {
+                                        const file = e.target.files?.[0];
+                                        e.target.value = '';
+                                        if (!file)
+                                            return;
+                                        if (file.size > 32 * 1024 * 1024) {
+                                            setError('快照超过 32 MiB');
+                                            return;
+                                        }
+                                        try {
+                                            await request('import', undefined, data.directory, { snapshot: await file.text() });
+                                        }
+                                        catch {
+                                            setError('无法读取快照文件');
+                                        }
+                                    } }))),
+                        data.directory && react_1.default.createElement(react_1.default.Fragment, null,
+                            react_1.default.createElement("button", { className: "ar-quiet", disabled: busy, onClick: () => setChoosing(!choosing), "aria-expanded": choosing }, "\u5207\u6362\u76EE\u5F55"),
+                            choosing && react_1.default.createElement("form", { className: "ar-directory-form", onSubmit: e => { e.preventDefault(); void request('read'); } },
+                                react_1.default.createElement("label", { htmlFor: "ar-change-directory" }, "\u9879\u76EE\u7EDD\u5BF9\u8DEF\u5F84"),
+                                react_1.default.createElement("input", { id: "ar-change-directory", value: directory, onChange: e => setDirectory(e.target.value), required: true, disabled: busy }),
+                                react_1.default.createElement("button", { disabled: busy }, "\u6253\u5F00\u76EE\u5F55")))))),
+            react_1.default.createElement("nav", { className: "ar-tabs", "aria-label": "\u96F7\u8FBE\u9875\u9762" }, [['overview', '总览'], ['watch', '关注动态'], ['brief', '每周简报']].map(([id, title]) => react_1.default.createElement("button", { key: id, "aria-current": view === id ? 'page' : undefined, onClick: () => { setView(id); setFocusProject(undefined); } }, title))),
+            error && react_1.default.createElement("div", { className: "ar-notice danger", role: "alert" },
                 react_1.default.createElement("span", null,
-                    stale ? '数据已过期或刷新失败；请核对每个来源的时间。' : '失败不代表没有动态。',
-                    " \u5DF2\u4FDD\u7559\u6765\u6E90\u9519\u8BEF\u3002")),
+                    sourceError(error),
+                    ready ? ' · 保留上次数据' : ''),
+                react_1.default.createElement("button", { disabled: busy, onClick: () => void request('read') }, "\u91CD\u8BD5")),
+            data.localSnapshot && react_1.default.createElement("p", { className: "ar-notice warn", role: "status" }, "\u672C\u5730\u5FEB\u7167 \u00B7 \u975E\u5B9E\u65F6\u6570\u636E\uFF0C\u8BF7\u6838\u5BF9\u6765\u6E90\u65F6\u95F4\u3002"),
+            !!data.diagnostics?.length ? react_1.default.createElement("p", { className: "ar-notice warn", role: "status" },
+                (0, network_settings_js_1.networkHint)(data.diagnostics.find(d => d.code === 'TLS_KEY_TOO_SMALL')?.code ?? data.diagnostics[0].code),
+                stale ? ' · 保留上次数据' : '') : (stale || failed) && react_1.default.createElement("p", { className: "ar-notice warn", role: "status" }, stale ? '正在显示上次成功缓存，请刷新后核对。' : '部分来源获取失败，请刷新或查看来源状态。'),
             busy && react_1.default.createElement("div", { role: "status", className: "ar-loading" },
                 react_1.default.createElement("span", { className: "ar-spin" }, "\u25CC"),
-                " \u6B63\u5728\u8BFB\u53D6\u516C\u5F00\u6765\u6E90\u4E0E\u672C\u5730\u7F13\u5B58\uFF0C\u8BF7\u7A0D\u5019\u2026"),
+                " \u6B63\u5728\u8BFB\u53D6\u2026"),
             ready ? view === 'overview' ? react_1.default.createElement(Overview, { data: data, jump: project => { setFocusProject(project); setView("watch"); } }) : view === 'watch' ? react_1.default.createElement(Watch, { data: data, focusProject: focusProject, mutate: (action, project, extra) => void request(action, project, data.directory, extra), busy: busy }) : react_1.default.createElement(Brief, { data: data, request: action => void request(action, undefined, data.directory), busy: busy })
                 : view === 'brief' && data.directory ? react_1.default.createElement(Brief, { data: data, request: action => void request(action, undefined, data.directory), busy: busy }) : !busy && react_1.default.createElement("div", { className: "ar-card ar-empty" },
                     react_1.default.createElement(Icon, { size: 44 }),
-                    react_1.default.createElement("h2", null, data.directory ? '雷达已就绪，等待第一次采集' : '为你的项目，打开一扇社区窗口'),
-                    react_1.default.createElement("p", null, data.directory ? '点击「刷新数据」获取官方计数与关注动态。只读取公开来源，无需模型或登录。' : '选择已有目录，或在上方输入一个本地项目路径。不需要创建聊天或配置模型。')),
+                    react_1.default.createElement("h2", null, data.directory ? '开始关注社区变化' : '打开你的项目'),
+                    react_1.default.createElement("p", null, data.directory ? '点击「刷新数据」获取社区概况与项目动态。' : '填写本地项目目录，开始使用社区雷达。')),
             react_1.default.createElement("footer", { className: "ar-footer" },
                 react_1.default.createElement("span", null,
                     "Apache Radar ",
                     react_1.default.createElement("span", { className: "ar-divider" }, "/"),
                     " \u672C\u5730 Apache \u793E\u533A\u96F7\u8FBE"),
-                react_1.default.createElement("span", null, "\u7EDF\u8BA1\u53E3\u5F84\u5E76\u5217\u5C55\u793A \u00B7 reporter.apache.org \u4E0D\u4F7F\u7528"))));
+                react_1.default.createElement("span", null, "\u516C\u5F00\u6765\u6E90 \u00B7 UTC+8"))));
 }
 exports.inject = ['slots'];
 function apply(ctx) {
     ctx.slots.inject('main', () => ctx.slots.register({ name: 'main', key: 'apache-radar' }, Dashboard));
     ctx.slots.inject('sidebar.panellist', () => ctx.slots.register({ name: 'sidebar.panellist', id: 'apache-radar', order: 25, label: () => 'Apache 雷达' }, Icon));
-    ctx.slots.inject('plugins.row.config', () => ctx.slots.register({ name: 'plugins.row.config', key: 'dsh-apache-radar#apache-radar' }, props => react_1.default.createElement(network_settings_js_1.NetworkSettings, { ...props })));
+    ctx.slots.inject('plugins.row.config', () => ctx.slots.register({ name: 'plugins.row.config', key: 'dsh-apache-radar#apache-radar' }, props => react_1.default.createElement(network_settings_js_1.NetworkSettings, { ...props, endpoint: "/api/apache-radar/network-settings" })));
 }
 const css = `
-.ar-security-scope{display:flex;flex-wrap:wrap;gap:0 8px;font-size:10px}
-.ar-security-scope>span{flex-basis:100%;font-size:10px}
+.ar-security-projects{display:flex;flex-wrap:wrap;gap:3px 12px}
+.ar-security-scope{min-width:0}
 .ar-security-card .ar-number small{font-size:14px;letter-spacing:0;color:var(--ar-faint)}
 .ar-root .ar-project-jump{border:0;padding:0;background:transparent;font-size:11px;justify-content:flex-start;white-space:normal;color:var(--ar-accent)}
 .ar-security-strip{border-top:2px solid color-mix(in srgb,var(--ar-accent) 45%,var(--ar-line))}
@@ -756,7 +785,10 @@ const css = `
 .ar-advisory[open]>summary:after{content:'−'}
 .ar-advisory>summary b{font-size:12px;color:var(--ar-text)}
 .ar-advisory>summary>span:nth-of-type(2){flex:1;min-width:140px}
-.ar-advisory-source{flex-basis:100%;font-size:10px;color:var(--ar-faint);overflow-wrap:anywhere}
+.ar-advisory-link{font-size:11px;color:var(--ar-faint);margin-left:auto}
+.ar-advisory>summary>span:nth-of-type(2){line-height:1.6}
+.ar-limits{margin-top:8px}
+.ar-osv{border-top:1px solid var(--ar-line);margin-top:16px;padding-top:4px}
 .ar-advisory-body{padding:12px 0 4px;font-size:12px;overflow-wrap:anywhere}
 .ar-advisory-body dl{display:grid;grid-template-columns:105px minmax(0,1fr);gap:8px;padding:14px;background:var(--ar-bg);border-radius:8px}
 .ar-advisory-body dt{color:var(--ar-faint)}
@@ -793,16 +825,16 @@ const css = `
   box-sizing:border-box
 }
 .ar-shell {
-  max-width:1440px;
+  max-width:1360px;
   margin:auto;
-  padding:40px 42px 24px;
+  padding:36px 40px 24px;
   padding-top:max(40px,var(--dsh-frame-leading-clearance,0px))
 }
 .ar-root h1,.ar-root h2,.ar-root h3,.ar-root h4,.ar-root p {
   margin:0
 }
 .ar-root h1 {
-  font-size:25px;
+  font-size:26px;
   letter-spacing:-.7px;
   font-weight:650
 }
@@ -856,7 +888,7 @@ const css = `
 }
 .ar-root .ar-primary {
   background:var(--ar-accent);
-  color:var(--dsw-static-neutral-bluish-00);
+  color:var(--dsw-alias-label-primary-foreground);
   border-color:transparent
 }
 .ar-root .ar-primary:hover {
@@ -928,7 +960,8 @@ const css = `
 .ar-projectbar {
   border:1px solid var(--ar-line);
   border-radius:12px;
-  padding:12px 14px;
+  padding:12px 16px;
+  margin-top:24px;
   background:var(--ar-card);
   flex-wrap:wrap
 }
@@ -968,7 +1001,7 @@ const css = `
   display:flex;
   gap:26px;
   border-bottom:1px solid var(--ar-line);
-  margin:23px 0 28px
+  margin:8px 0 28px
 }
 .ar-tabs button {
   background:transparent;
@@ -999,7 +1032,7 @@ const css = `
 }
 .ar-section-heading {
   margin-bottom:20px;
-  align-items:flex-start;
+  align-items:baseline;
   flex-wrap:wrap
 }
 .ar-section-heading p {
@@ -1016,7 +1049,7 @@ const css = `
 }
 .ar-metrics {
   display:grid;
-  grid-template-columns:1.2fr repeat(5,minmax(0,1fr));
+  grid-template-columns:repeat(3,minmax(0,1fr));
   gap:12px;
   margin-bottom:22px
 }
@@ -1024,19 +1057,20 @@ const css = `
   padding:19px 18px 16px;
   display:flex;
   flex-direction:column;
-  gap:8px
+  gap:9px;
+  min-height:175px
 }
 .ar-featured {
   border-color:color-mix(in srgb,var(--ar-accent) 32%,var(--ar-line));
   background:linear-gradient(125deg,color-mix(in srgb,var(--ar-accent) 6%,var(--ar-card)),var(--ar-card))
 }
-.ar-eyebrow {
+.ar-root h3.ar-eyebrow {
   font-size:12px;
   font-weight:500;
   color:var(--ar-muted)
 }
 .ar-number {
-  font-size:39px;
+  font-size:36px;
   line-height:1.2;
   font-weight:600;
   letter-spacing:-1.7px;
@@ -1052,12 +1086,9 @@ const css = `
   flex:1
 }
 .ar-citation {
-  font-size:10px;
+  font-size:11px;
   line-height:1.7;
   color:var(--ar-faint);
-  display:flex;
-  gap:0 7px;
-  flex-wrap:wrap;
   overflow-wrap:anywhere;
   font-variant-numeric:tabular-nums
 }
@@ -1075,9 +1106,8 @@ const css = `
 .ar-citation>span {
   display:block
 }
-.ar-citation>span:not(.ar-badge) {
-  width:100%
-}
+.ar-citation>summary{font-size:11px;overflow-wrap:anywhere}
+.ar-citation[open]>span{margin-top:5px}
 .ar-two-col {
   display:grid;
   grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);
@@ -1094,7 +1124,7 @@ const css = `
 }
 .ar-card-heading {
   margin-bottom:9px;
-  align-items:flex-start;
+  align-items:baseline;
   flex-wrap:wrap
 }
 .ar-muted {
@@ -1107,7 +1137,7 @@ const css = `
   width:fit-content;
   border:1px solid var(--ar-line);
   border-radius:5px;
-  padding:1px 6px;
+  padding:2px 7px;
   font-size:10px;
   line-height:1.6;
   color:var(--ar-muted);
@@ -1132,11 +1162,12 @@ const css = `
   display:grid;
   grid-template-columns:repeat(4,minmax(0,1fr));
   gap:10px;
-  margin:22px 0
+  margin:20px 0
 }
 .ar-retired-cell {
   padding-right:8px;
   border-right:1px solid var(--ar-line);
+  min-width:0;
   font-size:11px;
   color:var(--ar-muted)
 }
@@ -1160,7 +1191,8 @@ const css = `
 .ar-root summary {
   cursor:pointer;
   font-size:12px;
-  color:var(--ar-muted)
+  color:var(--ar-muted);
+  line-height:1.7
 }
 .ar-difference summary .ar-dot {
   margin-right:6px
@@ -1215,7 +1247,7 @@ const css = `
   border:1px solid var(--ar-line);
   border-radius:9px;
   padding:12px 16px;
-  margin-bottom:20px;
+  margin-bottom:16px;
   font-size:12px;
   flex-wrap:wrap
 }
@@ -1276,13 +1308,13 @@ const css = `
   font-size:13px
 }
 .ar-watch-toolbar {
-  margin-bottom:24px;
+  margin-bottom:20px;
   flex-wrap:wrap;
   justify-content:flex-start
 }
 .ar-watch-toolbar form {
   flex:0 1 auto;
-  margin-left:auto
+  margin:12px 0
 }
 .ar-watch-toolbar input {
   width:175px;
@@ -1305,7 +1337,7 @@ const css = `
   background:transparent;
   color:var(--ar-faint);
   padding:7px 18px;
-  min-width:85px
+  min-width:70px
 }
 .ar-segment button[aria-pressed=true] {
   background:var(--ar-card);
@@ -1351,14 +1383,15 @@ const css = `
 .ar-item-links {
   display:flex;
   gap:12px;
-  font-size:10px;
+  font-size:11px;
   color:var(--ar-faint);
+  flex-wrap:wrap;
   margin-top:7px
 }
 .ar-security {
   border-left:2px solid var(--ar-error);
   padding-left:14px;
-  background:linear-gradient(90deg,color-mix(in srgb,var(--ar-error) 4%,transparent),transparent);
+  background:color-mix(in srgb,var(--ar-error) 2%,transparent);
   margin-top:9px
 }
 .ar-item .ar-footnote {
@@ -1386,7 +1419,7 @@ const css = `
   font-size:11px;
   color:var(--ar-faint);
   background:transparent;
-  border-style:dashed;
+  border-color:transparent;
   margin-top:12px
 }
 .ar-source-list {
@@ -1409,7 +1442,7 @@ const css = `
   margin:20px auto
 }
 .ar-brief .ar-section {
-  padding:30px 34px
+  padding:24px 28px
 }
 .ar-brief-title {
   margin:28px 0 18px!important
@@ -1440,6 +1473,30 @@ const css = `
   padding:0 8px;
   opacity:.5
 }
+.ar-heading-count{font-size:12px;font-weight:500;color:var(--ar-faint);margin-left:8px;letter-spacing:0;font-variant-numeric:tabular-nums}
+.ar-metric-detail{margin-top:auto;font-size:11px}
+.ar-metric-detail>summary{font-size:11px}
+.ar-metric-detail[open] .ar-note{margin:8px 0}
+.ar-metric-detail .ar-citation{margin-top:6px}
+.ar-network{margin-top:8px}
+.ar-network>summary{width:fit-content;margin-left:auto;padding:4px 0;font-size:12px}
+.ar-network-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:30px;margin:12px 0 20px}
+.ar-network-body>div{min-width:0}
+.ar-network-body h3{margin-bottom:12px}
+.ar-network-body h3:not(:first-child){margin-top:24px}
+.ar-network-body .ar-actions{justify-content:flex-start;flex-wrap:wrap;margin:12px 0;font-size:12px}
+.ar-proxy-result,.ar-diagnostics{font-size:12px;overflow-wrap:anywhere;margin:14px 0}
+.ar-proxy-result p,.ar-diagnostics p{margin:6px 0}
+.ar-diagnostics pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow:auto;font-size:11px}
+.ar-import{display:flex;flex-direction:column;gap:6px;max-width:100%;color:var(--ar-muted)}
+.ar-import input{max-width:100%;width:245px;font-size:11px}
+.ar-directory-form{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px;font-size:12px}
+.ar-directory-form input{width:100%}
+.ar-root .ar-quiet{background:transparent;border-color:transparent;padding-left:0;font-size:12px;color:var(--ar-muted)}
+.ar-manage{margin-left:auto;font-size:12px}
+.ar-manage[open]{padding:12px;border:1px solid var(--ar-line);border-radius:10px;background:var(--ar-card)}
+.ar-brief{line-height:1.85}
+.ar-brief li{margin:8px 0}
 @container (max-width:1000px) {
   .ar-shell {
     padding:28px 24px 20px
@@ -1467,6 +1524,17 @@ const css = `
   }
 }
 @container (max-width:600px) {
+  .ar-network-body{grid-template-columns:minmax(0,1fr);gap:24px}
+  .ar-advisory>summary{gap:7px}
+  .ar-advisory>summary>span:nth-of-type(2){flex-basis:100%}
+  .ar-advisory-body dl{grid-template-columns:1fr;gap:5px}
+  .ar-advisory-body dd+dt{margin-top:8px}
+  .ar-categories{grid-template-columns:1fr}
+  .ar-directory{flex-wrap:wrap;min-width:0}
+  .ar-manage{max-width:100%}
+  .ar-watch-toolbar form{flex-wrap:wrap;min-width:0}
+  .ar-tabs button{font-size:13px}
+  .ar-brand{gap:10px}
   .ar-shell {
     padding:24px 16px
   }

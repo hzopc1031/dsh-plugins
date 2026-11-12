@@ -1,3 +1,4 @@
+import { registerNetworkSettings } from './network-config.js';
 import { defineTool } from '@deepseek-ai/dsh-tools';
 import z from '@deepseek-ai/schemastery';
 import { DEFAULT_WATCH_LIST, resolveWatchList } from './watch.js';
@@ -21,6 +22,7 @@ const toolNames = actions.map(action => `apache_radar_${action}`);
 export function apply(ctx, config = {}) {
     const watchList = resolveWatchList(config.watchList);
     const http = createHttpClient(config);
+    registerNetworkSettings(ctx, name);
     ctx.effect(() => () => http.close());
     const directoryOf = (agent) => {
         if (!agent)
@@ -46,7 +48,7 @@ export function apply(ctx, config = {}) {
         if (action === 'apply-proxy' && !detected?.proxy)
             throw new Error('请先从系统检测可用代理');
         const editor = ctx.get?.('configEditor');
-        const entry = editor?.entries().find(entry => entry.fiber === ctx.fiber);
+        const entry = editor?.entries().find(entry => entry === ctx.fiber.entry);
         if (!editor || !entry)
             throw new Error('宿主配置编辑服务不可用，请在插件设置中填写或清空 httpsProxy');
         await editor.edit(entry, current => ({ ...current, httpsProxy: action === 'clear-proxy' ? '' : detected.proxy }));

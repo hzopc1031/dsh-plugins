@@ -1,3 +1,4 @@
+import { registerNetworkSettings } from './network-config.js';
 import { createIntranetHttp, intranetConfig } from './intranet-http.js';
 import { CommandDefinitionId } from '@deepseek-ai/dsh-commands';
 import z from '@deepseek-ai/schemastery';
@@ -49,6 +50,7 @@ export function settings(input) {
     return { repositories, fullMax: fullLimitSchema.parse(input.fullMax ?? 100), limit: limitSchema.parse(input.limit ?? 20), modelEnabled: input.modelEnabled ?? true, provider: input.provider?.trim() ?? '', model: input.model?.trim() ?? '' };
 }
 export async function apply(ctx, input = {}) {
+    registerNetworkSettings(ctx, name);
     const network = createIntranetHttp(input);
     ctx.effect(() => () => network.close());
     const config = settings(input), domain = await ctx.storageDomain.open(domainSpec);

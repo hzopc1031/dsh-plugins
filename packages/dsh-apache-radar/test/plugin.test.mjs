@@ -134,7 +134,7 @@ test('detect never writes settings; apply/clear use owning host config entry and
   Object.assign(systemProxy,mock)
   const host=pluginContext(),fiber={},entry={fiber,options:{id:'my-radar'}},writes=[]
   let handler,current={watchList:['kafka'],timeoutSeconds:45}
-  host.ctx.fiber=fiber
+  host.ctx.fiber={entry}
   const editor={entries:()=>[entry],edit:async(e,change)=>{assert.equal(e,entry);current=change(current);writes.push({...current})}}
   host.ctx.get=name=>name==='configEditor'?editor:undefined
   host.ctx.inject=(_names,setup)=>setup({get:()=>({fetch:{register:route=>{handler=route.fetch;return()=>{}}}}),effect:setup=>setup()})

@@ -8,7 +8,7 @@ export declare const SOURCES: {
     readonly suppressions: "https://raw.githubusercontent.com/apache/kafka/trunk/gradle/resources/dependencycheck-suppressions.xml";
     readonly guidance: "https://security.apache.org/report-dependency/";
 };
-export declare const USER_AGENT = "dsh-advisory-impact/0.1.3 (https://github.com/hzopc1031/dsh-plugins)";
+export declare const USER_AGENT = "dsh-advisory-impact/0.1.4 (https://github.com/hzopc1031/dsh-plugins)";
 export declare class SourceError extends Error {
     readonly url: string;
     constructor(url: string, message: string, options?: ErrorOptions);

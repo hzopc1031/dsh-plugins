@@ -1,6 +1,6 @@
 {
   "name": "dsh-advisory-impact",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Local official-first Kafka, Hadoop and Flink advisory checks with pinned versions and a native DSH panel",
   "type": "module",
   "main": "index.js",

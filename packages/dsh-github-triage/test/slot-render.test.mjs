@@ -9,6 +9,7 @@ import React,{act} from 'react'
 import { Context } from '@deepseek-ai/cordis'
 import {primitivesFixture,domGlobals} from './primitives-fixture.mjs'
 const require=createRequire(import.meta.url)
+const {Simulate}=require('react-dom/test-utils')
 test('rc.5 actual renderer materializes sidebar and root page without a duplicate header action without an agent',async t=>{
   const dom=new JSDOM('<main id="app"></main>',{url:'https://dsh.invalid',pretendToBeVisual:true}),saved=new Map()
   const globals={...domGlobals(dom),IS_REACT_ACT_ENVIRONMENT:true}
@@ -39,8 +40,11 @@ test('rc.5 actual renderer materializes sidebar and root page without a duplicat
   ctx.provide('layout',{selectPanel:id=>navigation.push(id)})
   ctx.provide('remote',{commands:{execute:async()=>{throw Error('main page must never need an agent')}}})
   client.apply(ctx)
-  // Real official registry; the fixture supplies the three owning shell seats.
-  ctx.slots.register({name:'root',children:{'main':{kind:'keyed',scope:'root'},'sidebar.panellist':{kind:'list',scope:'root'},'conversation.session.header.actions':{kind:'list',scope:'session'}}},props=>React.createElement('div',null,
+  const settingsWrites=[]
+  const form={state:{value:{},writable:true,revision:4},mutate:async(...args)=>{settingsWrites.push(args);return true}}
+  // Real official registry; the fixture supplies the owning shell seats.
+  ctx.slots.register({name:'root',children:{'main':{kind:'keyed',scope:'root'},'plugins.row.config':{kind:'keyed',scope:'root'},'sidebar.panellist':{kind:'list',scope:'root'},'conversation.session.header.actions':{kind:'list',scope:'session'}}},props=>React.createElement('div',null,
+    props.renderSlot('plugins.row.config',{view:'page',form},{entryKey:'dsh-github-triage#github-triage'}),
     props.renderSlot('sidebar.panellist',{size:18,active:true}),
     props.renderSlot('conversation.session.header.actions',{}),
     props.renderSlot('main',{}, {entryKey:'dsh-github-triage'})))
@@ -51,6 +55,11 @@ test('rc.5 actual renderer materializes sidebar and root page without a duplicat
   assert.ok(ctx.slots.entriesOfSlot('sidebar.panellist').some(e=>e.options.id==='dsh-github-triage'))
   assert.ok(document.querySelector('.gt-page'));assert.equal(document.querySelectorAll('.gt-stat').length,6)
   assert.equal(document.querySelectorAll('style[data-github-triage]').length,1)
+  const input=document.querySelector('section[aria-label="网络设置"] input[name="insecureSkipTlsVerifyHosts"]')
+  assert.ok(input);assert.equal(input.checked,false)
+  const {API_TLS_SKIP_LABEL}=await import('../lib/intranet-http.js')
+  assert.equal(input.closest('label').textContent,API_TLS_SKIP_LABEL)
+  assert.equal(input.disabled,true, 'settings are disabled until their host response is available')
   assert.deepEqual(navigation,[]);assert.equal(document.querySelector('[role="dialog"]'),null)
   assert.match(document.body.textContent,/未配置模型/);assert.match(document.body.textContent,/仓库列表（0）/)
   await act(async()=>{unmount();unmount=undefined});await ctx.fiber.dispose()

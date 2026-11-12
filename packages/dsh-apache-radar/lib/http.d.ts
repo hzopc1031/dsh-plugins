@@ -6,7 +6,7 @@ export interface SourceResponse {
     status?: number;
 }
 export type HttpClient = (url: string) => Promise<SourceResponse>;
-export declare const USER_AGENT = "dsh-apache-radar/0.1.3 (+https://github.com/hzopc1031/dsh-plugins)";
+export declare const USER_AGENT = "dsh-apache-radar/0.1.4 (+https://github.com/hzopc1031/dsh-plugins)";
 export declare function publicSourceUrl(input: string): string;
 export declare class HttpError extends Error {
     readonly url: string;

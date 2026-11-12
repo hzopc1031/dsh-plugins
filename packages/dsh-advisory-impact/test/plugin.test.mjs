@@ -168,3 +168,11 @@ test('command and tools pin/watch/refresh/report/open/lookup operate against rec
   assert.equal((await h.command('watch none')).kind, 'success')
   assert.deepEqual((await h.execute('advisory_impact_watch')).watch, [])
 })
+
+
+test('the API TLS setting stays in network config and does not leak into watch/pin validation', async t => {
+  const h = await host(t, { insecureSkipTlsVerifyHosts: true, watch: ['kafka'] })
+  const result = await h.command('pin')
+  assert.equal(result.kind, 'success')
+  assert.deepEqual(JSON.parse(result.text.slice(result.text.indexOf('{'))).watch, ['kafka'])
+})

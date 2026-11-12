@@ -8,7 +8,7 @@ const expected = [
   'LICENSE', 'README.md', 'CHANGELOG.md', 'locale/en.json', 'locale/zh.json',
   'docs/decisions.md', 'docs/dsh-api.md',
   ...['overview-light', 'overview-dark', 'suppressions-dark'].map(name => `docs/images/${name}.png`),
-  ...['system-proxy', 'intranet-http', 'plugin', 'types', 'http', 'fetchers', 'verdicts', 'local', 'config', 'cache', 'osv', 'evaluate', 'view-model', 'report', 'surface', 'tools', 'panel-host', 'panel-model', 'client'].flatMap(name => [`lib/${name}.js`, `lib/${name}.d.ts`]),
+  ...['network-config', 'network-settings', 'system-proxy', 'intranet-http', 'plugin', 'types', 'http', 'fetchers', 'verdicts', 'local', 'config', 'cache', 'osv', 'evaluate', 'view-model', 'report', 'surface', 'tools', 'panel-host', 'panel-model', 'client'].flatMap(name => [`lib/${name}.js`, `lib/${name}.d.ts`]),
 ].sort()
 assert.deepEqual(pack.files.map(file => file.path).sort(), expected, 'Unexpected or missing package files')
 const pkg = JSON.parse(readFileSync('package.json', 'utf8'))
@@ -16,7 +16,7 @@ for (const hook of ['preinstall', 'install', 'postinstall', 'prepare', 'prepack'
   assert.ok(!pkg.scripts?.[hook], `Lifecycle hook forbidden: ${hook}`)
 }
 assert.equal(pkg.name, 'dsh-advisory-impact')
-assert.equal(pkg.version, '0.1.3')
+assert.equal(pkg.version, '0.1.4')
 assert.equal(pkg.dsh.bundle.patch, './cordis.patch.yml')
 assert.equal(pkg.main, 'index.js')
 assert.equal(pkg.exports['./client'], './lib/client.js')

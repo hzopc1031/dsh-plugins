@@ -1,5 +1,6 @@
+import { NetworkSettings, networkHint, type NetworkSettingsProps } from './network-settings.js'
 import React, { useEffect, useRef, useState } from 'react'
-import { MarkdownText } from '@deepseek-ai/dsh-client-ui-primitives'
+import { Button, MarkdownText } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { DashboardData } from './dashboard.js'
 import type { Citation, CountRow } from './counts.js'
 import type { ProjectSecurity, SecurityReport, SecuritySource } from './security.js'
@@ -11,7 +12,7 @@ const projectName = (id: string) => ({ kafka: 'Kafka', hadoop: 'Hadoop', flink: 
 const time = (value?: string | null) => value ? new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Singapore',
   year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(value)) : '尚未成功抓取'
 const statusName = (value: string) => ({ ok: '已更新', cached: '缓存', stale: '上次成功缓存', failed: '抓取失败', unavailable: '暂无来源' })[value] ?? value
-const sourceError = (error?: string) => error && /fetch failed|NETWORK_ERROR|ECONN|ETIMEDOUT|ENOTFOUND|UND_ERR_|CERT|SIGNATURE|ISSUER|HTTP[ _]\d{3}/i.test(error) ? '来源不可用 · 见网络诊断' : error
+const sourceError = (error?: string) => error && /TLS_KEY_TOO_SMALL|key too (?:small|weak)|fetch failed|NETWORK_ERROR|ECONN|ETIMEDOUT|ENOTFOUND|UND_ERR_|CERT|SIGNATURE|ISSUER|HTTP[ _]\d{3}/i.test(error) ? (error.includes('TLS_KEY_TOO_SMALL') ? '证书密钥过短 · 见网络 / 设置' : '来源不可用 · 见网络 / 设置') : error
 const labels = { code: { copyLabel: '复制', copiedLabel: '已复制' }, footnotes: '注释' }
 
 export function securityOverview(report: SecurityReport) {
@@ -47,37 +48,35 @@ function Badge({ children, tone = '' }: { children: React.ReactNode; tone?: stri
   return <span className={`ar-badge ${tone}`}>{children}</span>
 }
 function SourceChip({ source }: { source: Citation }) {
-  return <div className="ar-citation"><a href={source.url} target="_blank" rel="noreferrer" title={source.url}>{new URL(source.url).hostname} ↗</a>
-    <span title="抓取时间 · Asia/Singapore (UTC+8)">{time(source.fetchedAt)}</span>
-    {source.sourceTimestamp && <span>源时间 {source.sourceTimestamp}</span>}
-    {source.cacheStatus === 'stale' && <Badge tone="warn">旧缓存</Badge>}
-    {source.cacheError && <details className="ar-source-error"><summary>抓取失败 · 查看原因</summary><span className="ar-error-text">{sourceError(source.cacheError)}</span></details>}</div>
+  return <details className="ar-citation"><summary><a href={source.url} target="_blank" rel="noreferrer" title={source.url}>{new URL(source.url).hostname} ↗</a> · {source.fetchedAt ? time(source.fetchedAt).slice(5) : '尚未成功抓取'}{source.cacheStatus === 'stale' ? ' · 旧缓存' : ''}</summary>
+    <span>抓取 {time(source.fetchedAt)} · UTC+8{source.sourceTimestamp ? ` · 源时间 ${source.sourceTimestamp}` : ''}</span>
+    {source.cacheError && <span className="ar-error-text">{sourceError(source.cacheError)}</span>}</details>
 }
 export function CountCard({ row, title, featured = false }: { row: CountRow; title?: string; featured?: boolean }) {
   return <article className={`ar-card ar-metric ${featured ? 'ar-featured' : ''}`}>
-    <div className="ar-eyebrow">{title ?? row.label}</div><strong className="ar-number">{row.status === 'ok' ? row.value : '—'}</strong>
-    <p className="ar-note">{row.status === 'error' ? sourceError(row.error) : row.note}</p>
-    {row.sources.map((source, i) => <SourceChip key={i} source={source}/>)}</article>
+    <h3 className="ar-eyebrow">{title ?? row.label}</h3><strong className="ar-number">{row.status === 'ok' ? row.value : '—'}</strong>
+    {row.status === 'error' && <p className="ar-error-text">{sourceError(row.error)}</p>}
+    <details className="ar-metric-detail"><summary>口径与来源</summary><p className="ar-note">{row.note}</p>{row.sources.map((source, i) => <SourceChip key={i} source={source}/>)}</details></article>
 }
 export function Overview({ data, jump }: { data: DashboardData; jump?: (project: string) => void }) {
   const counts = data.counts!
   const titles = ['当前列示', '顶级项目 · TLP', '孵化项目 · Podlings', '项目委员会 · PMC', '全部委员会']
   const mismatches = counts.comparisons.filter(c => c.status !== 'match')
   return <>
-    <div className="ar-section-heading"><div><h2>从不同口径，看 Apache</h2><p>项目、委员会与孵化项目各有定义，数字保留各自的出处。</p></div><Badge>官方公开来源</Badge></div>
+    <div className="ar-section-heading"><h2>社区概况</h2><span className="ar-muted">官方公开来源 · 统计口径独立</span></div>
     <div className="ar-metrics">{counts.counts.slice(0, 5).map((row, i) => <CountCard key={row.id} row={row} title={titles[i]} featured={i === 0}/>)}{data.security && <SecurityCard report={data.security} jump={jump}/>}</div>
     <div className="ar-two-col">
-      <section className="ar-card ar-section"><div className="ar-card-heading"><h3>退休口径，放在一起看</h3><Badge tone="warn">不合并为总数</Badge></div><p className="ar-muted">退休委员会、Attic 项目与子项目，范围并不相同。</p>
+      <section className="ar-card ar-section"><div className="ar-card-heading"><h3>退休与 Attic</h3><span className="ar-muted">口径不同，不合计</span></div>
         <div className="ar-retired">{counts.retired.map(row => <div key={row.id} className="ar-retired-cell"><span>{({ 'retired-whimsy': 'Whimsy 委员会', 'retired-projects': 'Projects 委员会', 'attic-pmcs': 'Attic PMC', 'attic-subprojects': 'Attic 子项目' })[row.id] ?? row.label}</span>
           <strong>{row.status === 'ok' ? row.value : '—'}</strong>{row.status === 'error' && <p className="ar-error-text">{sourceError(row.error)}</p>}{row.sources.map((s, i) => <SourceChip key={i} source={s}/>)}</div>)}</div>
-        {mismatches.map(c => <details className="ar-difference" key={c.id} open={c.id === 'retired-whimsy-attic'}><summary><span className="ar-dot warn"/>{c.label} · {c.status === 'error' ? '无法核对' : '存在差异'}</summary>
+        {mismatches.map(c => <details className="ar-difference" key={c.id}><summary><span className="ar-dot warn"/>{c.label} · {c.status === 'error' ? '无法核对' : '存在差异'}</summary>
           <p>{c.note}</p>{c.status === 'error' ? <p>{sourceError(c.error)}</p> : <><p>仅左侧：{c.onlyLeft.map(m => `${m.name} (${m.id})`).join('、') || '无'}</p><p>仅右侧：{c.onlyRight.map(m => `${m.name} (${m.id})`).join('、') || '无'}</p></>}
           {c.sources.map((s, i) => <SourceChip key={i} source={s}/>)}</details>)}
       </section>
-      <section className="ar-card ar-section"><div className="ar-card-heading"><h3>官方领域标签</h3><Badge>可多选归类</Badge></div><p className="ar-muted">沿用 chooser 的标签，一个项目可以属于多个领域。</p>
+      <section className="ar-card ar-section"><div className="ar-card-heading"><h3>领域分布 <span className="ar-heading-count">{counts.categories.status === 'ok' ? counts.categories.rows.length : '—'}</span></h3><span className="ar-muted">官方多标签</span></div>
         {counts.categories.status === 'error' ? <p className="ar-error-text">{sourceError(counts.categories.error)}</p> : <div className="ar-categories">{counts.categories.rows.map(row => <details key={row.id} className="ar-category"><summary>{row.label}<b>{row.status === 'ok' ? row.value : '—'}</b></summary>
           <p>{row.members?.map(m => m.name).join('、')}</p>{row.sources.map((s, i) => <SourceChip key={i} source={s}/>)}</details>)}</div>}
-        {counts.categories.sources.map((s, i) => <SourceChip key={i} source={s}/>)}<p className="ar-footnote">多标签数量不能相加为项目总数。点标签查看成员及来源。</p>
+        {counts.categories.sources.map((s, i) => <SourceChip key={i} source={s}/>)}<p className="ar-footnote">多标签归类，数量不合计。</p>
       </section>
     </div>
     <details className="ar-card ar-section"><summary>孵化项目交叉核对与统计说明</summary><p>{counts.explanation}</p>
@@ -93,12 +92,10 @@ function ItemRow({ item, security }: { item: Item; security?: ProjectSecurity })
       {item.status && <Badge tone={['accepted', 'implemented', 'released'].includes(item.status) ? 'good' : ''}>{item.statusText ?? item.status}</Badge>}
       <span>{item.kind === 'jira' ? item.id : item.version}</span><time>{item.date ? time(item.date).slice(0, 10) : '日期未知 · 参考条目'}</time></div>
     <a className="ar-item-title" href={item.url} target="_blank" rel="noreferrer">{item.title}<span aria-label="打开原文"> ↗</span></a>
-    {!!item.security && jiraCves(item.title, true, security).map(cve => <div className="ar-cve-chip" key={cve.id}>
+    {!!item.security && jiraCves(item.title, true, security).map(cve => <div className="ar-cve-chip" key={cve.id} title={`按已抓取官方列表核对 · ${time(cve.fetchedAt)}${cve.stale ? ' · 旧缓存' : ''}`}>
       {cve.status === 'published' ? <button onClick={() => revealAdvisory(`${item.project}-${cve.id}`)}>{cve.id} · {cve.label} ↗</button> : <Badge>{cve.id} · {cve.label}</Badge>}
-      <span className="ar-footnote">按已抓取官方列表核对 · {time(cve.fetchedAt)}{cve.stale ? ' · 旧缓存' : ''}</span>
     </div>)}
-    {!!item.fixVersions?.length && <p className="ar-footnote">目标版本 {item.fixVersions.join('、')} · 不代表已经发布</p>}
-    <div className="ar-item-links"><a href={item.sourceUrl} target="_blank" rel="noreferrer">采集来源 ↗</a>{item.notesUrl && <a href={item.notesUrl} target="_blank" rel="noreferrer">版本说明 ↗</a>}</div>
+    <div className="ar-item-links">{!!item.fixVersions?.length && <span>目标 {item.fixVersions.join('、')} · 不代表已发布</span>}<a href={item.sourceUrl} target="_blank" rel="noreferrer">采集来源 ↗</a>{item.notesUrl && <a href={item.notesUrl} target="_blank" rel="noreferrer">版本说明 ↗</a>}</div>
   </article>
 }
 function ItemList({ items, empty, security }: { items: Item[]; empty: string; security?: ProjectSecurity }) {
@@ -122,20 +119,19 @@ export function Watch({ data, mutate, busy, focusProject }: { data: DashboardDat
   const undated = data.undatedItems?.filter(i => i.project === project) ?? []
   const sources = data.sources?.filter(s => !s.project || s.project === project) ?? []
   return <>
-    <div className="ar-section-heading"><div><h2>只关注你在用的项目</h2><p>滚动最近 7 天 · Asia/Singapore（UTC+8）</p></div></div>
+    <div className="ar-section-heading"><h2>项目动态 <span className="ar-heading-count">{data.watchList?.length ?? 0}</span></h2><span className="ar-muted">最近 7 天 · 滚动窗口 · UTC+8</span></div>
     <div className="ar-watch-toolbar"><div className="ar-segment" role="group" aria-label="关注项目">{data.watchList?.map(id => <button aria-pressed={project === id} key={id} onClick={() => setSelected(id)}>{projectName(id)}</button>)}</div>
-      <form onSubmit={e => { e.preventDefault(); mutate('add', newId); setNewId('') }}><input aria-label="添加项目 id" placeholder="项目 id，如 spark" pattern="[a-zA-Z][a-zA-Z0-9-]*" required value={newId} onChange={e => setNewId(e.target.value)}/><button disabled={busy}>＋ 关注</button></form>
-      {project && <button disabled={busy} onClick={() => mutate('remove', project)} aria-label={`取消关注 ${projectName(project)}`}>取消关注</button>}</div>
-    {project ? <><SecurityStrip key={project + (security?.pin ?? "")} project={project} security={security} report={data.security} mutate={mutate} busy={busy} expanded={focusProject === project}/><div className="ar-two-col"><section className="ar-card ar-section"><div className="ar-card-heading"><h3>{projectName(project)} · 正式发布</h3><Badge>官方发布目录</Badge></div>
-      <ItemList key={project + 'release'} items={items.filter(i => i.kind === 'release')} empty="窗口内无已收录发布；请同时核对下方来源状态。"/>
-    </section><section className="ar-card ar-section"><div className="ar-card-heading"><h3>{project === 'kafka' ? 'Kafka · KIP' : project === 'flink' ? 'Flink · FLIP' : projectName(project) + ' · 提案'}</h3><Badge>保留来源状态</Badge></div>
-      <ItemList key={project + 'proposal'} items={items.filter(i => i.kind === 'proposal')} empty={project === 'hadoop' ? 'Hadoop 没有已验证的通用 HIP 索引。' : '窗口内暂无已收录提案；日期未知条目在下方单列。'}/>
+      <details className="ar-manage" open={!project || undefined}><summary>管理关注</summary><form onSubmit={e => { e.preventDefault(); mutate('add', newId); setNewId('') }}><input aria-label="添加项目 id" placeholder="项目 id，如 spark" pattern="[a-zA-Z][a-zA-Z0-9-]*" required value={newId} onChange={e => setNewId(e.target.value)}/><button disabled={busy}>＋ 关注</button></form>
+      {project && <button disabled={busy} onClick={() => mutate('remove', project)} aria-label={`取消关注 ${projectName(project)}`}>取消关注</button>}</details></div>
+    {project ? <><SecurityStrip key={project + (security?.pin ?? "")} project={project} security={security} report={data.security} mutate={mutate} busy={busy} expanded={focusProject === project}/><div className="ar-two-col"><section className="ar-card ar-section"><div className="ar-card-heading"><h3>正式发布 <span className="ar-heading-count">{items.filter(i => i.kind === 'release').length}</span></h3></div>
+      <ItemList key={project + 'release'} items={items.filter(i => i.kind === 'release')} empty="近 7 天暂无已收录发布。"/>
+    </section><section className="ar-card ar-section"><div className="ar-card-heading"><h3>{project === 'kafka' ? 'KIP' : project === 'flink' ? 'FLIP' : '提案'} <span className="ar-heading-count">{items.filter(i => i.kind === 'proposal').length}</span></h3></div>
+      <ItemList key={project + 'proposal'} items={items.filter(i => i.kind === 'proposal')} empty={project === 'hadoop' ? 'Hadoop 没有已验证的通用 HIP 索引。' : '近 7 天暂无已收录提案。'}/>
     </section></div>
-    <section className="ar-card ar-section"><div className="ar-card-heading"><h3>JIRA · 按类型与状态整理</h3><Badge>工单 ≠ 已发布功能</Badge></div>
-      <p className="ar-muted">仅抓取关注项目的首个响应页；New Feature 和目标版本不证明已经发布。</p>
-      {groupIssues(items).length ? groupIssues(items).map(group => <details className="ar-issue-group" key={project + group.label} open={group.label === '安全'}><summary>{group.label}</summary><ItemList items={group.items} empty="" security={security}/></details>) : <p className="ar-empty-inline">窗口内暂无已收录 JIRA；来源失败时不能解释为零更新。</p>}
+    <section className="ar-card ar-section"><div className="ar-card-heading"><h3>JIRA <span className="ar-heading-count">{items.filter(i => i.kind === 'jira').length}</span></h3><span className="ar-muted">首个响应页 · 工单不代表已发布</span></div>
+      {groupIssues(items).length ? groupIssues(items).map(group => <details className="ar-issue-group" key={project + group.label} open={group.label === '安全'}><summary>{group.label} <span className="ar-heading-count">{group.items.length}</span></summary><ItemList items={group.items} empty="" security={security}/></details>) : <p className="ar-empty-inline">近 7 天暂无已收录 JIRA；请核对来源状态。</p>}
     </section>
-    <details className="ar-card ar-section"><summary>日期未知的提案与参考条目 · 不计为本周新增</summary><ItemList key={project + 'undated'} items={undated} empty="暂无日期未知的参考条目。"/></details>
+    <details className="ar-card ar-section"><summary>参考提案 · 日期未知，不计入本周</summary><ItemList key={project + 'undated'} items={undated} empty="暂无日期未知的参考条目。"/></details>
     <details className="ar-card ar-section"><summary>采集窗口与来源状态</summary><p className="ar-muted">{data.window?.label}</p><Sources sources={sources}/></details></> : <div className="ar-card ar-empty"><h3>关注列表是空的</h3><p>添加一个项目 id，开始整理它的动态。</p></div>}
   </>
 }
@@ -150,16 +146,15 @@ function revealAdvisory(id: string) {
 }
 function SecurityCitation({ source }: { source?: SecuritySource<unknown> }) {
   if (!source) return null
-  return <div className="ar-citation"><a href={source.url} target="_blank" rel="noreferrer">{new URL(source.url).hostname} ↗</a><span>抓取 {time(source.fetchedAt)} · UTC+8{source.status === 'stale' ? ' · 上次成功缓存' : ''}</span>{source.sourceTimestamp && <span>源时间 {source.sourceTimestamp}</span>}
-    {source.error && <details className="ar-source-error"><summary>来源失败 · 查看原因</summary><span className="ar-error-text">{sourceError(source.error)}</span></details>}</div>
+  return <SourceChip source={{ url: source.url, fetchedAt: source.fetchedAt ?? null, fetchedAtDisplay: time(source.fetchedAt), sourceTimestamp: source.sourceTimestamp, cacheStatus: source.status === 'stale' ? 'stale' : undefined, cacheError: source.error }}/>
 }
 export function SecurityCard({ report, jump }: { report: SecurityReport; jump?: (project: string) => void }) {
   const summary = securityOverview(report)
-  return <article className="ar-card ar-metric ar-security-card"><div className="ar-eyebrow">关注组件 · 版本与安全</div>
-    <strong className="ar-number">{summary.incomplete ? summary.affected.length ? `≥${summary.affected.length}` : '—' : summary.affected.length}<small> / {summary.watched}</small></strong>
-    <p className="ar-note">当前版本有官方公告影响的组件<br/>{summary.unpinned} 个未填运行版本{summary.incomplete ? ` · ${summary.incomplete} 个来源待核对` : ''}</p>
-    {report.projects.map(p => <div className="ar-security-scope" key={p.project}><button className="ar-project-jump" onClick={() => jump?.(p.project)}>{projectName(p.project)}{summary.affected.includes(p.project) ? ' · 受影响' : !p.pin ? ' · 未填版本' : ''} ↗</button>
-      {p.source && <><a className="ar-footnote" href={p.source.url} title={p.source.url} target="_blank" rel="noreferrer">官方来源 ↗</a><span className="ar-footnote">{time(p.source.fetchedAt)} · UTC+8{p.source.status === 'stale' ? ' · 旧缓存' : ''}</span>{p.source.sourceTimestamp && <span className="ar-footnote">源时间 {p.source.sourceTimestamp}</span>}{p.source.error && <details className="ar-source-error"><summary>来源失败</summary><span>{sourceError(p.source.error)}</span></details>}</>}{p.error && <p className="ar-error-text">{sourceError(p.error)}</p>}</div>)}
+  return <article className="ar-card ar-metric ar-security-card"><h3 className="ar-eyebrow">版本与安全</h3>
+    <strong className="ar-number">{summary.incomplete ? summary.affected.length ? `≥${summary.affected.length}` : '—' : summary.affected.length}<small> / {summary.watched} 受影响</small></strong>
+    <p className="ar-note">{summary.unpinned} 个未填运行版本{summary.incomplete ? ` · ${summary.incomplete} 个来源待核对` : ''}</p>
+    <div className="ar-security-projects">{report.projects.map(p => <div className="ar-security-scope" key={p.project}><button className="ar-project-jump" onClick={() => jump?.(p.project)}>{projectName(p.project)}{summary.affected.includes(p.project) ? ' · 受影响' : ''} ↗</button></div>)}</div>
+    <details className="ar-metric-detail"><summary>官方来源</summary>{report.projects.map(p => <div key={p.project}><SecurityCitation source={p.source}/>{p.error && <p className="ar-error-text">{sourceError(p.error)}</p>}</div>)}</details>
   </article>
 }
 export function SecurityStrip({ project, security, report, mutate, busy, expanded = false }: {
@@ -170,34 +165,34 @@ export function SecurityStrip({ project, security, report, mutate, busy, expande
   const unknown = security?.advisories.filter(a => a.verdict === 'unknown').length ?? 0
   const supported = ['kafka', 'hadoop', 'flink'].includes(project)
   return <section className="ar-card ar-section ar-security-strip">
-    <div className="ar-card-heading"><div><h3>{projectName(project)} · 版本与安全</h3><p className="ar-muted">{security?.pin ? `你在用 ${security.pin} · ${security.source?.data ? `${affected} 个已收录官方公告影响此版本 · ${unknown} 个无法判断 · 官方修复逐项见下方` : '官方列表不可用，无法判断'}` : '填写你实际运行的版本，按官方范围立即核对。'}{security?.source?.status === 'stale' ? ' · 上次成功缓存' : ''}</p></div><Badge tone={affected ? 'danger' : ''}>{security?.pin ? '官方范围匹配' : '未填版本 · 无法判断'}</Badge></div>
-    {supported && <form className="ar-pin-form" onSubmit={e => { e.preventDefault(); mutate('pin', project, { version }) }}><label htmlFor={`ar-pin-${project}`}>运行版本</label><input id={`ar-pin-${project}`} aria-label={`${projectName(project)} 运行版本`} placeholder="输入实际版本，如 3.9.0" value={version} maxLength={200} onChange={e => setVersion(e.target.value)}/><button disabled={busy} className="ar-primary">保存版本并判断</button>{security?.pin && <button type="button" disabled={busy} onClick={() => mutate('pin', project, { version: '' })}>清除</button>}</form>}
+    <div className="ar-card-heading"><h3>版本与安全</h3><span className="ar-muted">{security?.pin ? security.source?.data ? <><Badge tone={affected ? 'danger' : ''}>{affected} 项受影响</Badge> · {unknown} 项无法判断</> : '官方列表不可用，无法判断' : '未填版本 · 无法判断'}{security?.source?.status === 'stale' ? ' · 上次成功缓存' : ''}</span></div>
+    {supported && <form className="ar-pin-form" onSubmit={e => { e.preventDefault(); mutate('pin', project, { version }) }}><label htmlFor={`ar-pin-${project}`}>运行版本</label><input id={`ar-pin-${project}`} aria-label={`${projectName(project)} 运行版本`} placeholder="输入实际版本，如 3.9.0" value={version} maxLength={200} onChange={e => setVersion(e.target.value)}/><button disabled={busy} className="ar-primary">保存并核对</button>{security?.pin && <button type="button" disabled={busy} onClick={() => mutate('pin', project, { version: '' })}>清除</button>}</form>}
     <SecurityCitation source={security?.source}/>
     {security?.error && <p className="ar-error-text">{sourceError(security.error)}</p>}
-    {security?.notices.map(n => <p className="ar-footnote" key={n}>{n}</p>)}
+    {!!security?.notices.length && <details className="ar-limits"><summary>来源覆盖说明</summary>{security.notices.map(n => <p className="ar-footnote" key={n}>{n}</p>)}</details>}
     {project === 'flink' && <SecurityCitation source={report?.flinkPointer}/>}
-    <details className="ar-advisories" open={expanded || undefined}><summary>官方安全公告 · 展开逐项判定与修复版本</summary>
-      <p className="ar-footnote">不同公告的修复版本分别列出；组件、配置与限制条件须逐项核对。判定不构成生产安全或升级结论。</p>
+    <details className="ar-advisories" open={expanded || undefined}><summary>官方安全公告 <span className="ar-heading-count">{security?.advisories.length ?? '—'}</span></summary>
       {security?.advisories.map(a => <details className="ar-advisory" id={`${project}-${a.id}`} key={a.id} tabIndex={-1} onToggle={e => {
         if (e.currentTarget.open && a.osv.status === 'unqueried') mutate('osv', project, { cve: a.id })
-      }}><summary><Badge tone={verdictTone[a.verdict]}>{verdictName[a.verdict]}</Badge><b>{a.id}</b><span>{a.title}</span><span className="ar-advisory-source"><a href={a.url} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}>官方原文 ↗</a> · 抓取 {time(a.fetchedAt)} · UTC+8{a.sourceTimestamp ? ` · 源时间 ${a.sourceTimestamp}` : ""}</span></summary>
+      }}><summary><Badge tone={verdictTone[a.verdict]}>{verdictName[a.verdict]}</Badge><b>{a.id}</b><span>{a.title}</span><a className="ar-advisory-link" href={a.url} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}>官方原文 ↗</a></summary>
         <div className="ar-advisory-body"><p>{a.reason}</p><dl><dt>官方受影响范围</dt><dd>{a.affectedText}</dd><dt>官方修复版本</dt><dd>{a.fixedText ?? '官方未明确列出'}</dd></dl>
         <SecurityCitation source={{ url: a.url, fetchedAt: a.fetchedAt, sourceTimestamp: a.sourceTimestamp, status: security.source!.status, data: null }}/>
-        <details className="ar-limits"><summary>官方原文与限制条件</summary>{a.notes.map((note, i) => <p key={i}>{note}</p>)}</details>
-        <div className="ar-osv"><h4>OSV · 第二来源</h4><p>{a.osv.data?.label ?? (a.osv.status === 'unqueried' ? '展开后按需查询，不用于官方判定。' : '查询失败，不影响官方判定。')}</p>{a.osvDifference && <p className="ar-error-text">OSV 与官方范围表述不同；官方判定保持不变，请分别核对组件和范围。</p>}<SecurityCitation source={a.osv}/>{a.osv.status === 'failed' && <button disabled={busy} onClick={() => mutate('osv', project, { cve: a.id })}>重试 OSV</button>}{a.osv.data?.record && <pre>{JSON.stringify(a.osv.data.record.affected, null, 2)}</pre>}</div>
+        <details className="ar-limits"><summary>官方说明与适用条件</summary><p>按组件、配置逐项核对；判定不构成生产安全或升级结论。</p>{a.notes.map((note, i) => <p key={i}>{note}</p>)}</details>
+        <div className="ar-osv"><h4>OSV · 第二来源</h4><p>{a.osv.data?.label ?? (a.osv.status === 'unqueried' ? '展开后按需查询，不用于官方判定。' : '查询失败，不影响官方判定。')}</p>{a.osvDifference && <p className="ar-error-text">OSV 与官方范围表述不同；官方判定保持不变，请分别核对组件和范围。</p>}<SecurityCitation source={a.osv}/>{a.osv.status === 'failed' && <button disabled={busy} onClick={() => mutate('osv', project, { cve: a.id })}>重试 OSV</button>}{a.osv.data?.record && <details><summary>OSV 范围原文</summary><pre>{JSON.stringify(a.osv.data.record.affected, null, 2)}</pre></details>}</div>
         </div></details>)}
       {!security?.advisories.length && <p className="ar-empty-inline">{sourceError(security?.error) ?? '尚未采集官方列表，请刷新；不能据此认定没有公告。'}</p>}
-      {project === 'kafka' && <details className="ar-suppressions"><summary>扫描器报了，但官方说明不适用 · 单独查看</summary><p className="ar-footnote">官方 suppressions 不计为影响 Kafka 的公告。</p><SecurityCitation source={report?.suppressions}/>{report?.suppressions?.data?.suppressions.map(a => <article key={a.id}><b>{a.id}</b><p>{a.notes}</p><SecurityCitation source={{ ...report.suppressions!, url: a.url, fetchedAt: a.fetchedAt }}/></article>)}
+      {project === 'kafka' && <details className="ar-suppressions"><summary>官方不适用说明 · suppressions</summary><p className="ar-footnote">官方 suppressions 不计为影响 Kafka 的公告。</p><SecurityCitation source={report?.suppressions}/>{report?.suppressions?.data?.suppressions.map(a => <article key={a.id}><b>{a.id}</b><p>{a.notes}</p><SecurityCitation source={{ ...report.suppressions!, url: a.url, fetchedAt: a.fetchedAt }}/></article>)}
         <p><a href="https://security.apache.org/report-dependency/" target="_blank" rel="noreferrer">ASF：如何报告依赖库安全问题 ↗</a></p><SecurityCitation source={report?.guidance}/></details>}
     </details>
   </section>
 }
 
 function BriefSection({ part }: { part: string }) {
+  if (part.startsWith('# ')) return <details className="ar-card ar-section"><summary>周报信息与统计口径</summary><MarkdownText text={part} labels={labels} omitHtml/></details>
   if (part.startsWith('## 关注项目动态')) return <><h2 className="ar-brief-title">关注项目动态</h2>{part.split('\n').slice(1).join('\n').trim().split(/\n(?=### )/).map((project, i) => <BriefSection part={project} key={i}/>)}</>
-  if (part.startsWith('## 本周新公告')) return <article className="ar-card ar-section"><MarkdownText text={part} labels={labels} omitHtml/></article>
-  if (part.startsWith('## ')) return <details className="ar-card ar-section"><summary>{part.split('\n')[0]!.replace(/^## /, '')} · 展开明细</summary><MarkdownText text={part} labels={labels} omitHtml/></details>
-  const lines = part.split('\n')
+  if (part.startsWith('## 本周新公告')) return <article className="ar-card ar-section"><MarkdownText text={part.split('\n').slice(0, 8).join('\n')} labels={labels} omitHtml/>{part.split('\n').length > 8 && <details className="ar-brief-more"><summary>全部新公告与判定</summary><MarkdownText text={part.split('\n').slice(8).join('\n')} labels={labels} omitHtml/></details>}</article>
+  if (part.startsWith('## ')) return <details className="ar-card ar-section"><summary>{part.split('\n')[0]!.replace(/^## /, '')}</summary><MarkdownText text={part} labels={labels} omitHtml/></details>
+  const lines = part.replace(/^### (kafka|hadoop|flink)\b/, (_, id: string) => `### ${projectName(id)}`).split('\n')
   const preview = part.startsWith('### ') && lines.length > 4
   return <article className="ar-card ar-section"><MarkdownText text={preview ? lines.slice(0, 4).join('\n') : part} labels={labels} omitHtml/>
     {preview && <details className="ar-brief-more"><summary>展开其余周报条目</summary><MarkdownText text={lines.slice(4).join('\n')} labels={labels} omitHtml/></details>}</article>
@@ -220,10 +215,10 @@ export function Brief({ data, request, busy }: { data: DashboardData; request: (
       setTimeout(() => URL.revokeObjectURL(url), 60_000)
     } catch (error) { tab.close(); setNotice(String(error)) }
   }
-  return <><div className="ar-section-heading"><div><h2>把这一周，留成一份简报</h2><p>带原文、来源与时间的中文 Markdown · 在本地保存</p></div>
+  return <><div className="ar-section-heading"><div><h2>每周简报</h2><p>最近 7 天 · 已保存的 Markdown</p></div>
     <div className="ar-actions"><button disabled={busy} onClick={() => request('brief')}>{data.markdown ? '重新生成' : '生成本周周报'}</button>
       {data.markdown && <><button className="ar-primary" onClick={copy}>复制 Markdown</button><button onClick={openFile}>打开已保存文件 ↗</button></>}</div></div>
-    <p role="status" className="ar-muted">{notice || '周报无需模型生成。复制和打开操作使用已保存的全文。'}</p>
+    {notice && <p role="status" className="ar-muted">{notice}</p>}
     {data.markdown ? <div className="ar-brief">{briefSections(data.markdown).map((part, i) => <BriefSection part={part} key={i}/>)}</div> : <div className="ar-card ar-empty"><Icon size={40}/><h3>第一份周报，从这里开始</h3><p>点击「生成本周周报」，采集关注项目并保存到所选目录。</p></div>}</>
 }
 export function Dashboard() {
@@ -232,6 +227,8 @@ export function Dashboard() {
     try { return localStorage.getItem('apache-radar.directory') ?? '' } catch { return '' }
   })
   const [choosing, setChoosing] = useState(false)
+  const [networkOpen, setNetworkOpen] = useState(false)
+  const [networkRevision, setNetworkRevision] = useState(0)
   const [view, setView] = useState('overview')
   const [focusProject, setFocusProject] = useState<string>()
   const [busy, setBusy] = useState(true)
@@ -247,7 +244,7 @@ export function Dashboard() {
       const result = await response.json()
       if (!response.ok) throw new Error(result.error ?? `HTTP ${response.status}`)
       if (generation.current !== version) return
-      if (['detect-proxy', 'redetect-proxy', 'apply-proxy', 'clear-proxy'].includes(action)) { setProxyDetection(result); return }
+      if (['detect-proxy', 'redetect-proxy', 'apply-proxy', 'clear-proxy'].includes(action)) { setProxyDetection(result); if (action === 'apply-proxy' || action === 'clear-proxy') setNetworkRevision(revision => revision + 1); return }
       if (action === 'diagnose') { setDiagnosis(result); return }
       setData(result); if (result.directory) { setDirectory(result.directory); setChoosing(false); try { localStorage.setItem('apache-radar.directory', result.directory) } catch { /* Directory selection still works without browser storage. */ } }
     } catch (cause) { if (generation.current === version) setError(cause instanceof Error ? cause.message : String(cause)) }
@@ -277,35 +274,31 @@ export function Dashboard() {
   return <div className="ar-root" aria-busy={busy}>
     <style>{css}</style><div className="ar-shell">
     <header className="ar-header"><div className="ar-brand"><span className="ar-brand-icon"><Icon size={27}/></span><div><div className="ar-overline">APACHE / COMMUNITY RADAR</div><h1>Apache 社区雷达</h1></div></div><span className="ar-local"><span className="ar-dot"/>本地工作台 · 无需模型</span></header>
-    <div className="ar-intro"><p>在纷繁的社区动态中，找到你关心的变化。</p><span>公开来源 · 原文可追溯 · UTC+8</span></div>
-    <div className="ar-projectbar">{data.directory && !choosing ? <div className="ar-directory"><span className="ar-dot"/><span title={data.directory}>本地项目 · {data.directory.split(/[\\/]/).filter(Boolean).at(-1)}</span><button disabled={busy} onClick={() => setChoosing(true)}>切换目录</button></div> : <form onSubmit={e => { e.preventDefault(); void request('read') }}><label htmlFor="ar-directory">项目目录</label>
-      <input id="ar-directory" list="ar-directories" value={directory} placeholder="输入本地项目的绝对路径" onChange={e => setDirectory(e.target.value)} required disabled={busy}/><datalist id="ar-directories">{data.directories.map(d => <option value={d} key={d}/>)}</datalist><button disabled={busy}>打开</button></form>}
-      <div className="ar-actions"><button disabled={busy} onClick={() => void request('detect-proxy')}>从系统检测代理</button><button disabled={busy || !data.directory} onClick={() => void request('diagnose')}>网络诊断</button><button disabled={busy || !data.directory} onClick={() => void exportSnapshot()}>导出快照</button><label>导入快照 <input type="file" accept="application/json,.json" disabled={busy || !data.directory} style={{ maxWidth: 170 }} onChange={async e => {
-        const file = e.target.files?.[0]; e.target.value = ''
-        if (!file) return
-        if (file.size > 32 * 1024 * 1024) { setError('快照超过 32 MiB'); return }
-        try { await request('import', undefined, data.directory, { snapshot: await file.text() }) }
-        catch { setError('无法读取快照文件') }
-      }}/></label><span className="ar-last">上次采集 {time(data.collectedAt)}</span><button className="ar-primary" disabled={busy || !data.directory} onClick={() => void request('refresh', undefined, data.directory)}><span className={busy ? 'ar-spin' : ''}>↻</span> {busy ? '正在读取…' : '刷新数据'}</button></div></div>
-    <nav className="ar-tabs" aria-label="雷达页面">{[['overview', '概览', '01'], ['watch', '关注动态', '02'], ['brief', '每周简报', '03']].map(([id, title, num]) => <button key={id} aria-current={view === id ? 'page' : undefined} onClick={() => { setView(id!); setFocusProject(undefined) }}><span>{num}</span>{title}</button>)}</nav>
-    {error && <div className="ar-notice danger" role="alert"><strong>操作失败</strong><span>{error} {ready ? '仍保留当前画面中的上次数据。' : ''}</span><button disabled={busy} onClick={() => void request('read')}>重试读取</button></div>}
-    {data.localSnapshot && <div className="ar-notice warn" role="status"><strong>本地快照（导入）</strong><span>包含导入数据，非实时官方抓取；请核对来源时间。</span></div>}
-    {data.proxyNote && <div className="ar-notice" role="status">{data.proxyNote}</div>}
-    {proxyDetection && <div className="ar-card ar-section" role="status"><strong>从系统检测代理</strong>
-      <p>来源：{proxyDetection.source ?? '插件设置'} · 请求超时：{proxyDetection.timeoutSeconds ?? 30} 秒</p>
-      {proxyDetection.pacUrl && <p>PAC 地址：{proxyDetection.pacUrl}</p>}
-      <p>Apache 示例代理：{proxyDetection.proxy ?? 'DIRECT / 沿用原访问路径'}</p>
-      <p>上次检测：{proxyDetection.detectedAt ?? '—'} · 缓存有效期：{(proxyDetection.ttlSeconds ?? 1800) / 60} 分钟</p>
-      {proxyDetection.warning && <p>{proxyDetection.warning}</p>}{proxyDetection.note && <p>{proxyDetection.note}</p>}
-      <div className="ar-actions"><button disabled={busy} onClick={() => void request('redetect-proxy')}>重新检测</button><button disabled={busy || !proxyDetection.proxy} onClick={() => void request('apply-proxy')}>应用到插件设置</button><button disabled={busy} onClick={() => void request('clear-proxy')}>清空插件代理</button></div>
-    </div>}
-    {diagnosis !== undefined && <div className="ar-card ar-section" role="status"><strong>网络诊断</strong><pre style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{JSON.stringify(diagnosis, null, 2)}</pre></div>}
-    {!!data.diagnostics?.length && <div className="ar-notice warn" role="status"><strong>网络诊断 · 来源获取失败</strong><div>{data.diagnostics.map(d => <p key={d.code}><b>{d.code} · {d.count} 个来源</b><br/>{d.hintZh}</p>)}</div></div>}
-    {(!data.diagnostics?.length && (stale || failed)) && <div className="ar-notice warn" role="status"><strong>{stale ? '正在显示上次成功缓存' : '部分来源未能取得数据'}</strong><span>{stale ? '数据已过期或刷新失败；请核对每个来源的时间。' : '失败不代表没有动态。'} 已保留来源错误。</span></div>}
-    {busy && <div role="status" className="ar-loading"><span className="ar-spin">◌</span> 正在读取公开来源与本地缓存，请稍候…</div>}
+    <div className="ar-projectbar" aria-label="日常操作">{data.directory ? <div className="ar-directory"><span className="ar-dot"/><span title={data.directory}>{data.directory.split(/[\\/]/).filter(Boolean).at(-1)}</span><span className="ar-last">更新 {time(data.collectedAt)}</span></div> : <form onSubmit={e => { e.preventDefault(); void request('read') }}><label htmlFor="ar-directory">项目目录</label><input id="ar-directory" list="ar-directories" value={directory} placeholder="本地项目的绝对路径" onChange={e => setDirectory(e.target.value)} required disabled={busy}/><datalist id="ar-directories">{data.directories.map(d => <option value={d} key={d}/>)}</datalist><button disabled={busy}>打开</button></form>}
+      <Button variant="primary" className="ar-primary" disabled={busy || !data.directory} onClick={() => void request('refresh', undefined, data.directory)}><span className={busy ? 'ar-spin' : ''}>↻</span> {busy ? '正在读取…' : '刷新数据'}</Button></div>
+    <details className="ar-network" onToggle={e => setNetworkOpen(e.currentTarget.open)}><summary>网络 / 设置</summary><div className="ar-card ar-section ar-network-body">
+      <div><h3>连接设置</h3>{networkOpen && <NetworkSettings key={networkRevision} endpoint="/api/apache-radar/network-settings"/>}</div>
+      <div><h3>代理与诊断</h3><div className="ar-actions"><button disabled={busy} onClick={() => void request(proxyDetection ? 'redetect-proxy' : 'detect-proxy')}>{proxyDetection ? '重新检测' : '从系统检测代理'}</button><button disabled={busy || !data.directory} onClick={() => void request('diagnose')}>网络诊断</button></div>
+        {data.proxyNote && <p className="ar-muted">{data.proxyNote}</p>}
+        {proxyDetection && <div className="ar-proxy-result" role="status"><p>{proxyDetection.source ?? '插件设置'} · 超时 {proxyDetection.timeoutSeconds ?? 30} 秒</p>{proxyDetection.pacUrl && <p>PAC：{proxyDetection.pacUrl}</p>}<p>示例代理：{proxyDetection.proxy ?? 'DIRECT / 沿用原访问路径'}</p><p>检测 {proxyDetection.detectedAt ?? '—'} · 缓存 {(proxyDetection.ttlSeconds ?? 1800) / 60} 分钟</p>{proxyDetection.warning && <p>{proxyDetection.warning}</p>}{proxyDetection.note && <p>{proxyDetection.note}</p>}<div className="ar-actions"><button disabled={busy || !proxyDetection.proxy} onClick={() => void request('apply-proxy')}>应用到插件设置</button><button disabled={busy} onClick={() => void request('clear-proxy')}>清空插件代理</button></div></div>}
+        {(diagnosis !== undefined || !!data.diagnostics?.length) && <details className="ar-diagnostics"><summary>诊断详情</summary>{data.diagnostics?.map(d => <p key={d.code}>{d.code} · {d.count} 个来源 · {d.hintZh}</p>)}{diagnosis !== undefined && <pre>{JSON.stringify(diagnosis, null, 2)}</pre>}</details>}
+        <h3>本地数据</h3><div className="ar-actions"><button disabled={busy || !data.directory} onClick={() => void exportSnapshot()}>导出快照</button><label className="ar-import">导入快照 <input aria-label="导入快照" type="file" accept="application/json,.json" disabled={busy || !data.directory} onChange={async e => {
+          const file = e.target.files?.[0]; e.target.value = ''
+          if (!file) return
+          if (file.size > 32 * 1024 * 1024) { setError('快照超过 32 MiB'); return }
+          try { await request('import', undefined, data.directory, { snapshot: await file.text() }) }
+          catch { setError('无法读取快照文件') }
+        }}/></label></div>
+        {data.directory && <><button className="ar-quiet" disabled={busy} onClick={() => setChoosing(!choosing)} aria-expanded={choosing}>切换目录</button>{choosing && <form className="ar-directory-form" onSubmit={e => { e.preventDefault(); void request('read') }}><label htmlFor="ar-change-directory">项目绝对路径</label><input id="ar-change-directory" value={directory} onChange={e => setDirectory(e.target.value)} required disabled={busy}/><button disabled={busy}>打开目录</button></form>}</>}
+      </div></div></details>
+    <nav className="ar-tabs" aria-label="雷达页面">{[['overview', '总览'], ['watch', '关注动态'], ['brief', '每周简报']].map(([id, title]) => <button key={id} aria-current={view === id ? 'page' : undefined} onClick={() => { setView(id!); setFocusProject(undefined) }}>{title}</button>)}</nav>
+    {error && <div className="ar-notice danger" role="alert"><span>{sourceError(error)}{ready ? ' · 保留上次数据' : ''}</span><button disabled={busy} onClick={() => void request('read')}>重试</button></div>}
+    {data.localSnapshot && <p className="ar-notice warn" role="status">本地快照 · 非实时数据，请核对来源时间。</p>}
+    {!!data.diagnostics?.length ? <p className="ar-notice warn" role="status">{networkHint(data.diagnostics.find(d => d.code === 'TLS_KEY_TOO_SMALL')?.code ?? data.diagnostics[0]!.code)}{stale ? ' · 保留上次数据' : ''}</p> : (stale || failed) && <p className="ar-notice warn" role="status">{stale ? '正在显示上次成功缓存，请刷新后核对。' : '部分来源获取失败，请刷新或查看来源状态。'}</p>}
+    {busy && <div role="status" className="ar-loading"><span className="ar-spin">◌</span> 正在读取…</div>}
     {ready ? view === 'overview' ? <Overview data={data} jump={project => { setFocusProject(project); setView("watch") }}/> : view === 'watch' ? <Watch data={data} focusProject={focusProject} mutate={(action, project, extra) => void request(action, project, data.directory, extra)} busy={busy}/> : <Brief data={data} request={action => void request(action, undefined, data.directory)} busy={busy}/>
-      : view === 'brief' && data.directory ? <Brief data={data} request={action => void request(action, undefined, data.directory)} busy={busy}/> : !busy && <div className="ar-card ar-empty"><Icon size={44}/><h2>{data.directory ? '雷达已就绪，等待第一次采集' : '为你的项目，打开一扇社区窗口'}</h2><p>{data.directory ? '点击「刷新数据」获取官方计数与关注动态。只读取公开来源，无需模型或登录。' : '选择已有目录，或在上方输入一个本地项目路径。不需要创建聊天或配置模型。'}</p></div>}
-    <footer className="ar-footer"><span>Apache Radar <span className="ar-divider">/</span> 本地 Apache 社区雷达</span><span>统计口径并列展示 · reporter.apache.org 不使用</span></footer>
+      : view === 'brief' && data.directory ? <Brief data={data} request={action => void request(action, undefined, data.directory)} busy={busy}/> : !busy && <div className="ar-card ar-empty"><Icon size={44}/><h2>{data.directory ? '开始关注社区变化' : '打开你的项目'}</h2><p>{data.directory ? '点击「刷新数据」获取社区概况与项目动态。' : '填写本地项目目录，开始使用社区雷达。'}</p></div>}
+    <footer className="ar-footer"><span>Apache Radar <span className="ar-divider">/</span> 本地 Apache 社区雷达</span><span>公开来源 · UTC+8</span></footer>
     </div></div>
 }
 
@@ -319,11 +312,12 @@ export const inject = ['slots']
 export function apply(ctx: ClientContext) {
   ctx.slots.inject('main', () => ctx.slots.register({ name: 'main', key: 'apache-radar' }, Dashboard))
   ctx.slots.inject('sidebar.panellist', () => ctx.slots.register({ name: 'sidebar.panellist', id: 'apache-radar', order: 25, label: () => 'Apache 雷达' }, Icon))
+  ctx.slots.inject('plugins.row.config', () => ctx.slots.register({ name: 'plugins.row.config', key: 'dsh-apache-radar#apache-radar' }, props => <NetworkSettings {...props as NetworkSettingsProps} endpoint="/api/apache-radar/network-settings"/>))
 }
 
 const css = `
-.ar-security-scope{display:flex;flex-wrap:wrap;gap:0 8px;font-size:10px}
-.ar-security-scope>span{flex-basis:100%;font-size:10px}
+.ar-security-projects{display:flex;flex-wrap:wrap;gap:3px 12px}
+.ar-security-scope{min-width:0}
 .ar-security-card .ar-number small{font-size:14px;letter-spacing:0;color:var(--ar-faint)}
 .ar-root .ar-project-jump{border:0;padding:0;background:transparent;font-size:11px;justify-content:flex-start;white-space:normal;color:var(--ar-accent)}
 .ar-security-strip{border-top:2px solid color-mix(in srgb,var(--ar-accent) 45%,var(--ar-line))}
@@ -337,7 +331,10 @@ const css = `
 .ar-advisory[open]>summary:after{content:'−'}
 .ar-advisory>summary b{font-size:12px;color:var(--ar-text)}
 .ar-advisory>summary>span:nth-of-type(2){flex:1;min-width:140px}
-.ar-advisory-source{flex-basis:100%;font-size:10px;color:var(--ar-faint);overflow-wrap:anywhere}
+.ar-advisory-link{font-size:11px;color:var(--ar-faint);margin-left:auto}
+.ar-advisory>summary>span:nth-of-type(2){line-height:1.6}
+.ar-limits{margin-top:8px}
+.ar-osv{border-top:1px solid var(--ar-line);margin-top:16px;padding-top:4px}
 .ar-advisory-body{padding:12px 0 4px;font-size:12px;overflow-wrap:anywhere}
 .ar-advisory-body dl{display:grid;grid-template-columns:105px minmax(0,1fr);gap:8px;padding:14px;background:var(--ar-bg);border-radius:8px}
 .ar-advisory-body dt{color:var(--ar-faint)}
@@ -374,16 +371,16 @@ const css = `
   box-sizing:border-box
 }
 .ar-shell {
-  max-width:1440px;
+  max-width:1360px;
   margin:auto;
-  padding:40px 42px 24px;
+  padding:36px 40px 24px;
   padding-top:max(40px,var(--dsh-frame-leading-clearance,0px))
 }
 .ar-root h1,.ar-root h2,.ar-root h3,.ar-root h4,.ar-root p {
   margin:0
 }
 .ar-root h1 {
-  font-size:25px;
+  font-size:26px;
   letter-spacing:-.7px;
   font-weight:650
 }
@@ -437,7 +434,7 @@ const css = `
 }
 .ar-root .ar-primary {
   background:var(--ar-accent);
-  color:var(--dsw-static-neutral-bluish-00);
+  color:var(--dsw-alias-label-primary-foreground);
   border-color:transparent
 }
 .ar-root .ar-primary:hover {
@@ -509,7 +506,8 @@ const css = `
 .ar-projectbar {
   border:1px solid var(--ar-line);
   border-radius:12px;
-  padding:12px 14px;
+  padding:12px 16px;
+  margin-top:24px;
   background:var(--ar-card);
   flex-wrap:wrap
 }
@@ -549,7 +547,7 @@ const css = `
   display:flex;
   gap:26px;
   border-bottom:1px solid var(--ar-line);
-  margin:23px 0 28px
+  margin:8px 0 28px
 }
 .ar-tabs button {
   background:transparent;
@@ -580,7 +578,7 @@ const css = `
 }
 .ar-section-heading {
   margin-bottom:20px;
-  align-items:flex-start;
+  align-items:baseline;
   flex-wrap:wrap
 }
 .ar-section-heading p {
@@ -597,7 +595,7 @@ const css = `
 }
 .ar-metrics {
   display:grid;
-  grid-template-columns:1.2fr repeat(5,minmax(0,1fr));
+  grid-template-columns:repeat(3,minmax(0,1fr));
   gap:12px;
   margin-bottom:22px
 }
@@ -605,19 +603,20 @@ const css = `
   padding:19px 18px 16px;
   display:flex;
   flex-direction:column;
-  gap:8px
+  gap:9px;
+  min-height:175px
 }
 .ar-featured {
   border-color:color-mix(in srgb,var(--ar-accent) 32%,var(--ar-line));
   background:linear-gradient(125deg,color-mix(in srgb,var(--ar-accent) 6%,var(--ar-card)),var(--ar-card))
 }
-.ar-eyebrow {
+.ar-root h3.ar-eyebrow {
   font-size:12px;
   font-weight:500;
   color:var(--ar-muted)
 }
 .ar-number {
-  font-size:39px;
+  font-size:36px;
   line-height:1.2;
   font-weight:600;
   letter-spacing:-1.7px;
@@ -633,12 +632,9 @@ const css = `
   flex:1
 }
 .ar-citation {
-  font-size:10px;
+  font-size:11px;
   line-height:1.7;
   color:var(--ar-faint);
-  display:flex;
-  gap:0 7px;
-  flex-wrap:wrap;
   overflow-wrap:anywhere;
   font-variant-numeric:tabular-nums
 }
@@ -656,9 +652,8 @@ const css = `
 .ar-citation>span {
   display:block
 }
-.ar-citation>span:not(.ar-badge) {
-  width:100%
-}
+.ar-citation>summary{font-size:11px;overflow-wrap:anywhere}
+.ar-citation[open]>span{margin-top:5px}
 .ar-two-col {
   display:grid;
   grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);
@@ -675,7 +670,7 @@ const css = `
 }
 .ar-card-heading {
   margin-bottom:9px;
-  align-items:flex-start;
+  align-items:baseline;
   flex-wrap:wrap
 }
 .ar-muted {
@@ -688,7 +683,7 @@ const css = `
   width:fit-content;
   border:1px solid var(--ar-line);
   border-radius:5px;
-  padding:1px 6px;
+  padding:2px 7px;
   font-size:10px;
   line-height:1.6;
   color:var(--ar-muted);
@@ -713,11 +708,12 @@ const css = `
   display:grid;
   grid-template-columns:repeat(4,minmax(0,1fr));
   gap:10px;
-  margin:22px 0
+  margin:20px 0
 }
 .ar-retired-cell {
   padding-right:8px;
   border-right:1px solid var(--ar-line);
+  min-width:0;
   font-size:11px;
   color:var(--ar-muted)
 }
@@ -741,7 +737,8 @@ const css = `
 .ar-root summary {
   cursor:pointer;
   font-size:12px;
-  color:var(--ar-muted)
+  color:var(--ar-muted);
+  line-height:1.7
 }
 .ar-difference summary .ar-dot {
   margin-right:6px
@@ -796,7 +793,7 @@ const css = `
   border:1px solid var(--ar-line);
   border-radius:9px;
   padding:12px 16px;
-  margin-bottom:20px;
+  margin-bottom:16px;
   font-size:12px;
   flex-wrap:wrap
 }
@@ -857,13 +854,13 @@ const css = `
   font-size:13px
 }
 .ar-watch-toolbar {
-  margin-bottom:24px;
+  margin-bottom:20px;
   flex-wrap:wrap;
   justify-content:flex-start
 }
 .ar-watch-toolbar form {
   flex:0 1 auto;
-  margin-left:auto
+  margin:12px 0
 }
 .ar-watch-toolbar input {
   width:175px;
@@ -886,7 +883,7 @@ const css = `
   background:transparent;
   color:var(--ar-faint);
   padding:7px 18px;
-  min-width:85px
+  min-width:70px
 }
 .ar-segment button[aria-pressed=true] {
   background:var(--ar-card);
@@ -932,14 +929,15 @@ const css = `
 .ar-item-links {
   display:flex;
   gap:12px;
-  font-size:10px;
+  font-size:11px;
   color:var(--ar-faint);
+  flex-wrap:wrap;
   margin-top:7px
 }
 .ar-security {
   border-left:2px solid var(--ar-error);
   padding-left:14px;
-  background:linear-gradient(90deg,color-mix(in srgb,var(--ar-error) 4%,transparent),transparent);
+  background:color-mix(in srgb,var(--ar-error) 2%,transparent);
   margin-top:9px
 }
 .ar-item .ar-footnote {
@@ -967,7 +965,7 @@ const css = `
   font-size:11px;
   color:var(--ar-faint);
   background:transparent;
-  border-style:dashed;
+  border-color:transparent;
   margin-top:12px
 }
 .ar-source-list {
@@ -990,7 +988,7 @@ const css = `
   margin:20px auto
 }
 .ar-brief .ar-section {
-  padding:30px 34px
+  padding:24px 28px
 }
 .ar-brief-title {
   margin:28px 0 18px!important
@@ -1021,6 +1019,30 @@ const css = `
   padding:0 8px;
   opacity:.5
 }
+.ar-heading-count{font-size:12px;font-weight:500;color:var(--ar-faint);margin-left:8px;letter-spacing:0;font-variant-numeric:tabular-nums}
+.ar-metric-detail{margin-top:auto;font-size:11px}
+.ar-metric-detail>summary{font-size:11px}
+.ar-metric-detail[open] .ar-note{margin:8px 0}
+.ar-metric-detail .ar-citation{margin-top:6px}
+.ar-network{margin-top:8px}
+.ar-network>summary{width:fit-content;margin-left:auto;padding:4px 0;font-size:12px}
+.ar-network-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:30px;margin:12px 0 20px}
+.ar-network-body>div{min-width:0}
+.ar-network-body h3{margin-bottom:12px}
+.ar-network-body h3:not(:first-child){margin-top:24px}
+.ar-network-body .ar-actions{justify-content:flex-start;flex-wrap:wrap;margin:12px 0;font-size:12px}
+.ar-proxy-result,.ar-diagnostics{font-size:12px;overflow-wrap:anywhere;margin:14px 0}
+.ar-proxy-result p,.ar-diagnostics p{margin:6px 0}
+.ar-diagnostics pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow:auto;font-size:11px}
+.ar-import{display:flex;flex-direction:column;gap:6px;max-width:100%;color:var(--ar-muted)}
+.ar-import input{max-width:100%;width:245px;font-size:11px}
+.ar-directory-form{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px;font-size:12px}
+.ar-directory-form input{width:100%}
+.ar-root .ar-quiet{background:transparent;border-color:transparent;padding-left:0;font-size:12px;color:var(--ar-muted)}
+.ar-manage{margin-left:auto;font-size:12px}
+.ar-manage[open]{padding:12px;border:1px solid var(--ar-line);border-radius:10px;background:var(--ar-card)}
+.ar-brief{line-height:1.85}
+.ar-brief li{margin:8px 0}
 @container (max-width:1000px) {
   .ar-shell {
     padding:28px 24px 20px
@@ -1048,6 +1070,17 @@ const css = `
   }
 }
 @container (max-width:600px) {
+  .ar-network-body{grid-template-columns:minmax(0,1fr);gap:24px}
+  .ar-advisory>summary{gap:7px}
+  .ar-advisory>summary>span:nth-of-type(2){flex-basis:100%}
+  .ar-advisory-body dl{grid-template-columns:1fr;gap:5px}
+  .ar-advisory-body dd+dt{margin-top:8px}
+  .ar-categories{grid-template-columns:1fr}
+  .ar-directory{flex-wrap:wrap;min-width:0}
+  .ar-manage{max-width:100%}
+  .ar-watch-toolbar form{flex-wrap:wrap;min-width:0}
+  .ar-tabs button{font-size:13px}
+  .ar-brand{gap:10px}
   .ar-shell {
     padding:24px 16px
   }

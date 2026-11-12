@@ -157,4 +157,7 @@ textarea.gt-input{display:block;border:0.5px solid var(--dsw-alias-border-l4);bo
 .gt-chips>button{max-width:100%;height:auto;min-height:24px;white-space:normal;overflow-wrap:anywhere}
 
 .gt-network{margin-bottom:16px}
+.gt-network>summary{width:fit-content;margin-left:auto;padding:5px 0;color:var(--dsw-alias-label-secondary);font-size:12px;cursor:pointer}
+.gt-network>.gt-card{margin-top:12px}
+.gt-network section{margin-top:16px}
 .gt-network-text{white-space:pre-wrap;overflow-wrap:anywhere;min-width:0;max-width:100%;user-select:text;font:12px/1.8 var(--ds-font-family-code,monospace)}

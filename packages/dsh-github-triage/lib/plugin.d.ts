@@ -35,12 +35,13 @@ export declare const Config: z<Schemastery.ObjectS<NoInfer<{
     modelEnabled: z<boolean, boolean, "defined">;
     provider: z<string, string, "defined">;
     model: z<string, string, "defined">;
-    systemProxy: z<"auto" | "off">;
     timeoutSeconds: z<number>;
+    systemProxy: z<"auto" | "off">;
     httpsProxy: z<string>;
     noProxy: z<string>;
     caBundlePath: z<string>;
     insecureSkipTlsVerify: z<boolean>;
+    insecureSkipTlsVerifyHosts: z<boolean, boolean, "volatile-defined">;
 }>>, Schemastery.ObjectT<NoInfer<{
     repositories: z<({
         repo?: string | null | undefined;
@@ -72,12 +73,13 @@ export declare const Config: z<Schemastery.ObjectS<NoInfer<{
     modelEnabled: z<boolean, boolean, "defined">;
     provider: z<string, string, "defined">;
     model: z<string, string, "defined">;
-    systemProxy: z<"auto" | "off">;
     timeoutSeconds: z<number>;
+    systemProxy: z<"auto" | "off">;
     httpsProxy: z<string>;
     noProxy: z<string>;
     caBundlePath: z<string>;
     insecureSkipTlsVerify: z<boolean>;
+    insecureSkipTlsVerifyHosts: z<boolean, boolean, "volatile-defined">;
 }>>, "plain">;
 export interface Input extends IntranetSettings {
     repositories?: {

@@ -1,3 +1,4 @@
+import { registerNetworkSettings } from './network-config.js'
 import type { Context } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-commands'
 import type { Agent } from '@deepseek-ai/dsh-agent'
@@ -15,7 +16,7 @@ import { renderCommandResult } from './command.js'
 export const name = 'apache-radar'
 export const inject = ['commands', 'tools', 'agents']
 export interface Config extends IntranetSettings { watchList?: string[]; offlineOnly?: boolean }
-export const Config: z<Config> = z.object({
+export const Config: z<Config, Omit<Config, 'insecureSkipTlsVerifyHosts'> & { insecureSkipTlsVerifyHosts: { get(): boolean } }> = z.object({
   ...intranetConfig,
   offlineOnly: z.boolean().default(false).description('仅使用本地缓存或导入快照，不访问外网'),
   watchList: z.array(z.string()).default([...DEFAULT_WATCH_LIST]).description(message('config.watchList')),
@@ -27,6 +28,7 @@ const toolNames = actions.map(action => `apache_radar_${action}`)
 export function apply(ctx: Context, config: Config = {}): void {
   const watchList = resolveWatchList(config.watchList)
   const http = createHttpClient(config)
+  registerNetworkSettings(ctx, name)
   ctx.effect(() => () => http.close())
   const directoryOf = (agent: Agent | undefined) => {
     if (!agent) return undefined
@@ -47,7 +49,7 @@ export function apply(ctx: Context, config: Config = {}): void {
     const detected = http.proxyStatus()
     if (action === 'apply-proxy' && !detected?.proxy) throw new Error('请先从系统检测可用代理')
     const editor = ctx.get?.('configEditor') as { entries(): { fiber?: unknown; options: { id: string } }[]; edit(entry: unknown, change: (current: Record<string, unknown>) => Record<string, unknown>): Promise<void> } | undefined
-    const entry = editor?.entries().find(entry => entry.fiber === ctx.fiber)
+    const entry = editor?.entries().find(entry => entry === (ctx.fiber as unknown as { entry?: unknown }).entry)
     if (!editor || !entry) throw new Error('宿主配置编辑服务不可用，请在插件设置中填写或清空 httpsProxy')
     await editor.edit(entry, current => ({ ...current, httpsProxy: action === 'clear-proxy' ? '' : detected!.proxy }))
     return { note: action === 'clear-proxy' ? '已清空插件代理，恢复自动检测。' : '已应用到插件 httpsProxy 设置。', timeoutSeconds: effectiveTimeout(config) / 1000 }

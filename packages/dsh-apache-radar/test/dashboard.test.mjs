@@ -13,7 +13,7 @@ import { fixture, radarFixtureHttp } from './helpers.mjs'
 let client
 const loader = { load: entry => { client = entry.factory(name => {
   if (name === 'react') return React
-  if (name === '@deepseek-ai/dsh-client-ui-primitives') return { MarkdownText: ({ text }) => React.createElement('pre', null, text) }
+  if (name === '@deepseek-ai/dsh-client-ui-primitives') return { Button: ({ variant, ...props }) => React.createElement('button', props), MarkdownText: ({ text }) => React.createElement('pre', null, text) }
   throw new Error('Unshipped client import: ' + name)
 }) } }
 runInNewContext(await readFile(new URL('../lib/client.js', import.meta.url), 'utf8'), { window: { __ModuleLoader__: loader }, URL, Intl })
@@ -83,7 +83,7 @@ test('dashboard failure retains last-good source times, errors, mismatch evidenc
 test('native slot registrations use a model-independent main panel, sidebar label and unload-owned callbacks', () => {
   const entries = [], disposers = []
   const ctx = { slots: {
-    inject: (slot, setup) => { assert.ok(['main', 'sidebar.panellist'].includes(slot)); const dispose = setup(); disposers.push(dispose); return dispose },
+    inject: (slot, setup) => { assert.ok(['main', 'sidebar.panellist', 'plugins.row.config'].includes(slot)); const dispose = setup(); disposers.push(dispose); return dispose },
     register: (options, component) => { const entry = { options, component }; entries.push(entry); return () => entries.splice(entries.indexOf(entry), 1) },
   } }
   client.apply(ctx)
@@ -91,6 +91,11 @@ test('native slot registrations use a model-independent main panel, sidebar labe
   assert.equal(entries[0].component, client.Dashboard)
   assert.equal(entries[1].options.id, 'apache-radar')
   assert.equal(entries[1].options.label(), 'Apache 雷达')
+  assert.equal(entries[2].options.key, 'dsh-apache-radar#apache-radar')
+  const settings = staticView(entries[2].component, { view: 'page', form: { state: { value: {}, writable: true } } })
+  assert.match(settings, /不安全：仅跳过 OSV \/ GitHub API 证书校验/)
+  assert.match(settings, /type="checkbox"/)
+  assert.doesNotMatch(settings, /checked=/)
   assert.match(staticView(client.Dashboard, {}), /无需模型/)
   for (const dispose of disposers) dispose()
   assert.equal(entries.length, 0)
@@ -165,7 +170,7 @@ test('view shaping retains security, type/status groups, original links, retired
 test('failed count cards show a short status, leaving the shared diagnostics banner to explain the cause', () => {
   const html = staticView(client.CountCard, { row: { id: 'chooser', label: 'Chooser', status: 'error', sources: [],
     error: 'https://projects.apache.org/json/foundation/chooser.json: Fetch failed: ECONNREFUSED; HTTPS_PROXY' } })
-  assert.match(html, /见网络诊断/)
+  assert.match(html, /网络 \/ 设置/)
   assert.doesNotMatch(html, /HTTPS_PROXY|https:\/\/|Fetch failed/)
 })
 
@@ -177,4 +182,26 @@ test('system detect/redetect/apply/clear actions reach only the explicit proxy h
     assert.equal(result.status,200);assert.equal((await result.json()).timeoutSeconds,30)
   }
   assert.deepEqual(calls,['detect-proxy','redetect-proxy','apply-proxy','clear-proxy'])
+})
+
+test('main actions stay small; advanced controls and host form are inside a closed network disclosure', async () => {
+  const { parse } = await import('node-html-parser')
+  const root = parse(staticView(client.Dashboard, {}))
+  const settings = root.querySelector('details.ar-network')
+  assert.ok(settings)
+  assert.equal(settings.hasAttribute('open'), false)
+  const toolbar = root.querySelector('[aria-label="日常操作"]')
+  assert.deepEqual(toolbar.querySelectorAll('button').map(b => b.textContent.trim()), ['打开', '↻ 正在读取…'])
+  for (const label of ['从系统检测代理', '网络诊断', '导出快照', '导入快照']) assert.ok(settings.textContent.includes(label), label)
+  assert.ok(!toolbar.textContent.includes('网络诊断'))
+})
+
+test('weak CA UI is a single actionable sentence while the transport keeps its complete hint', async () => {
+  const { networkHint } = await import('../lib/network-settings.js')
+  const { WEAK_CA_HINT } = await import('../lib/intranet-http.js')
+  const hint = networkHint('TLS_KEY_TOO_SMALL')
+  assert.match(hint, /公司证书密钥过短.*网络 \/ 设置.*OSV \/ GitHub API/)
+  assert.ok(hint.length < 80)
+  assert.doesNotMatch(hint, /\n/)
+  assert.match(WEAK_CA_HINT, /导入 CA 证书解决不了/)
 })

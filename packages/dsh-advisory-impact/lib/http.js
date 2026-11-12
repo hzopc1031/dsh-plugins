@@ -8,7 +8,7 @@ export const SOURCES = {
     suppressions: 'https://raw.githubusercontent.com/apache/kafka/trunk/gradle/resources/dependencycheck-suppressions.xml',
     guidance: 'https://security.apache.org/report-dependency/',
 };
-export const USER_AGENT = 'dsh-advisory-impact/0.1.3 (https://github.com/hzopc1031/dsh-plugins)';
+export const USER_AGENT = 'dsh-advisory-impact/0.1.4 (https://github.com/hzopc1031/dsh-plugins)';
 const allowed = new Set(Object.values(SOURCES));
 export class SourceError extends Error {
     url;

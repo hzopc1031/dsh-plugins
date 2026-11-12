@@ -75,3 +75,15 @@ test('request timeout uses 30 seconds by default and honors clamped timeoutSecon
     assert.deepEqual(seen,[30000,45000,10000,120000,30000])
   }finally{AbortSignal.timeout=original}
 })
+
+
+test('OSV source failures retain the weak-key hint for commands and tools', async t => {
+  const { WEAK_CA_HINT } = await import('../lib/intranet-http.js')
+  const http = createHttpClient({ fetch: async () => { throw new TypeError('fetch failed', { cause: { code: 'ERR_SSL_CA_KEY_TOO_SMALL' } }) } })
+  t.after(() => http.close())
+  await assert.rejects(http('https://api.osv.dev/v1/vulns/CVE-2024-31141'), error => {
+    assert.ok(error.message.includes(WEAK_CA_HINT))
+    assert.equal(error.message.split(WEAK_CA_HINT).length, 2)
+    return true
+  })
+})

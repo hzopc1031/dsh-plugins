@@ -1,3 +1,4 @@
+import { registerNetworkSettings } from './network-config.js'
 import { createIntranetHttp, intranetConfig, type IntranetSettings } from './intranet-http.js'
 import type { Context } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent'
@@ -54,6 +55,7 @@ export function settings(input: Input): Settings {
   return {repositories,fullMax:fullLimitSchema.parse(input.fullMax??100),limit:limitSchema.parse(input.limit??20),modelEnabled:input.modelEnabled??true,provider:input.provider?.trim()??'',model:input.model?.trim()??''}
 }
 export async function apply(ctx: Context, input: Input = {}): Promise<void> {
+  registerNetworkSettings(ctx, name)
   const network = createIntranetHttp(input)
   ctx.effect(() => () => network.close())
   const config=settings(input), domain=await ctx.storageDomain.open(domainSpec)

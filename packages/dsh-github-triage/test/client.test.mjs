@@ -68,12 +68,13 @@ async function setup(t){
     render:async(name,props={})=>{await act(async()=>root.render(React.createElement(client[name],{call,...props})))},
   }
 }
-test('lazy client registers only the sidebar and root page, with no session action',async t=>{
+test('lazy client registers sidebar, root page and network settings, with no session action',async t=>{
   const f=await setup(t),effects=[],registrations=[],injections=[]
   f.client.apply({get:()=>undefined,effect:fn=>{effects.push(fn())},slots:{inject:(slot,callback)=>{injections.push(slot);callback()},register:o=>registrations.push(o)}})
   t.after(()=>effects.reverse().forEach(dispose=>dispose?.()))
-  assert.deepEqual(injections,['main','sidebar.panellist'])
-  assert.equal(registrations.length,2)
+  assert.deepEqual(injections,['main','sidebar.panellist','plugins.row.config'])
+  assert.equal(registrations.length,3)
+  assert.ok(registrations.some(o=>o.name==='plugins.row.config'&&o.key==='dsh-github-triage#github-triage'))
   assert.ok(registrations.some(o=>o.name==='main'&&o.key==='dsh-github-triage'))
   assert.ok(registrations.some(o=>o.name==='sidebar.panellist'&&o.id==='dsh-github-triage'&&o.label()==='GitHub 哨兵'))
   assert.equal(f.client.TriageButton,undefined)
@@ -85,11 +86,15 @@ test('dashboard renders repositories, schedule, business, local path and model s
 })
 test('network controls keep both actions and display complete multiline diagnostics',async t=>{
   const f=await setup(t);await f.render('Dashboard')
+  const disclosure=document.querySelector('details.gt-network')
+  assert.ok(disclosure);assert.equal(disclosure.open,false)
+  assert.equal(document.querySelector('.gt-head-actions').textContent.includes('网络诊断'),false)
   const long='系统代理：Windows PAC\n'+('很长的诊断地址/'.repeat(150))+'\n超时：30 秒\n诊断结束'
   f.custom(async r=>r.action==='detect-proxy'?'已检测到系统代理':long)
   await f.click('从系统检测代理')
   const card=document.querySelector('section[aria-label="代理与网络诊断"]')
   assert.equal(card.getAttribute('role'),'status')
+  assert.ok(disclosure.contains(card));assert.equal(card.querySelector('details').open,false)
   assert.equal(card.querySelector('pre').textContent,'已检测到系统代理')
   await f.click('网络诊断')
   assert.equal(card.querySelector('pre').textContent,long)

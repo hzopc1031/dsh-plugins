@@ -9,7 +9,9 @@
 
 ## 看看界面
 
-入口：DSH 侧栏 → **公告影响**。以下均为真实 DSH Web 原生面板截图，使用 **2026-11-11 录制夹具和演示版本**，不代表你的真实集群或当前官方清单。Kafka 清单在这次回放中取受控子集，以演练 OSV-only 分组；界面抓取时间是回放时间。红色提示来自未录制的 OSV 查询，不是把缺失数据当成安全结论。
+下图沿用此前版本的布局；当前版本已将网络工具和来源说明折叠，数据口径不变。
+
+入口：DSH 侧栏 → **公告影响**。以下均为真实 DSH Web 原生面板截图，使用 **2026-11-11 录制夹具和演示版本**，不代表你的真实集群或当前官方清单。界面抓取时间是回放时间，示例版本仅用于展示。公告详情与来源时间按需展开，网络选项统一收进「网络 / 设置」。
 
 ![真实 DSH 浅色面板：来源、时间和项目标签](docs/images/overview-light.png)
 
@@ -32,13 +34,13 @@
    ```
 
    需要 Node.js ≥22、DSH `>=0.2.1-rc.5 <0.3.0-0`。Windows 若提示 desktop 环境由 Electron 管理，请使用桌面版自带的 CLI，见[仓库安装说明](../../README.md#安装--installation)。
-3. **重开 DSH，点击侧栏「公告影响」。** 展开「项目与运行版本」，输入本地项目绝对路径并点击「读取项目」；填写项目 id 和实际运行版本，点击「保存版本」，再点击「核对 / 刷新」。你会看到总览、项目标签、带官方链接和 UTC+8 时间的三态卡片。没有填写版本的项目仍列出公告，理由为「未填写运行版本，无法判断」。无需添加模型 key；宿主初次出现登录/key 提示时可关闭后使用面板。
+3. **重开 DSH，点击侧栏「公告影响」。** 展开「项目设置」，输入本地项目绝对路径并点击「读取项目」；填写项目 id 和实际运行版本，点击「保存版本」，再点击「核对 / 刷新」。你会看到总览、项目标签、带官方链接和 UTC+8 时间的三态卡片。没有填写版本的项目仍列出公告，理由为「未填写运行版本，无法判断」。无需添加模型 key；宿主初次出现登录/key 提示时可关闭后使用面板。
 
 ## 日常怎么用
 
 **核对版本。** 默认关注 `kafka,hadoop,flink`，可以在面板更改关注列表。每个项目的表单保存一个版本；组件和 Maven 坐标可选。组件公告需要相符的组件 pin，例如 Kafka Clients 或 Flink Kubernetes Operator，不能用核心产品版本替代。保存新版本或关注列表后会清除旧结论，重新核对后再查看。
 
-**分清三类结果。** 项目公告卡片给出「受影响 / 不受影响 / 无法判断」，保留官方限制条件。独立的「扫描器报了，但官方说明不适用」来自 Kafka 官方 suppressions 文件；没有虚构 Hadoop/Flink 文件。「仅见 OSV，未见官方公告」只展示第二来源记录，不产生官方三态结论。OSV 与官方范围不同也不会覆盖官方结论。
+**分清三类结果。** 项目公告卡片给出「受影响 / 不受影响 / 无法判断」，保留官方限制条件。独立的「官方不适用说明 · suppressions」来自 Kafka 官方 suppressions 文件；没有虚构 Hadoop/Flink 文件。「仅见 OSV，未见官方公告」只展示第二来源记录，不产生官方三态结论。OSV 与官方范围不同也不会覆盖官方结论。
 
 **保留一份报告。** 面板底部「查看报告」→「复制报告」；剪贴板不可用时可选中文本全文复制。在已选项目的会话里，也可用以下命令；它们本身不调用模型：
 
@@ -69,7 +71,9 @@ This is unreleased: use the quoted Git install command above. Reopen DSH, select
 
 大公司常用代理自动配置脚本（PAC），按访问的网站选择出口，不一定有一个固定代理地址。这三个联网插件会读取 Windows 当前用户的 PAC / 静态系统代理，使用解析出的 HTTP(S) 代理；常见公司内网可少一步寻找代理地址和手写 `.env`。已有 `httpsProxy` 或 HTTP(S)/ALL_PROXY 环境变量时完全沿用原策略，不运行 PAC 检测；没有系统代理、PAC 返回 DIRECT 或检测失败时沿用原请求路径。`systemProxy: "off"` 关闭检测。不修改 `.dsh/.env` 或进程环境；仅点击雷达的「应用到插件设置」才保存代理到该插件的 `httpsProxy`，清空恢复自动检测。
 
-请求默认超时 **30 秒（30 000 ms）**，`timeoutSeconds` 可调整，限制 10–120 秒；无效值回到 30 秒。系统设置与 PAC 脚本在进程中缓存 30 分钟，可手动重新检测。仅支持 HTTP(S) PAC 地址，file:// 和 SOCKS 会提示并回到原路径。公司根证书仍可通过 `caBundlePath` / `NODE_EXTRA_CA_CERTS` 配置；不要随意开启 `insecureSkipTlsVerify`。
+请求默认超时 **30 秒（30 000 ms）**，`timeoutSeconds` 可调整，限制 10–120 秒；无效值回到 30 秒。系统设置与 PAC 脚本在进程中缓存 30 分钟，可手动重新检测。仅支持 HTTP(S) PAC 地址，file:// 和 SOCKS 会提示并回到原路径。证书不受信任时可通过 `caBundlePath` / `NODE_EXTRA_CA_CERTS` 补充公司根证书。
+
+出现 `CA certificate key too weak`、`CA_KEY_TOO_SMALL` 或 OpenSSL 校验错误 67，表示证书密钥强度不足，与「证书不受信任」不同；OpenSSL 3 的默认安全级别通常要求 RSA 密钥至少 2048 位，报错本身不代表已测得实际位数。`caBundlePath` / `NODE_EXTRA_CA_CERTS` 只能补充信任，不能修复弱密钥。可在插件管理中打开目标插件条目的「配置」，开启「不安全：仅跳过 OSV / GitHub API 证书校验」（`insecureSkipTlsVerifyHosts`，默认 `false`），仅对精确主机 `api.osv.dev` / `api.github.com` 跳过校验；Apache、npm、其他主机、PAC 获取和 HTTPS 代理自身仍校验。跳过会失去目标证书身份保护，请仅在接受风险时开启；优先让网络管理员更新拦截证书。原有 `insecureSkipTlsVerify` 默认也为 `false`，开启会跳过该网络客户端所有目标和 HTTPS 代理的证书校验，范围更大。
 
 Windows 注册表读取由模拟注册表的单元测试覆盖，本次只在 Linux 验证，未在真实公司 PAC、Windows Desktop 上实测。PAC 来自公司网络且本身是代码，Node vm 不是抵御蓄意攻击者的安全边界；无宿主对象、禁止动态代码生成、大小/时间限制和输出转字符串用于降低风险。完整配置及边界见[公司内网配置](../../docs/intranet-network.md)和[PAC 范围说明](../../docs/intranet-pac.md)。
 
@@ -78,6 +82,8 @@ Windows 注册表读取由模拟注册表的单元测试覆盖，本次只在 Li
 Large companies commonly use PAC auto-configuration to select a proxy per website. These plugins read Windows user PAC / static system proxy settings and use the resolved HTTP(S) proxy, reducing the need to find an address and hand-edit `.env`. Explicit plugin or environment proxies bypass detection. No system proxy, PAC DIRECT, or detection failure preserves the original request path; `systemProxy: "off"` disables detection. Nothing writes `.env` or process environment. Requests default to 30 seconds; `timeoutSeconds` clamps to 10–120 seconds (invalid values use 30). Registry/PAC behavior is covered by mocked unit tests and Linux replay only, not a real corporate PAC or Windows Desktop. PAC is network-supplied code; vm is not a security boundary.
 
 运行 `/advisory-impact diagnose` 检查 DNS / TCP / TLS 与代理来源。同原因错误在面板合并显示。`snapshot-export` 将官方缓存导出到项目内 `.advisory-impact-snapshot.json`；拷贝到目标项目同名位置后运行 `snapshot-import` 导入。开启 `offlineOnly` 仅使用本地缓存/快照；缺失的 OSV 第二来源仍标为不可用。
+
+Weak certificate keys (`CA certificate key too weak`, `CA_KEY_TOO_SMALL`, verify error 67) differ from untrusted certificates: `caBundlePath` / `NODE_EXTRA_CA_CERTS` cannot repair key strength. The opt-in `insecureSkipTlsVerifyHosts` switch defaults to `false` and skips verification only for exact `api.osv.dev` / `api.github.com` origins, including through CONNECT. Other hosts, PAC retrieval and the HTTPS proxy’s own TLS still verify. The existing global `insecureSkipTlsVerify` also defaults to `false` and bypasses verification for all client targets and HTTPS proxies. Both bypasses remove certificate identity protection; prefer replacing the weak interception certificate.
 
 ## 补充说明 / Details
 
@@ -99,7 +105,7 @@ Large companies commonly use PAC auto-configuration to select a proxy per websit
 
 ### 版本与验证
 
-`0.1.3` 未发布 npm，仅供 Git 分支安装；没有合并 main、PR 或市场提交。声明兼容 DSH `>=0.2.1-rc.5 <0.3.0-0`、Node.js `>=22`；历史在 Linux 加载并验证的是 **DSH 0.2.2-rc.1 / 源码 fcc0ad46**；内网分支另对照官方 tag 源码 `66491b05`。最低开发 peers 的类型构建通过，不据此宣称所有版本或 Electron 桌面实测通过。预编译 `lib/` 已提交，无安装生命周期脚本。
+`0.1.4` 未发布 npm，仅供 Git 分支安装；没有合并 main、PR 或市场提交。声明兼容 DSH `>=0.2.1-rc.5 <0.3.0-0`、Node.js `>=22`；历史在 Linux 加载并验证的是 **DSH 0.2.2-rc.1 / 源码 fcc0ad46**；内网分支另对照官方 tag 源码 `66491b05`。最低开发 peers 的类型构建通过，不据此宣称所有版本或 Electron 桌面实测通过。预编译 `lib/` 已提交，无安装生命周期脚本。
 
 已在真实 DSH Web、零模型 key、无聊天轮次下验证面板导航、版本编辑、项目切换、报告、明暗主题、OSV 404/分歧和故障后的缓存回退。单元与集成测试仅用带来源的录制夹具；最终独立烟测也成功读取六个公开官方端点及一条 OSV GET，报告保留实际来源与时间。截图来自录制回放，不冒充该次实时抓取。
 

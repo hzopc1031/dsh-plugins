@@ -26,12 +26,13 @@ export declare const Config: z<Schemastery.ObjectS<NoInfer<{
         maven: z<string, string, "plain">;
     }>>[], "defined">;
     cacheTtlMs: z<number, number, "defined">;
-    systemProxy: z<"auto" | "off">;
     timeoutSeconds: z<number>;
+    systemProxy: z<"auto" | "off">;
     httpsProxy: z<string>;
     noProxy: z<string>;
     caBundlePath: z<string>;
     insecureSkipTlsVerify: z<boolean>;
+    insecureSkipTlsVerifyHosts: z<boolean, boolean, "volatile-defined">;
 }>>, Schemastery.ObjectT<NoInfer<{
     offlineOnly: z<boolean, boolean, "defined">;
     watch: z<string[], string[], "defined">;
@@ -47,12 +48,13 @@ export declare const Config: z<Schemastery.ObjectS<NoInfer<{
         maven: z<string, string, "plain">;
     }>>[], "defined">;
     cacheTtlMs: z<number, number, "defined">;
-    systemProxy: z<"auto" | "off">;
     timeoutSeconds: z<number>;
+    systemProxy: z<"auto" | "off">;
     httpsProxy: z<string>;
     noProxy: z<string>;
     caBundlePath: z<string>;
     insecureSkipTlsVerify: z<boolean>;
+    insecureSkipTlsVerifyHosts: z<boolean, boolean, "volatile-defined">;
 }>>, "plain">;
 export declare function parseSettings(value?: unknown): Settings;
 /** Re-read on every evaluation so edits apply without a restart; file fields override plugin config. */

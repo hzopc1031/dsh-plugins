@@ -65,6 +65,10 @@ export declare const requestSchema: z.ZodDiscriminatedUnion<[z.ZodObject<{
 }, z.core.$strict>, z.ZodObject<{
     action: z.ZodLiteral<"models">;
 }, z.core.$strict>, z.ZodObject<{
+    action: z.ZodLiteral<"detect-proxy">;
+}, z.core.$strict>, z.ZodObject<{
+    action: z.ZodLiteral<"diagnose">;
+}, z.core.$strict>, z.ZodObject<{
     action: z.ZodLiteral<"add">;
     value: z.ZodObject<{
         repo: z.ZodPipe<z.ZodString, z.ZodTransform<string, string>>;
@@ -430,7 +434,7 @@ export declare const routeActions: {
     readonly run: readonly ["start"];
     readonly correct: readonly ["fix"];
     readonly rules: readonly ["rules", "export", "import"];
-    readonly models: readonly ["models"];
+    readonly models: readonly ["models", "detect-proxy", "diagnose"];
     readonly jobs: readonly ["jobs"];
 };
 export type RouteName = keyof typeof routeActions;

@@ -67,7 +67,15 @@ This is unreleased: use the quoted Git install command above. Reopen DSH, select
 
 ## 公司内网访问
 
-在公司电脑遇到 `fetch failed` 时，可查看错误代码与代理/公司证书排查提示。插件设置增加 `httpsProxy`、`noProxy`、`caBundlePath`、`insecureSkipTlsVerify`（默认关闭，开启不安全）。默认沿用 DSH 的用户级代理配置，不读取 Windows 系统代理或 PAC。具体 Windows `.dsh/.env` 写法、证书与重载步骤见[公司内网配置](../../docs/intranet-network.md)。
+大公司常用代理自动配置脚本（PAC），按访问的网站选择出口，不一定有一个固定代理地址。这三个联网插件会读取 Windows 当前用户的 PAC / 静态系统代理，使用解析出的 HTTP(S) 代理；常见公司内网可少一步寻找代理地址和手写 `.env`。已有 `httpsProxy` 或 HTTP(S)/ALL_PROXY 环境变量时完全沿用原策略，不运行 PAC 检测；没有系统代理、PAC 返回 DIRECT 或检测失败时沿用原请求路径。`systemProxy: "off"` 关闭检测。不修改 `.dsh/.env` 或进程环境；仅点击雷达的「应用到插件设置」才保存代理到该插件的 `httpsProxy`，清空恢复自动检测。
+
+请求默认超时 **30 秒（30 000 ms）**，`timeoutSeconds` 可调整，限制 10–120 秒；无效值回到 30 秒。系统设置与 PAC 脚本在进程中缓存 30 分钟，可手动重新检测。仅支持 HTTP(S) PAC 地址，file:// 和 SOCKS 会提示并回到原路径。公司根证书仍可通过 `caBundlePath` / `NODE_EXTRA_CA_CERTS` 配置；不要随意开启 `insecureSkipTlsVerify`。
+
+Windows 注册表读取由模拟注册表的单元测试覆盖，本次只在 Linux 验证，未在真实公司 PAC、Windows Desktop 上实测。PAC 来自公司网络且本身是代码，Node vm 不是抵御蓄意攻击者的安全边界；无宿主对象、禁止动态代码生成、大小/时间限制和输出转字符串用于降低风险。完整配置及边界见[公司内网配置](../../docs/intranet-network.md)和[PAC 范围说明](../../docs/intranet-pac.md)。
+
+运行 `/advisory-impact detect-proxy` 查看系统检测结果，`redetect-proxy` 清缓存重检；`diagnose` 同时显示 PAC 和有效超时。需要固定代理时在插件设置填写 `httpsProxy`，清空恢复自动检测。官方匿名来源只跟随已有来源主机白名单内至多 5 次 HTTPS 跳转，拒绝站外、HTTP、凭据、IP、循环及超限跳转。
+
+Large companies commonly use PAC auto-configuration to select a proxy per website. These plugins read Windows user PAC / static system proxy settings and use the resolved HTTP(S) proxy, reducing the need to find an address and hand-edit `.env`. Explicit plugin or environment proxies bypass detection. No system proxy, PAC DIRECT, or detection failure preserves the original request path; `systemProxy: "off"` disables detection. Nothing writes `.env` or process environment. Requests default to 30 seconds; `timeoutSeconds` clamps to 10–120 seconds (invalid values use 30). Registry/PAC behavior is covered by mocked unit tests and Linux replay only, not a real corporate PAC or Windows Desktop. PAC is network-supplied code; vm is not a security boundary.
 
 运行 `/advisory-impact diagnose` 检查 DNS / TCP / TLS 与代理来源。同原因错误在面板合并显示。`snapshot-export` 将官方缓存导出到项目内 `.advisory-impact-snapshot.json`；拷贝到目标项目同名位置后运行 `snapshot-import` 导入。开启 `offlineOnly` 仅使用本地缓存/快照；缺失的 OSV 第二来源仍标为不可用。
 
@@ -91,7 +99,7 @@ This is unreleased: use the quoted Git install command above. Reopen DSH, select
 
 ### 版本与验证
 
-`0.1.2` 未发布 npm，仅供 Git 分支安装；没有合并 main、PR 或市场提交。声明兼容 DSH `>=0.2.1-rc.5 <0.3.0-0`、Node.js `>=22`；历史在 Linux 加载并验证的是 **DSH 0.2.2-rc.1 / 源码 fcc0ad46**；内网分支另对照官方 tag 源码 `66491b05`。最低开发 peers 的类型构建通过，不据此宣称所有版本或 Electron 桌面实测通过。预编译 `lib/` 已提交，无安装生命周期脚本。
+`0.1.3` 未发布 npm，仅供 Git 分支安装；没有合并 main、PR 或市场提交。声明兼容 DSH `>=0.2.1-rc.5 <0.3.0-0`、Node.js `>=22`；历史在 Linux 加载并验证的是 **DSH 0.2.2-rc.1 / 源码 fcc0ad46**；内网分支另对照官方 tag 源码 `66491b05`。最低开发 peers 的类型构建通过，不据此宣称所有版本或 Electron 桌面实测通过。预编译 `lib/` 已提交，无安装生命周期脚本。
 
 已在真实 DSH Web、零模型 key、无聊天轮次下验证面板导航、版本编辑、项目切换、报告、明暗主题、OSV 404/分歧和故障后的缓存回退。单元与集成测试仅用带来源的录制夹具；最终独立烟测也成功读取六个公开官方端点及一条 OSV GET，报告保留实际来源与时间。截图来自录制回放，不冒充该次实时抓取。
 

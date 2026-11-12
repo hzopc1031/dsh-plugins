@@ -1,4 +1,4 @@
-import { createIntranetHttp, describeNetworkError } from './intranet-http.js';
+import { createIntranetHttp, describeNetworkError, effectiveTimeout, fetchOfficial } from './intranet-http.js';
 import { setTimeout as delay } from 'node:timers/promises';
 export const SOURCES = {
     kafka: 'https://kafka.apache.org/community/cve-list/',
@@ -8,7 +8,7 @@ export const SOURCES = {
     suppressions: 'https://raw.githubusercontent.com/apache/kafka/trunk/gradle/resources/dependencycheck-suppressions.xml',
     guidance: 'https://security.apache.org/report-dependency/',
 };
-export const USER_AGENT = 'dsh-advisory-impact/0.1.2 (https://github.com/hzopc1031/dsh-plugins)';
+export const USER_AGENT = 'dsh-advisory-impact/0.1.3 (https://github.com/hzopc1031/dsh-plugins)';
 const allowed = new Set(Object.values(SOURCES));
 export class SourceError extends Error {
     url;
@@ -49,7 +49,7 @@ async function readPayload(response, maxBytes) {
     }
     return new TextDecoder('utf-8', { fatal: true }).decode(Buffer.concat(chunks));
 }
-/** Serial anonymous GETs, one bounded 429 retry, no redirects or implicit live requests. */
+/** Serial anonymous GETs, one bounded 429 retry, bounded official redirects and no implicit live requests. */
 export function createHttpClient(options = {}) {
     return transport(false, options);
 }
@@ -78,7 +78,7 @@ function transport(osv, options) {
     const fetch = options.fetch ?? network.fetch;
     const now = options.now ?? (() => new Date());
     const sleep = options.sleep ?? delay;
-    const timeoutMs = options.timeoutMs ?? 15_000;
+    const timeoutMs = options.timeoutMs ?? effectiveTimeout(options);
     const maxBytes = options.maxBytes ?? 4 * 1024 * 1024;
     for (const n of [timeoutMs, maxBytes]) {
         if (!Number.isSafeInteger(n) || n <= 0)
@@ -94,13 +94,13 @@ function transport(osv, options) {
         }
         try {
             for (let attempt = 0; attempt < 2; attempt++) {
-                const response = await fetch(url, {
+                const response = await fetchOfficial(fetch, url, {
                     method: query ? 'POST' : 'GET', redirect: 'manual', credentials: 'omit',
                     headers: { 'User-Agent': USER_AGENT, Accept: osv ? 'application/json' : 'text/html, application/xml, text/xml, text/plain',
                         ...(query ? { 'Content-Type': 'application/json' } : {}) },
                     ...(query ? { body: JSON.stringify({ package: { name: query.maven, ecosystem: 'Maven' }, version: query.version }) } : {}),
                     signal: AbortSignal.timeout(timeoutMs),
-                });
+                }, new Set(osv ? ['api.osv.dev'] : Object.values(SOURCES).map(url => new URL(url).hostname)));
                 if (response.status === 429 && attempt === 0) {
                     await response.body?.cancel();
                     const retry = response.headers.get('retry-after');

@@ -10,7 +10,7 @@ test('fixed GitHub origin rejects attacker hosts and redirects',async()=>{let ca
 test('URL repository list and enrichment request only canonical fixed-origin paths',async()=>{
   const urls=[]
   const c=new Github({env,gh,fetch:async(url,init)=>{
-    urls.push(url);assert.equal(init.method,'GET');assert.equal(init.headers['User-Agent'],'dsh-github-triage/0.4.2')
+    urls.push(url);assert.equal(init.method,'GET');assert.equal(init.headers['User-Agent'],'dsh-github-triage/0.4.3')
     if(url.endsWith('/repos/o/r'))return response({default_branch:'main',has_issues:true})
     if(url.includes('/git/trees/'))return response({tree:[]})
     return response({items:[]})
@@ -129,4 +129,16 @@ test('HTTP failures retain named status codes in the user-visible message', () =
     assert.equal(error.code, 'HTTP_' + status)
     assert.match(error.message, new RegExp('HTTP ' + status))
   }
+})
+
+test('GitHub network timeout defaults to 30s and honors clamped timeoutSeconds', async () => {
+  const original=AbortSignal.timeout,seen=[]
+  AbortSignal.timeout=ms=>{seen.push(ms);return original(ms)}
+  try{
+    for(const timeoutSeconds of [undefined,45,2,200,NaN]){
+      const client=new Github({env:{},gh:async()=>'',network:{timeoutSeconds},fetch:async()=>({ok:true,status:200,headers:new Headers(),json:async()=>({})})})
+      try{await client.request('/repos/o/r')}finally{await client.close()}
+    }
+    assert.deepEqual(seen,[30000,45000,10000,120000,30000])
+  }finally{AbortSignal.timeout=original}
 })

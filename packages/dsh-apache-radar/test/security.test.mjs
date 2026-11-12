@@ -211,7 +211,7 @@ test('OSV parser, boundary, transport and disagreement remain secondary; 404 abs
   const http = createHttpClient({ now, fetch: async (u, init) => {
     requests.push(u)
     assert.equal(init.headers['User-Agent'], USER_AGENT)
-    assert.equal(init.redirect, 'error')
+    assert.equal(init.redirect, 'manual')
     assert.equal(init.credentials, 'omit')
     assert.ok(init.signal)
     const response = osvResponse(u)

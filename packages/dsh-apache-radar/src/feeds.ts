@@ -7,8 +7,8 @@ import { resolveWatchList } from './watch.js'
 import { readCachedSource } from './feed-cache.js'
 
 export const PROPOSAL_SOURCES = {
-  kafka: 'https://cwiki.apache.org/confluence/display/KAFKA/Kafka+Improvement+Proposals',
-  flink: 'https://cwiki.apache.org/confluence/display/FLINK/Flink+Improvement+Proposals',
+  kafka: 'https://cwiki.apache.org/confluence/spaces/KAFKA/pages/50859233/Kafka+Improvement+Proposals',
+  flink: 'https://cwiki.apache.org/confluence/spaces/FLINK/pages/65145551/Flink+Improvement+Proposals',
 } as const
 export const KAFKA_DOWNLOADS = 'https://kafka.apache.org/community/downloads/'
 const jiraProjects: Record<string, readonly string[]> = {

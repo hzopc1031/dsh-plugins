@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { Socket } from 'node:net'
+import { PROPOSAL_SOURCES } from '../lib/feeds.js'
 import { createHttpClient, USER_AGENT } from '../lib/http.js'
 
 // No test can silently fall back to a live endpoint, including through another HTTP library.
@@ -15,7 +16,7 @@ export function fixtureHttp() {
     now: () => new Date(FETCHED_AT),
     fetch: async (url, init) => {
       assert.equal(init.headers['User-Agent'], USER_AGENT)
-      assert.equal(init.redirect, 'error')
+      assert.equal(init.redirect, 'manual')
       assert.equal(init.credentials, 'omit')
       assert.ok(init.signal instanceof AbortSignal)
       const entry = manifest.sources.find(source => source.url === url)
@@ -55,7 +56,7 @@ export function radarFixtureHttp({ at = FETCHED_AT, requests = [], fail = () => 
     requests.push(url)
     if (fail(url)) throw new Error(`Injected timeout: ${url}`)
     const feedManifest = JSON.parse(await fixture('feed-provenance.json'))
-    let source = [...manifest.sources, ...feedManifest.sources].find(s => s.url === url)
+    let source = [...manifest.sources, ...feedManifest.sources].find(s => s.url === url || s.file === (url === PROPOSAL_SOURCES.kafka ? 'kip-index.html' : url === PROPOSAL_SOURCES.flink ? 'flip-index.html' : ''))
     // Replays a recorded historical Kafka query body; it is not a recorded rolling-query response.
     if (!source && new URL(url).pathname.endsWith('/search') && new URL(url).searchParams.get('jql')?.startsWith('project in (KAFKA)')) {
       source = feedManifest.sources.find(s => s.file === 'jira-kafka-newfeature.json')

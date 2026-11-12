@@ -1,4 +1,4 @@
-import { intranetConfig, type IntranetSettings } from './intranet-http.js'
+import { createIntranetHttp, intranetConfig, type IntranetSettings } from './intranet-http.js'
 import type { Context } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 import { CommandDefinitionId, type CommandInvocation, type CommandResult } from '@deepseek-ai/dsh-commands'
@@ -54,6 +54,8 @@ export function settings(input: Input): Settings {
   return {repositories,fullMax:fullLimitSchema.parse(input.fullMax??100),limit:limitSchema.parse(input.limit??20),modelEnabled:input.modelEnabled??true,provider:input.provider?.trim()??'',model:input.model?.trim()??''}
 }
 export async function apply(ctx: Context, input: Input = {}): Promise<void> {
+  const network = createIntranetHttp(input)
+  ctx.effect(() => () => network.close())
   const config=settings(input), domain=await ctx.storageDomain.open(domainSpec)
   const lifetime=new AbortController(),safe=new SafeText(),briefs=new Map<string,string>()
   const retryAt=new Map<string,number>()
@@ -146,6 +148,8 @@ export async function apply(ctx: Context, input: Input = {}): Promise<void> {
       return output.join('\n\n')
     })
   })
+  command('triage-detect-proxy','从系统检测代理',async i => JSON.stringify(await network.detectProxy('https://api.github.com', i.rawInput.trim() === 'refresh'),null,2))
+  command('triage-diagnose','网络诊断与请求超时',async () => JSON.stringify(await network.diagnose('https://api.github.com'),null,2))
   command('triage-report','查看最近 GitHub 哨兵结果',async i=>{
     const raw=i.rawInput.trim()
     if(raw.startsWith('--brief ')) {
@@ -173,6 +177,7 @@ export async function apply(ctx: Context, input: Input = {}): Promise<void> {
     },
     model:()=>({enabled:config.modelEnabled,provider:config.provider,model:config.model,available:!modelWarning(ctx,config),warning:modelWarning(ctx,config)}),
     models:()=>listModels(ctx),
+    network: async action => JSON.stringify(action === 'diagnose' ? await network.diagnose('https://api.github.com') : await network.detectProxy('https://api.github.com', true), null, 2),
   })
   mountRoutes(ctx,ui)
   command('triage-ui','GitHub 哨兵界面数据接口（JSON）',async i=>{

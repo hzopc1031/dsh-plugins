@@ -4,7 +4,7 @@ import type { Agent } from '@deepseek-ai/dsh-agent'
 import { defineTool, type ParameterSchemaSpec } from '@deepseek-ai/dsh-tools'
 import z from '@deepseek-ai/schemastery'
 import { DEFAULT_WATCH_LIST, resolveWatchList } from './watch.js'
-import { intranetConfig, type IntranetSettings } from './intranet-http.js'
+import { effectiveTimeout, intranetConfig, type IntranetSettings } from './intranet-http.js'
 import { createHttpClient } from './http.js'
 import { validDirectory } from './local-files.js'
 import { runRadar, type RadarAction, type RadarArgs } from './radar.js'
@@ -41,7 +41,17 @@ export function apply(ctx: Context, config: Config = {}): void {
     queue = result.catch(() => {})
     return result
   }
-  registerDashboard(ctx, run, () => [...new Set(ctx.agents.list().map(directoryOf).filter(validDirectory))])
+  registerDashboard(ctx, run, () => [...new Set(ctx.agents.list().map(directoryOf).filter(validDirectory))], async action => {
+    if (action === 'detect-proxy' || action === 'redetect-proxy') return http.detectProxy(undefined, action === 'redetect-proxy')
+    if (action === 'proxy-status') return http.proxyStatus()
+    const detected = http.proxyStatus()
+    if (action === 'apply-proxy' && !detected?.proxy) throw new Error('请先从系统检测可用代理')
+    const editor = ctx.get?.('configEditor') as { entries(): { fiber?: unknown; options: { id: string } }[]; edit(entry: unknown, change: (current: Record<string, unknown>) => Record<string, unknown>): Promise<void> } | undefined
+    const entry = editor?.entries().find(entry => entry.fiber === ctx.fiber)
+    if (!editor || !entry) throw new Error('宿主配置编辑服务不可用，请在插件设置中填写或清空 httpsProxy')
+    await editor.edit(entry, current => ({ ...current, httpsProxy: action === 'clear-proxy' ? '' : detected!.proxy }))
+    return { note: action === 'clear-proxy' ? '已清空插件代理，恢复自动检测。' : '已应用到插件 httpsProxy 设置。', timeoutSeconds: effectiveTimeout(config) / 1000 }
+  })
   for (const action of actions) {
     const parameters: ParameterSchemaSpec = action === 'watch' ? {
       operation: { type: 'string' as const, enum: ['get', 'add', 'remove'] as const }, project: { type: 'string' as const },

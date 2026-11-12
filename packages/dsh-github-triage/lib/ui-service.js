@@ -42,6 +42,8 @@ export function uiService(d) {
             }
             if (r.action === 'jobs')
                 return { ok: true, data: jobList() };
+            if (r.action === 'detect-proxy' || r.action === 'diagnose')
+                return { ok: true, data: await d.network?.(r.action) ?? '网络诊断不可用' };
             if (r.action === 'models')
                 return { ok: true, data: await d.models() };
             if (r.action === 'rules')

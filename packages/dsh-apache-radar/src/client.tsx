@@ -237,6 +237,7 @@ export function Dashboard() {
   const [busy, setBusy] = useState(true)
   const [error, setError] = useState('')
   const [diagnosis, setDiagnosis] = useState<unknown>()
+  const [proxyDetection, setProxyDetection] = useState<{ source?: string; pacUrl?: string; proxy?: string; warning?: string; detectedAt?: string; ttlSeconds?: number; timeoutSeconds?: number; note?: string }>()
   const generation = useRef(0)
   async function request(action = 'read', project?: string, target = directory, extra?: { version?: string; cve?: string; snapshot?: string }) {
     const version = ++generation.current
@@ -246,6 +247,7 @@ export function Dashboard() {
       const result = await response.json()
       if (!response.ok) throw new Error(result.error ?? `HTTP ${response.status}`)
       if (generation.current !== version) return
+      if (['detect-proxy', 'redetect-proxy', 'apply-proxy', 'clear-proxy'].includes(action)) { setProxyDetection(result); return }
       if (action === 'diagnose') { setDiagnosis(result); return }
       setData(result); if (result.directory) { setDirectory(result.directory); setChoosing(false); try { localStorage.setItem('apache-radar.directory', result.directory) } catch { /* Directory selection still works without browser storage. */ } }
     } catch (cause) { if (generation.current === version) setError(cause instanceof Error ? cause.message : String(cause)) }
@@ -278,7 +280,7 @@ export function Dashboard() {
     <div className="ar-intro"><p>在纷繁的社区动态中，找到你关心的变化。</p><span>公开来源 · 原文可追溯 · UTC+8</span></div>
     <div className="ar-projectbar">{data.directory && !choosing ? <div className="ar-directory"><span className="ar-dot"/><span title={data.directory}>本地项目 · {data.directory.split(/[\\/]/).filter(Boolean).at(-1)}</span><button disabled={busy} onClick={() => setChoosing(true)}>切换目录</button></div> : <form onSubmit={e => { e.preventDefault(); void request('read') }}><label htmlFor="ar-directory">项目目录</label>
       <input id="ar-directory" list="ar-directories" value={directory} placeholder="输入本地项目的绝对路径" onChange={e => setDirectory(e.target.value)} required disabled={busy}/><datalist id="ar-directories">{data.directories.map(d => <option value={d} key={d}/>)}</datalist><button disabled={busy}>打开</button></form>}
-      <div className="ar-actions"><button disabled={busy || !data.directory} onClick={() => void request('diagnose')}>网络诊断</button><button disabled={busy || !data.directory} onClick={() => void exportSnapshot()}>导出快照</button><label>导入快照 <input type="file" accept="application/json,.json" disabled={busy || !data.directory} style={{ maxWidth: 170 }} onChange={async e => {
+      <div className="ar-actions"><button disabled={busy} onClick={() => void request('detect-proxy')}>从系统检测代理</button><button disabled={busy || !data.directory} onClick={() => void request('diagnose')}>网络诊断</button><button disabled={busy || !data.directory} onClick={() => void exportSnapshot()}>导出快照</button><label>导入快照 <input type="file" accept="application/json,.json" disabled={busy || !data.directory} style={{ maxWidth: 170 }} onChange={async e => {
         const file = e.target.files?.[0]; e.target.value = ''
         if (!file) return
         if (file.size > 32 * 1024 * 1024) { setError('快照超过 32 MiB'); return }
@@ -288,6 +290,15 @@ export function Dashboard() {
     <nav className="ar-tabs" aria-label="雷达页面">{[['overview', '概览', '01'], ['watch', '关注动态', '02'], ['brief', '每周简报', '03']].map(([id, title, num]) => <button key={id} aria-current={view === id ? 'page' : undefined} onClick={() => { setView(id!); setFocusProject(undefined) }}><span>{num}</span>{title}</button>)}</nav>
     {error && <div className="ar-notice danger" role="alert"><strong>操作失败</strong><span>{error} {ready ? '仍保留当前画面中的上次数据。' : ''}</span><button disabled={busy} onClick={() => void request('read')}>重试读取</button></div>}
     {data.localSnapshot && <div className="ar-notice warn" role="status"><strong>本地快照（导入）</strong><span>包含导入数据，非实时官方抓取；请核对来源时间。</span></div>}
+    {data.proxyNote && <div className="ar-notice" role="status">{data.proxyNote}</div>}
+    {proxyDetection && <div className="ar-card ar-section" role="status"><strong>从系统检测代理</strong>
+      <p>来源：{proxyDetection.source ?? '插件设置'} · 请求超时：{proxyDetection.timeoutSeconds ?? 30} 秒</p>
+      {proxyDetection.pacUrl && <p>PAC 地址：{proxyDetection.pacUrl}</p>}
+      <p>Apache 示例代理：{proxyDetection.proxy ?? 'DIRECT / 沿用原访问路径'}</p>
+      <p>上次检测：{proxyDetection.detectedAt ?? '—'} · 缓存有效期：{(proxyDetection.ttlSeconds ?? 1800) / 60} 分钟</p>
+      {proxyDetection.warning && <p>{proxyDetection.warning}</p>}{proxyDetection.note && <p>{proxyDetection.note}</p>}
+      <div className="ar-actions"><button disabled={busy} onClick={() => void request('redetect-proxy')}>重新检测</button><button disabled={busy || !proxyDetection.proxy} onClick={() => void request('apply-proxy')}>应用到插件设置</button><button disabled={busy} onClick={() => void request('clear-proxy')}>清空插件代理</button></div>
+    </div>}
     {diagnosis !== undefined && <div className="ar-card ar-section" role="status"><strong>网络诊断</strong><pre style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{JSON.stringify(diagnosis, null, 2)}</pre></div>}
     {!!data.diagnostics?.length && <div className="ar-notice warn" role="status"><strong>网络诊断 · 来源获取失败</strong><div>{data.diagnostics.map(d => <p key={d.code}><b>{d.code} · {d.count} 个来源</b><br/>{d.hintZh}</p>)}</div></div>}
     {(!data.diagnostics?.length && (stale || failed)) && <div className="ar-notice warn" role="status"><strong>{stale ? '正在显示上次成功缓存' : '部分来源未能取得数据'}</strong><span>{stale ? '数据已过期或刷新失败；请核对每个来源的时间。' : '失败不代表没有动态。'} 已保留来源错误。</span></div>}

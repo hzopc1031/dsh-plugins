@@ -9,6 +9,7 @@ interface Dependencies {
     serialize: <T>(f: () => Promise<T>) => Promise<T>;
     validate: (r: Repo) => Promise<void>;
     perform: (r: Repo, limit: number, scheduled: boolean, signal: AbortSignal, scan: UiScan) => Promise<Report>;
+    network?: (action: 'detect-proxy' | 'diagnose') => Promise<string>;
     signal: AbortSignal;
     model: () => ModelStatus;
     models: () => Promise<string>;

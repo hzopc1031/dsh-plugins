@@ -15,6 +15,8 @@ for (const name of names) {
     JSON.parse(await readFile(new URL('locale/' + file, base), 'utf8')); jsonCount++
   }
 }
-const copies = await Promise.all(['dsh-apache-radar', 'dsh-advisory-impact', 'dsh-github-triage'].map(name => readFile(new URL(name + '/src/intranet-http.ts', root), 'utf8')))
-assert.equal(copies[0], copies[1]); assert.equal(copies[0], copies[2])
-console.log(`PASS: 17 engines admit DSH 0.2.2-rc.1; ${jsonCount} JSON files parse without BOM; 3 HTTP helper copies identical`)
+for (const file of ['intranet-http.ts', 'system-proxy.ts']) {
+  const copies = await Promise.all(['dsh-apache-radar', 'dsh-advisory-impact', 'dsh-github-triage'].map(name => readFile(new URL(name + '/src/' + file, root), 'utf8')))
+  assert.equal(copies[0], copies[1], file); assert.equal(copies[0], copies[2], file)
+}
+console.log(`PASS: 17 engines admit DSH 0.2.2-rc.1; ${jsonCount} JSON files parse without BOM; 3 HTTP and 3 PAC helper copies identical`)

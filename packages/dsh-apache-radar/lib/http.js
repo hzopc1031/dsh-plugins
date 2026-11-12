@@ -1,7 +1,7 @@
-import { createIntranetHttp, describeNetworkError } from './intranet-http.js';
+import { createIntranetHttp, describeNetworkError, effectiveTimeout, fetchOfficial } from './intranet-http.js';
 import { SOURCES as ADVISORY_SOURCES, osvUrl } from './advisory/http.js';
 import { setTimeout as delay } from 'node:timers/promises';
-export const USER_AGENT = 'dsh-apache-radar/0.1.2 (+https://github.com/hzopc1031/dsh-plugins)';
+export const USER_AGENT = 'dsh-apache-radar/0.1.3 (+https://github.com/hzopc1031/dsh-plugins)';
 const hosts = new Set(['projects.apache.org', 'whimsy.apache.org', 'attic.apache.org',
     'incubator.apache.org', 'kafka.apache.org', 'svn.apache.org', 'issues.apache.org', 'cwiki.apache.org',
     'release-catalog.apache.org', 'www.apache.org', 'apache.org']);
@@ -35,7 +35,7 @@ export function createHttpClient(options = {}) {
     const fetcher = options.fetch ?? network.fetch;
     const now = options.now ?? (() => new Date());
     const sleep = options.sleep ?? delay;
-    const timeoutMs = options.timeoutMs ?? 15_000;
+    const timeoutMs = options.timeoutMs ?? effectiveTimeout(options);
     if (!Number.isSafeInteger(timeoutMs) || timeoutMs <= 0)
         throw new Error('Invalid HTTP timeout');
     let queue = Promise.resolve();
@@ -47,10 +47,10 @@ export function createHttpClient(options = {}) {
             if (remaining > 0)
                 await sleep(remaining);
             try {
-                const response = await fetcher(url, {
+                const response = await fetchOfficial(fetcher, url, {
                     headers: { 'User-Agent': USER_AGENT, Accept: 'application/json, text/html, application/xml;q=0.9' },
-                    signal: AbortSignal.timeout(timeoutMs), redirect: 'error', credentials: 'omit',
-                });
+                    signal: AbortSignal.timeout(timeoutMs), redirect: 'manual', credentials: 'omit',
+                }, new Set([...hosts, ...Object.values(ADVISORY_SOURCES).map(url => new URL(url).hostname), 'api.osv.dev']));
                 const osvNotIndexed = url.startsWith('https://api.osv.dev/v1/vulns/') && response.status === 404;
                 if (!response.ok && !osvNotIndexed) {
                     if (response.status === 429) {
@@ -102,5 +102,5 @@ export function createHttpClient(options = {}) {
         queue = request.catch(() => { });
         return request;
     };
-    return Object.assign(client, { close: network.close, diagnose: network.diagnose });
+    return Object.assign(client, { close: network.close, diagnose: network.diagnose, detectProxy: network.detectProxy, proxyStatus: network.proxyStatus });
 }

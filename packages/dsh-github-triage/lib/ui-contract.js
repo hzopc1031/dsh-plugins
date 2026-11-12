@@ -26,6 +26,8 @@ export const requestSchema = z.discriminatedUnion('action', [
     z.object({ action: z.literal('detail'), repo: repoName, number: z.number().int().positive() }).strict(),
     z.object({ action: z.literal('jobs') }).strict(),
     z.object({ action: z.literal('models') }).strict(),
+    z.object({ action: z.literal('detect-proxy') }).strict(),
+    z.object({ action: z.literal('diagnose') }).strict(),
     z.object({ action: z.literal('add'), value: editableRepoSchema }).strict(),
     z.object({ action: z.literal('patch'), repo: repoName, patch: patchSchema }).strict(),
     z.object({ action: z.literal('remove'), repo: repoName }).strict(),
@@ -53,7 +55,7 @@ export function decodeValue(request, value) {
         return repoSchema.parse(value);
     return z.string().parse(value);
 }
-export const routeActions = { snapshot: ['snapshot'], detail: ['detail'], repos: ['add', 'patch', 'remove'], run: ['start'], correct: ['fix'], rules: ['rules', 'export', 'import'], models: ['models'], jobs: ['jobs'] };
+export const routeActions = { snapshot: ['snapshot'], detail: ['detail'], repos: ['add', 'patch', 'remove'], run: ['start'], correct: ['fix'], rules: ['rules', 'export', 'import'], models: ['models', 'detect-proxy', 'diagnose'], jobs: ['jobs'] };
 export const routePath = (name) => '/api/dsh-github-triage/' + name;
 export function routeFor(action) {
     return Object.keys(routeActions).find(name => routeActions[name].includes(action));

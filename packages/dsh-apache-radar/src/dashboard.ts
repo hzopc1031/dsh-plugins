@@ -7,6 +7,7 @@ import type { itemSummary } from './radar.js'
 import { validDirectory } from './local-files.js'
 
 export interface DashboardData {
+  proxyNote?: string
   diagnostics?: { code: string; hintZh: string; count: number }[]
   localSnapshot?: boolean
   security?: SecurityReport
@@ -29,7 +30,7 @@ interface FetchConnection {
 }
 type Run = (directory: string | undefined, action: RadarAction, args?: RadarArgs) => Promise<string>
 
-export function dashboardHandler(run: Run, directories: () => string[]) {
+export function dashboardHandler(run: Run, directories: () => string[], proxy?: (action: string) => Promise<unknown>) {
   return async (request: Request): Promise<Response> => {
     const json = (value: unknown, status = 200) => Response.json(value, { status, headers: { 'cache-control': 'no-store' } })
     try {
@@ -37,8 +38,9 @@ export function dashboardHandler(run: Run, directories: () => string[]) {
       if (!body || Array.isArray(body) || typeof body !== 'object'
         || Object.keys(body).some(key => !['directory', 'action', 'project', 'version', 'cve', 'snapshot'].includes(key))) throw new Error('无效的面板请求。')
       const { directory, action = 'read', project } = body
-      if (typeof action !== 'string' || !['read', 'refresh', 'brief', 'add', 'remove', 'file', 'pin', 'osv', 'diagnose', 'export', 'import'].includes(action)) throw new Error('未知操作。')
+      if (typeof action !== 'string' || !['read', 'refresh', 'brief', 'add', 'remove', 'file', 'pin', 'osv', 'diagnose', 'export', 'import', 'detect-proxy', 'redetect-proxy', 'apply-proxy', 'clear-proxy'].includes(action)) throw new Error('未知操作。')
       if (directory !== undefined && !validDirectory(directory)) throw new Error('请选择本地绝对目录，不能包含 ..。')
+      if (['detect-proxy', 'redetect-proxy', 'apply-proxy', 'clear-proxy'].includes(action)) return json(await proxy?.(action) ?? { note: '系统代理检测不可用' })
       const available = directories()
       const target = directory ?? (available.length === 1 ? available[0] : undefined)
       if (!target) {
@@ -66,19 +68,20 @@ export function dashboardHandler(run: Run, directories: () => string[]) {
       const data = JSON.parse(await run(target, 'dashboard', {
         refresh: action === 'refresh', saveBrief: action === 'brief',
       }))
-      return json({ ...data, directories: available, directory: target })
+      const status = await proxy?.('proxy-status') as { automatic?: boolean } | undefined
+      return json({ ...data, proxyNote: status?.automatic ? '已自动使用 Windows PAC / 系统代理访问官方来源。' : undefined, directories: available, directory: target })
     } catch (error) {
       return json({ error: error instanceof Error ? error.message : String(error) }, 400)
     }
   }
 }
 
-export function registerDashboard(ctx: Context, run: Run, directories: () => string[]): void {
+export function registerDashboard(ctx: Context, run: Run, directories: () => string[], proxy?: (action: string) => Promise<unknown>): void {
   // CLI-only hosts keep their commands when the browser connection is absent.
   ctx.inject(['connection'], scope => {
     const connection = scope.get('connection') as FetchConnection
     scope.effect(() => connection.fetch.register({
-      path: '/api/apache-radar/dashboard', methods: ['POST'], requestBody: 'buffered', fetch: dashboardHandler(run, directories),
+      path: '/api/apache-radar/dashboard', methods: ['POST'], requestBody: 'buffered', fetch: dashboardHandler(run, directories, proxy),
     }), 'apache-radar: authenticated dashboard')
   })
 }

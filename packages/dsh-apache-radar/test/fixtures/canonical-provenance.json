@@ -1,0 +1,20 @@
+[
+  {
+    "project": "kafka",
+    "url": "https://cwiki.apache.org/confluence/spaces/KAFKA/pages/50859233/Kafka+Improvement+Proposals",
+    "fetchedAt": "2026-11-12T06:53:54.319Z",
+    "originalSha256": "f9b82dc8e298f8fcf011187d89fb12c008fe6436ef553c4f4ec4bf0a3e308058",
+    "fixtureSha256": "6eab10b564f02e52b8ce0ad7301805b2f50fafde49c038b26954bf841e0acd61",
+    "file": "kafka-proposal-canonical.html",
+    "transformation": "Keep actual headings and first three rows per table; remove navigation, scripts, user metadata and remaining rows. Captured from canonical URL; replay is not a live feed."
+  },
+  {
+    "project": "flink",
+    "url": "https://cwiki.apache.org/confluence/spaces/FLINK/pages/65145551/Flink+Improvement+Proposals",
+    "fetchedAt": "2026-11-12T06:53:54.341Z",
+    "originalSha256": "fb07e11c44b652e9f6e1459ed8797b894af07a434a52a6429764648b0e9ab8bf",
+    "fixtureSha256": "2e9e246c248684c8d5e804863e24cbc76279138344970fa3bd26e313876930e5",
+    "file": "flink-proposal-canonical.html",
+    "transformation": "Keep actual headings and first three rows per table; remove navigation, scripts, user metadata and remaining rows. Captured from canonical URL; replay is not a live feed."
+  }
+]

@@ -37,7 +37,9 @@
 
 本次对照官方 `dsh-v0.2.1-rc.5` 与 `dsh-v0.2.2-rc.1`，统一版本准入为 `>=0.2.1-rc.5 <0.3.0-0`；Apache Radar 因依赖 rc.1 新增的 `MarkdownText.omitHtml`，例外使用 `>=0.2.2-rc.1 <0.3.0-0`。草稿找回和截图附件 0.2.3 已将精确版本门禁改为能力与结构校验，已对照两版源码并通过模拟交互回归；真实 rc.1 桌面仍待验收。范围通过不代表功能与界面均已验证，详见[兼容性报告](docs/engines-compatibility.md)。所有包都已预编译，没有安装脚本。装完后**完全退出桌面 DSH（含托盘）再重新打开**。
 
-内网改动同时保留：雷达、公告与 GitHub 哨兵支持代理、额外 CA 和具名错误提示；雷达与公告保留诊断及本地快照入口。分支此前在 Linux DSH 0.2.2-rc.1 加载全部 17 个插件的记录见[兼容矩阵](docs/compat-matrix.md)，配置步骤见[公司电脑代理、CA 与离线快照](docs/intranet-network.md)。此次合并只做自动化验证，不新增 Windows / Electron 实机结论。
+大公司常用 PAC 自动配置，按访问网站选择出口。Apache 雷达、公告影响核对和 GitHub 哨兵已考虑这种公司内网：默认读取 Windows 系统 PAC / 静态代理并使用解析出的 HTTP(S) 代理，减少寻找代理地址和手写 `.env`。已有显式代理、没有系统代理或 PAC 返回 DIRECT 时沿用原访问路径；`systemProxy: "off"` 可关闭。默认请求超时 30 秒，`timeoutSeconds` 限制 10–120 秒。雷达和公告的官方来源只跟随 HTTPS 白名单内跳转，GitHub 令牌请求仍禁止跳转。
+
+Windows 读取由模拟注册表单元测试覆盖，真实 DSH rc.1 界面只在 Linux 做回放验证，未在真实公司 PAC 或 Windows Desktop 上实测。17 包联网盘点见[PAC 范围矩阵](docs/intranet-pac.md)，配置步骤见[公司电脑代理、CA 与离线快照](docs/intranet-network.md)。
 
 Compatibility metadata is checked against official DSH `0.2.1-rc.5` and `0.2.2-rc.1` sources. Per-package engine ranges do not imply other versions were tested. Packages are prebuilt and have no install scripts. Fully quit and reopen DSH Desktop after installing.
 

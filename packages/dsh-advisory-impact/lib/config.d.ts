@@ -26,6 +26,8 @@ export declare const Config: z<Schemastery.ObjectS<NoInfer<{
         maven: z<string, string, "plain">;
     }>>[], "defined">;
     cacheTtlMs: z<number, number, "defined">;
+    systemProxy: z<"auto" | "off">;
+    timeoutSeconds: z<number>;
     httpsProxy: z<string>;
     noProxy: z<string>;
     caBundlePath: z<string>;
@@ -45,6 +47,8 @@ export declare const Config: z<Schemastery.ObjectS<NoInfer<{
         maven: z<string, string, "plain">;
     }>>[], "defined">;
     cacheTtlMs: z<number, number, "defined">;
+    systemProxy: z<"auto" | "off">;
+    timeoutSeconds: z<number>;
     httpsProxy: z<string>;
     noProxy: z<string>;
     caBundlePath: z<string>;

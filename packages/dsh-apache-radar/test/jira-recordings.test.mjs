@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
 import { test } from 'node:test'
-import { collectWatchFeeds, jiraSearchUrl, parseJira } from '../lib/feeds.js'
+import { collectWatchFeeds, jiraSearchUrl, parseJira, PROPOSAL_SOURCES } from '../lib/feeds.js'
 import { fetchCountsReport } from '../lib/counts.js'
 import { renderWeeklyBrief } from '../lib/brief.js'
 import { message } from '../lib/messages.js'
@@ -12,7 +12,7 @@ const feeds = JSON.parse(await fixture('feed-provenance.json'))
 const now = new Date(recording.window.end)
 const records = [...manifest.sources, ...feeds.sources, ...recording.sources]
 const http = async url => {
-  const source = records.find(s => s.url === url)
+  const source = records.find(s => s.url === url || s.file === (url === PROPOSAL_SOURCES.kafka ? 'kip-index.html' : url === PROPOSAL_SOURCES.flink ? 'flip-index.html' : ''))
   assert.ok(source, `No recorded source for ${url}`)
   return { url, fetchedAt: source.fetchedAt, payload: await fixture(source.file) }
 }

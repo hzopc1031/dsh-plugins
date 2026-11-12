@@ -1,6 +1,6 @@
 import { execFile } from 'node:child_process'
 import type { Dispatcher } from 'undici'
-import { createIntranetHttp, describeNetworkError, type IntranetSettings } from './intranet-http.js'
+import { createIntranetHttp, describeNetworkError, effectiveTimeout, type IntranetSettings } from './intranet-http.js'
 import { repoName, limitSchema, fullLimitSchema, type Scan, type Item } from './types.js'
 import { SafeText } from './safety.js'
 import { BusinessReadError, clip, FILE_SNIPPET_LIMIT, MAX_CONTEXT_FILES } from './business.js'
@@ -61,9 +61,9 @@ export class Github {
     if (url.pathname === '/graphql') this.validateQuery(url.searchParams.get('query') ?? '')
     const now = (this.#options.now ?? Date.now)()
     if (now < this.#cooldown) throw new GithubError(429, this.#cooldown)
-    const combined = AbortSignal.any([AbortSignal.timeout(this.#options.timeoutMs ?? 20000), ...(signal ? [signal] : [])])
+    const combined = AbortSignal.any([AbortSignal.timeout(this.#options.timeoutMs ?? effectiveTimeout(this.#options.network)), ...(signal ? [signal] : [])])
     await this.auth(combined)
-    const headers: Record<string,string> = { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', 'User-Agent': 'dsh-github-triage/0.4.2' }
+    const headers: Record<string,string> = { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', 'User-Agent': 'dsh-github-triage/0.4.3' }
     if (this.#token) headers.Authorization = 'Bearer ' + this.#token
     try {
       const response = await (this.#options.fetch ?? this.#network.fetch)(url.href, { method: 'GET', headers, signal: combined, redirect: 'error' })

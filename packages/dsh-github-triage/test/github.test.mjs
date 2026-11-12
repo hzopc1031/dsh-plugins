@@ -6,6 +6,24 @@ const env={},gh=async()=>''
 test('client refuses every non-GET method before auth/network',async()=>{let calls=0;const client=new Github({env,gh:async()=>{calls++;return ''},fetch:async()=>{calls++;return response({})}});for(const method of ['POST','PUT','PATCH','DELETE','HEAD','get'])await assert.rejects(client.request('/repos/o/r',method),/非 GET/);assert.equal(calls,0)})
 test('GraphQL mutation, mixed operations and direct bypass are refused',async()=>{let calls=0;const client=new Github({env,gh,fetch:async()=>{calls++;return response({})}});for(const q of ['mutation { addComment { id } }','query Q { viewer {login} } mutation X { x }','{ viewer {login}}','subscription { x }','query A {x} query B {y}'])await assert.rejects(client.graphql(q),/query/);await assert.rejects(client.request('/graphql?query='+encodeURIComponent('mutation {x}')),/query/);assert.equal(calls,0);await client.graphql('query Q { viewer { login } }');assert.equal(calls,1)})
 test('fixed GitHub origin rejects attacker hosts and redirects',async()=>{let calls=0;const c=new Github({env,gh,fetch:async(url,init)=>{calls++;assert.equal(new URL(url).host,'api.github.com');assert.equal(init.redirect,'error');return response({})}});for(const p of ['https://evil.test/x','//evil.test/x','/repos/o/r#x','/repos/o/r\\x'])await assert.rejects(c.request(p));assert.equal(calls,0);await c.request('/repos/o/r');assert.equal(calls,1)})
+
+test('URL repository list and enrichment request only canonical fixed-origin paths',async()=>{
+  const urls=[]
+  const c=new Github({env,gh,fetch:async(url,init)=>{
+    urls.push(url);assert.equal(init.method,'GET');assert.equal(init.headers['User-Agent'],'dsh-github-triage/0.4.2')
+    if(url.endsWith('/repos/o/r'))return response({default_branch:'main',has_issues:true})
+    if(url.includes('/git/trees/'))return response({tree:[]})
+    return response({items:[]})
+  }})
+  await c.list(' https://www.github.com/O/R.git/issues?state=open#intro ','issues',1)
+  await c.enrich('git@github.com:O/R.git',{kind:'issue',title:'render fails',number:1})
+  assert.ok(urls.includes('https://api.github.com/repos/o/r'))
+  assert.ok(urls.some(u=>u.includes('/repos/o/r/git/trees/main')))
+  assert.ok(urls.every(u=>{const parsed=new URL(u);return parsed.origin==='https://api.github.com'&&!parsed.pathname.includes('.git')}))
+  const count=urls.length
+  await assert.rejects(c.list('https://user:fixture-secret@github.com/O/R','issues',1))
+  assert.equal(urls.length,count)
+})
 test('token precedence GH_TOKEN then GITHUB_TOKEN then gh, never output',async()=>{for(const [vars,expected] of [[{GH_TOKEN:'first-fixture',GITHUB_TOKEN:'second-fixture'},'first-fixture'],[{GITHUB_TOKEN:'second-fixture'},'second-fixture'],[{},'gh-fixture']]){let auth,ghCalls=0;const c=new Github({env:vars,gh:async()=>{ghCalls++;return 'gh-fixture'},fetch:async(_,i)=>{auth=i.headers.Authorization;assert.equal(i.method,'GET');return response({text:expected})}});const data=await c.request('/repos/o/r');assert.equal(auth,'Bearer '+expected);assert.ok(!JSON.stringify(data).includes(expected));assert.equal(ghCalls,Object.keys(vars).length?0:1);assert.ok(!JSON.stringify(c).includes(expected));assert.ok(!c.warnings.join().includes(expected));}})
 test('anonymous auth warns without leaking details',async()=>{let headers;const c=new Github({env,gh,fetch:async(_,i)=>{headers=i.headers;return response({})}});await c.request('/repos/o/r');assert.equal(headers.Authorization,undefined);assert.match(c.warnings.join(),/匿名/);assert.equal(c.warnings.length,1)})
 test('403 and 429 cooldown respects retry headers and suppresses repeated requests',async()=>{for(const status of [403,429]){let calls=0;const c=new Github({env,gh,now:()=>1000,fetch:async()=>{calls++;return response({},status,{'retry-after':'120','x-ratelimit-reset':'200'})}});await assert.rejects(c.request('/repos/o/r'),e=>e instanceof GithubError&&e.retryAt===200000);await assert.rejects(c.request('/repos/o/r'));assert.equal(calls,1)}})

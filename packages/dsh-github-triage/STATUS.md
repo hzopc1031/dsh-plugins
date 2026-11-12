@@ -1,4 +1,37 @@
-# 开发状态 · GitHub 哨兵（dsh-github-triage）0.4.0
+# 开发状态 · GitHub 哨兵（dsh-github-triage）0.4.2
+
+说明：本轮（表单与 https 地址）原按 0.4.1 开发；rebase 时 main 的 0.4.1 已被内网兼容合并占用，故发布为 **0.4.2**，下文「0.4.1 表单/地址」小节即 0.4.2 内容。
+
+日期：2026-11-12。分支 `fix/triage-form-https`，基线/HEAD `a6d4cea`。本轮仅修改 `packages/dsh-github-triage`，使用已有依赖 junction；未安装依赖、未改 node_modules、未读 `_private` / `_tools`、未改全局配置或用户 DSH、未发布、未 commit/push。下文 0.4.0 内容为此前记录。
+
+## 0.4.1 表单调研与采用依据
+
+实际读取了 `C:/Users/Mayn/.dsh/skills/README.md` 索引及目录清单：没有通用 UI、表单或 DSH 组件设计 skill；公众号排版、图片卡片等 skill 的用途不适合本次表单。读取并遵循权威 `C:/Users/Mayn/.dsh/skills/dsh-plugin-readme/SKILL.md:13` 的“已有好文案保留，只修改任务要求的部分”，也检查了仓库 `.agents/skills` 中同名副本（本仓库只有该 skill）。额外阅读现有 `plugin-creator:update-plugin` 的 source-first 指导，未安装插件或运行参考仓库脚本。
+
+本仓库已打开 `dsh-apache-radar/src/client.tsx:267`（目录输入）、`:494`（flex 换行）、`dsh-advisory-impact/src/client.tsx:645`（报告 textarea）与 `src/panel.css`，以及 `dsh-content-evidence/src/client/index.tsx:60`、`styles.ts:8–13`（标签在上、100% 宽输入、纵向 resize、fieldset min-width:0）。这些可参考但不足以解决官方弹层宽度；最终以官方组件和 dsh-context 设置布局为主。`D:/AIInfra/DSHarness` 已只读核对存在，没有修改或遍历其配置。
+
+已读取 junction 中 `@deepseek-ai/dsh-client-ui-primitives/lib/types/index.d.ts:23,40,64`、`Input.d.ts`、`Modal.d.ts:9–17`、`settings-form/fields.d.ts:10–59`：现成可用 Input、Modal、SettingsValueField，没有导出的 Drawer。仓库表单实际复用宿主共享的 **Modal + Input**；SettingsValueField 要求配置覆盖、继承与重置语义，本表单保留自己的局部 patch 语义，采用其 label / hint / aria-invalid / aria-describedby 做法，不冒充配置字段。
+
+通过 GitHub 连接器实际打开了官方仓库两个 tag 的文件。裁切根因是 [rc.5 Modal.module.css:33–46](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-primitives/src/Modal.module.css#L33) 的默认卡片 `width:min(380px,100%)` 与 `overflow:hidden`，而原内部 `.gt-dialog` 单独设约 720px 宽。[rc.5 添加插件向导:1116–1164](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-plugin-manager/src/client/PluginManagerPage.tsx#L1116) 使用 Modal 的 className / contentClassName / footer 和就近错误；[其 CSS:541–549、900–917](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-plugin-manager/src/client/PluginManagerPage.module.css#L541) 给外层宽高上限、让内容区 min-height:0 后独立滚动，操作区留在外面。本次按该文件同样采用的 **headless Modal + 头部 / 滚动正文 / 底部操作区**（向导 TSX:1340–1414），只调整仓库弹层外框，不重写总页面。
+
+字段按 [rc.1 自动化任务 TaskEditorFields.tsx:167–178](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.2-rc.1/packages/client/ui-schedule/src/client/TaskEditorFields.tsx#L167) 的 fieldset、上方 label、官方 Input，以及 [TaskManagerPage.module.css:134–138、1107–1124](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.2-rc.1/packages/client/ui-schedule/src/client/TaskManagerPage.module.css#L134) 的网格、min-width:0、100% 宽 textarea 排列；[rc.5 Input.module.css:25–38](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-primitives/src/Input.module.css#L25) 确认输入可收缩及主题变量。[rc.1 SettingsValueField:60–108](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.2-rc.1/packages/client/ui-primitives/src/settings-form/fields.tsx#L60) 提供 label、hint 与错误关联的具体做法；另读取 rc.5 GeneralSection.tsx 确认设置内容采用单列。rc.5 / rc.1 Modal.tsx 的公开定制接口一致。
+
+社区参考实际读取 `D:/Ai Infra Tools/DeepSeek Harness/插件开发/_wip/triage-ui/dsh-context-ref/src/client/components/settingsCard.tsx:69–99,128–133`、`clearableInput.tsx:61–87`、`styles/settings.css:1–19`、`styles/base.css:22–25,48–51,90–94`：采用分组间距、标签在上、textarea 垂直伸缩、容器查询与输入 min-width:0；不复制其组件实现。也实际打开 [GitHub deepseek-harness topic](https://github.com/topics/deepseek-harness)，并检索 npm 的 dsh- 与社区 dsh-context；npm 搜索页返回 403、forum.dshtui.com 无法访问，未将搜索摘要当作新的 UI 实现依据。没有找到需要安装才能使用的现成表单插件；可用的官方组件和参考源码已足够。
+
+具体落地：仓库 / 本地代码 / 业务说明 / 定时与上限四组；外框最大 760px、正文独立滚动、底部保存/取消固定；弹层自己的 `gt-repo-form` 容器在 560px 以下改单列。路径字段跨整行，字段/网格/输入都可收缩，完整路径另有 `overflow-wrap:anywhere` 预览及 title。textarea 可纵向拉伸，帮助与错误靠近字段并关联可访问性属性。所有新颜色均使用 `var(--dsw-alias-*)`，延续 gt- 前缀。局部更新、显式清空、删除确认保持。
+
+## 0.4.1 地址与验证
+
+原 `types.ts` 的 repoName 只用正则接受 owner/repo 并转小写；`ui-contract.ts`、`config.ts`、settings 加载及路由已共用该 schema。本轮在这一入口增加 HTTP/HTTPS、www、无协议 github.com、Git SSH，处理首尾空白、.git、尾斜杠、网页子路径、查询和锚点，输出始终是小写 owner/repo。精确主机白名单拒绝子域、仿冒主机、凭据及非法字符；错误使用固定文字，不回显凭据。补齐 GitHub enrich 与纠正命令原先校验后未使用规范值的位置，仅更改地址处理，不改研判算法。
+
+- `npm run build`、`npm run typecheck`：通过；`npm test`：最终 **509/509 通过，0 失败、0 跳过**；预构建产物已更新。
+- `npm run verify-pack`：通过，**0.4.1 / 50 文件**精确白名单；版本同步 package.json、lock 顶层/根包、User-Agent、THIRD_PARTY_NOTICES、README 与断言。engines.dsh 保持 `>=0.2.1-rc.5 <0.3.0-0`。`git diff --check` 通过。
+- 新增测试覆盖各地址写法和边界、配置/命令/路由、凭据错误不回显、服务端 canonical key 持久化、表单四组、外框宽度/长路径规则/响应式/底部操作区、失焦与提交归一化；原局部更新、清空、并发保留、删除确认回归通过。jsdom 不计算真实几何布局，不等同于视觉验证。
+- `npm run ui-smoke`：未通过，独立 Edge 的 **CDP timeout: Page.enable**，尚未进入页面，未生成本轮 `ui-form.png`。脚本已新增打开添加仓库、填写长路径、不提交、核对宽度/换行/底部区域并保存 `ui-form.png` 的步骤，审核者需在沙箱外复跑。
+- 本轮 smoke 诊断目录：`C:/Users/Mayn/AppData/Local/Temp/dsh-github-triage-ui-artifacts-PdMtQQ`。脚本报告自建进程树 PID 34280 无法确认停止、临时目录 `C:/Users/Mayn/AppData/Local/Temp/dsh-github-triage-ui-home-T6OZKr` 清理遇 EBUSY；后续 Get-Process 未检出该 PID，CIM 查询被拒。对该 TEMP 子目录的后续删除被自动审批以 “blocked by policy” 拒绝，未绕过。审核者请检查并清理本轮临时目录。
+- 未验证：真实宿主表单亮/暗主题、窄容器与长路径的最终截图，Electron 桌面及 rc.1 实机，真实 GitHub/模型请求和定时；没有据此扩大兼容性承诺。
+
+## 0.4.0 历史记录
 
 日期：2026-11-12。工作目录为本 worktree，分支 `feat/triage-ui-v4`，HEAD `cb2a882`。本轮从 0.3.2 重做页面与数据接入，保留分析逻辑、GitHub GET 边界、原命令、存储域及共享串行队列。未安装依赖、未新增依赖、未改 junction/node_modules、未读 `_private` / `_tools`、未改全局 DSH 配置、未安装到用户 profile、未发布、未 commit/push。
 

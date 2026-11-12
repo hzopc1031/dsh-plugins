@@ -50,7 +50,7 @@ example-team/plugin-kit · 两者 · 每天 09:30
 
 3. **重开 DSH，配置后得到第一份结果。** 在插件设置找到 **GitHub 哨兵（dsh-github-triage）** 并启用。先在 DSH 模型设置配置服务商，再点击侧边栏 **GitHub 哨兵** → 模型状态胶囊 → **查看可复制的模型 ID**，用页面的 **插件设置** 按钮打开设置，将 `provider`、`model` 分别填入同名字段，并启用 `modelEnabled`。这里填准确 ID，不填 API key；目录为空时去 DSH 模型设置查 ID。页面会显示当前路由和配置指引，无需活动会话或 agent。
 
-   在面板点 **添加仓库**，填 `owner/repo`、分析类型和业务说明；按需填写本地 Git 仓库绝对路径和 ref（空为 HEAD）、业务文件、定时和单次上限。点 **保存仓库**，先用小上限（例如 6）点 **立即分析**；按钮会显示排队/进行中，完成后在三档结果中展开 **查看详情与纠正**。
+   在面板点 **添加仓库**，填 `owner/repo`，或直接粘贴 `https://github.com/owner/repo`（支持 `.git`、issues/pulls/tree 子页面、查询和锚点，离开输入框或保存时整理为 `owner/repo`）；再选分析类型、填写业务说明。按需填写本地 Git 仓库绝对路径和 ref（空为 HEAD）、业务文件、定时和单次上限；长路径会在输入框下方完整换行显示。点 **保存仓库**，先用小上限（例如 6）点 **立即分析**；按钮会显示排队/进行中，完成后在三档结果中展开 **查看详情与纠正**。
 
    本地对照只读选定 ref 的已提交快照，不读取未提交修改。业务文字、规则与相关代码片段会交给所选模型服务商，只选择愿意发送的内容。公开仓库可匿名读取；私有仓库需启动环境已有 `GH_TOKEN` / `GITHUB_TOKEN` 或 GitHub CLI（`gh`）读取权限，界面不提供凭据填写项。
 
@@ -83,6 +83,8 @@ example-team/plugin-kit · 两者 · 每天 09:30
 再次 `add` 同一仓库只合并本次明确提供的字段，不再清除其他业务、本地、规则、类型或定时设置；原命令语法兼容。要清除定时或可选字段可在界面编辑。全量扫描不改变定时模式。
 
 普通 `/triage [owner/repo] [--limit N]` 上限为 1–100，默认 20；全量模式使用 `--max`，不能与 `--limit` 混用。命令上限优先于仓库 `limit` / `fullMax`，再优先于全局同名配置。不带仓库处理全部已配置仓库，临时指定仓库则可直接运行；最多配置 50 个仓库。
+
+表单、配置和上述命令也接受 `http://github.com/owner/repo`、`https://www.github.com/owner/repo`、`github.com/owner/repo` 和 `git@github.com:owner/repo.git`，统一按小写 `owner/repo` 保存。仅支持 GitHub 主站，不接受 gist 等其他主机或带用户名/令牌的 URL。
 
 ### 更换或清除本地对照
 
@@ -161,7 +163,7 @@ repositories:
 
 ### 版本与兼容
 
-当前版本 **0.4.1**，尚未发布 npm。开发基线为 **DeepSeek Harness 0.2.1-rc.5**，并对照 **0.2.2-rc.1** 的页面与连接接口源码，要求 Node.js 22 或以上；本地对照需要 PATH 中可用的 Git。主线界面开发验证环境为 Windows / Node.js 24，分支内网修复的加载与本地代理测试环境为 Linux / Node.js 24；此次合并在 Linux 运行自动测试，Windows / Electron 与 Node.js 22 未重新实机验证。未发布改动合入 main 前，上面的 main 安装地址仍指向现有 main 内容。
+当前版本 **0.4.2**，尚未发布 npm。开发基线为 **DeepSeek Harness 0.2.1-rc.5**，并对照 **0.2.2-rc.1** 的页面与连接接口源码，要求 Node.js 22 或以上；本地对照需要 PATH 中可用的 Git。主线界面开发验证环境为 Windows / Node.js 24，分支内网修复的加载与本地代理测试环境为 Linux / Node.js 24；此次合并在 Linux 运行自动测试，Windows / Electron 与 Node.js 22 未重新实机验证。未发布改动合入 main 前，上面的 main 安装地址仍指向现有 main 内容。
 
 ### 只读边界与证据局限
 

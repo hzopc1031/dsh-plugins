@@ -22,7 +22,10 @@ async function setup(t){
   vm.runInNewContext(readFileSync(new URL('../lib/client.js',import.meta.url),'utf8'),{window,document,navigator,URL,AbortController,AbortSignal,Error,fetch:(...args)=>globalThis.fetch(...args),setTimeout,clearTimeout})
   assert.equal(id,'dsh-github-triage')
   const client=factory(name=>{
-    if(name==='@deepseek-ai/dsh-client-ui-primitives')return {Modal:({open,children,title,onClose})=>open?React.createElement('div',{role:'dialog','aria-label':title},children,React.createElement('button',{onClick:onClose},'关闭面板')):null}
+    if(name==='@deepseek-ai/dsh-client-ui-primitives')return {
+      Input:({className,...props})=>React.createElement('span',{className},React.createElement('input',props)),
+      Modal:({open,children,title,onClose,className})=>open?React.createElement('div',{role:'dialog','aria-label':title,className},children,React.createElement('button',{onClick:onClose},'关闭面板')):null,
+    }
     assert.ok(['react','react/jsx-runtime'].includes(name),'host share only: '+name);return require(name)
   })
   const root=createRoot(document.getElementById('root')),calls=[]
@@ -86,6 +89,65 @@ test('repository form validates schema fields locally and sends no invalid reque
   const f=await setup(t);await f.render('RepoForm',{onSaved:async()=>{},onCancel:()=>{}})
   await f.input('GitHub 仓库（owner/repo）','invalid');await f.input('普通分析单次上限（1–100，空为继承）','101')
   await f.submit('添加仓库');assert.equal(f.calls.length,0);assert.ok([...document.querySelectorAll('[role=alert]')].some(e=>e.textContent))
+})
+
+test('repository modal uses bounded official shell and grouped fields with full-width paths',async t=>{
+  const f=await setup(t);await f.render('Dashboard');await f.click('添加仓库')
+  assert.ok(document.querySelector('[role=dialog].gt-repo-modal .gt-repo-dialog'))
+  const form=document.querySelector('form[aria-label="添加仓库"]')
+  assert.deepEqual([...form.querySelectorAll('fieldset>legend')].map(e=>e.textContent),['仓库','本地代码','业务说明','定时与上限'])
+  assert.equal(form.lastElementChild.className,'gt-form-footer')
+  assert.ok(form.querySelector('.gt-form-body'));assert.ok(form.querySelector('.gt-form-actions button[type=submit]'))
+  const longPath='C:\\代码与业务资料\\'+'very-long-repository-directory\\'.repeat(20)+'repository'
+  for(const label of ['本地代码路径（可空，绝对路径）','业务说明文件（仓库相对路径或本机绝对路径）','只读规则文件（可空，本机绝对路径）']){
+    await f.input(label,longPath)
+    const input=document.querySelector('[aria-label="'+label+'"]')
+    assert.ok(input.closest('.gt-form-field.gt-field-wide'));assert.ok(input.closest('.gt-input'))
+    assert.equal(input.title,longPath)
+    assert.equal(input.closest('.gt-form-field').querySelector('.gt-path-preview').textContent,longPath)
+  }
+  const css=readFileSync(new URL('../src/client.css',import.meta.url),'utf8')
+  for(const rule of [
+    /\.gt-repo-modal\.gt-repo-modal\{[^}]*width:min\(760px,100%\)[^}]*max-height:min\(860px,100%\)/,
+    /\.gt-dialog\.gt-repo-dialog\{[^}]*min-width:0[^}]*min-height:0[^}]*container:gt-repo-form \/ inline-size/,
+    /\.gt-form-grid\{[^}]*repeat\(2,minmax\(0,1fr\)\)/,
+    /\.gt-form-field\{[^}]*min-width:0/,
+    /\.gt-field-wide\{grid-column:1\/-1/,
+    /\.gt-form-field \.gt-input\{[^}]*width:100%[^}]*min-width:0[^}]*box-sizing:border-box/,
+    /\.gt-path-preview\{[^}]*white-space:pre-wrap[^}]*overflow-wrap:anywhere/,
+    /\.gt-form-body\{[^}]*min-height:0[^}]*overflow-y:auto/,
+    /\.gt-form-footer\{flex:none/,
+    /@container gt-repo-form \(max-width:560px\)/,
+    /\.gt-textarea\{[^}]*resize:vertical/,
+  ])assert.match(css,rule)
+})
+
+test('pasted repository URL normalizes on blur and clears its nearby accessible error',async t=>{
+  const f=await setup(t);await f.render('RepoForm',{onSaved:async()=>{},onCancel:()=>{}})
+  const input=document.querySelector('[aria-label="GitHub 仓库（owner/repo）"]')
+  await f.input(input.getAttribute('aria-label'),'https://fixture:fixture-secret@github.com/O/New')
+  await act(async()=>Simulate.blur(input))
+  assert.equal(input.getAttribute('aria-invalid'),'true')
+  const error=document.getElementById(input.getAttribute('aria-describedby').split(' ').at(-1))
+  assert.equal(error.getAttribute('role'),'alert');assert.ok(!error.textContent.includes('fixture-secret'))
+  await f.input(input.getAttribute('aria-label'),' https://www.github.com/O/New.git/tree/main?tab=readme#intro ')
+  await act(async()=>Simulate.blur(input))
+  assert.equal(input.value,'o/new');assert.equal(input.getAttribute('aria-invalid'),null)
+  assert.equal(document.querySelector('.gt-field-error'),null)
+  await f.submit('添加仓库');assert.equal(f.calls[0].value.repo,'o/new')
+})
+
+test('submit normalizes URL even without blur and keeps normalized value when another field is invalid',async t=>{
+  const f=await setup(t);await f.render('RepoForm',{onSaved:async()=>{},onCancel:()=>{}})
+  await f.input('GitHub 仓库（owner/repo）','github.com/O/New/issues?state=open#all')
+  await f.input('普通分析单次上限（1–100，空为继承）','101');await f.submit('添加仓库')
+  assert.equal(f.calls.length,0)
+  assert.equal(document.querySelector('[aria-label="GitHub 仓库（owner/repo）"]').value,'o/new')
+  const input=document.querySelector('[aria-label="普通分析单次上限（1–100，空为继承）"]')
+  assert.equal(input.getAttribute('aria-invalid'),'true')
+  assert.match(input.closest('.gt-form-field').textContent,/1–100/)
+  await f.input(input.getAttribute('aria-label'),'5');await f.submit('添加仓库')
+  assert.equal(f.calls[0].value.repo,'o/new');assert.equal(f.calls[0].value.limit,5)
 })
 test('repository add submits business/local/ref/schedule through shared validated shape',async t=>{
   const f=await setup(t);await f.render('RepoForm',{onSaved:async()=>{},onCancel:()=>{}})

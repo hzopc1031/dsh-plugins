@@ -1,4 +1,4 @@
-import { judgmentSchema, limitSchema, fullLimitSchema } from './types.js';
+import { repoName, judgmentSchema, limitSchema, fullLimitSchema } from './types.js';
 import { openLocal, localEvidence } from './local.js';
 import { loadRules } from './rule-files.js';
 import { rules } from './rules.js';
@@ -167,7 +167,7 @@ export function correct(state, raw, now) {
     const match = /^([^\s#]+\/[^\s#]+)#(\d+)\s+(\S+)(?:\s+([\s\S]+))?$/.exec(raw.trim());
     if (!match)
         throw new Error('用法：/triage-fix owner/repo#123 <adopt|manual-review|not-recommended|bug|需求|提问|重复|无效|值得修|待补充|不值得修|值得合并|改完再合|不建议合> [理由]');
-    const repo = match[1].toLowerCase(), number = Number(match[2]), key = repo + '#' + number, cached = state.cache[key];
+    const repo = repoName.parse(match[1]), number = Number(match[2]), key = repo + '#' + number, cached = state.cache[key];
     if (!cached?.result.judgment)
         throw new Error('请先 /triage 拉取该条目');
     let j = structuredClone(cached.result.judgment);

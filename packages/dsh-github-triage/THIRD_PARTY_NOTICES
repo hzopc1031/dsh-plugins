@@ -1,4 +1,4 @@
-dsh-github-triage 0.4.1
+dsh-github-triage 0.4.2
 
 This package is an original implementation, licensed under MIT (see LICENSE).
 
@@ -7,6 +7,8 @@ Implementation ideas were studied from:
   https://github.com/bowenliang123/dsh-context
   Studied sidebar/main slot pairing, connection Fetch routes, design tokens,
   overview cards, loading skeletons and on-demand detail lifetimes.
+  For 0.4.1 also studied settings groups, stacked labels, min-width:0,
+  container sizing and vertically resizable textareas.
 - ItQianChen/dsh-github-flow — MIT
   https://github.com/ItQianChen/dsh-github-flow
   Studied gh credential reuse and repository review rule separation.
@@ -37,6 +39,9 @@ Browser bundle:
 - Browser registration/build conventions follow this monorepo's MIT-licensed
   dsh-draft-rescue and dsh-snip-attach and official DeepSeek Harness rc.5 (MIT).
   No official UI component implementation is copied; Modal is host-shared.
+  The 0.4.1 repository form also uses host-shared Input and follows the
+  rc.5 / rc.1 plugin install wizard's bounded Modal, scrolling body and
+  persistent footer pattern, with DSH alias theme tokens.
 MIT License
 
 Copyright (c) 2025 Colin McDonnell

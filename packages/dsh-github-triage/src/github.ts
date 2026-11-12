@@ -63,7 +63,7 @@ export class Github {
     if (now < this.#cooldown) throw new GithubError(429, this.#cooldown)
     const combined = AbortSignal.any([AbortSignal.timeout(this.#options.timeoutMs ?? 20000), ...(signal ? [signal] : [])])
     await this.auth(combined)
-    const headers: Record<string,string> = { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', 'User-Agent': 'dsh-github-triage/0.4.1' }
+    const headers: Record<string,string> = { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', 'User-Agent': 'dsh-github-triage/0.4.2' }
     if (this.#token) headers.Authorization = 'Bearer ' + this.#token
     try {
       const response = await (this.#options.fetch ?? this.#network.fetch)(url.href, { method: 'GET', headers, signal: combined, redirect: 'error' })
@@ -170,7 +170,7 @@ export class Github {
     }
   }
   async enrich(repo: string, item: Item, signal?: AbortSignal): Promise<Item> {
-    repoName.parse(repo)
+    repo=repoName.parse(repo)
     const result: Item = {...item,notes:[]}
     const optional = async <T>(path: string): Promise<T | undefined> => {
       try { return await this.request<T>(path,'GET',signal) } catch (e) {

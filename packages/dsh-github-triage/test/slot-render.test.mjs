@@ -32,7 +32,8 @@ test('rc.5 actual renderer materializes sidebar, root page and header navigation
   // dialog content, not the official Modal implementation (tsc checks its props).
   const Modal=({open,children,title,onClose,closeLabel})=>open?React.createElement('div',{role:'dialog','aria-label':title},children,React.createElement('button',{'aria-label':closeLabel,onClick:onClose},'关闭')):null
   vm.runInNewContext(readFileSync(new URL('../lib/client.js',import.meta.url),'utf8'),context)
-  const client=factory(name=>name==='@deepseek-ai/dsh-client-ui-primitives'?{Modal}:require(name))
+  const Input=({className,...props})=>React.createElement('span',{className},React.createElement('input',props))
+  const client=factory(name=>name==='@deepseek-ai/dsh-client-ui-primitives'?{Modal,Input}:require(name))
   ctx=new Context()
   renderer.apply(ctx)
   ctx.slots.installLocale({getSnapshot:()=>({revision:0}),subscribe:()=>()=>{},bind:()=>key=>key})

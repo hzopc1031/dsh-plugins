@@ -22,8 +22,8 @@ if(args.includes('--help')){
   plugin --profile web add --offline --ignore-scripts --config.auto-install-peers=false <本包绝对路径>
 仅将本包以本地路径装入临时 profile，不下载依赖、不运行安装脚本。
 启动 web，先检查侧边栏「GitHub 哨兵」及无活动 agent 的中央页面，
-核对 KPI、仓库列表、研判结果、模型指引，再进入临时空会话检查顶部快捷按钮。
-截图 ui.png、result.json、脱敏日志留在 TEMP/dsh-github-triage-ui-artifacts-* 并打印路径。
+核对 KPI、仓库列表、研判结果、模型指引，打开添加仓库表单填入长路径，再进入临时空会话检查顶部快捷按钮。
+截图 ui.png、ui-form.png、result.json、脱敏日志留在 TEMP/dsh-github-triage-ui-artifacts-* 并打印路径。
 最后关闭自建进程，删除临时 DSH_HOME 和浏览器目录；保留截图诊断。
 退出码：0 通过/help；1 安装或 UI 失败；2 参数/环境不足；3 清理失败。
 不读取用户 desktop profile，不安装到用户 DSH，不修改 D:/AIInfra/DSHarness。`)
@@ -182,6 +182,19 @@ try{
   await writeFile(screenshotPath,Buffer.from(screenshot.data,'base64'))
   console.log('截图：'+screenshotPath)
   assert.ok(sidebar&&state.page&&state.list&&state.results&&state.kpis===6&&state.modelPrompt&&!state.error,'侧边栏或无会话中央页面未通过；检查 result.json 和 ui.png')
+  assert.ok(await evaluate("(()=>{const b=Array.from(document.querySelectorAll('.gt-page button')).find(b=>b.textContent.trim()==='添加仓库');b?.click();return !!b})()"),'添加仓库按钮不存在')
+  for(let n=0;n<40;n++){if(await evaluate("!!document.querySelector('form[aria-label=\"添加仓库\"]')"))break;await pause(100)}
+  // Stage input through React's native input event; never save or scan this path.
+  const longPath='C:\\work\\'+'very-long-local-repository-directory\\'.repeat(16)+'repository'
+  assert.ok(await evaluate(`(()=>{const input=document.querySelector('input[aria-label="本地代码路径（可空，绝对路径）"]');if(!input)return false;Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,${JSON.stringify(longPath)});input.dispatchEvent(new Event('input',{bubbles:true}));return true})()`),'本地路径字段未出现')
+  await pause(150)
+  const formState=await evaluate(`(()=>{const form=document.querySelector('form[aria-label="添加仓库"]'),input=form?.querySelector('input[aria-label="本地代码路径（可空，绝对路径）"]'),preview=input?.closest('.gt-form-field')?.querySelector('.gt-path-preview'),body=form?.querySelector('.gt-form-body'),footer=form?.querySelector('.gt-form-footer');if(!input||!preview||!body||!footer)return null;const r=input.getBoundingClientRect(),b=body.getBoundingClientRect(),f=footer.getBoundingClientRect();return {groups:form.querySelectorAll('fieldset').length,value:input.value===${JSON.stringify(longPath)},preview:preview.textContent===input.value,wrap:getComputedStyle(preview).overflowWrap,fits:r.left>=b.left&&r.right<=b.right,footerVisible:f.top>=0&&f.bottom<=innerHeight,scrolls:body.scrollHeight>body.clientHeight}})()`)
+  const formShot=await cdp('Page.captureScreenshot',{format:'png',captureBeyondViewport:false})
+  await writeFile(path.join(artifacts,'ui-form.png'),Buffer.from(formShot.data,'base64'))
+  await writeFile(path.join(artifacts,'result.json'),scrub(JSON.stringify({...state,form:formState,cliVersion:version},null,2)))
+  console.log('表单截图：'+path.join(artifacts,'ui-form.png'))
+  assert.ok(formState&&formState.groups===4&&formState.value&&formState.preview&&formState.wrap==='anywhere'&&formState.fits&&formState.footerVisible,'表单分组、长路径或底部操作区不正确')
+  await evaluate("document.querySelector('form[aria-label=\"添加仓库\"] button[aria-label=\"关闭仓库表单\"]').click()")
   let header=false
   for(let n=0;n<80;n++){
     await evaluate("(()=>{const row=document.querySelector('[data-row-key^=\"session:\"]');if(row){row.click();return}const g=Array.from(document.querySelectorAll('*')).find(e=>e.children.length===0&&e.textContent.trim()==='未分组');g?.click()})()")
@@ -193,8 +206,8 @@ try{
   await evaluate("document.querySelector('button.gt-entry').click()")
   for(let n=0;n<40;n++){if(await evaluate("!!document.querySelector('.gt-page [aria-label=\"仓库列表\"]')"))break;await pause(250)}
   assert.ok(await evaluate("!!document.querySelector('.gt-page [aria-label=\"仓库列表\"]')"),'快捷按钮没有打开同一页面')
-  await writeFile(path.join(artifacts,'result.json'),scrub(JSON.stringify({...state,header,cliVersion:version},null,2)))
-  console.log('PASS：侧边栏、无活动 agent 的中央页面、六项 KPI、仓库列表、结果列表、模型指引与会话快捷按钮均通过。')
+  await writeFile(path.join(artifacts,'result.json'),scrub(JSON.stringify({...state,form:formState,header,cliVersion:version},null,2)))
+  console.log('PASS：侧边栏、无活动 agent 的中央页面、六项 KPI、仓库列表、结果列表、模型指引、长路径表单与会话快捷按钮均通过。')
 }catch(error){
   exitCode=1;console.error('UI smoke 未通过：'+scrub(error.message)+'\n产物目录：'+artifacts)
 }finally{

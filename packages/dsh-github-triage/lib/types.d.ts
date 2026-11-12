@@ -1,4 +1,8 @@
 import { z } from 'zod';
+/** Extract the repository before interpreting URL paths (no URL dot-segment rewriting).
+ * An exact authority allowlist also rejects credentials, ports and lookalike hosts.
+ * Never include the supplied address in validation errors: it may contain a token.
+ */
 export declare const repoName: z.ZodPipe<z.ZodString, z.ZodTransform<string, string>>;
 export declare const limitSchema: z.ZodNumber;
 export declare const fullLimitSchema: z.ZodNumber;

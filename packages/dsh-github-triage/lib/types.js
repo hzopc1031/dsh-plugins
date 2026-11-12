@@ -1,5 +1,23 @@
 import { z } from 'zod';
-export const repoName = z.string().regex(/^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,38})\/[a-zA-Z0-9_.-]+$/).transform(s => s.toLowerCase()).refine(s => !s.endsWith('/.') && !s.endsWith('/..'));
+/** Extract the repository before interpreting URL paths (no URL dot-segment rewriting).
+ * An exact authority allowlist also rejects credentials, ports and lookalike hosts.
+ * Never include the supplied address in validation errors: it may contain a token.
+ */
+export const repoName = z.string().transform((input, ctx) => {
+    const value = input.trim();
+    const web = /^(?:https?:\/\/)?(?:www\.)?github\.com\/(.*)$/i.exec(value);
+    const ssh = /^git@github\.com:([^?#]+)$/i.exec(value);
+    const path = web ? web[1].split(/[?#]/, 1)[0] : ssh ? ssh[1] : value;
+    const parts = path.replace(/\/+$/, '').split('/');
+    const owner = parts[0], repo = parts[1]?.replace(/(?:\.git)+$/i, '');
+    if (/[\s\\\u0000-\u001f\u007f]/.test(value) || (!web && parts.length !== 2) || !owner || !repo
+        || !/^[a-zA-Z0-9][a-zA-Z0-9-]{0,38}$/.test(owner)
+        || !/^[a-zA-Z0-9_.-]{1,100}$/.test(repo) || repo === '.' || repo === '..') {
+        ctx.addIssue({ code: 'custom', message: '请输入 owner/repo 或 github.com 仓库地址；不接受其他主机或含凭据的地址' });
+        return z.NEVER;
+    }
+    return (owner + '/' + repo).toLowerCase();
+});
 export const limitSchema = z.number().int().min(1).max(100);
 export const fullLimitSchema = z.number().int().min(1).max(500);
 export const scheduleSchema = z.discriminatedUnion('kind', [

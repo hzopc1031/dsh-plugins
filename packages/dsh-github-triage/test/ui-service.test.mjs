@@ -33,6 +33,20 @@ test('UI snapshot lists static repositories, defaults, model enablement and no c
   assert.deepEqual(Object.keys(s.model).sort(),['available','enabled','model','provider','warning'])
   assert.match(await h.call({action:'models'}),/provider: "p"/)
 })
+
+test('URL add, patch, duplicate and remove use one canonical stored repository',async()=>{
+  const h=harness()
+  const added=await h.call({action:'add',value:{repo:' https://www.github.com/Owner/Repo.git/tree/main?x=y#intro ',business:'original'}})
+  assert.equal(added.repo,'owner/repo')
+  assert.deepEqual(Object.keys(h.state().overrides),['owner/repo'])
+  await h.call({action:'patch',repo:'git@github.com:Owner/Repo.git',patch:{limit:4}})
+  assert.equal(h.state().overrides['owner/repo'].business,'original')
+  assert.equal(h.state().overrides['owner/repo'].limit,4)
+  assert.equal((await h.service({action:'add',value:{repo:'http://github.com/Owner/Repo/issues'}})).ok,false)
+  assert.equal(h.saves(),2)
+  await h.call({action:'remove',repo:'github.com/Owner/Repo/pulls'})
+  assert.deepEqual(h.state().removed,['owner/repo']);assert.deepEqual(h.state().overrides,{})
+})
 test('UI unconfigured and disabled model states remain explicit',async()=>{
   for(const cfg of [{},{modelEnabled:false,provider:'p',model:'m'}]){
     const s=await harness(cfg).call({action:'snapshot'});assert.equal(s.model.available,false);assert.equal(s.model.enabled,cfg.modelEnabled??true)

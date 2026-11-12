@@ -168,3 +168,13 @@ test('failed count cards show a short status, leaving the shared diagnostics ban
   assert.match(html, /见网络诊断/)
   assert.doesNotMatch(html, /HTTPS_PROXY|https:\/\/|Fetch failed/)
 })
+
+test('system detect/redetect/apply/clear actions reach only the explicit proxy handler', async () => {
+  const calls=[]
+  const handler=dashboardHandler(()=>assert.fail('not a feed request'),()=>[],async action=>{calls.push(action);return {source:'Windows PAC',proxy:'http://proxy:8080/',timeoutSeconds:30}})
+  for(const action of ['detect-proxy','redetect-proxy','apply-proxy','clear-proxy']){
+    const result=await handler(request({action}))
+    assert.equal(result.status,200);assert.equal((await result.json()).timeoutSeconds,30)
+  }
+  assert.deepEqual(calls,['detect-proxy','redetect-proxy','apply-proxy','clear-proxy'])
+})

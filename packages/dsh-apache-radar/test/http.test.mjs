@@ -66,3 +66,12 @@ test('requests serialize through body consumption and recover after failure', as
   await second
   assert.deepEqual(order, [SOURCES.chooser, SOURCES.releases])
 })
+
+test('request timeout uses 30 seconds by default and honors clamped timeoutSeconds', async () => {
+  const original=AbortSignal.timeout,seen=[]
+  AbortSignal.timeout=ms=>{seen.push(ms);return original(ms)}
+  try{
+    for(const timeoutSeconds of [undefined,45,2,200,NaN])await createHttpClient({timeoutSeconds,fetch:async()=>new Response('ok')})(SOURCES.chooser)
+    assert.deepEqual(seen,[30000,45000,10000,120000,30000])
+  }finally{AbortSignal.timeout=original}
+})

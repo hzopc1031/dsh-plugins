@@ -35,7 +35,7 @@ async function fixture(t) {
   return { certPath, url: 'https://fixture.test:' + origin.address().port, direct: 'https://127.0.0.1:' + origin.address().port,
     proxy: 'http://127.0.0.1:' + proxy.address().port, connects: () => connects }
 }
-function client(t, settings, env = {}) { const c = createIntranetHttp(settings, env); t.after(() => c.close()); return c }
+function client(t, settings, env = {}) { const c = createIntranetHttp(settings, env, { readSettings: async () => ({}) }); t.after(() => c.close()); return c }
 
 test('default fetch preserves the host dispatcher and passes through request options', async t => {
   const previous = globalThis.fetch, seen = []

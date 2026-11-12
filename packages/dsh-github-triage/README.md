@@ -157,13 +157,21 @@ repositories:
 
 ## 公司内网访问
 
-在公司电脑遇到 `fetch failed` 时，可查看错误代码与代理/公司证书排查提示。插件设置增加 `httpsProxy`、`noProxy`、`caBundlePath`、`insecureSkipTlsVerify`（默认关闭，开启不安全）。默认沿用 DSH 的用户级代理配置，不读取 Windows 系统代理或 PAC。具体 Windows `.dsh/.env` 写法、证书与重载步骤见[公司内网配置](../../docs/intranet-network.md)。
+大公司常用代理自动配置脚本（PAC），按访问的网站选择出口，不一定有一个固定代理地址。这三个联网插件会读取 Windows 当前用户的 PAC / 静态系统代理，使用解析出的 HTTP(S) 代理；常见公司内网可少一步寻找代理地址和手写 `.env`。已有 `httpsProxy` 或 HTTP(S)/ALL_PROXY 环境变量时完全沿用原策略，不运行 PAC 检测；没有系统代理、PAC 返回 DIRECT 或检测失败时沿用原请求路径。`systemProxy: "off"` 关闭检测。不修改 `.dsh/.env` 或进程环境；仅点击雷达的「应用到插件设置」才保存代理到该插件的 `httpsProxy`，清空恢复自动检测。
+
+请求默认超时 **30 秒（30 000 ms）**，`timeoutSeconds` 可调整，限制 10–120 秒；无效值回到 30 秒。系统设置与 PAC 脚本在进程中缓存 30 分钟，可手动重新检测。仅支持 HTTP(S) PAC 地址，file:// 和 SOCKS 会提示并回到原路径。公司根证书仍可通过 `caBundlePath` / `NODE_EXTRA_CA_CERTS` 配置；不要随意开启 `insecureSkipTlsVerify`。
+
+Windows 注册表读取由模拟注册表的单元测试覆盖，本次只在 Linux 验证，未在真实公司 PAC、Windows Desktop 上实测。PAC 来自公司网络且本身是代码，Node vm 不是抵御蓄意攻击者的安全边界；无宿主对象、禁止动态代码生成、大小/时间限制和输出转字符串用于降低风险。完整配置及边界见[公司内网配置](../../docs/intranet-network.md)和[PAC 范围说明](../../docs/intranet-pac.md)。
+
+页面新增「从系统检测代理」「网络诊断」；命令为 `/triage-detect-proxy`（加 `refresh` 清缓存）和 `/triage-diagnose`。需要固定代理时点击既有「插件设置」填写 `httpsProxy`，清空恢复自动检测。GitHub API 继续固定主机、仅 GET、禁止跳转，避免令牌随跳转发送。
+
+Large companies commonly use PAC auto-configuration to select a proxy per website. These plugins read Windows user PAC / static system proxy settings and use the resolved HTTP(S) proxy, reducing the need to find an address and hand-edit `.env`. Explicit plugin or environment proxies bypass detection. No system proxy, PAC DIRECT, or detection failure preserves the original request path; `systemProxy: "off"` disables detection. Nothing writes `.env` or process environment. Requests default to 30 seconds; `timeoutSeconds` clamps to 10–120 seconds (invalid values use 30). Registry/PAC behavior is covered by mocked unit tests and Linux replay only, not a real corporate PAC or Windows Desktop. PAC is network-supplied code; vm is not a security boundary.
 
 ## 补充说明
 
 ### 版本与兼容
 
-当前版本 **0.4.2**，尚未发布 npm。开发基线为 **DeepSeek Harness 0.2.1-rc.5**，并对照 **0.2.2-rc.1** 的页面与连接接口源码，要求 Node.js 22 或以上；本地对照需要 PATH 中可用的 Git。主线界面开发验证环境为 Windows / Node.js 24，分支内网修复的加载与本地代理测试环境为 Linux / Node.js 24；此次合并在 Linux 运行自动测试，Windows / Electron 与 Node.js 22 未重新实机验证。未发布改动合入 main 前，上面的 main 安装地址仍指向现有 main 内容。
+当前版本 **0.4.3**，尚未发布 npm。开发基线为 **DeepSeek Harness 0.2.1-rc.5**，并对照 **0.2.2-rc.1** 的页面与连接接口源码，要求 Node.js 22 或以上；本地对照需要 PATH 中可用的 Git。主线界面开发验证环境为 Windows / Node.js 24，分支内网修复的加载与本地代理测试环境为 Linux / Node.js 24；此次合并在 Linux 运行自动测试，Windows / Electron 与 Node.js 22 未重新实机验证。未发布改动合入 main 前，上面的 main 安装地址仍指向现有 main 内容。
 
 ### 只读边界与证据局限
 
@@ -173,7 +181,7 @@ repositories:
 - 关联修复 PR 搜索最多看 5 个候选，只接受正文明确关闭该 issue 的已合入 PR，最多 2 个；每个 PR 最多读 100 个提交。Git 每次最多 5 秒、输出最多 256KB（正文读取更小），超时、取消、超限都停止并提示，证据不足由模型标注 `unclear`。
 - 上游相关文件来自默认分支，每条最多 3 个片段、每片段 3KB；PR patch 与模型上下文均有界，不是完整代码审查。AI 不运行测试或复现，不保证适用性判断正确。
 - 业务说明送模型最多 8KB，整个请求最多 48KB，超出会删减并提示。每条最多一次模型生成，45 秒超时、1800 tokens 输出上限；模型失败只展示证据，不写已研判缓存。仓库内容、业务、本地代码、规则和纠正参考会发送给所选模型服务商；模型无工具，输入都当作不可信数据。已知 GitHub 令牌会脱敏，但任意机密无法自动识别。
-- GitHub 凭据按 `GH_TOKEN` → `GITHUB_TOKEN` → 固定参数的 `gh auth token` → 匿名读取，只在内存用于请求头，不写报告、不送模型、不读 DSH 密钥文件。请求固定 GitHub API、仅 GET、拒绝重定向，20 秒超时；限流遵守响应头，支持 `HTTP_PROXY` / `HTTPS_PROXY` / `NO_PROXY`。
+- GitHub 凭据按 `GH_TOKEN` → `GITHUB_TOKEN` → 固定参数的 `gh auth token` → 匿名读取，只在内存用于请求头，不写报告、不送模型、不读 DSH 密钥文件。请求固定 GitHub API、仅 GET、拒绝重定向，默认 30 秒超时（timeoutSeconds 可调）；限流遵守响应头，支持 `HTTP_PROXY` / `HTTPS_PROXY` / `NO_PROXY`。
 
 ### 调度、缓存和真实宿主接口
 

@@ -123,6 +123,7 @@ function Rules({repo,call,onClose}:{repo:string;call:UiCall;onClose:()=>void}) {
 }
 export function Dashboard({call,openSettings}:{call:UiCall;openSettings?:()=>boolean}) {
   const [snapshot,setSnapshot]=useState<Snapshot>(),[error,setError]=useState(''),[edit,setEdit]=useState<Repo|null|undefined>(),[selected,setSelected]=useState(''),[models,setModels]=useState(''),[guide,setGuide]=useState(false)
+  const [networkInfo,setNetworkInfo]=useState('')
   const [ruleRepo,setRuleRepo]=useState(''),[deleting,setDeleting]=useState(''),[busy,setBusy]=useState(false),[scan,setScan]=useState<{repo:Repo;full:boolean}>()
   const alive=useRef(true),seq=useRef(0)
   async function refresh(){
@@ -148,9 +149,10 @@ export function Dashboard({call,openSettings}:{call:UiCall;openSettings?:()=>boo
   const reports=snapshot?.reports??[],results=reports.flatMap(r=>r.results),latest=reports.reduce((n,r)=>Math.max(n,r.at),0),lastJob=snapshot?.jobs.reduce<Job|undefined>((a,b)=>(b.at??0)>=(a?.at??0)?b:a,undefined)
   return <div className="gt-page"><div className="gt-scroll"><div className="gt-content">
     <header className="gt-page-head"><div><div className="gt-eyebrow">GITHUB TRIAGE</div><h1>GitHub 哨兵</h1><p className="gt-muted">从仓库待办到下一步，把判断依据放在一起。</p></div>
-      <div className="gt-head-actions"><button className="gt-pill" onClick={settings}><Settings size={14}/>插件设置</button>
+      <div className="gt-head-actions"><button className="gt-pill" disabled={busy} onClick={()=>void call<string>({action:'detect-proxy'}).then(setNetworkInfo).catch(e=>setError(message(e)))}>从系统检测代理</button><button className="gt-pill" disabled={busy} onClick={()=>void call<string>({action:'diagnose'}).then(setNetworkInfo).catch(e=>setError(message(e)))}>网络诊断</button><button className="gt-pill" onClick={settings}><Settings size={14}/>插件设置</button>
       {snapshot&&<button className={'gt-pill '+(snapshot.model.available?'':'gt-warn')} onClick={()=>setGuide(v=>!v)}>{snapshot.model.available?snapshot.model.provider+' / '+snapshot.model.model:'模型未配置 · 查看指引'}</button>}
       <button className="gt-primary" disabled={!snapshot?.repositories.length||busy||active} onClick={()=>void all()}>{busy?'提交中…':'全部分析'}</button></div></header>
+    {networkInfo&&<section className="gt-card" role="status"><h2>代理与网络诊断</h2><pre style={{whiteSpace:"pre-wrap",overflowWrap:"anywhere"}}>{networkInfo}</pre><p>需要固定代理时，在插件设置填写 httpsProxy；清空恢复自动检测。</p></section>}
     {error&&<div className="gt-error" role="alert"><span>{error}</span><button onClick={()=>void refresh()}>重试</button></div>}
     {!snapshot?(!error&&<Skeleton/>):<>
       {(guide||!snapshot.model.available)&&<section className="gt-card gt-model" aria-label="模型状态"><div className="gt-section-head"><h2><Settings size={18}/>模型：{snapshot.model.available?'已配置':'尚不可研判'}</h2><button onClick={()=>void call<string>({action:'models'}).then(setModels).catch(e=>setError(message(e)))}>查看可复制的模型 ID</button></div>

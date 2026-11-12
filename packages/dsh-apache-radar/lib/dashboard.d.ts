@@ -5,6 +5,7 @@ import type { CountsReport } from './counts.js';
 import type { FeedSource, FeedWindow } from './feeds.js';
 import type { itemSummary } from './radar.js';
 export interface DashboardData {
+    proxyNote?: string;
     diagnostics?: {
         code: string;
         hintZh: string;
@@ -26,6 +27,6 @@ export interface DashboardData {
     markdown?: string;
 }
 type Run = (directory: string | undefined, action: RadarAction, args?: RadarArgs) => Promise<string>;
-export declare function dashboardHandler(run: Run, directories: () => string[]): (request: Request) => Promise<Response>;
-export declare function registerDashboard(ctx: Context, run: Run, directories: () => string[]): void;
+export declare function dashboardHandler(run: Run, directories: () => string[], proxy?: (action: string) => Promise<unknown>): (request: Request) => Promise<Response>;
+export declare function registerDashboard(ctx: Context, run: Run, directories: () => string[], proxy?: (action: string) => Promise<unknown>): void;
 export {};

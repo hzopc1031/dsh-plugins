@@ -126,3 +126,26 @@ test('effective workingDirectory service takes precedence over immutable initial
     await rm(current, { recursive: true, force: true })
   }
 })
+
+test('detect never writes settings; apply/clear use owning host config entry and preserve other fields', async () => {
+  const { systemProxy, createSystemProxy } = await import('../lib/system-proxy.js')
+  const originalDetect=systemProxy.detect,originalClear=systemProxy.clear
+  const mock=createSystemProxy({platform:'win32',query:async()=> ' AutoConfigURL    REG_SZ    http://pac.example/a\n ProxyEnable    REG_DWORD    0x0',fetchPac:async()=>"function FindProxyForURL(){return 'PROXY user:secret@proxy:8080'}",resolve:async()=>null})
+  Object.assign(systemProxy,mock)
+  const host=pluginContext(),fiber={},entry={fiber,options:{id:'my-radar'}},writes=[]
+  let handler,current={watchList:['kafka'],timeoutSeconds:45}
+  host.ctx.fiber=fiber
+  const editor={entries:()=>[entry],edit:async(e,change)=>{assert.equal(e,entry);current=change(current);writes.push({...current})}}
+  host.ctx.get=name=>name==='configEditor'?editor:undefined
+  host.ctx.inject=(_names,setup)=>setup({get:()=>({fetch:{register:route=>{handler=route.fetch;return()=>{}}}}),effect:setup=>setup()})
+  try{
+    apply(host.ctx)
+    const request=action=>handler(new Request('http://localhost/api/apache-radar/dashboard',{method:'POST',body:JSON.stringify({action})}))
+    const result=await (await request('detect-proxy')).json()
+    assert.equal(result.proxy,'http://proxy:8080/');assert.equal(writes.length,0)
+    assert.equal((await request('apply-proxy')).status,200)
+    assert.deepEqual(writes[0],{watchList:['kafka'],timeoutSeconds:45,httpsProxy:'http://proxy:8080/'})
+    assert.equal((await request('clear-proxy')).status,200)
+    assert.deepEqual(writes[1],{watchList:['kafka'],timeoutSeconds:45,httpsProxy:''})
+  }finally{systemProxy.detect=originalDetect;systemProxy.clear=originalClear;host.dispose()}
+})

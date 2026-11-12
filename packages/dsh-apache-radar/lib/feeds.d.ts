@@ -1,7 +1,7 @@
 import type { HttpClient, SourceResponse } from './http.js';
 export declare const PROPOSAL_SOURCES: {
-    readonly kafka: "https://cwiki.apache.org/confluence/display/KAFKA/Kafka+Improvement+Proposals";
-    readonly flink: "https://cwiki.apache.org/confluence/display/FLINK/Flink+Improvement+Proposals";
+    readonly kafka: "https://cwiki.apache.org/confluence/spaces/KAFKA/pages/50859233/Kafka+Improvement+Proposals";
+    readonly flink: "https://cwiki.apache.org/confluence/spaces/FLINK/pages/65145551/Flink+Improvement+Proposals";
 };
 export declare const KAFKA_DOWNLOADS = "https://kafka.apache.org/community/downloads/";
 export interface FeedWindow {

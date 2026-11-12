@@ -1,5 +1,8 @@
 import z from '@deepseek-ai/schemastery';
+import { type SystemProxyDependencies, type ProxyDetection } from './system-proxy.js';
 export interface IntranetSettings {
+    systemProxy?: 'auto' | 'off';
+    timeoutSeconds?: number;
     httpsProxy?: string;
     noProxy?: string;
     caBundlePath?: string;
@@ -16,15 +19,31 @@ export declare function collapseNetworkErrors(value: unknown): {
     hintZh: string;
     count: number;
 }[];
-export declare function createIntranetHttp(settings?: IntranetSettings, env?: NodeJS.ProcessEnv): {
+export declare function effectiveTimeout(settings?: IntranetSettings): number;
+export declare function fetchOfficial(fetcher: typeof globalThis.fetch, input: string, init: RequestInit, hosts: ReadonlySet<string>): Promise<Response>;
+export declare function createIntranetHttp(settings?: IntranetSettings, env?: NodeJS.ProcessEnv, dependencies?: SystemProxyDependencies): {
     fetch: typeof globalThis.fetch;
     diagnose: (url?: string) => Promise<{
+        systemProxy: ProxyDetection | undefined;
+        timeoutSeconds: number;
         proxy: string;
         probes: string;
         dns: unknown;
         tcp: unknown;
         tls: unknown;
     }>;
+    detectProxy: (url?: string, refresh?: boolean) => Promise<ProxyDetection>;
+    proxyStatus: () => {
+        automatic: boolean;
+        source: "Windows PAC" | "\u9759\u6001\u7CFB\u7EDF\u4EE3\u7406" | "\u672A\u68C0\u6D4B\u5230";
+        pacUrl?: string;
+        proxy?: string;
+        warning?: string;
+        detectedAt: string;
+        ttlSeconds: number;
+        timeoutSeconds?: number;
+        note?: string;
+    } | undefined;
     route: (url: string) => {
         source: string;
         proxied: boolean;

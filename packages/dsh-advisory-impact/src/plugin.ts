@@ -38,13 +38,14 @@ export function projectDirectory(ctx: Pick<Context, 'get'>, agent: Agent): strin
 }
 
 export function apply(ctx: Context, config: unknown = {}): void {
-  const { httpsProxy, noProxy, caBundlePath, insecureSkipTlsVerify, offlineOnly, ...settings } = config as IntranetSettings & { offlineOnly?: boolean }
-  const network = createIntranetHttp({ httpsProxy, noProxy, caBundlePath, insecureSkipTlsVerify })
-  ctx.effect(() => () => network.close())
+  const { httpsProxy, noProxy, caBundlePath, insecureSkipTlsVerify, systemProxy, timeoutSeconds, offlineOnly, ...settings } = config as IntranetSettings & { offlineOnly?: boolean }
   const cacheRoot = path.join(os.homedir(), '.cache', 'dsh-advisory-impact')
+  const networkSettings = { httpsProxy, noProxy, caBundlePath, insecureSkipTlsVerify, systemProxy, timeoutSeconds }
+  const network = createIntranetHttp(networkSettings, process.env, { cacheDirectory: cacheRoot })
+  ctx.effect(() => () => network.close())
   const service = new AdvisoryService({ config: settings,
-    cache: new SourceCache(path.join(cacheRoot, 'official'), createHttpClient({ fetch: network.fetch }), undefined, offlineOnly),
-    osv: new OsvClient(new SourceCache(path.join(cacheRoot, 'osv'), createOsvHttpClient({ fetch: network.fetch }), undefined, offlineOnly)) })
+    cache: new SourceCache(path.join(cacheRoot, 'official'), createHttpClient({ fetch: network.fetch, timeoutSeconds }), undefined, offlineOnly),
+    osv: new OsvClient(new SourceCache(path.join(cacheRoot, 'osv'), createOsvHttpClient({ fetch: network.fetch, timeoutSeconds }), undefined, offlineOnly)) })
   ctx.effect(() => ctx.commands.register({
     definitionId: CommandDefinitionId('dsh-advisory-impact'),
     name,
@@ -53,8 +54,9 @@ export function apply(ctx: Context, config: unknown = {}): void {
     recordInput: false,
     handler: async ({ agent, rawInput, signal }) => {
       try {
-        if (['diagnose', 'snapshot-export', 'snapshot-import'].includes(rawInput.trim())) {
+        if (['detect-proxy', 'redetect-proxy', 'diagnose', 'snapshot-export', 'snapshot-import'].includes(rawInput.trim())) {
           const action = rawInput.trim(), directory = projectDirectory(ctx, agent)
+          if (action === 'detect-proxy' || action === 'redetect-proxy') return { kind: 'success', text: '从系统检测代理\n' + JSON.stringify(await network.detectProxy(undefined, action === 'redetect-proxy'), null, 2) }
           if (action === 'diagnose') return { kind: 'success', text: '网络诊断\n' + JSON.stringify(await network.diagnose(), null, 2) }
           if (!directory) throw new Error('请先选择本地项目')
           const { readLocal, writeLocal } = await import('./local.js')

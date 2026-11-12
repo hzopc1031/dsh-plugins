@@ -56,7 +56,7 @@ test('temporary official profile loads prebuilt plugin, commands persist only in
     let session=ctx.sessions.create(SessionId('github-triage-test'),{meta:{cwd:root}})
     let agent={id:session.id,session,ctx,status:'idle'}
     const execute=async line=>(await ctx.commands.execute(agent,line,[],new AbortController().signal)).result
-    assert.deepEqual(ctx.commands.list(agent).map(c=>c.name).filter(n=>n.startsWith('triage')).sort(),['triage','triage-fix','triage-models','triage-repo','triage-report','triage-rules','triage-ui'])
+    assert.deepEqual(ctx.commands.list(agent).map(c=>c.name).filter(n=>n.startsWith('triage')).sort(),['triage','triage-detect-proxy','triage-diagnose','triage-fix','triage-models','triage-repo','triage-report','triage-rules','triage-ui'])
     const manifest=JSON.parse(await readFile(path.join(project,'package.json'),'utf8'))
     assert.equal(manifest.dsh.client.platform,'web')
     assert.deepEqual(manifest.dsh.client.inject,["@deepseek-ai/dsh-client-ui-conversation","@deepseek-ai/dsh-client-ui-session","@deepseek-ai/dsh-api-remotes","@deepseek-ai/dsh-client-ui-sidebar","@deepseek-ai/dsh-client-ui-layout","@deepseek-ai/dsh-client-locale","@deepseek-ai/dsh-client-ui-plugin-manager"])

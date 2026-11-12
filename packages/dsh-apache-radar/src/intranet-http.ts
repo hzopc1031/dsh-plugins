@@ -6,8 +6,12 @@ import { lookup } from 'node:dns/promises'
 import { connect } from 'node:net'
 import type { Dispatcher } from 'undici'
 import z from '@deepseek-ai/schemastery'
+import { systemProxy, createSystemProxy, type SystemProxyDependencies, type ProxyDetection } from './system-proxy.js'
+import { isIP } from 'node:net'
 
 export interface IntranetSettings {
+  systemProxy?: 'auto' | 'off'
+  timeoutSeconds?: number
   httpsProxy?: string
   noProxy?: string
   caBundlePath?: string
@@ -57,8 +61,38 @@ export function collapseNetworkErrors(value: unknown): { code: string; hintZh: s
   return [...groups].map(([code, urls]) => ({ code, hintZh: describeNetworkError({ code }).hintZh, count: urls.size }))
 }
 
-export function createIntranetHttp(settings: IntranetSettings = {}, env: NodeJS.ProcessEnv = process.env) {
-  const envValue = (name: string) => env[name.toLowerCase()] ?? env[name]
+export function effectiveTimeout(settings: IntranetSettings = {}): number {
+  const n = settings.timeoutSeconds
+  return typeof n === 'number' && Number.isFinite(n) ? Math.round(Math.max(10, Math.min(120, n)) * 1000) : 30_000
+}
+
+export async function fetchOfficial(fetcher: typeof globalThis.fetch, input: string, init: RequestInit, hosts: ReadonlySet<string>): Promise<Response> {
+  let url = input
+  const seen = new Set([url])
+  for (let hop = 0; ; hop++) {
+    const response = await fetcher(url, { ...init, redirect: 'manual', credentials: 'omit' })
+    if (![301, 302, 303, 307, 308].includes(response.status)) return response
+    const location = response.headers.get('location')
+    await response.body?.cancel()
+    let next: URL
+    try { next = new URL(location ?? '', url) } catch { throw new Error('REDIRECT_BLOCKED · 重定向地址无效') }
+    // Validate every hop before sending another anonymous request; never widen the source host list.
+    if (!location || next.protocol !== 'https:' || next.username || next.password || next.port || isIP(next.hostname.replace(/^\[|\]$/g, '')) || !hosts.has(next.hostname)) {
+      throw new Error('REDIRECT_BLOCKED · 重定向不在官方 HTTPS 来源白名单，请核对原文地址')
+    }
+    next.hash = ''
+    if (seen.has(next.href)) throw new Error('REDIRECT_LOOP · 官方来源重定向循环')
+    if (hop >= 5) throw new Error('REDIRECT_LIMIT · 官方来源重定向超过 5 次')
+    seen.add(next.href); url = next.href
+  }
+}
+
+export function createIntranetHttp(settings: IntranetSettings = {}, env: NodeJS.ProcessEnv = process.env, dependencies?: SystemProxyDependencies) {
+  const envValue = (name: string) => env[name.toLowerCase()] ?? env[name] ?? Object.entries(env).find(([key]) => key.toUpperCase() === name)?.[1]
+  const detector = dependencies ? createSystemProxy(dependencies) : systemProxy
+  const explicit = () => !!(settings.httpsProxy || envValue('HTTPS_PROXY') || envValue('HTTP_PROXY') || envValue('ALL_PROXY'))
+  let lastDetection: ProxyDetection | undefined
+  let automaticUsed = false
   if (settings.caBundlePath && !isAbsolute(settings.caBundlePath)) throw new Error('CA 证书路径必须是绝对路径')
   if (settings.insecureSkipTlsVerify !== undefined && typeof settings.insecureSkipTlsVerify !== 'boolean') throw new Error('不安全 TLS 选项必须是布尔值')
   const proxyUrl = (value: string, secure = false) => {
@@ -66,9 +100,9 @@ export function createIntranetHttp(settings: IntranetSettings = {}, env: NodeJS.
       const url = new URL(value)
       if (!(url.protocol === 'http:' || secure && url.protocol === 'https:') || !url.hostname || url.hash || url.search || url.pathname !== '/') throw new Error()
       return url.href
-    } catch { throw new Error('HTTPS 代理必须是 http://host:port；不支持 SOCKS 或 PAC（地址已隐藏）') }
+    } catch { throw new Error('HTTPS 代理必须是 http://host:port；不支持 SOCKS（地址已隐藏）') }
   }
-  if (settings.httpsProxy) proxyUrl(settings.httpsProxy)
+  if (settings.httpsProxy) proxyUrl(settings.httpsProxy, true)
   function route(input: string) {
     const url = new URL(input)
     const host = url.hostname.toLowerCase().replace(/^\[|\]$/g, '')
@@ -80,7 +114,7 @@ export function createIntranetHttp(settings: IntranetSettings = {}, env: NodeJS.
       return (!match[2] || match[2] === port) && (host === target || host.endsWith('.' + target))
     }) || host === 'localhost' || host.endsWith('.localhost') || host === '::1' || /^127\./.test(host)
     if (bypass) return { source: 'direct (NO_PROXY / loopback)' }
-    if (url.protocol === 'https:' && settings.httpsProxy) return { proxy: proxyUrl(settings.httpsProxy), source: 'plugin setting' }
+    if (url.protocol === 'https:' && settings.httpsProxy) return { proxy: proxyUrl(settings.httpsProxy, true), source: 'plugin setting' }
     for (const name of (url.protocol === 'https:' ? ['HTTPS_PROXY', 'HTTP_PROXY', 'ALL_PROXY'] : ['HTTP_PROXY', 'ALL_PROXY'])) {
       const value = envValue(name)
       if (value) return { proxy: proxyUrl(value, true), source: env[name.toLowerCase()] !== undefined ? name.toLowerCase() : name }
@@ -105,9 +139,8 @@ export function createIntranetHttp(settings: IntranetSettings = {}, env: NodeJS.
     }
     return [...rootCertificates, ...extra]
   })()
-  async function dispatcher(input: string) {
+  async function dispatcher(proxy?: string) {
     if (closed) throw new Error('网络客户端已关闭')
-    const { proxy } = route(input)
     const key = proxy ?? 'direct'
     if (!agents.has(key)) agents.set(key, (async () => {
       const { Agent, ProxyAgent } = await import('undici')
@@ -116,18 +149,41 @@ export function createIntranetHttp(settings: IntranetSettings = {}, env: NodeJS.
     })())
     return agents.get(key)!
   }
+  async function detectProxy(url = 'https://projects.apache.org/json/foundation/chooser.json', refresh = false): Promise<ProxyDetection> {
+    if (explicit() || settings.systemProxy === 'off') return { source: '未检测到', detectedAt: new Date().toISOString(), ttlSeconds: 1800,
+      timeoutSeconds: effectiveTimeout(settings) / 1000, note: explicit() ? '已配置显式代理，保持原访问路径；未运行系统检测。' : 'systemProxy: off，未运行系统检测。' }
+    if (refresh) { await detector.clear(); automaticUsed = false }
+    const result = await detector.detect(url)
+    lastDetection = { ...result.info, timeoutSeconds: effectiveTimeout(settings) / 1000 }
+    return lastDetection
+  }
+  async function resolveRoute(url: string) {
+    const original = route(url)
+    if (explicit() || settings.systemProxy === 'off' || original.source !== 'direct') return original
+    const result = await detector.detect(url)
+    automaticUsed ||= !!result.proxy
+    lastDetection = { ...result.info, automatic: automaticUsed, timeoutSeconds: effectiveTimeout(settings) / 1000 }
+    return result.proxy ? { proxy: result.proxy, source: result.info.source } : original
+  }
   const fetch: typeof globalThis.fetch = async (input, init) => {
     const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
     try {
       if (closed) throw new Error('网络客户端已关闭')
-      return await globalThis.fetch(input, custom ? { ...init, dispatcher: await dispatcher(url) } as RequestInit : init)
+      const routing = await resolveRoute(url)
+      try {
+        return await globalThis.fetch(input, custom || routing.proxy ? { ...init, dispatcher: await dispatcher(routing.proxy) } as RequestInit : init)
+      } catch (error) {
+        if (!routing.proxy || !['Windows PAC', '静态系统代理'].includes(routing.source)) throw error
+        if (lastDetection) lastDetection.warning = '系统代理请求失败，已尝试原访问路径。'
+        return await globalThis.fetch(input, custom ? { ...init, dispatcher: await dispatcher(route(url).proxy) } as RequestInit : init)
+      }
     } catch (cause) {
       const info = describeNetworkError(cause, url)
       throw Object.assign(new Error(`${info.message}；${info.hintZh}`, { cause }), { code: info.code })
     }
   }
   async function diagnose(url = 'https://projects.apache.org/json/foundation/chooser.json') {
-    const target = new URL(url), routing = route(url)
+    const target = new URL(url), routing = await resolveRoute(url)
     if (!['https:', 'http:'].includes(target.protocol) || target.username || target.password) throw new Error('无效诊断地址')
     const probe = routing.proxy ? new URL(routing.proxy) : target
     const host = probe.hostname.replace(/^\[|\]$/g, '')
@@ -154,14 +210,16 @@ export function createIntranetHttp(settings: IntranetSettings = {}, env: NodeJS.
         socket.once('error', error => { resolve({ authorized: false, code: describeNetworkError(error).code }); socket.destroy() })
       })
     }
-    return result
+    return { ...result, systemProxy: lastDetection, timeoutSeconds: effectiveTimeout(settings) / 1000 }
   }
-  return { fetch, diagnose, route: (url: string) => ({ source: route(url).source, proxied: !!route(url).proxy }),
+  return { fetch, diagnose, detectProxy, proxyStatus: () => lastDetection && { ...lastDetection, automatic: automaticUsed }, route: (url: string) => ({ source: route(url).source, proxied: !!route(url).proxy }),
     async close() { if (closed) return; closed = true; await Promise.all([...agents.values()].map(async pending => { const agent = await pending.catch(() => undefined); await agent?.close() })) } }
 }
 
 export const intranetConfig: { [K in keyof Required<IntranetSettings>]: z<Required<IntranetSettings>[K]> } = {
-  httpsProxy: z.string().description('可选 HTTPS 代理，使用 http://host:port；不支持 SOCKS / PAC，勿在日志中分享凭据'),
+  systemProxy: z.union(['auto', 'off']).default('auto').description('无显式代理时自动读取 Windows PAC / 系统代理；off 沿用原访问路径'),
+  timeoutSeconds: z.union([z.number(), z.transform(z.any(), () => 30)]).default(30).description('请求超时秒数，限制为 10–120，默认 30 秒'),
+  httpsProxy: z.string().description('可选 HTTP(S) 代理 URL；清空恢复自动检测，勿在日志中分享凭据'),
   noProxy: z.string().description('可选代理绕过列表，例如 localhost,127.0.0.1,.company.example'),
   caBundlePath: z.string().description('可选公司根证书 PEM 绝对路径，与 NODE_EXTRA_CA_CERTS 合并'),
   insecureSkipTlsVerify: z.boolean().default(false).description('不安全 / insecure：跳过 TLS 证书校验，仅在明确接受风险时开启'),

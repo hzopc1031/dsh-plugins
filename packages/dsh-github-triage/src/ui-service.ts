@@ -12,6 +12,7 @@ interface Dependencies {
   serialize:<T>(f:()=>Promise<T>)=>Promise<T>
   validate:(r:Repo)=>Promise<void>
   perform:(r:Repo,limit:number,scheduled:boolean,signal:AbortSignal,scan:UiScan)=>Promise<Report>
+  network?:(action:'detect-proxy'|'diagnose')=>Promise<string>
   signal:AbortSignal; model:()=>ModelStatus; models:()=>Promise<string>
 }
 /** Shares the command/timer queue and storage domain; no extra HTTP listener. */
@@ -38,6 +39,7 @@ export function uiService(d:Dependencies) {
         return {ok:true,data:item}
       }
       if(r.action==='jobs')return {ok:true,data:jobList()}
+      if(r.action==='detect-proxy'||r.action==='diagnose')return {ok:true,data:await d.network?.(r.action)??'网络诊断不可用'}
       if(r.action==='models')return {ok:true,data:await d.models()}
       if(r.action==='rules')return {ok:true,data:d.safe.text(rulesDocument(r.repo,d.state(),all().find(v=>v.repo===r.repo)?.business))}
       if(r.action==='start') {

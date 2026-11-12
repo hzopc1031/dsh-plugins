@@ -11,6 +11,7 @@ export const HELP = `官方公告影响核对
 Flink 的 ASF 列表为实验性，覆盖 2023 年以来的公告，可能滞后官方 CVE 发布。
 全过程无需模型调用或模型 API key；这不是 lockfile 扫描器。
 
+/advisory-impact detect-proxy — 从系统检测代理（redetect-proxy 清缓存重检）
 /advisory-impact diagnose — 网络诊断（DNS / TCP / TLS / 代理来源）
 /advisory-impact snapshot-export — 导出官方缓存到项目内 .advisory-impact-snapshot.json
 /advisory-impact snapshot-import — 导入该固定文件中的本地快照

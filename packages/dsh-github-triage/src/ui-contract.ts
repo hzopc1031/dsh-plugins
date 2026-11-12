@@ -24,6 +24,8 @@ export const requestSchema = z.discriminatedUnion('action',[
   z.object({action:z.literal('detail'),repo:repoName,number:z.number().int().positive()}).strict(),
   z.object({action:z.literal('jobs')}).strict(),
   z.object({action:z.literal('models')}).strict(),
+  z.object({action:z.literal('detect-proxy')}).strict(),
+  z.object({action:z.literal('diagnose')}).strict(),
   z.object({action:z.literal('add'),value:editableRepoSchema}).strict(),
   z.object({action:z.literal('patch'),repo:repoName,patch:patchSchema}).strict(),
   z.object({action:z.literal('remove'),repo:repoName}).strict(),
@@ -54,7 +56,7 @@ export function decodeValue(request:UiRequest,value:unknown):unknown {
   if(request.action==='add'||request.action==='patch')return repoSchema.parse(value)
   return z.string().parse(value)
 }
-export const routeActions={snapshot:['snapshot'],detail:['detail'],repos:['add','patch','remove'],run:['start'],correct:['fix'],rules:['rules','export','import'],models:['models'],jobs:['jobs']} as const
+export const routeActions={snapshot:['snapshot'],detail:['detail'],repos:['add','patch','remove'],run:['start'],correct:['fix'],rules:['rules','export','import'],models:['models','detect-proxy','diagnose'],jobs:['jobs']} as const
 export type RouteName=keyof typeof routeActions
 export const routePath=(name:RouteName)=>'/api/dsh-github-triage/'+name
 export function routeFor(action:UiRequest['action']):RouteName {

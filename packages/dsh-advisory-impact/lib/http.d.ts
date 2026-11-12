@@ -8,7 +8,7 @@ export declare const SOURCES: {
     readonly suppressions: "https://raw.githubusercontent.com/apache/kafka/trunk/gradle/resources/dependencycheck-suppressions.xml";
     readonly guidance: "https://security.apache.org/report-dependency/";
 };
-export declare const USER_AGENT = "dsh-advisory-impact/0.1.2 (https://github.com/hzopc1031/dsh-plugins)";
+export declare const USER_AGENT = "dsh-advisory-impact/0.1.3 (https://github.com/hzopc1031/dsh-plugins)";
 export declare class SourceError extends Error {
     readonly url: string;
     constructor(url: string, message: string, options?: ErrorOptions);
@@ -21,7 +21,7 @@ export interface HttpOptions extends IntranetSettings {
     timeoutMs?: number;
     maxBytes?: number;
 }
-/** Serial anonymous GETs, one bounded 429 retry, no redirects or implicit live requests. */
+/** Serial anonymous GETs, one bounded 429 retry, bounded official redirects and no implicit live requests. */
 export declare function createHttpClient(options?: HttpOptions): HttpClient & Pick<ReturnType<typeof createIntranetHttp>, 'close' | 'diagnose'>;
 export declare const OSV_QUERY_URL = "https://api.osv.dev/v1/query";
 export declare const OSV_ID: RegExp;

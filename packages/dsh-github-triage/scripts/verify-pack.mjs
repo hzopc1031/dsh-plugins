@@ -8,11 +8,11 @@ for(const key of Object.keys(packEnv))if(key.toLowerCase()==='npm_config_cache')
 packEnv.npm_config_cache=fileURLToPath(new URL('../.tmp/npm-cache',import.meta.url))
 const [pack]=JSON.parse(execFileSync('npm',['pack','--dry-run','--json','--ignore-scripts'],{cwd,env:packEnv,encoding:'utf8',shell:process.platform==='win32'}))
 const read=async p=>(await readFile(new URL('../'+p,import.meta.url),'utf8')).replace(/^\uFEFF/,'')
-const modules=['intranet-http','client','client-forms','client-route','client-icons','ui-routes','ui-contract','ui-service','local','rule-files','business','config','github','model','pipeline','plugin','rules','safety','schedule','state','types']
+const modules=['system-proxy', 'intranet-http','client','client-forms','client-route','client-icons','ui-routes','ui-contract','ui-service','local','rule-files','business','config','github','model','pipeline','plugin','rules','safety','schedule','state','types']
 const expected=['package.json','index.js','cordis.patch.yml','locale/en.json','locale/zh.json','icon.svg','README.md','LICENSE','CHANGELOG.md','THIRD_PARTY_NOTICES',...modules.flatMap(n=>['lib/'+n+'.js','lib/'+n+'.d.ts'])]
 assert.deepEqual(pack.files.map(f=>f.path).sort(),expected.sort())
 const pkg=JSON.parse(await read('package.json'))
-assert.equal(pkg.name,'dsh-github-triage');assert.equal(pkg.version,'0.4.2');assert.equal(pkg.engines.dsh,'>=0.2.1-rc.5 <0.3.0-0')
+assert.equal(pkg.name,'dsh-github-triage');assert.equal(pkg.version,'0.4.3');assert.equal(pkg.engines.dsh,'>=0.2.1-rc.5 <0.3.0-0')
 assert.ok((await read('lib/github.js')).includes('dsh-github-triage/'+pkg.version))
 assert.equal((await read('THIRD_PARTY_NOTICES')).split(/\r?\n/,1)[0],pkg.name+' '+pkg.version)
 assert.equal(pkg.repository.directory,'packages/dsh-github-triage');assert.equal(pkg.homepage,'https://github.com/hzopc1031/dsh-plugins/tree/main/packages/dsh-github-triage#readme')

@@ -300,3 +300,16 @@ test('notes failures preserve catalogued releases and existing notes cache', asy
   assert.ok(noCache.items.length > 0)
   assert.ok(noCache.items.every(i => i.kind === 'release' && i.notesStatus === 'failed' && i.url === SOURCES.releases))
 })
+
+test('fresh trimmed canonical cwiki pages parse after replayed 302 and keep cwiki original links', async () => {
+  const rows=JSON.parse(await fixture('canonical-provenance.json'))
+  for(const row of rows){
+    const payload=await fixture(row.file)
+    assert.equal(createHash('sha256').update(payload).digest('hex'),row.fixtureSha256)
+    let calls=0
+    const http=createHttpClient({fetch:async()=>++calls===1?new Response(null,{status:302,headers:{Location:row.url+'?canonical=1'}}):new Response(payload)})
+    const result=await http(row.url),parsed=parseProposals(result.payload,row.project)
+    assert.equal(calls,2);assert.ok(parsed.data.length>0)
+    assert.ok(parsed.data.every(p=>new URL(p.url).hostname==='cwiki.apache.org'))
+  }
+})

@@ -35,6 +35,8 @@ export declare const Config: z<Schemastery.ObjectS<NoInfer<{
     modelEnabled: z<boolean, boolean, "defined">;
     provider: z<string, string, "defined">;
     model: z<string, string, "defined">;
+    systemProxy: z<"auto" | "off">;
+    timeoutSeconds: z<number>;
     httpsProxy: z<string>;
     noProxy: z<string>;
     caBundlePath: z<string>;
@@ -70,6 +72,8 @@ export declare const Config: z<Schemastery.ObjectS<NoInfer<{
     modelEnabled: z<boolean, boolean, "defined">;
     provider: z<string, string, "defined">;
     model: z<string, string, "defined">;
+    systemProxy: z<"auto" | "off">;
+    timeoutSeconds: z<number>;
     httpsProxy: z<string>;
     noProxy: z<string>;
     caBundlePath: z<string>;

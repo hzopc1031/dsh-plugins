@@ -503,6 +503,7 @@ function Dashboard() {
     const [busy, setBusy] = (0, react_1.useState)(true);
     const [error, setError] = (0, react_1.useState)('');
     const [diagnosis, setDiagnosis] = (0, react_1.useState)();
+    const [proxyDetection, setProxyDetection] = (0, react_1.useState)();
     const generation = (0, react_1.useRef)(0);
     async function request(action = 'read', project, target = directory, extra) {
         const version = ++generation.current;
@@ -515,6 +516,10 @@ function Dashboard() {
                 throw new Error(result.error ?? `HTTP ${response.status}`);
             if (generation.current !== version)
                 return;
+            if (['detect-proxy', 'redetect-proxy', 'apply-proxy', 'clear-proxy'].includes(action)) {
+                setProxyDetection(result);
+                return;
+            }
             if (action === 'diagnose') {
                 setDiagnosis(result);
                 return;
@@ -594,6 +599,7 @@ function Dashboard() {
                     react_1.default.createElement("datalist", { id: "ar-directories" }, data.directories.map(d => react_1.default.createElement("option", { value: d, key: d }))),
                     react_1.default.createElement("button", { disabled: busy }, "\u6253\u5F00")),
                 react_1.default.createElement("div", { className: "ar-actions" },
+                    react_1.default.createElement("button", { disabled: busy, onClick: () => void request('detect-proxy') }, "\u4ECE\u7CFB\u7EDF\u68C0\u6D4B\u4EE3\u7406"),
                     react_1.default.createElement("button", { disabled: busy || !data.directory, onClick: () => void request('diagnose') }, "\u7F51\u7EDC\u8BCA\u65AD"),
                     react_1.default.createElement("button", { disabled: busy || !data.directory, onClick: () => void exportSnapshot() }, "\u5BFC\u51FA\u5FEB\u7167"),
                     react_1.default.createElement("label", null,
@@ -634,6 +640,33 @@ function Dashboard() {
             data.localSnapshot && react_1.default.createElement("div", { className: "ar-notice warn", role: "status" },
                 react_1.default.createElement("strong", null, "\u672C\u5730\u5FEB\u7167\uFF08\u5BFC\u5165\uFF09"),
                 react_1.default.createElement("span", null, "\u5305\u542B\u5BFC\u5165\u6570\u636E\uFF0C\u975E\u5B9E\u65F6\u5B98\u65B9\u6293\u53D6\uFF1B\u8BF7\u6838\u5BF9\u6765\u6E90\u65F6\u95F4\u3002")),
+            data.proxyNote && react_1.default.createElement("div", { className: "ar-notice", role: "status" }, data.proxyNote),
+            proxyDetection && react_1.default.createElement("div", { className: "ar-card ar-section", role: "status" },
+                react_1.default.createElement("strong", null, "\u4ECE\u7CFB\u7EDF\u68C0\u6D4B\u4EE3\u7406"),
+                react_1.default.createElement("p", null,
+                    "\u6765\u6E90\uFF1A",
+                    proxyDetection.source ?? '插件设置',
+                    " \u00B7 \u8BF7\u6C42\u8D85\u65F6\uFF1A",
+                    proxyDetection.timeoutSeconds ?? 30,
+                    " \u79D2"),
+                proxyDetection.pacUrl && react_1.default.createElement("p", null,
+                    "PAC \u5730\u5740\uFF1A",
+                    proxyDetection.pacUrl),
+                react_1.default.createElement("p", null,
+                    "Apache \u793A\u4F8B\u4EE3\u7406\uFF1A",
+                    proxyDetection.proxy ?? 'DIRECT / 沿用原访问路径'),
+                react_1.default.createElement("p", null,
+                    "\u4E0A\u6B21\u68C0\u6D4B\uFF1A",
+                    proxyDetection.detectedAt ?? '—',
+                    " \u00B7 \u7F13\u5B58\u6709\u6548\u671F\uFF1A",
+                    (proxyDetection.ttlSeconds ?? 1800) / 60,
+                    " \u5206\u949F"),
+                proxyDetection.warning && react_1.default.createElement("p", null, proxyDetection.warning),
+                proxyDetection.note && react_1.default.createElement("p", null, proxyDetection.note),
+                react_1.default.createElement("div", { className: "ar-actions" },
+                    react_1.default.createElement("button", { disabled: busy, onClick: () => void request('redetect-proxy') }, "\u91CD\u65B0\u68C0\u6D4B"),
+                    react_1.default.createElement("button", { disabled: busy || !proxyDetection.proxy, onClick: () => void request('apply-proxy') }, "\u5E94\u7528\u5230\u63D2\u4EF6\u8BBE\u7F6E"),
+                    react_1.default.createElement("button", { disabled: busy, onClick: () => void request('clear-proxy') }, "\u6E05\u7A7A\u63D2\u4EF6\u4EE3\u7406"))),
             diagnosis !== undefined && react_1.default.createElement("div", { className: "ar-card ar-section", role: "status" },
                 react_1.default.createElement("strong", null, "\u7F51\u7EDC\u8BCA\u65AD"),
                 react_1.default.createElement("pre", { style: { whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' } }, JSON.stringify(diagnosis, null, 2))),

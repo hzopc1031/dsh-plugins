@@ -48,7 +48,7 @@ test('HTTP 429 retries once with Retry-After and does not hammer long backoff re
 test('HTTP failure, redirect, timeout and body errors surface as errors, never empty inventories', async () => {
   for (const status of [302, 401, 403, 404, 500, 503]) {
     const http = createHttpClient({ fetch: async () => new Response('', { status }) })
-    await assert.rejects(fetchAdvisories('kafka', http), new RegExp(`HTTP ${status}`))
+    await assert.rejects(fetchAdvisories('kafka', http), status === 302 ? /REDIRECT_BLOCKED/ : new RegExp(`HTTP ${status}`))
   }
   const timedOut = createHttpClient({ fetch: async () => { throw new DOMException('fixture timeout', 'TimeoutError') } })
   await assert.rejects(timedOut(SOURCES.kafka), error => error instanceof SourceError && error.cause.name === 'TimeoutError')
@@ -83,4 +83,18 @@ test('requests are serial and a failed request does not poison the queue', async
   assert.deepEqual(results.map(result => result.status), ['rejected', 'fulfilled', 'fulfilled'])
   assert.equal(peak, 1)
   for (const options of [{ timeoutMs: 0 }, { maxBytes: -1 }, { timeoutMs: NaN }]) assert.throws(() => createHttpClient(options), /positive integers/)
+})
+
+test('official redirects succeed only within source hosts and use configured 30s/default deadlines', async () => {
+  const original=AbortSignal.timeout,seen=[]
+  AbortSignal.timeout=ms=>{seen.push(ms);return original(ms)}
+  try{
+    for(const timeoutSeconds of [undefined,45,2,200,NaN]){
+      let calls=0
+      const http=createHttpClient({timeoutSeconds,fetch:async(u,init)=>{calls++;assert.equal(init.redirect,'manual');return calls===1?new Response(null,{status:302,headers:{location:'https://hadoop.apache.org/canonical.html'}}):new Response('ok')}})
+      assert.equal((await http(SOURCES.kafka)).payload,'ok');assert.equal(calls,2)
+    }
+    assert.deepEqual(seen,[30000,45000,10000,120000,30000])
+    await assert.rejects(createHttpClient({fetch:async()=>new Response(null,{status:302,headers:{location:'https://api.github.com/a'}})})(SOURCES.kafka),/REDIRECT_BLOCKED/)
+  }finally{AbortSignal.timeout=original}
 })

@@ -19,7 +19,7 @@ npm registry 可用的发行版包含 `@deepseek-ai/dsh@0.2.1-rc.5` 与 `0.2.2-r
 | dsh-dll-doctor | 0.2.1-rc.5 | ≥22 | 仅 Windows；Linux 返回「暂不支持（仅 Windows）」 | 是：实际加载、平台拒绝/离线测试 |
 | dsh-github-triage | 0.2.1-rc.5 | ≥22 | 沿用宿主 fetch；插件代理/CA 可覆盖；未实测 Windows gh 凭据链 | 是：实际加载、只读 API/本地 TLS 代理测试；未调用真实模型 |
 | dsh-invoice-gate | 0.2.1-rc.5 | ≥22 | 本地票据 I/O 与拒绝不安全路径；未实测 Windows | 是：实际加载、离线测试 |
-| dsh-html-deck-export | 0.2.1-rc.5 | ≥22 | 需本机 Chrome；本地 HTML 捕获，不新增外网抓取 | 是：实际加载、离线测试；未实测 Windows Chrome |
+| dsh-html-deck-export | 0.2.1-rc.5 | ≥22 | 需本机 Chrome；默认本地捕获，allowNetwork:true 可加载远程资源（浏览器原生代理路径） | 是：实际加载、离线测试；未实测 Windows Chrome |
 | dsh-content-evidence | 0.2.1-rc.5 | ≥22 | main/sidebar 槽位；Windows 导出仍安全拒绝 | 是：实际加载、离线测试；保留原声明范围 |
 | dsh-advisory-impact | 0.2.1-rc.5 | ≥22 | main/sidebar 与浏览器鉴权；公司网络配置见内网说明 | 是：实际加载、离线缓存/快照/代理测试；保留原声明范围 |
 | dsh-apache-radar | **0.2.2-rc.1** | ≥22 | MarkdownText.omitHtml、connection.fetch；公司网络见内网说明 | 是：实际加载、Web 故障/诊断/导入截图、离线与代理测试 |
@@ -58,3 +58,6 @@ npm registry 可用的发行版包含 `@deepseek-ai/dsh@0.2.1-rc.5` 与 `0.2.2-r
 | 代理与 CA | `packages/util/http-proxy/src/install.ts`: `installProxyFromEnvironment`、`applyPolicyEnv`、`proxyRouteFor`；`src/policy.ts`: 环境优先级/绕过；`docs/user/guide/network-proxy.zh.md`: 系统代理/PAC/自定义 CA 限制 |
 
 Node 特性按最低 22 核对：fetch、AbortSignal.any/timeout、Error.cause、fs/promises、ES2023 输出均存在。`O_NOFOLLOW` 等平台标志不作为 Windows 支持证据；位运算在缺少标志时不会提供同等防链接保障。保留既有固定文件名、路径/普通文件校验和拒绝不安全平台的策略，新增快照不接收调用者路径。Windows 路径使用既有平台 path 或明确的浏览器路径转换；没有执行 Linux 上的 Windows 专用工具。没有因本任务放松内容证据的 Windows 导出拒绝，也没有把 Puppeteer 本地渲染扩大到外网爬取。
+
+
+2026-11-12 PAC 增补：17 包联网盘点、三个 Node 联网插件的系统代理/安全重定向/30 秒超时范围见 [Windows PAC 范围矩阵](intranet-pac.md)。不将 Linux 回放视为真实 Windows 公司网络验证。check-compat 同时检查三份 HTTP 与三份 PAC helper 字节一致。

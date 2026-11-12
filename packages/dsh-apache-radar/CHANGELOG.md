@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.3
+
+- 无显式代理时读取 Windows PAC / 静态系统代理；提供检测、禁用与脱敏诊断，失败沿用原访问路径。
+- 请求默认超时改为 30 000 ms，新增 timeoutSeconds（10–120 秒）及诊断显示。
+- 官方来源逐跳验证 HTTPS 白名单、最多 5 跳；更新 cwiki KIP/FLIP 地址与真实裁剪夹具。
+- Windows 注册表 / PAC 采用模拟测试；仅在 Linux 验证，未宣称真实公司网络或 Windows Desktop 实测。
+
 ## 0.1.2 - 2026-11-12
 
 - 合并内网代理 / CA 诊断改动与 main 的 DSH 0.2.2-rc.1 兼容修复（merge intranet proxy/CA diagnostics with main's 0.2.2-rc.1 compatibility）；保留本包两侧已有功能与验证边界。

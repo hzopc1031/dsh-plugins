@@ -40,9 +40,4 @@ export declare function Dashboard({ call, openSettings }: {
     call: UiCall;
     openSettings?: () => boolean;
 }): import("react").JSX.Element;
-export declare function TriageButton({ call, sessionId, openPage }: {
-    call: UiCall;
-    sessionId: string;
-    openPage?: () => boolean;
-}): import("react").JSX.Element;
 export declare function apply(ctx: Context): void;

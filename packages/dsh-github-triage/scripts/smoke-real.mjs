@@ -52,7 +52,7 @@ else if(args){
       const source={safe:client.safe,get warnings(){return client.warnings},list:async()=>snapshot,enrich:client.enrich.bind(client),localDetails:client.localDetails.bind(client),contents:client.contents.bind(client)}
       const state=emptyState(),settings={repo,mode:'both',business:args.business,businessFile:args['business-file'],localRepoPath:args.local,localRef:args['local-ref']}
       const modelRoute=args['mock-model']?'smoke/mock-model':args['model-adapter']?'smoke/adapter:'+path.resolve(args['model-adapter']):'unconfigured'
-      if(!model)console.log('未配置模型，仅规则预筛，未经 AI 研判。')
+      if(!model)console.log('未配置模型，仅规则预筛，未经 AI 分析。')
       const snapshot=await client.list(repo,'both',limit,undefined,args)
       const first=await run(source,settings,state,{...args,limit,now:Date.now(),model,modelRoute})
       assert.equal(first.analyzed,snapshot.length)
@@ -65,10 +65,10 @@ else if(args){
       const assessed=first.results.filter(r=>r.judgment).length
       assert.equal(second.reused,assessed);assert.equal(second.analyzed,snapshot.length-assessed);assert.equal(second.briefing,undefined)
       assert.equal(Object.keys(restored.cache).length,assessed)
-      console.log('第二次运行（同一 GitHub 快照、从 TEMP 重载缓存）：'+second.analyzed+' 条重新处理，'+second.reused+' 条已研判缓存命中；不推送重复简报。')
+      console.log('第二次运行（同一 GitHub 快照、从 TEMP 重载缓存）：'+second.analyzed+' 条重新处理，'+second.reused+' 条已分析缓存命中；不推送重复简报。')
       if(model)assert.equal(assessed,snapshot.length)
       const issues=snapshot.filter(i=>i.kind==='issue').length,prs=snapshot.filter(i=>i.kind==='pr').length
-      console.log('PASS：'+issues+' issues + '+prs+' PR；严格只读；'+(args['mock-model']?'模拟模型（非真实 AI 结论）。':model?'使用显式模型适配器。':'未配置模型，仅规则预筛，未经 AI 研判；不缓存结论。'))
+      console.log('PASS：'+issues+' issues + '+prs+' PR；严格只读；'+(args['mock-model']?'模拟模型（非真实 AI 结论）。':model?'使用显式模型适配器。':'未配置模型，仅规则预筛，未经 AI 分析；不缓存结论。'))
     }catch(error){
       console.error(error instanceof GithubError?'真实 smoke 失败：'+error.message+' (HTTP '+error.status+')':'真实 smoke 未通过：网络、数据或断言失败；未输出原始错误以防凭据泄露。')
       process.exitCode=1

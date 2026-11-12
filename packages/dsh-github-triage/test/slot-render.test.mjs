@@ -7,12 +7,11 @@ import { createRequire } from 'node:module'
 import { JSDOM } from 'jsdom'
 import React,{act} from 'react'
 import { Context } from '@deepseek-ai/cordis'
+import {primitivesFixture,domGlobals} from './primitives-fixture.mjs'
 const require=createRequire(import.meta.url)
-test('rc.5 actual renderer materializes sidebar, root page and header navigation without an agent',async t=>{
-  const dom=new JSDOM('<main id="app"></main>',{url:'https://dsh.invalid'}),saved=new Map()
-  const globals={window:dom.window,document:dom.window.document,navigator:dom.window.navigator,
-    HTMLElement:dom.window.HTMLElement,Node:dom.window.Node,MutationObserver:dom.window.MutationObserver,
-    getComputedStyle:dom.window.getComputedStyle,IS_REACT_ACT_ENVIRONMENT:true}
+test('rc.5 actual renderer materializes sidebar and root page without a duplicate header action without an agent',async t=>{
+  const dom=new JSDOM('<main id="app"></main>',{url:'https://dsh.invalid',pretendToBeVisual:true}),saved=new Map()
+  const globals={...domGlobals(dom),IS_REACT_ACT_ENVIRONMENT:true}
   for(const [key,value] of Object.entries(globals)){
     saved.set(key,Object.getOwnPropertyDescriptor(globalThis,key));Object.defineProperty(globalThis,key,{configurable:true,writable:true,value})
   }
@@ -27,13 +26,9 @@ test('rc.5 actual renderer materializes sidebar, root page and header navigation
   window.__ModuleLoader__={load:row=>{factory=row.factory}}
   vm.runInNewContext(readFileSync(require.resolve('@deepseek-ai/dsh-client-ui-renderer/client'),'utf8'),context)
   const renderer=factory(require)
-  // Shared primitives ships one monolithic artifact with development-only CSS and
-  // Markdown dependencies absent here. This adapter tests our registration and
-  // dialog content, not the official Modal implementation (tsc checks its props).
-  const Modal=({open,children,title,onClose,closeLabel})=>open?React.createElement('div',{role:'dialog','aria-label':title},children,React.createElement('button',{'aria-label':closeLabel,onClick:onClose},'关闭')):null
   vm.runInNewContext(readFileSync(new URL('../lib/client.js',import.meta.url),'utf8'),context)
-  const Input=({className,...props})=>React.createElement('span',{className},React.createElement('input',props))
-  const client=factory(name=>name==='@deepseek-ai/dsh-client-ui-primitives'?{Modal,Input}:require(name))
+  const primitives=primitivesFixture()
+  const client=factory(name=>name==='@deepseek-ai/dsh-client-ui-primitives'?primitives:require(name))
   ctx=new Context()
   renderer.apply(ctx)
   ctx.slots.installLocale({getSnapshot:()=>({revision:0}),subscribe:()=>()=>{},bind:()=>key=>key})
@@ -51,13 +46,12 @@ test('rc.5 actual renderer materializes sidebar, root page and header navigation
     props.renderSlot('main',{}, {entryKey:'dsh-github-triage'})))
 
   await act(async()=>{unmount=ctx.uiRenderer.mount(document.getElementById('app'))})
-  const button=[...document.querySelectorAll('button')].find(b=>b.textContent==='GitHub 哨兵')
-  assert.ok(button,'real rc.5 renderer must materialize the contributed action')
+  assert.equal(ctx.slots.entriesOfSlot('conversation.session.header.actions').length,0)
+  assert.equal(document.querySelector('button.gt-entry'),null)
   assert.ok(ctx.slots.entriesOfSlot('sidebar.panellist').some(e=>e.options.id==='dsh-github-triage'))
   assert.ok(document.querySelector('.gt-page'));assert.equal(document.querySelectorAll('.gt-stat').length,6)
   assert.equal(document.querySelectorAll('style[data-github-triage]').length,1)
-  await act(async()=>{button.click();await Promise.resolve()})
-  assert.deepEqual(navigation,['dsh-github-triage']);assert.equal(document.querySelector('[role="dialog"]'),null)
+  assert.deepEqual(navigation,[]);assert.equal(document.querySelector('[role="dialog"]'),null)
   assert.match(document.body.textContent,/未配置模型/);assert.match(document.body.textContent,/仓库列表（0）/)
   await act(async()=>{unmount();unmount=undefined});await ctx.fiber.dispose()
   assert.equal(document.querySelector('style[data-github-triage]'),null)

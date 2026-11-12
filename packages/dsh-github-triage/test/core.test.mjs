@@ -14,7 +14,7 @@ const repo={repo:'o/r',mode:'both'}
 const options={limit:20,now:100}
 const source=(items)=>({list:async()=>items,enrich:async(_,i)=>i,safe:new SafeText({})})
 test('issue rules collect evidence only',()=>{const r=rules(issue());assert.deepEqual(Object.keys(r).sort(),['evidence','kind']);for(const value of ['有复现步骤','有版本信息','有日志/报错'])assert.ok(r.evidence.includes(value))})
-test('missing issue evidence is explicit',()=>{const r=rules(issue({body:'No details'}));for(const value of ['缺复现步骤','缺版本信息','缺日志/报错'])assert.ok(r.evidence.includes(value));assert.match(r.evidence.join(),/缺 issue 模板/)})
+test('missing issue evidence is explicit',()=>{const r=rules(issue({body:'No details'}));for(const value of ['缺复现步骤','缺版本信息','缺日志/报错'])assert.ok(r.evidence.includes(value));assert.match(r.evidence.join(),/缺 issues 模板/)})
 test('rough location is evidence and no reproduction proof',()=>assert.match(rules(issue({locations:['src/start.ts']})).evidence.join(),/粗略定位/))
 test('duplicate compares older issues only',()=>{const a=issue(),b=issue({number:2});assert.equal(duplicateOf(b,[a,b]),1);assert.match(rules(b,[a]).evidence.join(),/疑似重复 #1/);assert.equal(duplicateOf(a,[a,pr({number:0})]),undefined)})
 test('Chinese similarity and unrelated reports',()=>{assert.equal(similarity('无法启动桌面应用','无法启动桌面应用'),1);assert.ok(similarity('登录失败','文件路径错误')<0.5);assert.equal(similarity('',''),0)})

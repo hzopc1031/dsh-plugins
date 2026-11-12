@@ -15,9 +15,9 @@ export const patchSchema = z.object({
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(s => Number.isFinite(Date.parse(s)) && new Date(s).toISOString().slice(0, 10) === s);
 export const scanSchema = z.object({ full: z.boolean().optional(), since: date.optional(), until: date.optional(), limit: limitSchema.optional(), max: fullLimitSchema.optional() }).strict().superRefine((s, c) => {
     if (!s.full && (s.since || s.until || s.max !== undefined))
-        c.addIssue({ code: 'custom', path: ['full'], message: '时间范围和全量上限需要选择全量扫描' });
+        c.addIssue({ code: 'custom', path: ['full'], message: '时间范围和全量上限需要选择全面扫描' });
     if (s.full && s.limit !== undefined)
-        c.addIssue({ code: 'custom', path: ['limit'], message: '全量扫描请填写全量上限' });
+        c.addIssue({ code: 'custom', path: ['limit'], message: '全面扫描请填写全量上限' });
     if (s.since && s.until && s.since > s.until)
         c.addIssue({ code: 'custom', path: ['until'], message: '结束日期不能早于开始日期' });
 });
@@ -83,7 +83,7 @@ export function fieldErrors(error) {
     for (const issue of error.issues) {
         const path = issue.path.filter(p => !['value', 'patch', 'scan'].includes(String(p))).join('.') || 'form';
         const field = path.split('.')[0];
-        const hints = { repo: '请按 owner/repo 填写 GitHub 仓库', mode: '请选择 issues、PR 或两者', limit: '请输入 1–100 的整数', fullMax: '请输入 1–500 的整数', max: '请输入 1–500 的整数', schedule: '每日时间请填 HH:MM；间隔需在 0.001–8760 小时内', since: '请填写有效日期 YYYY-MM-DD', until: '请填写有效日期 YYYY-MM-DD', reason: '请填写 1–1200 字符的纠正理由' };
+        const hints = { repo: '请按 owner/repo 填写 GitHub 仓库', mode: '请选择 issues 与 PR、仅 issues 或仅 PR', limit: '请输入 1–100 的整数', fullMax: '请输入 1–500 的整数', max: '请输入 1–500 的整数', schedule: '每日时间请填 HH:MM；间隔需在 0.001–8760 小时内', since: '请填写有效日期 YYYY-MM-DD', until: '请填写有效日期 YYYY-MM-DD', reason: '请填写 1–1200 字符的纠正理由' };
         out[path] = issue.code === 'custom' ? issue.message : hints[field] ?? (issue.code === 'unrecognized_keys' ? '包含不支持的字段' : '请检查字段类型或长度');
     }
     return out;

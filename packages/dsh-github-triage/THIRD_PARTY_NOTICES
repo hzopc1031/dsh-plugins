@@ -1,8 +1,20 @@
-dsh-github-triage 0.4.3
+dsh-github-triage 0.4.4
 
 This package is an original implementation, licensed under MIT (see LICENSE).
 
 Implementation ideas were studied from:
+- deepseek-ai/deepseek-harness (MIT), official internal development skills
+  commit e8f7b93: .agents/skills/dsh-client-ui-ux (including alignment, icons,
+  spacing), dsh-responsive-ui and cordis-styling-nitpicking.
+  https://github.com/deepseek-ai/deepseek-harness/tree/e8f7b93/.agents/skills
+  Applied relevant third-party Client UI, theme, responsive and ownership rules;
+  host-workspace-only gates were not imported into this external bundle.
+- w2112515/dsh-plugin-development (MIT), commit 4dab80c
+  https://github.com/w2112515/dsh-plugin-development
+  Studied authority/verification, component routing, installable-bundle,
+  runtime-dynamic and workspace-plugin references and the read-only artifact
+  checker. This package is an external installable bundle, not a DSH workspace
+  package or a process-local dynamic plugin. No adapter was installed.
 - bowenliang123/dsh-context 0.83.1 (commit 4d8fb8a) — Apache-2.0
   https://github.com/bowenliang123/dsh-context
   Studied sidebar/main slot pairing, connection Fetch routes, design tokens,
@@ -42,6 +54,12 @@ Browser bundle:
   The 0.4.1 repository form also uses host-shared Input and follows the
   rc.5 / rc.1 plugin install wizard's bounded Modal, scrolling body and
   persistent footer pattern, with DSH alias theme tokens.
+  Version 0.4.3 uses host-shared Button, Input, Modal, Menu, SegmentedTabs,
+  Pill, Tag, Checkbox and SettingsValueField; exports and used props were checked
+  against local 0.2.1-rc.5 types/implementation and official dsh-v0.2.2-rc.1
+  ui-primitives source. No UI component source or CSS is redistributed.
+  The test-only harness reads exact component regions from the installed rc.5
+  artifact into memory; CSS class maps replace CSS loading, not component logic.
 MIT License
 
 Copyright (c) 2025 Colin McDonnell

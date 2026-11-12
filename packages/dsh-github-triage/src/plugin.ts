@@ -37,8 +37,8 @@ export const Config = z.object({
   limit:z.number().min(1).max(100).step(1).default(20),
   fullMax:z.number().min(1).max(500).step(1).default(100),
   modelEnabled:z.boolean().default(true),
-  provider:z.string().default('').description('DSH 已注册的服务商路由 ID，运行 /triage-models 复制 provider 值；与 model 分开填，不是密钥；默认空值无法 AI 研判'),
-  model:z.string().default('').description('DSH 已注册服务商下的模型 ID，运行 /triage-models 复制 model 值；不填 provider/model 组合；默认空值无法 AI 研判'),
+  provider:z.string().default('').description('DSH 已注册的服务商路由 ID，运行 /triage-models 复制 provider 值；与 model 分开填，不是密钥；默认空值无法 AI 分析'),
+  model:z.string().default('').description('DSH 已注册服务商下的模型 ID，运行 /triage-models 复制 model 值；不填 provider/model 组合；默认空值无法 AI 分析'),
 })
 export interface Input extends IntranetSettings {
   repositories?: {repo:string;mode?:'issues'|'prs'|'both';daily?:string;everyHours?:number;limit?:number;business?:string;businessFile?:string;localRepoPath?:string;localRef?:string;rulesFile?:string;fullMax?:number}[]
@@ -116,13 +116,13 @@ export async function apply(ctx: Context, input: Input = {}): Promise<void> {
         try {return {kind:'success',text:safe.text(await handler(i))}}
         catch (error) {
           // Never expose arbitrary dependency, provider, OS, or schema exception text.
-          return {kind:'error',text:i.signal.aborted||lifetime.signal.aborted?'研判已取消。':
+          return {kind:'error',text:i.signal.aborted||lifetime.signal.aborted?'分析已取消。':
             error instanceof GithubError?error.message:'操作失败：请检查命令格式、配置、仓库权限和网络。详见插件 README。'}
         }
       },
     }))
   }
-  command('triage-repo','增删、列出只读研判 GitHub 仓库',async i=>serialize(async()=>{
+  command('triage-repo','增删、列出只读分析 GitHub 仓库',async i=>serialize(async()=>{
     const raw=safe.text(i.rawInput).trim()
     if (raw==='list') return repositories(config.repositories,state).map(r=>r.repo+' · '+r.mode+' · '+(r.schedule?JSON.stringify(r.schedule):'仅手动')+' · 上限 '+(r.limit??config.limit)+' · 业务说明：'+(r.businessFile||(r.business?'内联文本':'未配置'))+' · 本地：'+(r.localRepoPath||'未配置')+' · 规则：'+(r.rulesFile||'自身存储')).join('\n')||'未配置仓库。'
     const next=structuredClone(state),message=repoCommand(raw,next,config.repositories)
@@ -137,7 +137,7 @@ export async function apply(ctx: Context, input: Input = {}): Promise<void> {
     if(i.rawInput.trim())throw new Error('无参数')
     return listModels(ctx)
   })
-  command('triage','只读研判 GitHub issues/PR',async i=>{
+  command('triage','只读分析 GitHub issues/PR',async i=>{
     const scan=runArguments(safe.text(i.rawInput)),{repo,limit}=scan,signal=AbortSignal.any([i.signal,lifetime.signal])
     return serialize(async()=>{
       const all=repositories(config.repositories,state)
@@ -165,7 +165,7 @@ export async function apply(ctx: Context, input: Input = {}): Promise<void> {
     const next=structuredClone(state),message=await rulesCommand(safe.text(i.rawInput),next,repositories(config.repositories,state),safe)
     await save(next);return message
   }))
-  command('triage-fix','纠正结论并保存为后续研判参考',async i=>serialize(async()=>{
+  command('triage-fix','纠正结论并保存为后续分析参考',async i=>serialize(async()=>{
     const next=structuredClone(state),message=correct(next,safe.text(i.rawInput),Date.now())
     await save(next);return message
   }))
@@ -194,7 +194,7 @@ export async function apply(ctx: Context, input: Input = {}): Promise<void> {
           const now=Date.now()
           if(dueSlot(repo.schedule,state.lastRun[repo.repo],now)===undefined || now<(retryAt.get(repo.repo)??0))continue
           try {await perform(repo,repo.limit??config.limit,true,lifetime.signal);retryAt.delete(repo.repo)}
-          catch(error){if(!stopped){retryAt.set(repo.repo,error instanceof GithubError&&error.retryAt?error.retryAt:now+300000);ctx.logger.warn('仓库定时研判失败，稍后重试；没有推进上次成功时间')}}
+          catch(error){if(!stopped){retryAt.set(repo.repo,error instanceof GithubError&&error.retryAt?error.retryAt:now+300000);ctx.logger.warn('仓库定时分析失败，稍后重试；没有推进上次成功时间')}}
         }
       })
       await deliver()

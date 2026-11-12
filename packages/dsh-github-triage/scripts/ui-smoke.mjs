@@ -22,8 +22,8 @@ if(args.includes('--help')){
   plugin --profile web add --offline --ignore-scripts --config.auto-install-peers=false <本包绝对路径>
 仅将本包以本地路径装入临时 profile，不下载依赖、不运行安装脚本。
 启动 web，先检查侧边栏「GitHub 哨兵」及无活动 agent 的中央页面，
-核对 KPI、仓库列表、研判结果、模型指引，打开添加仓库表单填入长路径，再进入临时空会话检查顶部快捷按钮。
-截图 ui.png、ui-form.png、result.json、脱敏日志留在 TEMP/dsh-github-triage-ui-artifacts-* 并打印路径。
+核对 KPI、仓库列表、分析结果、模型指引，打开添加仓库表单填入长路径，再进入临时空会话确认没有重复入口。
+截图 ui.png、ui-form.png、ui-form-invalid.png、可用时 ui-dark.png，以及 result.json、脱敏日志留在 TEMP/dsh-github-triage-ui-artifacts-* 并打印路径。
 最后关闭自建进程，删除临时 DSH_HOME 和浏览器目录；保留截图诊断。
 退出码：0 通过/help；1 安装或 UI 失败；2 参数/环境不足；3 清理失败。
 不读取用户 desktop profile，不安装到用户 DSH，不修改 D:/AIInfra/DSHarness。`)
@@ -151,7 +151,7 @@ try{
     if(r.exceptionDetails)throw new Error('页面脚本执行失败')
     return r.result?.value
   }
-  await cdp('Page.enable');await cdp('Emulation.setDeviceMetricsOverride',{width:1440,height:1100,deviceScaleFactor:1,mobile:false})
+  await cdp('Page.enable');await cdp('Emulation.setDeviceMetricsOverride',{width:1440,height:800,deviceScaleFactor:1,mobile:false})
   const announced=[...log.matchAll(/dsh web: (https?:\/\/[^\s\x1b]+)/g)].at(-1)?.[1]
   assert.ok(announced,'未收到官方 web 就绪 URL');assert.equal(new URL(announced).origin,new URL(url).origin)
   await cdp('Page.navigate',{url:announced})
@@ -175,7 +175,7 @@ try{
       await pause(250)
     }
   }
-  const state=await evaluate("({title:document.title,sidebar:!!document.querySelector('button[aria-label=\"GitHub 哨兵\"]'),page:!!document.querySelector('.gt-page'),kpis:document.querySelectorAll('.gt-stat').length,list:!!document.querySelector('[aria-label=\"仓库列表\"]'),results:!!document.querySelector('[aria-label=\"研判结果\"]'),modelPrompt:document.body.textContent.includes('modelEnabled'),error:document.querySelector('.gt-error')?.textContent,text:document.body.innerText.slice(0,12000)})")
+  const state=await evaluate("({title:document.title,sidebar:!!document.querySelector('button[aria-label=\"GitHub 哨兵\"]'),page:!!document.querySelector('.gt-page'),kpis:document.querySelectorAll('.gt-stat').length,list:!!document.querySelector('[aria-label=\"仓库列表\"]'),results:!!document.querySelector('[aria-label=\"分析结果\"]'),modelPrompt:document.body.textContent.includes('modelEnabled'),error:document.querySelector('.gt-error')?.textContent,text:document.body.innerText.slice(0,12000)})")
   await writeFile(path.join(artifacts,'result.json'),scrub(JSON.stringify({...state,cliVersion:version},null,2)))
   const screenshot=await cdp('Page.captureScreenshot',{format:'png',captureBeyondViewport:false})
   const screenshotPath=path.join(artifacts,'ui.png')
@@ -194,20 +194,50 @@ try{
   await writeFile(path.join(artifacts,'result.json'),scrub(JSON.stringify({...state,form:formState,cliVersion:version},null,2)))
   console.log('表单截图：'+path.join(artifacts,'ui-form.png'))
   assert.ok(formState&&formState.groups===4&&formState.value&&formState.preview&&formState.wrap==='anywhere'&&formState.fits&&formState.footerVisible,'表单分组、长路径或底部操作区不正确')
+  assert.ok(formState.scrolls,'800px 高窗口应滚动表单正文，底部按钮持续可见')
+  await evaluate(`(()=>{const input=document.querySelector('input[aria-label="GitHub 仓库（owner/repo）"]');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,'https://example.invalid/o/r');input.dispatchEvent(new Event('input',{bubbles:true}))})()`)
+  await pause(100)
+  await evaluate("document.querySelector('form[aria-label=\"添加仓库\"]').requestSubmit()")
+  await pause(150)
+  const invalidState=await evaluate("(()=>{const f=document.querySelector('form[aria-label=\"添加仓库\"]'),e=f?.querySelector('.gt-validation'),b=f?.querySelector('.gt-form-footer').getBoundingClientRect();return {blocked:!!f&&!!e,message:e?.textContent,neutral:!!e&&!e.classList.contains('gt-field-error'),footerVisible:!!b&&b.bottom<=innerHeight}})()")
+  await writeFile(path.join(artifacts,'ui-form-invalid.png'),Buffer.from((await cdp('Page.captureScreenshot',{format:'png',captureBeyondViewport:false})).data,'base64'))
+  assert.ok(invalidState.blocked&&invalidState.neutral&&invalidState.footerVisible,'非法地址必须拦截且保留可见操作区')
   await evaluate("document.querySelector('form[aria-label=\"添加仓库\"] button[aria-label=\"关闭仓库表单\"]').click()")
-  let header=false
-  for(let n=0;n<80;n++){
-    await evaluate("(()=>{const row=document.querySelector('[data-row-key^=\"session:\"]');if(row){row.click();return}const g=Array.from(document.querySelectorAll('*')).find(e=>e.children.length===0&&e.textContent.trim()==='未分组');g?.click()})()")
-    header=await evaluate("!!document.querySelector('button.gt-entry')")
-    if(header)break
-    await pause(500)
+  const light=await evaluate("getComputedStyle(document.querySelector('.gt-page')).backgroundColor")
+  await cdp('Emulation.setEmulatedMedia',{features:[{name:'prefers-color-scheme',value:'dark'}]})
+  await pause(300)
+  const dark=await evaluate("({background:getComputedStyle(document.querySelector('.gt-page')).backgroundColor,system:matchMedia('(prefers-color-scheme: dark)').matches})")
+  dark.changed=dark.background!==light
+  if(dark.changed)await writeFile(path.join(artifacts,'ui-dark.png'),Buffer.from((await cdp('Page.captureScreenshot',{format:'png',captureBeyondViewport:false})).data,'base64'))
+  else console.log('提示：宿主未随系统媒体切换主题，暗色外观需实机检查。')
+
+  let sessionSelected=false,sessionRowKey=null
+  for(let n=0;n<20;n++){
+    sessionRowKey=await evaluate("(()=>{const row=document.querySelector('[data-row-key^=\"session:\"]');if(!row)return null;row.click();return row.getAttribute('data-row-key')})()")
+    sessionSelected=!!sessionRowKey
+    if(sessionSelected)break
+    await pause(250)
   }
-  assert.ok(header,'会话顶部快捷按钮未出现')
-  await evaluate("document.querySelector('button.gt-entry').click()")
-  for(let n=0;n<40;n++){if(await evaluate("!!document.querySelector('.gt-page [aria-label=\"仓库列表\"]')"))break;await pause(250)}
-  assert.ok(await evaluate("!!document.querySelector('.gt-page [aria-label=\"仓库列表\"]')"),'快捷按钮没有打开同一页面')
-  await writeFile(path.join(artifacts,'result.json'),scrub(JSON.stringify({...state,form:formState,header,cliVersion:version},null,2)))
-  console.log('PASS：侧边栏、无活动 agent 的中央页面、六项 KPI、仓库列表、结果列表、模型指引、长路径表单与会话快捷按钮均通过。')
+  // rc.5 ConversationMainPanel owns sibling header/content nodes. Use its
+  // stable data attributes, not hashed CSS classes or a page-wide button scan.
+  // Blank sessions hide actions/tabs, but retain the session content and corner.
+  const inspectSessionHeader=`(()=>{
+    const content=[...document.querySelectorAll('[data-conversation-content][data-conversation-session]')].find(el=>'session:'+el.dataset.conversationSession===${JSON.stringify(sessionRowKey)}&&el.getClientRects().length>0);
+    const top=content?.parentElement?.querySelector(':scope > header');
+    if(!top||!top.getClientRects().length||!top.querySelector('[data-conversation-header-leading]')||!top.querySelector('[data-conversation-header-corner]'))return {confirmed:false,present:null};
+    return {confirmed:true,present:[...top.querySelectorAll('button')].some(b=>b.classList.contains('gt-entry')||b.textContent.trim()==='GitHub 哨兵')};
+  })()`
+  let headerCheck={confirmed:false,present:null}
+  if(sessionSelected)for(let n=0;n<40;n++){
+    headerCheck=await evaluate(inspectSessionHeader)
+    if(headerCheck.confirmed)break
+    await pause(250)
+  }
+  const header=headerCheck.present
+  if(!headerCheck.confirmed)console.log('提示：未能确认已进入临时会话视图并定位 rc.5 会话顶部；跳过顶部按钮检查（未验证），另由真实 renderer 回归测试验证。')
+  await writeFile(path.join(artifacts,'result.json'),scrub(JSON.stringify({...state,form:formState,invalid:invalidState,dark,header,headerCheck,sessionSelected,cliVersion:version},null,2)))
+  if(headerCheck.confirmed)assert.equal(header,false,'不应再有会话顶部 GitHub 哨兵按钮')
+  console.log('PASS：侧栏与中央页面、KPI、结果、模型指引、表单底部操作及非法地址拦截通过；'+(headerCheck.confirmed?'会话顶部无重复入口。':'会话顶部检查未验证，见上述提示。'))
 }catch(error){
   exitCode=1;console.error('UI smoke 未通过：'+scrub(error.message)+'\n产物目录：'+artifacts)
 }finally{
@@ -221,4 +251,6 @@ try{
   }catch(error){exitCode=3;console.error('临时目录清理失败：'+root+'；'+scrub(error.message))}
   process.removeListener('SIGINT',interrupt);process.removeListener('SIGTERM',interrupt)
 }
-process.exitCode=exitCode
+// CDP may be unresponsive even to its close handshake. All diagnostics above
+// are awaited; do not keep this one-shot CLI alive on an orphaned WebSocket.
+process.exit(exitCode)

@@ -22,7 +22,7 @@ export function rules(item: Item, peers: Item[] = []): PreScreen {
     const log = /\x60{3}[^\x60]*(?:error|exception|stack|trace|错误)|(?:error:|exception:|报错[：:]|日志[：:])\s*\S+/i.test(item.body)
     const evidence = [duplicate ? '疑似重复 #' + duplicate + '（相似度启发式，需人工核对）' : '',
       repro?'有复现步骤':'缺复现步骤',version?'有版本信息':'缺版本信息',log?'有日志/报错':'缺日志/报错',
-      /^#{1,4}\s+/m.test(item.body)?'有模板分段（未验证仓库特定模板）':'缺 issue 模板关键分段（通用启发式）',
+      /^#{1,4}\s+/m.test(item.body)?'有模板分段（未验证仓库特定模板）':'缺 issues 模板关键分段（通用启发式）',
       item.locations?.length?'关键词粗略定位：'+item.locations.join(', '):'未定位（没有代码级复现证明）',
       ...(item.notes??[])].filter(Boolean)
     return {kind:'issue',evidence}
@@ -44,7 +44,7 @@ export function rules(item: Item, peers: Item[] = []): PreScreen {
     ...suspicious.map(f=>'可疑/敏感改动：'+f.path+(f.patch&&/postinstall|preinstall|chmod|permissions:|curl|wget|exec\(/i.test(f.patch)?'（含安装/执行/权限线索）':'')),
     large?'改动规模超过 30 文件或 1000 行':'',
     item.draft?'草稿 PR':'',
-    linked.length?'关联 issue：'+linked.map(i=>'#'+i.number).join(', ')+(match?'；文本有对应线索，未验证实际修复':'；文本对应性不足，需核对实际修复'):'未定位同仓库关联 issue（Fixes #n 等）',
+    linked.length?'关联 issues：'+linked.map(i=>'#'+i.number).join(', ')+(match?'；文本有对应线索，未验证实际修复':'；文本对应性不足，需核对实际修复'):'未定位同仓库关联 issues（Fixes #n 等）',
     ...notes,
   ].filter(Boolean)
   return {kind:'pr',evidence:evidence.slice(0,40)}

@@ -63,7 +63,7 @@ export class Github {
     if (now < this.#cooldown) throw new GithubError(429, this.#cooldown)
     const combined = AbortSignal.any([AbortSignal.timeout(this.#options.timeoutMs ?? effectiveTimeout(this.#options.network)), ...(signal ? [signal] : [])])
     await this.auth(combined)
-    const headers: Record<string,string> = { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', 'User-Agent': 'dsh-github-triage/0.4.3' }
+    const headers: Record<string,string> = { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', 'User-Agent': 'dsh-github-triage/0.4.4' }
     if (this.#token) headers.Authorization = 'Bearer ' + this.#token
     try {
       const response = await (this.#options.fetch ?? this.#network.fetch)(url.href, { method: 'GET', headers, signal: combined, redirect: 'error' })
@@ -104,7 +104,7 @@ export class Github {
     const issuesDisabled = mode !== 'prs' && metadata.has_issues === false
     const prsDisabled = mode !== 'issues' && metadata.has_pull_requests === false
     if (issuesDisabled || prsDisabled) this.#featureWarnings.push('该仓库已关闭 ' +
-      (issuesDisabled && prsDisabled ? 'Issues/PR' : issuesDisabled ? 'Issues' : 'PR') + ' 功能；已跳过对应拉取。')
+      (issuesDisabled && prsDisabled ? 'issues / PR' : issuesDisabled ? 'issues' : 'PR') + ' 功能；已跳过对应拉取。')
     if(scan.full){
       if(issuesDisabled&&prsDisabled||mode==='issues'&&issuesDisabled||mode==='prs'&&prsDisabled)return []
       const range=scan.since||scan.until?' updated:'+(scan.since&&scan.until?scan.since+'..'+scan.until:scan.since?'>='+scan.since:'<='+scan.until):''
@@ -124,8 +124,8 @@ export class Github {
         }
         items.push(...typedItems.slice(0,limit))
       }
-      if(totalCount>limit)this.#warnings.push('全量扫描超过上限 '+limit+'，仅取最近更新的条目（含开放与关闭）；可缩小时间范围。')
-      this.#warnings.push('全量扫描会增加 GitHub 请求与模型费用；后续定时仅处理开放条目的新增和变化。')
+      if(totalCount>limit)this.#warnings.push('全面扫描超过上限 '+limit+'，仅取最近更新的条目（含开放与关闭）；可缩小时间范围。')
+      this.#warnings.push('全面扫描会增加 GitHub 请求与模型费用；后续定时仅处理开放条目的新增和变化。')
       return items.sort((a,b)=>b.updated_at.localeCompare(a.updated_at)).slice(0,limit)
     }
     const items: Item[] = []
@@ -216,9 +216,9 @@ export class Github {
     result.linked = []
     for (const match of item.body.matchAll(/\b(?:fix(?:es|ed)?|clos(?:e[sd]?)|resolv(?:e[sd]?))\s+(?:https:\/\/github.com\/[^\s/]+\/[^\s/]+\/issues\/|#)(\d+)/gi)) {
       if (this.#repositories.get(repo.toLowerCase())?.has_issues === false) {
-        result.notes!.push('该仓库已关闭 Issues 功能；已跳过关联 issue 拉取'); break
+        result.notes!.push('该仓库已关闭 issues 功能；已跳过关联 issues 拉取'); break
       }
-      if (result.linked.length>=3) {result.notes!.push('关联 issue 超过 3 条上限');break}
+      if (result.linked.length>=3) {result.notes!.push('关联 issues 超过 3 条上限');break}
       // Cross-repository links are not fetched as same-repository issues.
       if (match[0].includes('https://') && !match[0].toLowerCase().includes('github.com/'+repo.toLowerCase()+'/issues/')) continue
       const linked = await optional<IssueWire>(base+'/issues/'+Number(match[1]))

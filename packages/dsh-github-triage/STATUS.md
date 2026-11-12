@@ -1,4 +1,193 @@
-# 开发状态 · GitHub 哨兵（dsh-github-triage）0.4.2
+# 开发状态 · GitHub 哨兵（dsh-github-triage）0.4.4
+
+## 0.4.4 冲突合并（2026-11-12）
+
+审核者执行 rebase 后，仅编辑文件解决五处冲突，未暂存或继续 rebase。main 的 0afc59f 已占用 0.4.3，本地 151c12f 的界面改动因此顺延到 **0.4.4**；CHANGELOG 顶部是本轮 0.4.4，main 的 0.4.3 条目原样保留。下方 0.4.3 开发记录是升级前历史。
+
+- 保留 main 的 system-proxy、Windows PAC / 静态代理检测、网络诊断、30 秒默认超时及 timeoutSeconds（10–120 秒）、detect-proxy / diagnose 路由与命令；保留本地官方 primitives、唯一左侧栏入口、类型/分析文案、表单、扫描说明和请求核算。未更改分析逻辑或增加 GitHub 写操作。
+- 检测/诊断按钮改为宿主共享 `Button variant="outline"`；卡片使用现有 gt-card，诊断正文通过 gt-network-text 的 pre-wrap / overflow-wrap:anywhere 完整换行，无原生按钮、内联 style 或文本截断。新增两项 DOM 回归覆盖动作、完整长文本、失败保留结果与再次操作；DOM 测试不证明浏览器几何。
+- 同步 package.json、锁文件根版本、User-Agent、相关断言、NOTICE、README 与 verify-pack 至 0.4.4；engines.dsh 保持 `>=0.2.1-rc.5 <0.3.0-0`。发布模块同时包含 system-proxy 和 client-controls。lib/client.js 未手工合并，由 `npm run build` 重建。
+- Windows / Node.js 24：build、typecheck 通过；运行前 PATH 加入 `C:/Program Files/Git/mingw64/bin`，`npm test` **550/550 通过，0 失败、0 跳过**；verify-pack **56 文件通过**。node_modules 联接未改，未运行 npm install/publish，未读私密目录、凭据或已登录 Chrome。
+- 工作区冲突标记扫描（排除 .git、node_modules、私密目录与凭据文件）无 `<<<<<<<` / `>>>>>>>`，`git diff --check` 通过；README 本地链接目标存在，main 0.4.3 更新记录逐字保留。Git 索引仍保留五个未合并项，这是未执行 git add 的预期状态，留给审核者暂存并继续 rebase。
+- 请求核算已补充 `A = R + F`：自动系统代理失败回退最多为每个逻辑 GET 增加一次尝试，超时/取消共用原信号；下方原表格作为无该回退时的基数。main 自带的代理回退/显式代理不回退与超时测试均通过。
+- 本轮实际 `npm run ui-smoke` **未通过：CDP timeout: Page.enable**，没有进入插件页或生成截图。诊断目录：`C:/Users/Mayn/AppData/Local/Temp/dsh-github-triage-ui-artifacts-W7Af47`。脚本无法确认自建 PID 25720 进程树结束，并报告临时 home `C:/Users/Mayn/AppData/Local/Temp/dsh-github-triage-ui-home-QLdOot` 的 EBUSY 清理失败；随后 Get-Process 未检出该 PID，但不代表子进程全部退出，定向 CIM 查询被拒绝访问。仅针对本轮确切 TEMP 路径、带绝对路径/非联接检查的清理请求被自动审批以 `blocked by policy` 拒绝，未提供具体原因，未绕过。烟测执行会话未确认结束；需沙箱外检查自建进程和该目录。未触碰历史残留。
+
+### README 本轮必要修改自检
+
+按权威 `C:/Users/Mayn/.dsh/skills/dsh-plugin-readme/SKILL.md` 逐项复核，保留现有结构，只合并网络说明、版本、术语与验证环境。
+
+- [x] 第一屏紧接标题的一句话说明了用户能得到什么，未先讲实现细节。
+- [x] 有 3–4 条各不重复的亮点，每条以具体用户收益表达。
+- [x] 与同类插件或现有做法的差异清楚，比较有依据且没有夸大。
+- [x] 亮点后有示例输入与输出，或真实截图/演示；示意内容已标注。
+- [x] 图片、链接和锚点有效，没有失效素材或未替换的占位符（无图片；本地目标已核对，外部固定地址沿用既有文档，本轮未重新联网验证可达性）。
+- [x] 快速上手恰好三步，明确先完全退出桌面 DSH（含托盘）再安装，随后重开使用。
+- [x] Git 地址严格采用 `github:hzopc1031/dsh-plugins#main&path:/packages/<pkg>` 格式，已换成真实目录名，整段地址加引号。
+- [x] 首次使用入口、必填配置、最小操作及可见结果足够具体，profile 如有要求已核实。
+- [x] 术语先用大白话解释，命令和配置键准确，没有空泛宣传语。
+- [x] 版本、详细限制、实现机制和测试说明集中在最后；必要操作提醒在步骤旁可见。
+- [x] 开头没有测试数、typecheck、未实测、commit hash 或验收日志。
+- [x] 所有能力及兼容性承诺都有依据，安装、运行和界面验证的结论没有混淆。
+- [x] 名称、描述、入口与插件实际情况一致，示例和素材没有凭据或私人信息。
+- [x] 只改授权文档，未因写作而执行安装、发布或未授权的 Git 写操作（实现、构建与项目测试由本次任务另行授权）。
+
+---
+
+## 0.4.3 第二轮：桌面反馈修复（2026-11-12）
+
+在同一工作树上继续，保留上一轮官方控件和样式改动；只改本插件，版本仍为 0.4.3，engines.dsh 仍为 `>=0.2.1-rc.5 <0.3.0-0`。下方旧记录是历史验证，不代表本轮完成了真实桌面视觉验收。
+
+### 两个入口的原因与修正
+
+基线 `git show HEAD:packages/dsh-github-triage/src/client.tsx` 和上一轮 `_wip/triage-official/last.txt` 一致：0.3.0 先有会话动作，0.4.0 加入同 ID 的侧栏和中央页时仍保留会话导航；上一轮明确写了保留顶部入口。这是两个不同插槽的主动注册，不是 DSH 重复加载。当前 Client apply 只注册 `main` 与 `sidebar.panellist`，删除 TriageButton、会话动作注册、导航及其紧凑 Modal 回退。原命令和独立 commandCall 适配函数保留，不再提供页面入口。真实 renderer、组件测试、verify-pack 和 ui-smoke 均改为确认无会话动作。
+
+### 逐区复查与修复
+
+| 区域 | 本轮检查、修复与证据边界 |
+| --- | --- |
+| 侧栏与整页 | 仅保留左侧栏一级入口；main 与 sidebar 共用 ID；apply 的 style/locale 有 effect 清理，renderer 卸载验证通过 |
+| 添加/编辑表单 | headless Modal 使用明确的 `height:min(860px,100%)`，按宿主遮罩可用高度收缩；中间 flex 链保持 min-height:0，正文滚动、头尾不收缩。此前仅有 max-height，嵌套正文的可分配高度不稳定 |
+| 地址校验 | 去掉原长红字，改为简短中性文字“仓库地址无效，请改用 owner/repo 格式”；保留 schema 拒绝、aria-invalid、错误关联和非法数据零请求；输入修改时清除旧错误 |
+| 表单保存 | 保存期间禁止 Escape/遮罩关闭；失败保留草稿和字段错误，恢复可编辑；取消/保存仍在独立页脚 |
+| 类型与术语 | 表单、卡片、结果类型共用“issues 与 PR / 仅 issues / 仅 PR”；用户文案统一使用“分析”，命令说明、模型提示、报告、文档与断言同步 |
+| 仓库卡片 | 原来 raw both/prs 改为用户标签；长仓库名/路径/摘要继续换行；立即分析提交期间禁用，避免等待快照时连点 |
+| KPI | “待处理条目”改为“报告条目”，说明含历史报告和关闭条目；不把报告数当成 GitHub 开放待办总数 |
+| 结果/筛选 | 保留官方 SegmentedTabs、Pill、Menu 及键盘行为、tab/panel 关联、分页加载；类型标签统一，三档/搜索/排序/仓库组合回归 |
+| 详情/纠正 | 状态枚举显示“已确认/较可能/证据不足”等中文；移除无助于用户判断的内部缓存指纹；提交中锁定理由，保留证据及安全链接 |
+| 规则查看/导入导出 | 保留按需读取、失败重试、显式复制/新文件导出/导入；导入后重新读回规则并同步编辑草稿，避免下一次导入使用旧显示值 |
+| 普通/全面扫描选项 | 卡片按钮下方和选项正文均直接显示真实范围、继承上限与缓存条件；不依赖 hover/title。官方 Modal 的 contentClassName 指向独立可滚动内容，字段网格可变单列，错误完整换行，开始按钮在字段之后 |
+| 日期与上限错误 | 明确结束日期不能早于开始日期，分别关联 aria-invalid、aria-describedby 与可见 alert；切换模式/修改值清除旧提示 |
+| 删除确认 | 失败保留卡片与确认框，错误显示在确认框内部（此前显示在被遮罩盖住的主页面）；失败后可重试/取消 |
+| 模型/空状态 | 保留可操作模型指引、实际 ID 读取、三步空状态；统一分析字样；模型未配置时明确仅规则预筛 |
+| 加载/错误/布局 | 骨架、运行状态、错误重试、disabled 与长错误换行均检查；Menu 保留 body portal 并限制菜单滚动高度；390px、长路径、亮暗主题均沿用官方 tokens/组件，不伪造真实截图通过结论 |
+
+使用本地只读的 dsh-client-ui-ux（含 alignment/spacing/icons）、dsh-responsive-ui、cordis-styling-nitpicking、社区 dsh-plugin-development 的 bundle/authority 指引，核对借用的 rc.5 Modal 实现/样式与类型。未运行第三方 skill 脚本；本次用项目自有的 build/test/verify-pack 验证。生命周期复查限定当前 Client apply、轮询和详情请求：没有新增模块单例/持久监听，保留计时器与 slot/effect 释放；没有据此宣称整个宿主无生命周期缺陷。
+
+<a id="github-requests"></a>
+### GitHub 请求次数核算
+
+以下 R 先按 Github.request 的逻辑 GET 核算，即没有自动系统代理失败回退时的 HTTP GET 数；不含界面 POST、模型请求、本地 Git/文件读取、gh 本地认证命令。下面公式适用于成功完成的一轮；可选证据失败的 HTTP 尝试也要计数。强制请求失败/取消/限流会提前结束；队列已存在任务、输入拒绝或冷却期内可为 0，不自动重试补齐。
+
+对单仓库定义：
+
+- N：最终生效上限，普通 1–100（默认 20），全面扫描 1–500（默认 100）；本次参数优先于仓库，再优先于插件默认。I/P：合并并截取 N 条后，未复用 AI 缓存的 issues/PR 数，I+P≤N。
+- L：列表阶段请求；普通 `1 + T`，T 为选中且功能未禁用的类型数（0/1/2）。全面扫描 `1 + Σ p_t`，每个有效类型 `1≤p_t≤ceil(N/100)`，短页或收集到本类型 N 条即停；两类分别读取后再合并截断，并非各处理 N 条。空列表也请求第一页；关闭功能的流不请求。
+- B：有效的仓库相对业务文件 Contents 请求（正常 0 或 1，每轮都会读取）；绝对路径本机业务文件、业务文字和本机规则文件为 0。
+- G：未缓存 issues 的共享默认分支元数据+递归树请求；I=0 时为 0，正常 I>0 时为 2。可选元数据失败只尝试 1 次并跳过树；每次 list 清除树缓存，而且每仓库每轮新建 Github 实例。
+- S_i/S_p：每条 issues/PR 的 Contents 文件片段请求，0–3；没有按条目缓存 Contents。文件类型不支持/敏感路径跳过，读取失败的已发尝试仍计数。
+- F_p：PR 文件页数，1–3，每页 100；即使文件数为 0 也有第一页，恰好 100 个文件且未达分页上限时还查下一页。正常稳定分页为 `min(3,floor(文件总数/100)+1)`。详情 1 次、combined status 1 次、check-runs 1 次，不为后两者继续翻页。
+- K_p：PR 正文明确关闭同仓库 issues 的实际尝试数；不是固定 3。最多收集 3 个成功的 issues，按现有正文匹配和跨仓库过滤实际到达请求语句计数，禁用 issues 时为 0；失败或返回 PR 不增加成功数，重复引用不去重。
+- H：本地 Git 对照成功解析到 sha 时为 1，否则 0。未缓存 PR 额外 1 次 commits（per_page=100，无翻页）。每条未缓存 issues 额外 1 次搜索（per_page=5），D_i≤5 个正文明确关闭本 issues 的候选 PR 详情；V_i≤2 次文件页、C_i≤2 次提交页（最多纳入 2 个已合入修复 PR）。正常完整获取时 V_i=C_i=修复 PR 数；失败会终止该条本地补充流程。
+
+`R = L + B + G + Σ_issues S_i + Σ_PR(3 + F_p + K_p + S_p) + H × [P + Σ_issues(1 + D_i + V_i + C_i)]`
+
+0.4.4 合入 main 网络层后的实际次数：`A = R + F`，F 为自动 Windows PAC / 静态系统代理请求抛错后，沿原路径执行的额外 GET 尝试数（每个逻辑请求最多 1 次，0≤F≤R）。显式代理、DIRECT、禁用/未检测到系统代理时不走该回退；HTTP 非成功状态本身不会触发网络层回退。下方表格和极端上界均为 R；若所有自动代理尝试均失败后回退成功，网络尝试上界为对应值的两倍。超时/取消可能在发出请求前或过程中终止，不能把 2R 当成已实际发送量。GitHub 默认超时 30 秒，timeoutSeconds 限制 10–120 秒；代理尝试与回退共用同一 AbortSignal，不各获一份新超时，也没有新增自动分页/分析逻辑。PAC 获取不是 GitHub 请求；手动诊断不属于分析轮次，代理路径诊断可另向 api.github.com 发 HEAD（同样可能回退），不计入本节 GET。
+
+评论请求恒为 0：当前没有 comments/reviews 读取。PR 文件不等于额外一次“文件总请求”，上式已按页计入；本地代码只读操作本身不消耗 GitHub 请求。
+
+默认 both、普通 N=20 / 全面扫描 N=100、仓库两类功能开启、无本地对照/业务文件/关联引用、PR 文件不足 100、无匹配代码片段，且条目全部未缓存时：
+
+| 条目构成 | 立即分析（20 条） | 全面扫描（100 条） |
+| --- | ---: | ---: |
+| 全 issues | 3+2 = **5** | 3+2 = **5** |
+| issues 与 PR 各半 | 3+2+10×4 = **45** | 3+2+50×4 = **205** |
+| 全 PR | 3+20×4 = **83** | 3+100×4 = **403** |
+| 全部命中有效 AI 缓存或空列表 | **3** | **3** |
+
+每条实际匹配文件片段再加 0–3；有效仓库业务文件每轮加 1；可用本地对照每个 PR 加 1、每个 issues 加 1–10。仅 issues 或仅 PR 时，默认列表 L=2；关闭两类功能时 L=1。上限 500 的全面扫描 both 列表 L≤11，单类型 L≤6；缩小更新时间范围可能减少页数与入选数。仓库总请求是逐仓库 R 相加，最多配置 50 个仓库，不另乘隐藏的全局请求。
+
+**范围必须带条件：** 不启用本地对照、无业务文件且每个 PR 的关联读取尝试不超过 3 时，默认 both 为普通 **3–243** 次、全面扫描 **3–1203** 次（每 PR 最多 1 详情+3 文件页+2 CI+3 关联+3 片段=12）。这不是任意正文的硬上界。
+
+真实代码的 PR 正文在 list 规范化时截为 16,000 UTF-16 字符。最短关闭引用 `fix #0` 为 6 字符，连续匹配间至少需 1 个非词字符，因此单 PR 至多 `floor((16000+1)/7)=2285` 个匹配。全部引用读取失败且不触发冷却时，可尝试到这个数；不会因为 3 次失败而停。由此不加本地/业务的极端保守上界为普通 `3+20×(9+2285)=45,883` 次、默认全面扫描 `3+100×2294=229,403` 次；启用可用本地对照和 1 个仓库业务文件后，保守上界分别为 **45,904 / 229,504**。500 条、both 的相同极端上界为 `11+500×2294=1,147,011`（本地对照与业务文件再加 501）。这些是对现有分支的数学上界，不是典型用量；没有为了压低数字改变请求或关联逻辑。
+
+缓存只省未变化条目的 enrich/localDetails/模型调用，不省列表和仓库业务文件。必须模型可用且已有 judgment、指纹一致；指纹含更新时间、PR head（full 搜索初始无 head，与普通列表可能不同）、业务、本地快照、规则与模型路由。规则/上下文变化或切换列表来源可导致重新处理；未配模型/失败条目不写 AI 缓存。全面扫描不是绕过缓存或强制重算；普通分析也不是只向 GitHub 请求“自上次以来变化”的列表。
+
+源码依据（本轮文件行号）：[默认及每轮客户端](src/plugin.ts#L37) 37–38、90–95；[上限优先级](src/ui-service.ts#L43) 43–52；[列表](src/github.ts#L97) 97–140（metadata 102、full 分流 116–124、普通 133/137）；[正文截断](src/github.ts#L142) 142–145；[Contents/片段](src/github.ts#L146) 146–170 及 [片段数](src/business.ts#L10) 10；[issues 目录树](src/github.ts#L181) 181–196；[PR 详情/文件/CI/关联](src/github.ts#L199) 199–227；[本地补充](src/github.ts#L231) 231–258；[业务文件](src/business.ts#L47) 47–59；[缓存前后顺序](src/pipeline.ts#L64) 64–80、fingerprint 10–11、写缓存 103–104。
+
+新增 request-count 测试直接组合真实 Github、run 和内存 fetch，核对上述 6 个默认构成、第二轮缓存仍 3 次，以及 5 个无效关联引用仍发 5 次请求；没有访问真实 GitHub/凭据。
+
+### 本轮验证与限制
+
+- 最终 `npm run typecheck`、`npm test` **532/532** 通过（0 失败、0 跳过）、`npm run verify-pack` **54 文件通过**；预构建产物已刷新，运行前 PATH 已加入 `C:/Program Files/Git/mingw64/bin`，未安装依赖。新增请求计数与界面错误/焦点/删除失败等回归。中间一次大小写断言失败已统一修正后完整复验；`git diff --check` 通过。
+- 实际执行 `npm run ui-smoke`：再次失败于 **CDP timeout: Page.enable**，没有进入插件页面，未生成截图。本轮脚本保留 ui.png / ui-form.png，在 1440×800 检查表单页脚完整且正文滚动，新增 ui-form-invalid.png，并在系统主题确实切换时保存 ui-dark.png；不把媒体设置成功当作暗色已验证。
+- 烟测临时 home：`C:/Users/Mayn/AppData/Local/Temp/dsh-github-triage-ui-home-A6m2Oe`；诊断：`C:/Users/Mayn/AppData/Local/Temp/dsh-github-triage-ui-artifacts-Wru5NW`。脚本 taskkill 未确认 PID 30228 进程树结束，Remove 报 EBUSY；随后 Get-Process 未检出该 PID，但这不证明全部子进程结束；定向查询自建 smoke Node 进程的 CIM 请求被拒绝访问，原烟测执行会话未确认结束。验证绝对路径位于 TEMP、非联接后的显式清理被自动审批以 **blocked by policy** 拒绝，未提供具体原因，未绕过。未满足“不留临时文件”；不触碰历史工作树外残留。烟测脚本末尾已改为所有写入等待后退出，避免无响应 CDP close 握手令一次性 CLI 挂住。
+- 真实 DSH 0.4.2 Electron、亮暗主题、390px/短窗口最终几何与完整可访问性、菜单叠层/焦点外观、真实 GitHub/模型、长期定时仍未实测。组件/真实 renderer 的 DOM 回归、源码与 CSS 审查只能证明对应范围；审核者需在沙箱外复跑脚本并走查这些场景。
+
+### README 必要修改自检
+
+- [x] 第一屏紧接标题的一句话说明了用户能得到什么，未先讲实现细节。
+- [x] 有 3–4 条各不重复的亮点，每条以具体用户收益表达（保留四条）。
+- [x] 与同类插件或现有做法的差异清楚，比较有依据且没有夸大（对比逐条翻 GitHub）。
+- [x] 亮点后有示例输入与输出，或真实截图/演示；示意内容已标注。
+- [x] 图片、链接和锚点有效，没有失效素材或未替换的占位符（未新增图片，保留示意输出；请求核算链接对应上方固定锚点）。
+- [x] 快速上手恰好三步，明确先完全退出桌面 DSH（含托盘）再安装，随后重开使用。
+- [x] Git 地址严格采用 github:hzopc1031/dsh-plugins#main&path:/packages/<pkg> 格式，已换成真实目录名，整段地址加引号。
+- [x] 首次使用入口、必填配置、最小操作及可见结果足够具体，profile 如有要求已核实（沿用 desktop）。
+- [x] 术语先用大白话解释，命令和配置键准确，没有空泛宣传语（按本轮用户要求保留 issues/PR，统一“分析”）。
+- [x] 版本、详细限制、实现机制和测试说明集中在最后；必要操作提醒在步骤旁可见。
+- [x] 开头没有测试数、typecheck、未实测、commit hash 或验收日志。
+- [x] 所有能力及兼容性承诺都有依据，安装、运行和界面验证的结论没有混淆（真实视觉仍未验证）。
+- [x] 名称、描述、入口与插件实际情况一致，示例和素材没有凭据或私人信息。
+- [x] 只改授权文档，未因写作而执行安装、发布或未授权的 Git 写操作（代码与临时隔离验证另由本轮开发任务授权，未装入用户 profile）。
+
+---
+
+以下为上一轮及更早记录，当前结论以上方第二轮记录为准。
+
+
+## 0.4.3 官方 UI 资料核对与接入（2026-11-12）
+
+工作目录为 `dsh-plugins-wt-triage-official`，分支 `feat/triage-official-ui`，基线 `origin/main 8e5de94`。本轮是现有页面的控件接入与样式修正，不重写插件、路由或分析逻辑，版本使用补丁号 0.4.3。版本同步 package.json、lock 顶层和根包、GitHub User-Agent、测试断言、THIRD_PARTY_NOTICES、README 与 verify-pack；engines.dsh 仍为 `>=0.2.1-rc.5 <0.3.0-0`。
+
+### 为什么之前没用
+
+实际打开了本文件的 0.4.0 dsh-context 对照与「0.4.1 表单调研与采用依据」、CHANGELOG、THIRD_PARTY_NOTICES，以及 `_wip/triage-ui/{prompt,last}.txt`、`_wip/triage-form/{prompt,last}.txt`。第一轮任务明确以 dsh-context 为主要参考，交付记录也是围绕它的布局、图标解析和路由。第二轮任务要求找现成 skill/组件，但记录显示只检查了统一目录索引和相关页面源码，没有记录表明读过官方内部 dsh-client-ui-ux 或社区 dsh-plugin-development。
+
+本轮重新读取 `C:/Users/Mayn/.dsh/skills/README.md`，并确认两个同名目录均不存在；索引有 dsh-plugin-readme，没有上述两个 UI/开发 skill。这能解释自动发现未命中，不能代替继续检索官方资料。上一轮已看到 SettingsValueField，却把它的配置层语义一概视为不适合，仅使用 Modal/Input、借鉴字段布局。对上限这类确实支持继承的字段，这个排除范围过宽；其他原生控件也没有完成系统性替换。能从记录确认的是检索和采用不充分，不能据此编造当时的主观动机。
+
+### 实际阅读的资料与采用范围
+
+- 官方本地只读检出经单次 Git 命令核对为 `e8f7b93a344964de3dca1ace9e72b6e4d6de87cb`。完整打开 `dsh-client-ui-ux/SKILL.md`：UI change workflow / Minimum checks、Reuse before adding、Visual foundation、Component geometry、Interaction and feedback、Check the rules together；完整打开 `references/alignment.md`、`icons.md`、`spacing.md`。采用同角色轴线、完整图标盒与同前景色、组间/组内层级、共享控件、≤500 字重、在位错误、菜单 portal/关闭/焦点和真实渲染证据边界。
+- 完整打开 `dsh-responsive-ui/SKILL.md` 第 1–9 节：以 390 CSS px 为最低验收目标，先分配空间与换行，保留主要动作和状态；完整展示长仓库名/路径/摘要，容器查询保留，粗指针输入字号至少 16px，不用 UA 判断布局，不因宽度变化重新挂载表单。标签页本身在局部横向滚动区保留单行，不造成整页横向滚动；实际几何仍待浏览器验证。
+- 完整打开 `cordis-styling-nitpicking/SKILL.md` 的 Sources of truth、Review workflow 与三类 P0 规则。限定检查 Client apply、样式/locale/slot 注册、React 请求存活标记、轮询计时器和新增 Menu 的挂载/卸载；新状态留在组件内，没有新增模块级可变缓存、监听或计时器。原 ctx.effect 清理不变；真实 rc.5 renderer 测试仍检查卸载后样式移除，新增菜单测试检查 portal/backing 随表单卸载移除。这不是 Host 生命周期全面审计。
+- 官方 skill 引用的资料不在本地稀疏检出中，另通过 GitHub 实际打开同一 e8f7b93 的 `docs/web-styling.md`（Ownership、Component rules、Input capabilities）、`docs/ui-radius.md`（Select the radius、Nested geometry、Settings card materials、Apply and verify）与 `ui-primitives/README.md`（Component catalog、Controls and icons、Settings form kit）。卡片使用正式 `--dsw-alias-settings-card-fill/stroke` 与 `--dsw-radius-xl`，不叠加中性边框和阴影；内部组采用共享 radius token，普通分隔线 0.5px；主题选择器由宿主拥有。旧版共享组件内部的 hover/材料实现保留宿主版本，不复制或跨包覆盖以追赶 master；本包自己的 hover 规则受 hover 媒体查询约束。另在线核对 rc.5 `ui-theme/src/styles/base.css`，确认这些卡片别名和 radius token 已存在。
+- 社区本地只读检出核对为 `4dab80cbeb86f706aa6fa9cc8269049aa809ccc9`。完整打开 README、SKILL.md（Establish authority and intent、Execute selected workflow）、`component-routing.md`（Build a component plan、Add Client UI、Installable external bundle、Diagnose by failed boundary）、`installable-bundle.md`（包格式/层/打包验证）、`authority-and-verification.md`（来源优先级/Client UI 证据/未完成验证），以及指定的 `runtime-dynamic.md`、`workspace-plugin.md` 和 `scripts/check-artifact.mjs`。
+- 按社区规则分类为 **外部可安装 bundle**，不会因本仓库目录叫 packages 就套用 DSH 宿主 workspace 规则。Client 由现有 apply + sidebar.panellist/main 槽拥有；持久化、校验与 GitHub 权限仍由原 Host ui-service/POST 路由拥有。只调整展示消费者，不扩展公共服务、路由或写 GitHub 能力。manifest、patch 和 client external/bundle 机制保留。
+- README 完整读取并应用权威 `C:/Users/Mayn/.dsh/skills/dsh-plugin-readme/SKILL.md` 的「确认事实与范围」「已有好文案保留，只修改任务要求的部分」和「版本、限制、测试说明放文末」。仅更新上限继承操作、版本、共享控件说明与验证边界。
+
+不采用：宿主专属的 workspace compiler aggregate、invariant、Agent Note 双语副本、内部 designer 审批名册/PR GIF 流程，不适用于本次外部插件本地修正且本轮不建 PR/合并。runtime-dynamic 的 inspect/define/run 不适用，不安装该社区适配器。仍保留既有 gt- 作用域 CSS + esbuild text loader + ctx.effect 注入，而非迁移宿主 CSS Modules 构建链；控件视觉材料来自宿主 primitives，没有复制实现或新增依赖。既有在位结果/错误状态保留，未新增全局通知系统。未把静态检查或 jsdom 当作视觉验收。
+
+### primitives 版本依据与具体使用
+
+本机包 package.json 明确为 **0.2.1-rc.5**；实际打开其 `lib/types/index.d.ts`、Button/Input/Modal/SegmentedTabs/SegmentedControl/Checkbox/Pill/Tag/Menu/InlineEditor 的声明、`settings-form/{fields,form-model,SettingsForm}.d.ts`，对应 `lib/index.js` 组件实现及 Button/Input/Modal/SegmentedTabs/Menu/MenuSurface/Checkbox/Pill/Tag/settings-form 字段 CSS。
+
+通过 GitHub 实际打开固定 [rc.1 index.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.2-rc.1/packages/client/ui-primitives/src/index.ts)；再分别打开同 tag 的 Button.tsx、Input.tsx、Modal.tsx、SegmentedTabs.tsx、Checkbox.tsx、Menu.tsx、Pill.tsx、Tag.tsx、settings-form/fields.tsx 与 icons/index.tsx，确认以下实际使用的导出和 props 两边均有：
+
+- **Button**：全页、仓库卡、规则、重试、保存/取消、纠正、删除、会话入口；使用 primary / outline / ghost 和 sm / md、icon、原生表单属性。删除语义色通过局部类消费 error token，其他外观不再由自写 button 规则覆盖。
+- **Input**：搜索、路径、ref、仓库地址、定时时间、本次扫描日期/上限、导出路径。使用真实 wrapper 与内部 input，不再给 wrapper 叠加一套输入框边框/填充。
+- **Menu（内部委托 MenuSurface）+ Button**：分析类型、定时、结果类型、排序、纠正结论。`client-controls.tsx` 仅将 tuple 数据和表单状态接到 Menu；portal、键盘遍历、边界定位、外部点击/Escape、焦点返回均由官方实现，不另造 select/菜单。rc.5 / rc.1 无独立导出的 Select。
+- **SegmentedTabs + Pill**：五档结果视图（含全部/仅预筛）使用正式 tablist/tab/tabpanel 关系、方向键/Home/End；仓库筛选使用 Pill 的 active 状态。只使用 rc.5 支持的交集 props，没有采用 rc.1 才增加的 SegmentedTabs size。
+- **Tag**：结论与运行状态使用 success/warning/danger/neutral tone；替换手写徽章。
+- **Checkbox**：全面扫描选项；不用原生自写 checkbox，也没有本次需要新增的 Switch 场景。
+- **Modal**：仓库表单继续 headless；分析选项、删除确认继续共享 Modal（旧版整页回退本轮移除），并约束真实外层卡片宽高。菜单放到 body，避免正文滚动区裁切。
+- **SettingsValueField**：普通/全量仓库上限，用真实 label、numeric、hint/invalid、override badge 和 reset。仓库已有/草稿非空值表示单独设置；「继承插件设置」只暂存空值，保存时经原 changedFields/dirty 逻辑发送 null，不触发即时写入或更改其他字段。
+- **官方现有图标**：Branch/Plus/Settings/Search/Clock/ChevronDown，rc.5 声明与 rc.1 icons 导出逐个确认；展开箭头由共享 ChevronDown 旋转，不新画 SVG。图文控件使用同色/统一 16px 盒，保留文字标签，不增加需要额外 tooltip 的无名图标操作。
+
+未采用 SettingsForm / SettingsFormModel：它们绑定 revision-fenced settings scope、mutate 路径及 discard 生命周期；现有仓库操作是独立 add/patch 协议，接它们会改变持久化语义。仅复用能真实表达上限继承的 SettingsValueField。`ConfigField` 未出现在 rc.5 primitives 的 index 导出中，不假设宿主内部同名字段可用。业务说明、纠正理由与规则文档保留原生 textarea：两版没有通用 Textarea 导出，InlineEditor 会自动聚焦、Enter 保存/Escape 取消，不符合整表保存/长文档导入；这些 textarea 只消费已核对的 DSH 主题/半像素边框/圆角/伸缩规则。
+
+### 验证与未完成项
+
+- Windows / Node.js **24.20.0**；测试前 PATH 前置 `C:/Program Files/Git/mingw64/bin`，未安装任何依赖。`npm run typecheck`、`npm test`：**521/521 通过，0 失败、0 跳过**。最后图标/材料调整后重新 build、typecheck 和两组 UI/renderer 测试 **34/34 通过**。
+- jsdom 不再用自制 Modal/Input 替身。`test/primitives-fixture.mjs` 从已安装 rc.5 单体产物提取精确组件及依赖区域，在内存执行，绕开未使用的 Markdown/highlighter 依赖；CSS 仅用类映射、DOM 有有限适配。因此证明的是组件交互与本插件接线，不证明完整官方模块加载、图标 sprite 或视觉。真实 rc.5 renderer/slot 测试保留。
+- 回归保持地址解析（HTTPS/SSH/owner/repo）、原命令、POST 路由、局部更新/显式清空、删除确认、扫描/三档筛选/详情/纠正/规则等；分析代码未改，src/github.ts 仅更新 User-Agent。新增菜单键盘选择、Escape 不关底层表单、点击外部关闭、焦点返回、卸载移除 backing、tab 焦点/panel 关系、上限继承 reset 只提交 null、保存失败保留草稿并释放 disabled。
+- 已按本次用户授权运行社区只读 `check-artifact.mjs bundle .`：**PASS，0 warnings**；它只检查 manifest/patch，不是宿主运行证明。`npm run verify-pack`：**PASS，0.4.3，54 文件精确白名单**；新增 client-controls 的 JS/声明也进入白名单，primitives/React 仍为宿主 external；`git diff --check` 通过。
+- `npm run ui-smoke` 已尝试。临时 web 通过启动前提，但独立 Edge 在 **CDP timeout: Page.enable** 失败，未进入插件页面，未生成 `ui.png` / `ui-form.png`。原脚本仍保留整页与长路径表单两张截图及几何检查。诊断目录：`C:/Users/Mayn/AppData/Local/Temp/dsh-github-triage-ui-artifacts-jPrsh0`。没有接触已登录 Chrome 或用户 desktop profile。
+- 未验证：真实宿主亮/暗主题、390px 与断点两侧、长内容的最终几何/焦点外观、菜单边界和重叠层、图标 sprite、Electron/macOS 框架间隙、rc.1 实机页面、真实 GitHub/模型请求、长期调度。审核者需在沙箱外复跑烟测并检查这些场景；不宣称视觉验收完成。
+- 清理限制：烟测报告自建进程树 PID **10764** 停止未确认，临时 home `C:/Users/Mayn/AppData/Local/Temp/dsh-github-triage-ui-home-j98KCd` 最终 rmdir **EBUSY**。随后 Get-Process 未检出该 PID；CIM 进程归属查询被拒，不能据此保证整棵进程树停止。烟测命令在报告失败后未正常结束，仍需审核者核对自建进程。
+- 初始 git status 干净；验证期间 worktree 根新增 `cache.db`、`data/`、`webui/`（创建时间 15:08:18），未读取其中配置内容。这些不是提交目标。精确列举并校验路径后的清理（包括以上 TEMP home），以及再收窄到 worktree 生成物的清理，均被自动审批以 **blocked by policy** 拒绝，没有提供更具体原因，未用其他删除方式绕过。verify-pack 还使用本包 `.tmp/npm-cache`，这是本地 npm 诊断缓存，不进入发布物。审核者需清理这些验证产物；本轮无法满足「不留临时文件」这一项。
+
+以下保留此前开发记录，其中上轮关于排除 SettingsValueField 的结论已由本节修正。
+
 
 说明：本轮（表单与 https 地址）原按 0.4.1 开发；rebase 时 main 的 0.4.1 已被内网兼容合并占用，故发布为 **0.4.2**，下文「0.4.1 表单/地址」小节即 0.4.2 内容。
 
@@ -22,7 +211,7 @@
 
 ## 0.4.1 地址与验证
 
-原 `types.ts` 的 repoName 只用正则接受 owner/repo 并转小写；`ui-contract.ts`、`config.ts`、settings 加载及路由已共用该 schema。本轮在这一入口增加 HTTP/HTTPS、www、无协议 github.com、Git SSH，处理首尾空白、.git、尾斜杠、网页子路径、查询和锚点，输出始终是小写 owner/repo。精确主机白名单拒绝子域、仿冒主机、凭据及非法字符；错误使用固定文字，不回显凭据。补齐 GitHub enrich 与纠正命令原先校验后未使用规范值的位置，仅更改地址处理，不改研判算法。
+原 `types.ts` 的 repoName 只用正则接受 owner/repo 并转小写；`ui-contract.ts`、`config.ts`、settings 加载及路由已共用该 schema。本轮在这一入口增加 HTTP/HTTPS、www、无协议 github.com、Git SSH，处理首尾空白、.git、尾斜杠、网页子路径、查询和锚点，输出始终是小写 owner/repo。精确主机白名单拒绝子域、仿冒主机、凭据及非法字符；错误使用固定文字，不回显凭据。补齐 GitHub enrich 与纠正命令原先校验后未使用规范值的位置，仅更改地址处理，不改分析算法。
 
 - `npm run build`、`npm run typecheck`：通过；`npm test`：最终 **509/509 通过，0 失败、0 跳过**；预构建产物已更新。
 - `npm run verify-pack`：通过，**0.4.1 / 50 文件**精确白名单；版本同步 package.json、lock 顶层/根包、User-Agent、THIRD_PARTY_NOTICES、README 与断言。engines.dsh 保持 `>=0.2.1-rc.5 <0.3.0-0`。`git diff --check` 通过。
@@ -41,7 +230,7 @@
 
 | 参考文件（相对于 dsh-context-ref） | 核实后落地的做法 |
 | --- | --- |
-| `src/client/insightPage.ts` | 同 ID 的 `sidebar.panellist` list/root 与 `main` keyed/root，侧栏入口 `order:25`，中央完整页面。会话顶部按钮调用 `layout.selectPanel` 打开同一页面，保留工作空间、避免两份操作流程；仅缺少布局能力的宿主回退紧凑 Modal。 |
+| `src/client/insightPage.ts` | 同 ID 的 `sidebar.panellist` list/root 与 `main` keyed/root，侧栏入口 `order:25`，中央完整页面。当前仅保留侧栏及中央页，旧版会话导航与紧凑 Modal 已于本轮移除。 |
 | `src/host/connection.ts`、`postRoute.ts`；`src/client/route.ts`、`apiRoutes.ts` | `ctx.inject(['connection'], ...)` 能力检测，精确 POST 路由、buffered body、effect 生命周期、`{ok,value,error}` 信封、no-store；浏览器 fetch 与 zod 按动作解码。复用现有 ui-service，没有新端口或会话 agent 依赖。 |
 | `src/client/components/overviewPanel.tsx`、`styles/overview.css` | 全高 flex 页面 → 独立滚动区 → 页头与胶囊 → 六项 KPI → 仓库卡片网格 → 结果工具栏、仓库 chip、结果卡片 → 按需规则区。 |
 | `src/client/styles/base.css`、`stats.css` | `gt-` 类名前缀、DSH bg/border/label/button/state/shadow 令牌、亮暗主题、color-mix、容器查询、分段控件与可清空搜索、三步空状态。CSS 以 esbuild text loader 注入并随插件卸载移除。 |
@@ -74,7 +263,7 @@ UI 源码拆分为 `client.tsx`、`client-forms.tsx`、`client-route.ts`、`clie
 
 | 项目 | 结果 / 证据 |
 | --- | --- |
-| 一级侧栏页面与会话顶部按钮 | 通过。真实 rc.5 renderer 的 main/root、sidebar/list、header/session 同时渲染，顶部导航同 ID；命令执行替身故意拒绝，页面仍靠 POST 加载。另测缺布局的紧凑 Modal。 |
+| 一级侧栏页面与中央页面 | 本轮真实 rc.5 renderer 验证 main/root、sidebar/list 可用，header/session 无本插件动作；页面通过 POST 加载。 |
 | 仓库添加、删除确认、编辑与所有字段 | 通过。类型、业务/文件、本地路径/ref、规则文件、每天/间隔、两种上限均保留；前后端校验、并发最新字段保留与显式清空。 |
 | 模型状态、配置指引、真实 ID | 通过。已配置/禁用/缺失状态、设置入口和可复制模型目录；真实服务商调用未实测。 |
 | 增量/全量、since/until/上限、全部分析 | 通过。表单校验、请求形状、防重复、非阻塞入队、进度状态；与命令/定时共享串行队列。 |
@@ -99,7 +288,7 @@ UI 源码拆分为 `client.tsx`、`client-forms.tsx`、`client-route.ts`、`clie
 
 ## 真实 UI smoke 与未验证项
 
-已更新 `scripts/ui-smoke.mjs`：系统 TEMP 下独立 DSH_HOME/web profile，使用现有桌面 rc.5 CLI **离线、本地路径、ignore-scripts** 安装，只启动独立无头 Edge；检查侧栏入口、无活动 agent 的中央页面、六 KPI、仓库与结果区、模型指引，再检查会话快捷导航。加入带诊断噪声的版本行提取、失败时自建进程停止诊断与句柄释放；三个离线脚本契约测试通过。
+已更新 `scripts/ui-smoke.mjs`：系统 TEMP 下独立 DSH_HOME/web profile，使用现有桌面 rc.5 CLI **离线、本地路径、ignore-scripts** 安装，只启动独立无头 Edge；检查侧栏入口、无活动 agent 的中央页面、六 KPI、仓库与结果区、模型指引，再确认没有会话重复入口。加入带诊断噪声的版本行提取、失败时自建进程停止诊断与句柄释放；三个离线脚本契约测试通过。
 
 本机实际执行：CLI 为 0.2.1-rc.5，TEMP profile 本地安装与 web 启动完成，日志宣布 loopback `127.0.0.1:52060`。随后 **CDP `Page.enable` 超时**，尚未进入页面 DOM/截图检查，不能声称真实 UI 通过。退出清理初次报 EBUSY；对本次工具会话发出中断后再核对，该监听端口已停止。TEMP 根目录仍存在，进一步单独清理也被自动审批策略以 `blocked by policy` 拒绝，没有继续绕过。
 
@@ -146,7 +335,7 @@ UI 源码拆分为 `client.tsx`、`client-forms.tsx`、`client-route.ts`、`clie
 - [x] 图片、链接和锚点有效，没有失效素材或未替换的占位符。无图片；本地链接存在，外部链接沿用既有正式仓库及固定官方版本地址。
 - [x] 快速上手恰好三步，明确先完全退出桌面 DSH（含托盘）再安装，随后重开使用。
 - [x] Git 地址严格采用 `github:hzopc1031/dsh-plugins#main&path:/packages/<pkg>` 格式，已换成真实目录名，整段地址加引号。
-- [x] 首次使用入口、必填配置、最小操作及可见结果足够具体，profile 如有要求已核实。desktop、顶部“GitHub 哨兵”、provider/model/modelEnabled 和首次分析步骤明确。
+- [x] 首次使用入口、必填配置、最小操作及可见结果足够具体，profile 如有要求已核实。desktop、左侧栏“GitHub 哨兵”、provider/model/modelEnabled 和首次分析步骤明确。
 - [x] 术语先用大白话解释，命令和配置键准确，没有空泛宣传语。
 - [x] 版本、详细限制、实现机制和测试说明集中在最后；必要操作提醒在步骤旁可见。
 - [x] 开头没有测试数、typecheck、未实测、commit hash 或验收日志。
@@ -165,9 +354,9 @@ UI 源码拆分为 `client.tsx`、`client-forms.tsx`、`client-route.ts`、`clie
 - [ui-slots/src/index.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-slots/src/index.ts)：SlotCore、SlotMap、kind/scope、register 的 children 声明及释放；不能自行取个 slot 名称就假定宿主有出口。
 - [ui-renderer/src/client/registry.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-renderer/src/client/registry.ts) 与 [client/index.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-renderer/src/client/index.ts)：SlotRegistry、slots.inject、register、installScope 与真实 React 渲染。root 是 single，不应覆盖；整应用叠层应向 shell.overlay 贡献（[ui-layout 声明](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-layout/src/client/index.ts)），不是抢 root。
 - [ui-sidebar/src/client/index.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-sidebar/src/client/index.ts) 与 [contract/slots.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-sidebar/src/client/contract/slots.ts)：真实侧栏扩展有 sidebar.panellist / sidebar.panellist.actions / sidebar.footer.action（list/root）。sidebar.settings 是 single，替换它会影响原设置入口。panellist id 对应 main 面板，需要配套布局与导航注册。
-- [ui-conversation/src/client/apply.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-conversation/src/client/apply.ts) 与 [contract/slots.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-conversation/src/client/contract/slots.ts)：真实 **conversation.session.header.actions（list/session）**、header.utilities（list/session）、header.views.actions（list/root）、conversation.view、conversation.input.left/right/dock/overlay。当前采用 actions，在已打开会话顶部显示「GitHub 哨兵」按钮。它有会话 ID，可直接调用现成的会话命令 remote；本仓库 draft-rescue 已用相同入口。
+- [ui-conversation/src/client/apply.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-conversation/src/client/apply.ts) 与 [contract/slots.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-conversation/src/client/contract/slots.ts)：真实 **conversation.session.header.actions（list/session）**、header.utilities（list/session）、header.views.actions（list/root）、conversation.view、conversation.input.left/right/dock/overlay。此处为旧版会话接入依据；0.4.3 本轮已移除该注册，仅保留侧栏一级入口。
 - [ui-session/src/client/index.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-session/src/client/index.ts)：会话域标准 props/Hook、session scope 适配，不是任意业务远程方法。
-- [ui-settings/src/client/contract/slots.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-settings/src/client/contract/slots.ts)：有 settings.section、settings.plugins.tab、settings.action、settings.general.item；可扩展设置，但本插件需要当前会话的 remote commands，选择顶部面板更直接，模型配置继续用原插件设置的 provider/model/modelEnabled。
+- [ui-settings/src/client/contract/slots.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-settings/src/client/contract/slots.ts)：有 settings.section、settings.plugins.tab、settings.action、settings.general.item；可扩展设置，旧版使用会话 remote commands；当前整页已改为 POST，不依赖会话，模型配置继续用原插件设置的 provider/model/modelEnabled。
 - [ui-primitives/src/Modal.tsx](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-primitives/src/Modal.tsx)：真实共享 Modal，open/onClose/title/closeLabel；portal 到 document.body，自带关闭、Escape 和焦点层。使用宿主共享包，不复制实现、不打包私有 React。
 - [api/remotes/src/client/index.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/api/remotes/src/client/index.ts) 是已生成 Remote contribution 的显式集合，mount commandsRemote / llmRemote 等；不是动态 ctx.remote.anyName 的通用注册器。[api/gateway/src/index.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/api/gateway/src/index.ts) 依赖 Typert 已登记描述/Remote 元数据做派发。不能随手提供一个服务方法就宣称有浏览器 remote。
 - [interaction/commands/src/index.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/interaction/commands/src/index.ts) 的 CommandRuntime.execute 真实标注 @Remote；包内 rc.5 生成类型 typert.remote-client.d.ts 确认为 **ctx.remote.commands.execute(agentId, line, submittedAttachments, signal?) → RemoteResult<CommandExecution | undefined>**。沿用 snip-attach 的调用方式，新增插件自身结构化命令 /triage-ui，requestSchema 严格分发只读查询和本插件配置/纠正/导出，不新增 HTTP 服务或虚构 remote API。模型 ID 目录仍通过已验证的 llm.listProviders/listModels（同 /triage-models）只读返回。
@@ -218,7 +407,7 @@ UI 源码拆分为 `client.tsx`、`client-forms.tsx`、`client-route.ts`、`clie
 
 `scripts/ui-smoke.mjs` 默认使用桌面版自带 `%LOCALAPPDATA%\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd` 与系统 Edge。在**系统 TEMP** 下创建全新 DSH_HOME，以官方 web 模板初始化，由 CLI `plugin --profile web add --offline --ignore-scripts --config.auto-install-peers=false --store-dir <TEMP子目录> <本包绝对路径>` 进行真实本地路径安装。不会再用手工 junction 冒充安装；不下载依赖、不运行安装脚本。脚本默认不会接触 desktop profile、用户 Chrome 或 D:\AIInfra\DSHarness。
 
-在临时 profile 创建一个无提示词的空会话并命名，启动 loopback web，使用独立 Edge user-data-dir 与内置 WebSocket/CDP 选择会话，确认顶部按钮，点击后检查共享 Modal、“仓库列表”、未配模型提示并截图。临时 web 的自动生成认证 URL 仅用于内存中导航，诊断剔除 URL query/hash，不输出凭据。最后关闭自建进程并校验路径位于 TEMP 后删除临时 DSH_HOME 和浏览器目录；截图、result.json 和脱敏日志留在 TEMP/dsh-github-triage-ui-artifacts-*，终端打印路径。退出码：0 通过/help，1 安装/启动/UI 检查失败，2 参数或环境前提不足，3 清理失败。
+在临时 profile 创建一个无提示词的空会话并命名，启动 loopback web，使用独立 Edge user-data-dir 与内置 WebSocket/CDP 选择会话，确认没有重复会话入口，并通过侧栏检查主页面、“仓库列表”、未配模型提示并截图。临时 web 的自动生成认证 URL 仅用于内存中导航，诊断剔除 URL query/hash，不输出凭据。最后关闭自建进程并校验路径位于 TEMP 后删除临时 DSH_HOME 和浏览器目录；截图、result.json 和脱敏日志留在 TEMP/dsh-github-triage-ui-artifacts-*，终端打印路径。退出码：0 通过/help，1 安装/启动/UI 检查失败，2 参数或环境前提不足，3 清理失败。
 
 从包目录在沙箱外运行：
 
@@ -243,7 +432,7 @@ node scripts/ui-smoke.mjs --dsh "$env:LOCALAPPDATA\Programs\DeepSeek Harness\res
 - [x] 无空图片或占位符；相对 README/STATUS/LICENSE/NOTICE 路径存在；官方链接固定 rc.5。
 - [x] 快速上手恰好三步：完全退出桌面/托盘、使用桌面自带 CLI 安装、重开配置并得到首份结果。
 - [x] 安装命令准确使用桌面 runtime 的 dsh.cmd、desktop profile、加引号的 Git main 子目录地址。
-- [x] 明确已打开会话顶部「GitHub 哨兵」、provider/model/modelEnabled、添加与首次分析、可见结果。
+- [x] 明确左侧栏「GitHub 哨兵」、provider/model/modelEnabled、添加与首次分析、可见结果。
 - [x] 用大白话解释问题与代码改动、三档和本地适用性；命令、字段准确。
 - [x] 版本、边界、机制、验证集中在补充说明；模型外发、费用、定时、导出不覆盖放在操作旁。
 - [x] 开头无测试数/typecheck/commit/验收日志。
@@ -285,7 +474,7 @@ node scripts/ui-smoke.mjs --dsh "$env:LOCALAPPDATA\Programs\DeepSeek Harness\res
 
 issue / PR 都必填 recommendation（adopt/manual-review/not-recommended）、priority、reason、businessReason、evidence 及本地字段。原 type/exists/worthFixing/verdict/fitsDirection/risk/testing 保留。卡片和简报先建议采纳，再需人工看，再不推荐，组内按模型优先级；简报每组最多列 20 条编号。保留 fenced JSON 容错，缺少新字段则解析失败，不能把旧模型输出当成新结论。
 
-formatVersion:2 以及 0.1.0 状态保留仓库设置、删除标记、lastRun 和人工纠正，清除派生 cache/reports/pending，映射旧人工结论到新字段。缓存指纹另含业务内容、规则内容和模型路由。规则只供证据，业务与本地事实不替代模型独立研判；无模型/失败只预筛、不缓存。新规则或本地提交变化后重新处理，同一条目的用户纠正仍优先采用。
+formatVersion:2 以及 0.1.0 状态保留仓库设置、删除标记、lastRun 和人工纠正，清除派生 cache/reports/pending，映射旧人工结论到新字段。缓存指纹另含业务内容、规则内容和模型路由。规则只供证据，业务与本地事实不替代模型独立分析；无模型/失败只预筛、不缓存。新规则或本地提交变化后重新处理，同一条目的用户纠正仍优先采用。
 
 ### 全量与增量
 
@@ -329,7 +518,7 @@ Windows / Node.js 24.20.0 / npm 11.19.0，Git 临时仓库真实运行。最终 
 
 - [x] 第一屏紧接标题的一句话说明了用户能得到什么，未先讲实现细节。
 - [x] 有 3–4 条各不重复的亮点，每条以具体用户收益表达。首条是结合业务说明和自己的代码。
-- [x] 与同类插件或现有做法的差异清楚，比较有依据且没有夸大。只比较逐条翻 GitHub 与集中研判，不宣称竞品优劣。
+- [x] 与同类插件或现有做法的差异清楚，比较有依据且没有夸大。只比较逐条翻 GitHub 与集中分析，不宣称竞品优劣。
 - [x] 亮点后有示例输入与输出，或真实截图/演示；示意内容已标注。示例包含三档，不伪装真实结果。
 - [x] 图片、链接和锚点有效，没有失效素材或未替换的占位符。无图片和自定义锚点；本地文档路径已核对，外部链接使用明确的仓库/官方文档地址。
 - [x] 快速上手恰好三步，明确先完全退出桌面 DSH（含托盘）再安装，随后重开使用。本地对照放第三步内的可选操作。
@@ -345,7 +534,7 @@ Windows / Node.js 24.20.0 / npm 11.19.0，Git 临时仓库真实运行。最终 
 ## 0.4.0 沙箱外 ui-smoke 实测（2026-11-12，审核者复跑）
 
 - 环境：桌面自带 CLI 0.2.1-rc.5，系统 TEMP 下临时 DSH_HOME 的 web profile，本地路径离线安装，独立无头 Edge；不涉及用户 desktop profile。
-- 两次复跑结果一致（退出码 1）：侧边栏「GitHub 哨兵」入口、无活动 agent 的中央整页、6 项 KPI、仓库列表、研判结果列表、模型未配置指引均真实出现，数据经宿主 POST 路由加载成功，无错误条。
-- 失败项：会话顶部快捷按钮未检出。临时 web 左栏显示「暂无会话」并弹出登录引导，种子会话未在列表出现，无法进入会话；判断为 smoke 环境未种出可见会话，而非按钮缺失。代码中按钮仍注册于 `conversation.session.header.actions`，点击调用 `layout.selectPanel('dsh-github-triage')` 打开同一页面，失败时回退共享 Modal 渲染同一 Dashboard；jsdom 测试覆盖。
-- 未验证：真实桌面 DSH（Electron）中的会话顶部按钮、页面视觉与交互；DSH 0.2.2-rc.1 实机；真实 GitHub/模型长跑与定时。
+- 两次复跑结果一致（退出码 1）：侧边栏「GitHub 哨兵」入口、无活动 agent 的中央整页、6 项 KPI、仓库列表、分析结果列表、模型未配置指引均真实出现，数据经宿主 POST 路由加载成功，无错误条。
+- 失败项：会话顶部快捷按钮未检出。临时 web 左栏显示「暂无会话」并弹出登录引导，种子会话未在列表出现，无法进入会话；判断为 smoke 环境未种出可见会话，而非按钮缺失。这是旧版 smoke 的结果；当前注册与回退组件已删除，改为验证会话动作缺席。
+- 未验证：真实桌面 DSH（Electron）中的页面视觉与交互；DSH 0.2.2-rc.1 实机；真实 GitHub/模型长跑与定时。
 - 上文列出的 TEMP 遗留目录（dsh-github-triage-ui-home-*、ui-artifacts-*）已由审核者在沙箱外清理。

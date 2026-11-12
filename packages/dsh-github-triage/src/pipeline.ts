@@ -28,8 +28,8 @@ export function briefing(repo:string,changed:Result[],reused:number):string|unde
     const items=sorted(changed.filter(r=>r.judgment?.recommendation===value))
     return items.length?label+' '+items.length+' 条：'+items.slice(0,20).map(r=>'#'+r.number+'（'+r.judgment!.priority+'）').join('、')+(items.length>20?'…':''):''
   }).filter(Boolean)
-  return repo+'：新增/更新 '+issues.length+' 个 issue，'+prs.length+' 个 PR。缓存复用 '+reused+' 条。'+
-    (unassessed.length?' '+unassessed.length+' 条仅规则预筛，未经 AI 研判；'+[...new Set(unassessed.map(r=>r.modelNote))].join('；'):'')+'\n'+groups.join('\n')
+  return repo+'：新增/更新 '+issues.length+' 个 issues，'+prs.length+' 个 PR。缓存复用 '+reused+' 条。'+
+    (unassessed.length?' '+unassessed.length+' 条仅规则预筛，未经 AI 分析；'+[...new Set(unassessed.map(r=>r.modelNote))].join('；'):'')+'\n'+groups.join('\n')
 }
 /** Keep valid structured JSON and a byte budget even for large/untrusted sources. */
 export function modelPrompt(item:Item,evidence:string[],business:Business,state:State,repo:Repo,local:LocalEvidence={status:"未配置本地仓库对照",files:[],evidence:[]},ruleText=""):string {
@@ -85,7 +85,7 @@ export async function run(source:Source,repo:Repo,state:State,options:Scan&{limi
     else if(options.model){
       let output:string|undefined,failed=false
       try{output=await options.model(safe.text(modelPrompt(enriched,preScreen.evidence,business,state,repo,structuredClone(localContext),ruleContext.text)),options.signal)}
-      catch{failed=true;note='模型不可用或调用失败（含超时），无法 AI 研判；请检查 provider、model 和 DSH 模型服务。'}
+      catch{failed=true;note='模型不可用或调用失败（含超时），无法 AI 分析；请检查 provider、model 和 DSH 模型服务。'}
       if(!failed){
         try{
           if(typeof output!=='string')throw new Error('模型输出不是文本')
@@ -94,7 +94,7 @@ export async function run(source:Source,repo:Repo,state:State,options:Scan&{limi
           // Only observations are preserved: rules never change the model's decisions.
           judgment.evidence=[...new Set([...preScreen.evidence.map(e=>clip(e,800)),...judgment.evidence])].slice(0,40)
           if(!business.text)judgment.businessReason='未提供业务说明，按通用标准判断；'+clip(judgment.businessReason,900)
-        }catch{judgment=undefined;note='模型输出解析失败（缺字段、枚举或 JSON 格式不符），无法 AI 研判。'}
+        }catch{judgment=undefined;note='模型输出解析失败（缺字段、枚举或 JSON 格式不符），无法 AI 分析。'}
       }
     }
     options.signal?.throwIfAborted()
@@ -122,9 +122,9 @@ export function render(report:Report):string {
     report.localStatus,report.rulesStatus,'业务说明：'+md(report.businessStatus),new Date(report.at).toLocaleString()+' · 本轮处理 '+report.analyzed+' / 缓存 '+report.reused,
     ...report.warnings,...sorted(report.results).map(r=>{
       const j=r.judgment
-      const label=j?recommendationLabels[j.recommendation]:'未经 AI 研判'
+      const label=j?recommendationLabels[j.recommendation]:'未经 AI 分析'
       const heading=(group===label?'':'\n## '+label)+(group=label,'\n### #'+r.number+' '+md(r.title))+'\n'+md(r.localStatus??'未配置本地仓库对照')
-      if(!j)return heading+'\n**'+r.modelNote+'**\n仅规则预筛，未经 AI 研判\n'+r.evidence.slice(0,12).map(e=>'- '+md(e)).join('\n')+'\n[原链接]('+r.url+')'
+      if(!j)return heading+'\n**'+r.modelNote+'**\n仅规则预筛，未经 AI 分析\n'+r.evidence.slice(0,12).map(e=>'- '+md(e)).join('\n')+'\n[原链接]('+r.url+')'
       return heading+'\n'+recommendationLabels[j.recommendation]+' · 优先级：'+j.priority+'\n本地适用性：'+j.localApplicability+' · '+md(j.localReason)+'\n'+(j.kind==='issue'?j.priority+' · '+j.type+' · 真实存在：'+j.exists+' · '+j.worthFixing:
         j.verdict+' · 符合业务方向：'+j.fitsDirection+' · 风险：'+j.risk+'\n测试：'+md(j.testing))+
         '\n结合业务：'+md(j.businessReason)+'\n'+md(j.reason)+'\n'+j.evidence.map(e=>'- '+md(e)).join('\n')+
@@ -150,7 +150,7 @@ export function correct(state: State, raw: string, now: number): string {
     j.exists=['重复','无效'].includes(value)?'not_a_bug':'unclear'
     j.worthFixing=['重复','无效','提问'].includes(value)?'不值得修':'待补充'
   } else {
-    if (!['值得修','待补充','不值得修'].includes(value)) throw new Error('issue 结论无效')
+    if (!['值得修','待补充','不值得修'].includes(value)) throw new Error('issues 结论无效')
     j.worthFixing=value as typeof j.worthFixing
   }
   if(!['adopt','manual-review','not-recommended'].includes(value)){

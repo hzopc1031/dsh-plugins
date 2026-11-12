@@ -6,26 +6,25 @@ import { createRequire } from 'node:module'
 import { JSDOM } from 'jsdom'
 import React, { act } from 'react'
 import { createRoot } from 'react-dom/client'
+import {primitivesFixture,domGlobals} from './primitives-fixture.mjs'
 const require=createRequire(import.meta.url),{Simulate}=require('react-dom/test-utils')
-const good={kind:'issue',type:'bug',exists:'likely',worthFixing:'值得修',recommendation:'adopt',priority:'高',localApplicability:'present',localReason:'本地 render 函数存在',businessReason:'影响核心业务',reason:'研判理由',evidence:['本地提交线索 abc']}
+const good={kind:'issue',type:'bug',exists:'likely',worthFixing:'值得修',recommendation:'adopt',priority:'高',localApplicability:'present',localReason:'本地 render 函数存在',businessReason:'影响核心业务',reason:'分析理由',evidence:['本地提交线索 abc']}
 const repo={repo:'o/r',mode:'both',business:'原业务',localRepoPath:'C:\\repo',localRef:'main',rulesFile:'C:\\rules.md',schedule:{kind:'daily',time:'09:30'},limit:8}
 const result=(number,j=good)=>({number,kind:j?.kind??'issue',title:'条目 '+number,url:'https://github.com/o/r/'+(j?.kind==='pr'?'pull/':'issues/')+number,source:j?'model':'rules',evidence:['规则证据'],judgment:j})
 const report={repo:'o/r',at:1,analyzed:4,reused:0,warnings:[],businessStatus:'已使用业务',localStatus:'本地对照正常',results:[result(1),result(2,{...good,kind:'pr',verdict:'改完再合',fitsDirection:'yes',risk:'中',testing:'需补认证测试',recommendation:'manual-review'}),result(3,{...good,recommendation:'not-recommended'}),result(4,null)]}
 const snapshot=()=>({repositories:[structuredClone(repo)],reports:[structuredClone(report)],jobs:[],model:{enabled:true,provider:'p',model:'m',available:true},defaults:{limit:20,fullMax:100}})
 async function setup(t){
-  const dom=new JSDOM('<div id="root"></div>',{url:'https://dsh.invalid'}),saved=new Map()
-  for(const [key,value] of Object.entries({window:dom.window,document:dom.window.document,navigator:dom.window.navigator,IS_REACT_ACT_ENVIRONMENT:true})){
+  const dom=new JSDOM('<div id="root"></div>',{url:'https://dsh.invalid',pretendToBeVisual:true}),saved=new Map()
+  for(const [key,value] of Object.entries({...domGlobals(dom),IS_REACT_ACT_ENVIRONMENT:true})){
     saved.set(key,Object.getOwnPropertyDescriptor(globalThis,key));Object.defineProperty(globalThis,key,{configurable:true,writable:true,value})
   }
   let factory,id
   window.__ModuleLoader__={load:row=>{id=row.id;factory=row.factory}}
   vm.runInNewContext(readFileSync(new URL('../lib/client.js',import.meta.url),'utf8'),{window,document,navigator,URL,AbortController,AbortSignal,Error,fetch:(...args)=>globalThis.fetch(...args),setTimeout,clearTimeout})
   assert.equal(id,'dsh-github-triage')
+  const primitives=primitivesFixture()
   const client=factory(name=>{
-    if(name==='@deepseek-ai/dsh-client-ui-primitives')return {
-      Input:({className,...props})=>React.createElement('span',{className},React.createElement('input',props)),
-      Modal:({open,children,title,onClose,className})=>open?React.createElement('div',{role:'dialog','aria-label':title,className},children,React.createElement('button',{onClick:onClose},'关闭面板')):null,
-    }
+    if(name==='@deepseek-ai/dsh-client-ui-primitives')return primitives
     assert.ok(['react','react/jsx-runtime'].includes(name),'host share only: '+name);return require(name)
   })
   const root=createRoot(document.getElementById('root')),calls=[]
@@ -52,8 +51,14 @@ async function setup(t){
     assert.ok(button,'missing button '+label);await act(async()=>{button.click();await Promise.resolve()})
   }
   const input=async(label,value)=>{
-    const el=document.querySelector('[aria-label="'+label+'"]');assert.ok(el,'missing input '+label)
-    await act(async()=>{el.value=value;Simulate.change(el)})
+    const el=document.querySelector('[aria-label="'+label+'"]')??[...document.querySelectorAll('label')].find(e=>e.textContent===label)?.control
+    assert.ok(el,'missing input '+label)
+    if(el.getAttribute('aria-haspopup')==='menu'){
+      await act(async()=>{el.focus();el.click()})
+      const choices={both:'issues 与 PR',issues:'仅 issues',prs:'仅 PR',issue:'仅 issues',pr:'仅 PR',none:'不定时',daily:'每天 HH:MM',every:'每 N 小时',priority:'优先级优先',recent:'最近分析',number:'编号倒序',adopt:'建议采纳','manual-review':'需人工看','not-recommended':'不推荐'}
+      const row=[...document.querySelectorAll('[role=menuitem]')].find(e=>e.textContent===choices[value])
+      assert.ok(row,'missing menu option '+value);await act(async()=>row.click())
+    }else await act(async()=>{el.value=value;Simulate.change(el)})
   }
   const submit=async(label)=>{
     const form=document.querySelector('form[aria-label="'+label+'"]')??document.querySelector(label)
@@ -63,22 +68,45 @@ async function setup(t){
     render:async(name,props={})=>{await act(async()=>root.render(React.createElement(client[name],{call,...props})))},
   }
 }
-test('lazy client registers exact session-header action and opens Chinese dialog',async t=>{
-  const f=await setup(t);let Component,options;const effects=[],registrations=[]
-  f.client.apply({get:()=>undefined,effect:fn=>{effects.push(fn())},slots:{inject:(slot,callback)=>callback(),register:(o,c)=>{registrations.push(o);if(o.name==='conversation.session.header.actions'){options=o;Component=c}}}})
+test('lazy client registers only the sidebar and root page, with no session action',async t=>{
+  const f=await setup(t),effects=[],registrations=[],injections=[]
+  f.client.apply({get:()=>undefined,effect:fn=>{effects.push(fn())},slots:{inject:(slot,callback)=>{injections.push(slot);callback()},register:o=>registrations.push(o)}})
   t.after(()=>effects.reverse().forEach(dispose=>dispose?.()))
+  assert.deepEqual(injections,['main','sidebar.panellist'])
+  assert.equal(registrations.length,2)
   assert.ok(registrations.some(o=>o.name==='main'&&o.key==='dsh-github-triage'))
   assert.ok(registrations.some(o=>o.name==='sidebar.panellist'&&o.id==='dsh-github-triage'&&o.label()==='GitHub 哨兵'))
-  assert.equal(options.id,'dsh-github-triage')
-  await f.render('TriageButton',{sessionId:'s'})
-  assert.equal(document.querySelector('[role=dialog]'),null)
-  await f.click('GitHub 哨兵');assert.ok(document.querySelector('[role=dialog]'));assert.match(document.body.textContent,/仓库列表（1）/);assert.ok(Component)
-  await f.click('关闭面板');assert.equal(document.querySelector('[role=dialog]'),null)
+  assert.equal(f.client.TriageButton,undefined)
 })
 test('dashboard renders repositories, schedule, business, local path and model state',async t=>{
   const f=await setup(t);await f.render('Dashboard')
   await f.click('p / m')
   for(const text of ['o/r','原业务','C:\\repo','每天 09:30','provider：p','model：m'])assert.ok(document.body.textContent.includes(text),text)
+})
+test('network controls keep both actions and display complete multiline diagnostics',async t=>{
+  const f=await setup(t);await f.render('Dashboard')
+  const long='系统代理：Windows PAC\n'+('很长的诊断地址/'.repeat(150))+'\n超时：30 秒\n诊断结束'
+  f.custom(async r=>r.action==='detect-proxy'?'已检测到系统代理':long)
+  await f.click('从系统检测代理')
+  const card=document.querySelector('section[aria-label="代理与网络诊断"]')
+  assert.equal(card.getAttribute('role'),'status')
+  assert.equal(card.querySelector('pre').textContent,'已检测到系统代理')
+  await f.click('网络诊断')
+  assert.equal(card.querySelector('pre').textContent,long)
+  assert.equal(card.querySelector('[style]'),null)
+  assert.deepEqual(f.calls.filter(r=>['detect-proxy','diagnose'].includes(r.action)),[{action:'detect-proxy'},{action:'diagnose'}])
+})
+test('network action failure preserves the previous diagnostic and leaves controls usable',async t=>{
+  const f=await setup(t);await f.render('Dashboard')
+  f.custom(async()=> '已有诊断')
+  await f.click('网络诊断')
+  f.custom(async()=>{throw Error('网络诊断暂不可用')})
+  await f.click('从系统检测代理')
+  assert.equal(document.querySelector('.gt-network-text').textContent,'已有诊断')
+  assert.match(document.querySelector('[role=alert]').textContent,/网络诊断暂不可用/)
+  f.custom(async()=> '恢复后的完整诊断')
+  await f.click('网络诊断')
+  assert.equal(document.querySelector('.gt-network-text').textContent,'恢复后的完整诊断')
 })
 test('unconfigured model shows actionable settings warning and real copyable directory',async t=>{
   const f=await setup(t),s=snapshot();s.model={enabled:false,provider:'',model:'',available:false,warning:'模型未配置'};f.data(s)
@@ -108,7 +136,7 @@ test('repository modal uses bounded official shell and grouped fields with full-
   }
   const css=readFileSync(new URL('../src/client.css',import.meta.url),'utf8')
   for(const rule of [
-    /\.gt-repo-modal\.gt-repo-modal\{[^}]*width:min\(760px,100%\)[^}]*max-height:min\(860px,100%\)/,
+    /\.gt-repo-modal\.gt-repo-modal\{[^}]*width:min\(760px,100%\)[^}]*height:min\(860px,100%\)/,
     /\.gt-dialog\.gt-repo-dialog\{[^}]*min-width:0[^}]*min-height:0[^}]*container:gt-repo-form \/ inline-size/,
     /\.gt-form-grid\{[^}]*repeat\(2,minmax\(0,1fr\)\)/,
     /\.gt-form-field\{[^}]*min-width:0/,
@@ -129,7 +157,7 @@ test('pasted repository URL normalizes on blur and clears its nearby accessible 
   await act(async()=>Simulate.blur(input))
   assert.equal(input.getAttribute('aria-invalid'),'true')
   const error=document.getElementById(input.getAttribute('aria-describedby').split(' ').at(-1))
-  assert.equal(error.getAttribute('role'),'alert');assert.ok(!error.textContent.includes('fixture-secret'))
+  assert.equal(error.getAttribute('role'),'alert');assert.equal(error.className,'gt-validation');assert.equal(error.textContent,'仓库地址无效，请改用 owner/repo 格式');assert.ok(!error.textContent.includes('fixture-secret'));assert.ok(!document.body.textContent.includes('不接受其他主机'))
   await f.input(input.getAttribute('aria-label'),' https://www.github.com/O/New.git/tree/main?tab=readme#intro ')
   await act(async()=>Simulate.blur(input))
   assert.equal(input.value,'o/new');assert.equal(input.getAttribute('aria-invalid'),null)
@@ -143,10 +171,10 @@ test('submit normalizes URL even without blur and keeps normalized value when an
   await f.input('普通分析单次上限（1–100，空为继承）','101');await f.submit('添加仓库')
   assert.equal(f.calls.length,0)
   assert.equal(document.querySelector('[aria-label="GitHub 仓库（owner/repo）"]').value,'o/new')
-  const input=document.querySelector('[aria-label="普通分析单次上限（1–100，空为继承）"]')
+  const input=[...document.querySelectorAll('label')].find(e=>e.textContent==='普通分析单次上限（1–100，空为继承）').control
   assert.equal(input.getAttribute('aria-invalid'),'true')
   assert.match(input.closest('.gt-form-field').textContent,/1–100/)
-  await f.input(input.getAttribute('aria-label'),'5');await f.submit('添加仓库')
+  await f.input('普通分析单次上限（1–100，空为继承）','5');await f.submit('添加仓库')
   assert.equal(f.calls[0].value.repo,'o/new');assert.equal(f.calls[0].value.limit,5)
 })
 test('repository add submits business/local/ref/schedule through shared validated shape',async t=>{
@@ -182,8 +210,8 @@ test('analysis form rejects invalid full dates/limit and sends full scan options
   await f.click('分析选项')
   const checkbox=document.querySelector('input[type=checkbox]')
   await act(async()=>{checkbox.checked=true;Simulate.change(checkbox,{target:{checked:true}})})
-  await f.input('本次上限 o/r','501');await f.click('立即分析',1);assert.ok(!f.calls.some(r=>r.action==='start'))
-  await f.input('本次上限 o/r','12');await f.input('开始日期 o/r','2026-01-01');await f.input('结束日期 o/r','2026-11-11');await f.click('立即分析',1)
+  await f.input('本次上限 o/r','501');await f.click('开始全面扫描');assert.ok(!f.calls.some(r=>r.action==='start'))
+  await f.input('本次上限 o/r','12');await f.input('开始日期 o/r','2026-01-01');await f.input('结束日期 o/r','2026-11-11');await f.click('开始全面扫描')
   assert.deepEqual(f.calls.find(r=>r.action==='start').scan,{full:true,since:'2026-01-01',until:'2026-11-11',max:12})
 })
 test('result groups, issue and PR business details, local evidence, safe original links',async t=>{
@@ -191,8 +219,8 @@ test('result groups, issue and PR business details, local evidence, safe origina
   assert.equal(document.querySelector('.gt-detail'),null,'details must mount on demand')
   for(let i=0;i<4;i++)await f.click('查看详情与纠正')
   const text=document.body.textContent;assert.ok(text.indexOf('建议采纳（1）')<text.indexOf('需人工看（1）'));assert.ok(text.indexOf('需人工看（1）')<text.indexOf('不推荐（1）'))
-  for(const s of ['真实存在：likely','值得修','符合业务方向：yes','需补认证测试','影响核心业务','本地 render 函数存在','本地提交线索 abc','仅规则预筛，未经 AI 研判'])assert.ok(text.includes(s),s)
-  assert.match(text,/研判理由/);assert.match(text,/规则证据/)
+  for(const s of ['真实存在：较可能','值得修','符合业务方向：是','需补认证测试','影响核心业务','本地 render 函数存在','本地提交线索 abc','仅规则预筛，未经 AI 分析'])assert.ok(text.includes(s),s)
+  assert.match(text,/分析理由/);assert.match(text,/规则证据/)
   for(const a of document.querySelectorAll('a')){assert.equal(a.target,'_blank');assert.equal(a.rel,'noopener noreferrer')}
   await f.input('结果类型','pr');assert.equal(document.querySelectorAll('article').length,1);assert.match(document.body.textContent,/条目 2/)
   await f.input('结果类型','issue');assert.equal(document.querySelectorAll('article').length,3);assert.ok(![...document.querySelectorAll('article')].some(a=>a.textContent.includes('条目 2')))
@@ -281,11 +309,6 @@ test('deferred evidence loads per item on expand and is released on collapse',as
   await f.click('查看详情与纠正');assert.equal(f.calls.filter(r=>r.action==='detail').length,1);assert.match(document.querySelector('.gt-detail').textContent,/本地提交线索/)
   await f.click('收起详情');assert.equal(document.querySelector('.gt-detail'),null)
 })
-test('header shortcut navigates directly when host layout is present',async t=>{
-  const f=await setup(t);let opened=0
-  await f.render('TriageButton',{sessionId:'s',openPage:()=>{opened++;return true}});await f.click('GitHub 哨兵')
-  assert.equal(opened,1);assert.equal(document.querySelector('[role=dialog]'),null);assert.equal(f.calls.length,0)
-})
 test('repository cards add, edit a delta and remove after confirmation',async t=>{
   const f=await setup(t);await f.render('Dashboard');await f.click('添加仓库')
   await f.input('GitHub 仓库（owner/repo）','x/new');await f.input('业务说明','新项目');await f.submit('添加仓库')
@@ -313,4 +336,119 @@ test('POST transport decodes envelopes and falls back only for missing routes',a
   assert.equal(fallback.length,2)
   for(const response of [{ok:false,status:403},{ok:true,status:200,json:async()=>({ok:true,value:{broken:true}})},{ok:true,status:200,json:async()=>({ok:false,error:{code:'validation',message:'无效字段',fields:{limit:'错误'}}})}])await assert.rejects(f.client.postCall(async()=>response,async()=>{throw Error('must not fallback')})({action:'jobs'}))
   await assert.rejects(f.client.postCall(async()=>{throw Error('network')},async()=>{throw Error('must not fallback')})({action:'jobs'}),/操作可能已提交/)
+})
+
+test('official menu selection, Escape, outside dismissal and unmount preserve the repository draft',async t=>{
+  const f=await setup(t);await f.render('Dashboard');await f.click('添加仓库')
+  await f.input('业务说明','菜单切换后保留的草稿')
+  const trigger=document.querySelector('[aria-label="分析类型"]')
+  await act(async()=>{trigger.focus();trigger.click()})
+  assert.ok(document.querySelector('body>[role=menu]'),'menu must escape the scrolling form via portal')
+  await act(async()=>document.dispatchEvent(new window.KeyboardEvent('keydown',{key:'End',bubbles:true,cancelable:true})))
+  assert.equal(document.activeElement.textContent,'仅 PR')
+  await act(async()=>document.dispatchEvent(new window.KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true})))
+  // Native Enter activation is supplied by the browser, not jsdom.
+  act(()=>document.activeElement.click());await act(async()=>{await Promise.resolve()})
+  assert.equal(document.querySelector('[role=menu]'),null)
+  assert.ok(document.activeElement===trigger,'menu must restore trigger focus')
+  assert.equal(trigger.textContent,'仅 PR')
+  await act(async()=>trigger.click())
+  await act(async()=>document.dispatchEvent(new window.KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true})))
+  assert.ok(document.querySelector('form[aria-label="添加仓库"]'))
+  assert.equal(document.querySelector('[role=menu]'),null)
+  assert.equal(document.querySelector('[aria-label="业务说明"]').value,'菜单切换后保留的草稿')
+  await act(async()=>trigger.click())
+  await act(async()=>document.querySelector('.gt-form-head').dispatchEvent(new window.Event('pointerdown',{bubbles:true})))
+  assert.equal(document.querySelector('[role=menu]'),null)
+  await act(async()=>trigger.click())
+  await f.render('Results',{reports:[],selected:'',onChanged:async()=>{}})
+  assert.equal(document.querySelector('[role=menu]'),null)
+  assert.equal(document.querySelector('[data-menu-backing]'),null)
+})
+
+test('official settings field reset clears only the repository limit on save',async t=>{
+  const f=await setup(t);await f.render('RepoForm',{initial:repo,onSaved:async()=>{},onCancel:()=>{}})
+  const input=[...document.querySelectorAll('label')].find(e=>e.textContent==='普通分析单次上限（1–100，空为继承）').control
+  assert.equal(input.value,'8')
+  assert.ok(document.getElementById(input.getAttribute('aria-describedby')))
+  await f.click('继承插件设置')
+  assert.equal(input.value,'');assert.equal(f.calls.length,0,'reset stages a clear, without a request')
+  await f.submit('编辑仓库')
+  assert.deepEqual(f.calls[0],{action:'patch',repo:'o/r',patch:{limit:null}})
+})
+
+test('official tabs walk with arrows and End, keeping panel and focus associations',async t=>{
+  const f=await setup(t);await f.render('Results',{reports:[report],selected:'o/r',onChanged:async()=>{}})
+  const tabs=[...document.querySelectorAll('[role=tab]')]
+  await act(async()=>{tabs[0].focus();tabs[0].dispatchEvent(new window.KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true,cancelable:true}))})
+  assert.ok(document.activeElement===tabs[1],'arrow key must move focus');assert.equal(tabs[1].getAttribute('aria-selected'),'true')
+  assert.equal(document.querySelectorAll('article').length,1)
+  assert.equal(document.querySelector('[role=tabpanel]').getAttribute('aria-labelledby'),tabs[1].id)
+  await act(async()=>tabs[1].dispatchEvent(new window.KeyboardEvent('keydown',{key:'End',bubbles:true,cancelable:true})))
+  assert.ok(document.activeElement===tabs.at(-1),'End must focus last tab');assert.equal(document.querySelectorAll('article').length,1)
+  assert.match(document.querySelector('article').textContent,/仅规则预筛/)
+  assert.equal(tabs.filter(t=>t.tabIndex===0).length,1)
+})
+
+test('failed repository save retains official field drafts and releases disabled state',async t=>{
+  const f=await setup(t);f.custom(async()=>{throw new f.client.UiError('保存失败',{limit:'仓库上限暂不可用'})})
+  await f.render('RepoForm',{initial:repo,onSaved:async()=>{},onCancel:()=>{}})
+  await f.input('普通分析单次上限（1–100，空为继承）','9');await f.submit('编辑仓库')
+  const input=document.querySelector('input[inputmode=numeric]')
+  assert.equal(input.value,'9');assert.equal(input.disabled,false);assert.equal(input.getAttribute('aria-invalid'),'true')
+  assert.match(document.getElementById(input.getAttribute('aria-describedby')).textContent,/仓库上限暂不可用/)
+})
+
+test('analysis type labels match between form, card and result menu',async t=>{
+  const f=await setup(t);await f.render('Dashboard')
+  assert.ok(document.querySelector('.gt-repo').textContent.includes('issues 与 PR'))
+  await f.click('添加仓库');await f.input('分析类型','both')
+  await act(async()=>document.querySelector('[aria-label="分析类型"]').click())
+  assert.deepEqual([...document.querySelectorAll('[role=menuitem]')].map(e=>e.textContent),['issues 与 PR','仅 issues','仅 PR'])
+})
+
+test('invalid repository cannot save and gets a short neutral accessible message',async t=>{
+  const f=await setup(t);await f.render('RepoForm',{onSaved:async()=>{},onCancel:()=>{}})
+  await f.input('GitHub 仓库（owner/repo）','https://example.com/o/r');await f.submit('添加仓库')
+  assert.equal(f.calls.length,0)
+  assert.equal(document.querySelector('.gt-validation').textContent,'仓库地址无效，请改用 owner/repo 格式')
+  assert.equal(document.querySelector('.gt-field-error'),null)
+  await f.input('GitHub 仓库（owner/repo）','o/new');await f.submit('添加仓库')
+  assert.equal(f.calls[0].value.repo,'o/new')
+})
+
+test('full scan dialog explains limits, cache reuse and allows cancelling without a request',async t=>{
+  const f=await setup(t);await f.render('Dashboard');await f.click('全面扫描')
+  const dialog=document.querySelector('[role=dialog]')
+  assert.equal(dialog.getAttribute('aria-label'),'全面扫描')
+  assert.ok(dialog.querySelector('.gt-options-content'))
+  for(const text of ['开放条目','关闭条目','最后更新时间','最多 8 条','最多 100 条','复用缓存'])assert.ok(dialog.textContent.includes(text),text)
+  await f.input('开始日期 o/r','2026-11-12');await f.input('结束日期 o/r','2026-11-01');await f.click('开始全面扫描')
+  assert.match(dialog.querySelector('[role=alert]').textContent,/结束日期不能早于开始日期/)
+  const until=dialog.querySelector('[aria-label="结束日期 o/r"]')
+  assert.equal(until.getAttribute('aria-invalid'),'true')
+  assert.ok(until.getAttribute('aria-describedby').includes(dialog.querySelector('[role=alert]').id))
+  assert.ok(!f.calls.some(r=>r.action==='start'))
+  await act(async()=>dialog.querySelector('[aria-label="关闭分析选项"]').click())
+  assert.equal(document.querySelector('[role=dialog]'),null)
+})
+
+test('saving repository keeps its modal and draft through Escape until completion',async t=>{
+  const f=await setup(t);await f.render('Dashboard');await f.click('编辑')
+  let rejectSave;f.custom(()=>new Promise((_,reject)=>{rejectSave=reject}))
+  const form=document.querySelector('form')
+  await act(async()=>{Simulate.submit(form);await Promise.resolve()})
+  await act(async()=>document.dispatchEvent(new window.KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true})))
+  assert.ok(document.querySelector('form'))
+  await act(async()=>{rejectSave(new Error('保存失败'));await Promise.resolve()})
+  assert.equal(document.querySelector('[aria-label="业务说明"]').value,'原业务')
+  assert.ok(!document.querySelector('button[type=submit]').disabled)
+})
+
+test('failed delete retains the repository and shows the error inside the confirmation',async t=>{
+  const f=await setup(t);await f.render('Dashboard');await f.click('删除')
+  f.custom(async()=>{throw Error('删除失败，请重试')});await f.click('确认删除')
+  assert.equal(document.querySelectorAll('.gt-repo').length,1)
+  assert.match(document.querySelector('[role=dialog] [role=alert]').textContent,/删除失败/)
+  assert.ok(![...document.querySelectorAll('button')].find(b=>b.textContent==='确认删除').disabled)
 })

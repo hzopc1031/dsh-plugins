@@ -4,27 +4,27 @@
 
 - **不必为管理仓库新开会话：** 侧边栏进入完整页面，概览仓库数、待办和三档结论；用卡片管理本地路径、分支和定时，只保存你编辑的字段。
 - **按自己的业务看问题：** 相比逐条翻 GitHub，集中查看“在我这里是否存在、值不值得修、是否符合业务方向”，附本地对照和证据。
-- **先看值得处理的内容：** 按「建议采纳 / 需人工看 / 不推荐」、issue/PR 和仓库筛选，搜索标题与业务理由，展开详情后查看证据或打开原链接。
+- **先看值得处理的内容：** 按「建议采纳 / 需人工看 / 不推荐」、issues / PR 和仓库筛选，搜索标题与业务理由，展开详情后查看证据或打开原链接。
 - **把纠正留给下次参考：** 在详情中改结论并填写理由，形成仓库规则；在同一页面复制、导出新文件或导入编辑后的规则。
 
 ## 打开界面后的示例
 
-主入口是与「插件」「自动化任务」同级的侧边栏 **GitHub 哨兵** 页面。点击「添加仓库」，填写业务和本地路径后「保存仓库」，再点「立即分析」。会话顶部保留同名快捷按钮，直接打开这个页面。
+主入口是与「插件」「自动化任务」同级的侧边栏 **GitHub 哨兵** 页面。点击「添加仓库」，填写业务和本地路径后「保存仓库」，再点「立即分析」。
 
-以下是虚构内容的**示意输出**，不是桌面截图或真实 AI 研判：
+以下是虚构内容的**示意输出**，不是桌面截图或真实 AI 分析：
 
 ```text
 GitHub 哨兵
 模型：已配置 · provider：my-route · model：my-model
-跟踪仓库 1    待处理条目 2    建议采纳 1    需人工看 1    不推荐 0
+跟踪仓库 1    报告条目 2    建议采纳 1    需人工看 1    不推荐 0
 
-example-team/plugin-kit · 两者 · 每天 09:30
+example-team/plugin-kit · issues 与 PR · 每天 09:30
 业务：插件框架，优先保障文件变化后正确重载
 本地：C:\work\my-plugin-kit · main
 [编辑] [删除] [查看结果] [查看/导出规则] [立即分析]
 
 建议采纳（1）
-#42 连续写入后插件没有重新加载 · issue
+#42 连续写入后插件没有重新加载 · issues
 真实存在：likely · 值得修 · 优先级：高
 结合业务：正确重载是核心流程，需要优先核实。
 本地适用性：present · 本地 watcher 函数存在，尚未实际复现。
@@ -36,7 +36,7 @@ example-team/plugin-kit · 两者 · 每天 09:30
 测试：需补目录替换后连续写入的回归场景。
 ```
 
-「建议采纳」表示 issue 值得修或 PR 值得合入/回迁；「需人工看」表示还需补证据或调整；「不推荐」表示当前不值得处理。`likely` 是较可能存在；本地 `present / already-fixed / not-applicable / unclear` 分别表示存在、已有修复、不适用、证据不清楚。AI 不能替代复现与代码审查。模型不可用时明确显示「仅规则预筛，未经 AI 研判」。
+「建议采纳」表示 issues 值得修或 PR 值得合入/回迁；「需人工看」表示还需补证据或调整；「不推荐」表示当前不值得处理。`likely` 是较可能存在；本地 `present / already-fixed / not-applicable / unclear` 分别表示存在、已有修复、不适用、证据不清楚。AI 不能替代复现与代码审查。模型不可用时明确显示「仅规则预筛，未经 AI 分析」。
 
 ## 3 步快速上手
 
@@ -50,16 +50,16 @@ example-team/plugin-kit · 两者 · 每天 09:30
 
 3. **重开 DSH，配置后得到第一份结果。** 在插件设置找到 **GitHub 哨兵（dsh-github-triage）** 并启用。先在 DSH 模型设置配置服务商，再点击侧边栏 **GitHub 哨兵** → 模型状态胶囊 → **查看可复制的模型 ID**，用页面的 **插件设置** 按钮打开设置，将 `provider`、`model` 分别填入同名字段，并启用 `modelEnabled`。这里填准确 ID，不填 API key；目录为空时去 DSH 模型设置查 ID。页面会显示当前路由和配置指引，无需活动会话或 agent。
 
-   在面板点 **添加仓库**，填 `owner/repo`，或直接粘贴 `https://github.com/owner/repo`（支持 `.git`、issues/pulls/tree 子页面、查询和锚点，离开输入框或保存时整理为 `owner/repo`）；再选分析类型、填写业务说明。按需填写本地 Git 仓库绝对路径和 ref（空为 HEAD）、业务文件、定时和单次上限；长路径会在输入框下方完整换行显示。点 **保存仓库**，先用小上限（例如 6）点 **立即分析**；按钮会显示排队/进行中，完成后在三档结果中展开 **查看详情与纠正**。
+   在面板点 **添加仓库**，填 `owner/repo`，或直接粘贴 `https://github.com/owner/repo`（支持 `.git`、issues/pulls/tree 子页面、查询和锚点，离开输入框或保存时整理为 `owner/repo`）；再选分析类型（「issues 与 PR」「仅 issues」「仅 PR」）、填写业务说明。按需填写本地 Git 仓库绝对路径和 ref（空为 HEAD）、业务文件、定时和单次上限；长路径会在输入框下方完整换行显示。点 **保存仓库**，先用小上限（例如 6）点 **立即分析**；按钮会显示排队/进行中，完成后在三档结果中展开 **查看详情与纠正**。
 
    本地对照只读选定 ref 的已提交快照，不读取未提交修改。业务文字、规则与相关代码片段会交给所选模型服务商，只选择愿意发送的内容。公开仓库可匿名读取；私有仓库需启动环境已有 `GH_TOKEN` / `GITHUB_TOKEN` 或 GitHub CLI（`gh`）读取权限，界面不提供凭据填写项。
 
 ## 在界面中日常使用
 
-- **改仓库配置：** 点对应仓库「编辑」。仓库名固定，需要换仓库时添加新条目。编辑仅提交变化字段；清空可选字段表示清除，留空的单次上限继承全局值。服务端还会检查本地路径是 Git 根目录、ref 可解析，失败不保存。
+- **改仓库配置：** 点对应仓库「编辑」。仓库名固定，需要换仓库时添加新条目。编辑仅提交变化字段；清空可选字段表示清除。单次上限可点「继承插件设置」，随「保存仓库」一起生效。服务端还会检查本地路径是 Git 根目录、ref 可解析，失败不保存。
 - **自动检查：** 定时可选不定时、每天 HH:MM、每 N 小时。每天按本机时间执行，DSH 和插件需持续运行；定时仍只检查开放条目的新增和变化。
-- **手动分析：** 仓库卡点「立即分析」，或在页头点「全部分析」。点「分析选项」可改本次上限；点「全量扫描」可填最后更新时间的开始/结束日期及全量上限。全量含关闭条目，达到上限会截断并提示，会增加请求和模型费用。与命令、定时共用串行队列，同仓库的界面任务未结束时不会重复入队；离开页面后任务继续，重开可查状态。
-- **看业务结论：** 结果区用结论分段、issue/PR 类型、仓库 chip 和搜索一起缩小范围，可按优先级、最近分析或编号排序。点击标题或「查看详情与纠正」按需读取业务理由、证据、本地对照；原链接在每张卡上。未经 AI 研判的条目单独标注，不混入三档。「待处理条目」统计最新报告中的全部条目，不代表 GitHub 当前开放总数。
+- **手动分析：** 仓库卡点「立即分析」只读取所选类型最近更新的开放条目，默认最多 20 条；页头「全部分析」对每个仓库执行相同操作。点「分析选项」可改本次上限；点「全面扫描」可填最后更新时间的开始/结束日期及全量上限。全面扫描也含关闭条目，默认最多 100 条；两种方式均先读取列表，模型可用且条目与分析上下文未变时复用已有 AI 结论。全面扫描达到上限会截断并提示；全面扫描会增加请求和模型费用。与命令、定时共用串行队列，同仓库的界面任务未结束时不会重复入队；离开页面后任务继续，重开可查状态。
+- **看业务结论：** 结果区用结论分段、issues / PR 类型、仓库 chip 和搜索一起缩小范围，可按优先级、最近分析或编号排序。点击标题或「查看详情与纠正」按需读取业务理由、证据、本地对照；原链接在每张卡上。未经 AI 分析的条目单独标注，不混入三档。「报告条目」统计各仓库最新报告的全部条目（含停止跟踪后的历史报告及全面扫描读到的关闭条目），不代表 GitHub 当前开放总数。
 - **纠正并留规则：** 在已有 AI 结论的详情中选三档、填理由并提交；等同 `/triage-fix`。点「查看/导出规则」可复制文档，或填新绝对路径导出（不覆盖）。展开「导入规则」，粘贴编辑后的同仓库文档并点「确认导入规则」；也可继续用下方命令导入文件。
 - **停止跟踪：** 点「删除」再「确认删除」。不再调度该仓库，保留历史报告和纠正。
 
@@ -74,13 +74,13 @@ example-team/plugin-kit · 两者 · 每天 09:30
 /triage-repo add owner/repo --both --daily 09:30 --limit 20 --business "核心业务说明" --local "C:\work\my-repo"
 ```
 
-全量扫描包括开放与已关闭的 issue/PR，按**最后更新时间**筛选，日期首尾均包含；不填日期就不限制时间。`--max` 为两者合计上限，默认 100、最大 500。超过上限只取最近更新的，并提示你缩小时间范围；搜索结果不完整时也会提示。因此“全量”是扫描范围，不保证超过上限的历史全部读完。暂不支持 `--from-tag` / `--to-tag`：提交标签区间不能可靠表示 issue/PR 范围。
+全面扫描包括开放与已关闭的 issues / PR，按**最后更新时间**筛选，日期首尾均包含；不填日期就不限制时间。`--max` 为两者合计上限，默认 100、最大 500。超过上限只取最近更新的，并提示你缩小时间范围；搜索结果不完整时也会提示。因此“全量”是扫描范围，不保证超过上限的历史全部读完。暂不支持 `--from-tag` / `--to-tag`：提交标签区间不能可靠表示 issues / PR 范围。
 
-全量扫描会增加 GitHub 请求和模型费用。建议先用小条数与时间范围试跑；遇到 GitHub 限流时等待后重试，插件不会绕过限流或自动追完所有历史。
+全面扫描会增加 GitHub 请求和模型费用。建议先用小条数与时间范围试跑；遇到 GitHub 限流时等待后重试，插件不会绕过限流或自动追完所有历史。
 
 之后定时只看开放条目最近窗口里的新增和变化；未变且已有结论的直接复用。`--daily HH:MM` 按本机时间，或用 `--every 6` 每 6 小时检查；两者二选一，都不填则仅手动运行。定时需要 DSH 和插件持续运行，有变化才发简报。
 
-再次 `add` 同一仓库只合并本次明确提供的字段，不再清除其他业务、本地、规则、类型或定时设置；原命令语法兼容。要清除定时或可选字段可在界面编辑。全量扫描不改变定时模式。
+再次 `add` 同一仓库只合并本次明确提供的字段，不再清除其他业务、本地、规则、类型或定时设置；原命令语法兼容。要清除定时或可选字段可在界面编辑。全面扫描不改变定时模式。
 
 普通 `/triage [owner/repo] [--limit N]` 上限为 1–100，默认 20；全量模式使用 `--max`，不能与 `--limit` 混用。命令上限优先于仓库 `limit` / `fullMax`，再优先于全局同名配置。不带仓库处理全部已配置仓库，临时指定仓库则可直接运行；最多配置 50 个仓库。
 
@@ -114,7 +114,7 @@ example-team/plugin-kit · 两者 · 每天 09:30
 /triage-rules import owner/repo "C:\work\triage-rules.md"
 ```
 
-先取得条目的 AI 结论，再用 `adopt` / `manual-review` / `not-recommended` 纠正。保留旧写法：issue 可改 `bug`、`需求`、`提问`、`重复`、`无效` 或 `值得修`、`待补充`、`不值得修`；PR 可改 `值得合并`、`改完再合`、`不建议合`。旧写法会同步映射三档建议；新三档也会同步对应的修复/合入价值字段。
+先取得条目的 AI 结论，再用 `adopt` / `manual-review` / `not-recommended` 纠正。保留旧写法：issues 可改 `bug`、`需求`、`提问`、`重复`、`无效` 或 `值得修`、`待补充`、`不值得修`；PR 可改 `值得合并`、`改完再合`、`不建议合`。旧写法会同步映射三档建议；新三档也会同步对应的修复/合入价值字段。
 
 纠正、当时的业务说明会形成仓库级 Markdown 规则，保存在插件自己的存储中。同一条目优先采用用户纠正；后续其他条目由模型参考这些规则，规则不会自动变成确定事实。查看、导出时能读到业务背景、纠正理由及最终建议；可以编辑规则后导入，必须保留第一行的仓库标识。导入不是批量修改历史卡片；要修改某条已有用户结论，仍用 `/triage-fix`。
 
@@ -157,39 +157,51 @@ repositories:
 
 ## 公司内网访问
 
-大公司常用代理自动配置脚本（PAC），按访问的网站选择出口，不一定有一个固定代理地址。这三个联网插件会读取 Windows 当前用户的 PAC / 静态系统代理，使用解析出的 HTTP(S) 代理；常见公司内网可少一步寻找代理地址和手写 `.env`。已有 `httpsProxy` 或 HTTP(S)/ALL_PROXY 环境变量时完全沿用原策略，不运行 PAC 检测；没有系统代理、PAC 返回 DIRECT 或检测失败时沿用原请求路径。`systemProxy: "off"` 关闭检测。不修改 `.dsh/.env` 或进程环境；仅点击雷达的「应用到插件设置」才保存代理到该插件的 `httpsProxy`，清空恢复自动检测。
+大公司常用代理自动配置脚本（PAC），按访问的网站选择出口，不一定有一个固定代理地址。插件会读取 Windows 当前用户的 PAC / 静态系统代理，使用解析出的 HTTP(S) 代理；常见公司内网可少一步寻找代理地址和手写 `.env`。已有 `httpsProxy` 或 HTTP(S)/ALL_PROXY 环境变量时完全沿用原策略，不运行 PAC 检测；没有系统代理、PAC 返回 DIRECT 或检测失败时沿用原请求路径。`systemProxy: "off"` 关闭检测。不修改 `.dsh/.env` 或进程环境；需要固定代理时，在本插件设置填写 `httpsProxy`，清空恢复自动检测。
 
 请求默认超时 **30 秒（30 000 ms）**，`timeoutSeconds` 可调整，限制 10–120 秒；无效值回到 30 秒。系统设置与 PAC 脚本在进程中缓存 30 分钟，可手动重新检测。仅支持 HTTP(S) PAC 地址，file:// 和 SOCKS 会提示并回到原路径。公司根证书仍可通过 `caBundlePath` / `NODE_EXTRA_CA_CERTS` 配置；不要随意开启 `insecureSkipTlsVerify`。
 
-Windows 注册表读取由模拟注册表的单元测试覆盖，本次只在 Linux 验证，未在真实公司 PAC、Windows Desktop 上实测。PAC 来自公司网络且本身是代码，Node vm 不是抵御蓄意攻击者的安全边界；无宿主对象、禁止动态代码生成、大小/时间限制和输出转字符串用于降低风险。完整配置及边界见[公司内网配置](../../docs/intranet-network.md)和[PAC 范围说明](../../docs/intranet-pac.md)。
+Windows 注册表读取由模拟注册表的单元测试覆盖，此前在 Linux 验证，本轮在 Windows 运行模拟测试，未在真实公司 PAC、Windows Desktop 上实测。PAC 来自公司网络且本身是代码，Node vm 不是抵御蓄意攻击者的安全边界；无宿主对象、禁止动态代码生成、大小/时间限制和输出转字符串用于降低风险。完整配置及边界见[公司内网配置](../../docs/intranet-network.md)和[PAC 范围说明](../../docs/intranet-pac.md)。
 
 页面新增「从系统检测代理」「网络诊断」；命令为 `/triage-detect-proxy`（加 `refresh` 清缓存）和 `/triage-diagnose`。需要固定代理时点击既有「插件设置」填写 `httpsProxy`，清空恢复自动检测。GitHub API 继续固定主机、仅 GET、禁止跳转，避免令牌随跳转发送。
 
-Large companies commonly use PAC auto-configuration to select a proxy per website. These plugins read Windows user PAC / static system proxy settings and use the resolved HTTP(S) proxy, reducing the need to find an address and hand-edit `.env`. Explicit plugin or environment proxies bypass detection. No system proxy, PAC DIRECT, or detection failure preserves the original request path; `systemProxy: "off"` disables detection. Nothing writes `.env` or process environment. Requests default to 30 seconds; `timeoutSeconds` clamps to 10–120 seconds (invalid values use 30). Registry/PAC behavior is covered by mocked unit tests and Linux replay only, not a real corporate PAC or Windows Desktop. PAC is network-supplied code; vm is not a security boundary.
+Large companies commonly use PAC auto-configuration to select a proxy per website. This plugin reads Windows user PAC / static system proxy settings and uses the resolved HTTP(S) proxy, reducing the need to find an address and hand-edit `.env`. Explicit plugin or environment proxies bypass detection. No system proxy, PAC DIRECT, or detection failure preserves the original request path; `systemProxy: "off"` disables detection. Nothing writes `.env` or process environment. Requests default to 30 seconds; `timeoutSeconds` clamps to 10–120 seconds (invalid values use 30). Registry/PAC behavior is covered by mocked unit tests on Linux and Windows, not a real corporate PAC or Windows Desktop. PAC is network-supplied code; vm is not a security boundary.
 
 ## 补充说明
 
 ### 版本与兼容
 
-当前版本 **0.4.3**，尚未发布 npm。开发基线为 **DeepSeek Harness 0.2.1-rc.5**，并对照 **0.2.2-rc.1** 的页面与连接接口源码，要求 Node.js 22 或以上；本地对照需要 PATH 中可用的 Git。主线界面开发验证环境为 Windows / Node.js 24，分支内网修复的加载与本地代理测试环境为 Linux / Node.js 24；此次合并在 Linux 运行自动测试，Windows / Electron 与 Node.js 22 未重新实机验证。未发布改动合入 main 前，上面的 main 安装地址仍指向现有 main 内容。
+当前版本 **0.4.4**，尚未发布 npm。开发基线为 **DeepSeek Harness 0.2.1-rc.5**，并对照 **0.2.2-rc.1** 的页面与连接接口源码，要求 Node.js 22 或以上；本地对照需要 PATH 中可用的 Git。本轮自动测试环境为 Windows / Node.js 24；此前内网修复与 rc.1 加载验证在 Linux 进行。本轮 Electron、rc.1 实机界面与 Node.js 22 未重新验证。未发布改动合入 main 前，上面的 main 安装地址仍指向现有 main 内容。
 
 ### 只读边界与证据局限
 
 - 绝不自动改代码、推送、创建 PR、评论、改标签、关闭问题、合并或向 GitHub 写入任何内容。不会 checkout、fetch 或修改本地工作区。回迁执行（自动打补丁/建分支）暂不做。
 - 本地对照使用 Node 官方 `child_process.execFile('git', 固定参数数组, { shell:false })`；没有新增或猜测 DSH 服务接口。代码只接受 `rev-parse`、`ls-tree`、`cat-file`、`show`、`log`、`merge-base`、`patch-id` 的限定参数形状；其他命令及额外参数均拒绝。关闭可选锁、外部 diff/textconv、hooks、fsmonitor 与缺失对象自动获取；不主动启动网络操作。
-- 本地读取选定 ref 的**已提交快照**。每条最多检查 3 个文件，每文件片段最多 3KB，源 blob 超过 64KB 跳过，总本地上下文最多 16KB。不会跟随代码中的符号链接去读取目标。历史取最近 80 条，查 issue 号、标题关键词和上游修复提交信息；用提交包含关系及完整简单文本 diff 的稳定 patch-id 寻找已合入/回迁线索。浅克隆、旧修复、重命名、二进制、截断 patch、架构改变都可能缺证据；“没找到”不能证明问题不存在或没有修复。
-- 关联修复 PR 搜索最多看 5 个候选，只接受正文明确关闭该 issue 的已合入 PR，最多 2 个；每个 PR 最多读 100 个提交。Git 每次最多 5 秒、输出最多 256KB（正文读取更小），超时、取消、超限都停止并提示，证据不足由模型标注 `unclear`。
+- 本地读取选定 ref 的**已提交快照**。每条最多检查 3 个文件，每文件片段最多 3KB，源 blob 超过 64KB 跳过，总本地上下文最多 16KB。不会跟随代码中的符号链接去读取目标。历史取最近 80 条，查 issues 号、标题关键词和上游修复提交信息；用提交包含关系及完整简单文本 diff 的稳定 patch-id 寻找已合入/回迁线索。浅克隆、旧修复、重命名、二进制、截断 patch、架构改变都可能缺证据；“没找到”不能证明问题不存在或没有修复。
+- 关联修复 PR 搜索最多看 5 个候选，只接受正文明确关闭该 issues 的已合入 PR，最多 2 个；每个 PR 最多读 100 个提交。Git 每次最多 5 秒、输出最多 256KB（正文读取更小），超时、取消、超限都停止并提示，证据不足由模型标注 `unclear`。
 - 上游相关文件来自默认分支，每条最多 3 个片段、每片段 3KB；PR patch 与模型上下文均有界，不是完整代码审查。AI 不运行测试或复现，不保证适用性判断正确。
-- 业务说明送模型最多 8KB，整个请求最多 48KB，超出会删减并提示。每条最多一次模型生成，45 秒超时、1800 tokens 输出上限；模型失败只展示证据，不写已研判缓存。仓库内容、业务、本地代码、规则和纠正参考会发送给所选模型服务商；模型无工具，输入都当作不可信数据。已知 GitHub 令牌会脱敏，但任意机密无法自动识别。
+- 业务说明送模型最多 8KB，整个请求最多 48KB，超出会删减并提示。每条最多一次模型生成，45 秒超时、1800 tokens 输出上限；模型失败只展示证据，不写已分析缓存。仓库内容、业务、本地代码、规则和纠正参考会发送给所选模型服务商；模型无工具，输入都当作不可信数据。已知 GitHub 令牌会脱敏，但任意机密无法自动识别。
 - GitHub 凭据按 `GH_TOKEN` → `GITHUB_TOKEN` → 固定参数的 `gh auth token` → 匿名读取，只在内存用于请求头，不写报告、不送模型、不读 DSH 密钥文件。请求固定 GitHub API、仅 GET、拒绝重定向，默认 30 秒超时（timeoutSeconds 可调）；限流遵守响应头，支持 `HTTP_PROXY` / `HTTPS_PROXY` / `NO_PROXY`。
+
+### 每次分析会请求 GitHub 多少次
+
+默认分析类型为「issues 与 PR」，普通上限 20、全面扫描上限 100；仓库或本次设置可以覆盖。一次请求指一次 GitHub HTTP GET，不含模型调用或界面 POST。下列次数按没有自动系统代理失败回退的情况核算；系统代理请求失败后沿原路径再尝试一次时，每个逻辑 GET 最多产生两次网络尝试，详情见开发记录。
+
+- 两种方式默认均先请求 1 次仓库信息、1 次 issues 列表和 1 次 PR 列表，共 3 次。仅 issues / 仅 PR 为 2 次；关闭的仓库功能会跳过对应列表。
+- 普通分析没有列表翻页。全面扫描每类按 100 条分页，各最多 `ceil(上限/100)` 页，合并后再按总上限截取；默认 100 条时仍为 3 次列表阶段请求，上限 500 时最多 11 次。
+- 其后只为未复用缓存的条目读取证据：issues 共用一次默认分支和目录树读取（合计 2 次），每条另读 0–3 个文件片段；每个 PR 读详情、文件页、两类 CI，通常 4 次，再加片段及关联 issues。当前不读取评论。
+- 无本地对照、无仓库业务文件、无关联引用且 PR 文件不足 100 个时：20 条 issues / 各半 / 20 条 PR 分别是 **5 / 45 / 83 次**（假设没有匹配文件片段）；全面扫描 100 条分别为 **5 / 205 / 403 次**。这些是明确条件下的示例。全部缓存命中通常仍需 3 次；未启用模型或模型失败的条目没有可复用的 AI 结论。
+- 仓库相对路径业务文件每轮再加 1 次；本机业务文件不加。可用本地对照使每个未缓存 PR 多 1 次提交请求，每个 issues 多 1 次修复 PR 搜索，候选详情、文件和提交也计入。关联 issues 的 3 条限制是成功条目数，无效或重复引用可能使尝试数更高；不能把每 PR 的请求当作固定 4 次。
+
+逐分支公式、上下界及源码行号见 [开发记录的请求核算](STATUS.md#github-requests)。多个仓库的请求数相加；设置较小上限和时间范围能减少处理条目数，不能省去列表请求。
 
 ### 调度、缓存和真实宿主接口
 
-界面参考 dsh-context 的侧边栏与中央页面组合、设计令牌、卡片层级及按需读取方式，保留本仓库 lazy-CJS 打包。`sidebar.panellist` 与 `main` 使用相同 ID；会话顶部快捷按钮调用宿主布局服务打开同一页面。表单使用宿主共享 Modal。
+界面沿用 dsh-context 的侧边栏与中央页面组合及按需读取方式，按官方 UI 与响应式规范接入宿主共享按钮、输入框、菜单、标签页、弹窗和设置字段，保留本仓库 lazy-CJS 打包。`sidebar.panellist` 与 `main` 使用相同 ID，仅保留左侧栏入口。
 
-主页面通过宿主 `connection.fetch.register` 注册的 POST 路由获取数据，不依赖活动 agent，不把页面操作写入会话命令日志；沿用宿主认证，没有新增监听端口或凭据项。首次只取结果摘要，展开单项再读完整证据，规则按需读取，列表按批挂载；离开页面释放轮询与详情。仅宿主缺少布局服务时，顶部入口才回退为同组件的紧凑 Modal；仅 POST 返回 404/405 时，该会话入口的旧命令适配器才回退 `/triage-ui`，这时结果仍会记入会话日志。认证失败、网络超时、返回数据错误均不会自动重提操作。
+主页面通过宿主 `connection.fetch.register` 注册的 POST 路由获取数据，不依赖活动 agent，不把页面操作写入会话命令日志；沿用宿主认证，没有新增监听端口或凭据项。首次只取结果摘要，展开单项再读完整证据，规则按需读取，列表按批挂载；离开页面释放轮询与详情。原命令及独立的命令适配函数保留；主页面不注册会话动作或 Modal 回退入口。认证失败、网络超时、返回数据错误均不会自动重提操作。
 
-沿用 rc.5 的 `llm.stream`、`llm.listProviders()` / `llm.listModels(provider)`、`commands.register` 文本卡片及 `storageDomain` 自身存储域。接口依据固定 [DSH dsh-v0.2.1-rc.5](https://github.com/deepseek-ai/deepseek-harness/tree/dsh-v0.2.1-rc.5/packages/preset/agent-preset/skills/cordis-plugin-development)。全量扫描采用 [GitHub 只读搜索 API](https://docs.github.com/en/rest/search/search#search-issues-and-pull-requests)，受搜索索引、结果完整性和限流约束。
+沿用 rc.5 的 `llm.stream`、`llm.listProviders()` / `llm.listModels(provider)`、`commands.register` 文本卡片及 `storageDomain` 自身存储域。接口依据固定 [DSH dsh-v0.2.1-rc.5](https://github.com/deepseek-ai/deepseek-harness/tree/dsh-v0.2.1-rc.5/packages/preset/agent-preset/skills/cordis-plugin-development)。全面扫描采用 [GitHub 只读搜索 API](https://docs.github.com/en/rest/search/search#search-issues-and-pull-requests)，受搜索索引、结果完整性和限流约束。
 
 内部计时器每 30 秒检查一次，重启只补最近一轮；不借会话调度服务执行任意回调。发现变化才投递简报，无可用会话先保存，异常中断仍可能重复投递。没有 webhook 或独立后台服务。
 
@@ -197,11 +209,11 @@ Large companies commonly use PAC auto-configuration to select a proxy per websit
 
 ### 验证范围
 
-自动测试覆盖界面组件、字段 patch、队列状态和数据接口，使用 jsdom 加载本插件的预构建 bundle；另加载官方 rc.5 renderer 验证插槽注册与会话域渲染。组件测试的 Modal 使用 DOM 替身，官方共享 Modal 的参数另由 rc.5 类型声明校验，不能据此声称桌面弹窗已实测。
+自动测试覆盖界面组件、字段 patch、队列状态和数据接口，使用 jsdom 加载本插件的预构建 bundle；另加载官方 rc.5 renderer 验证插槽注册及会话顶部没有本插件动作。控件测试直接在内存执行本机 rc.5 发布文件中的 Button、Input、Modal、Menu、标签页和设置字段实现；仅 CSS 加载与 DOM 环境作适配，不等同于真实几何、亮暗主题或桌面弹窗验证。
 
 原测试继续覆盖真实临时 Git 仓库、只读白名单、三档、全量分页、规则文件、模型失败与缓存迁移；独立临时 rc.5 profile 验证命令、持久化、重载及 client 入口扫描。`verify-pack` 核对预构建 lib 与发布文件白名单。全部自动测试与构建结果见 [STATUS.md](STATUS.md)。
 
-沙箱外可在本包目录执行 `node scripts/ui-smoke.mjs`（已有 Node ≥22、桌面自带 rc.5 CLI 与系统 Edge），也可运行 `--help` 查看路径参数和退出码。它通过桌面 CLI 将本包本地路径离线装入系统 TEMP 下的临时 web profile，使用独立无头 Edge，检查侧边栏、无活动 agent 的中央页面、KPI、仓库/结果区和会话快捷按钮，并保存截图与脱敏诊断，退出清理临时 DSH_HOME。实际执行结果与未验证项见 [STATUS.md](STATUS.md)。Electron、真实模型请求与长期调度仍需实机验证。
+沙箱外可在本包目录执行 `node scripts/ui-smoke.mjs`（已有 Node ≥22、桌面自带 rc.5 CLI 与系统 Edge），也可运行 `--help` 查看路径参数和退出码。它通过桌面 CLI 将本包本地路径离线装入系统 TEMP 下的临时 web profile，使用独立无头 Edge，检查侧边栏、无活动 agent 的中央页面、KPI、仓库/结果区，并确认没有会话重复入口，并保存截图与脱敏诊断，退出清理临时 DSH_HOME。实际执行结果与未验证项见 [STATUS.md](STATUS.md)。Electron、真实模型请求与长期调度仍需实机验证。
 
 ### 来源与许可
 

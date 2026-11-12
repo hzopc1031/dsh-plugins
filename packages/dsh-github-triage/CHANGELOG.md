@@ -1,5 +1,19 @@
 # 更新记录
 
+## 0.4.4 - 2026-11-12
+
+- 入口收敛到左侧栏；移除会话动作注册及其回退弹窗。表单使用明确的弹层高度和独立正文滚动，保留可见保存/取消区；仓库地址校验改为简短的中性提示。
+- 分析类型统一为「issues 与 PR」「仅 issues」「仅 PR」；结果与模型提示统一称为“分析”。报告条目统计、详情状态和错误反馈改成明确文案，保存中不因 Escape 丢失草稿。
+- 立即分析与全面扫描增加范围、上限和缓存说明；修正分析选项弹窗的滚动及窄屏字段布局，完整保留日期、错误和操作。补充真实请求次数公式与有条件的默认示例。
+- 隔离 UI smoke 在 800px 高窗口检查表单按钮，确认会话动作不存在，增加非法地址截图与可用时的暗色截图。
+
+- 按官方 dsh-client-ui-ux（对齐、分组间距、图标、主题和交互）与 dsh-responsive-ui 修正现有整页；使用宿主共享 Button、Input、Menu、SegmentedTabs、Pill、Tag、Checkbox、Modal，移除自写按钮、原生 select、分段筛选和对应的整套控件样式。
+- 仓库普通/全量上限改用 SettingsValueField，显示仓库单独设置状态，支持暂存「继承插件设置」后随保存清空；其他字段继续分组、完整路径预览与局部更新。多行业务/规则内容保留 textarea，避免 InlineEditor 的 Enter 保存语义改变表单行为。
+- 仓库名、业务摘要、本地路径、运行信息允许换行；操作区可折行，弹窗外框按容器约束，页面字重不超过 500；结论标签、展开图标及控件状态由官方组件承担。
+- 核对本机 rc.5 与官方 dsh-v0.2.2-rc.1 的导出和实际接口；补充社区 dsh-plugin-development bundle/Client Slots 接入检查。测试在内存执行 rc.5 发布文件的实际控件实现，新增菜单键盘/关闭/焦点/卸载、标签页、继承重置与失败草稿回归。
+- 保持分析逻辑、宿主 POST 路由、地址解析、原命令与 GitHub 只读边界；兼容范围不变，无新增依赖。
+- 合并 main 0.4.3 的 Windows PAC / 系统代理、网络诊断和 30 秒可配置超时；检测与诊断按钮统一使用官方 Button，诊断正文完整换行；因 main 已占用 0.4.3，版本顺延为 0.4.4。
+
 ## 0.4.3
 
 - 无显式代理时读取 Windows PAC / 静态系统代理；提供检测、禁用与脱敏诊断，失败沿用原访问路径。
@@ -20,7 +34,7 @@
 
 ## 0.4.0 - 2026-11-12
 
-- 参照 dsh-context 0.83.1 重做一级侧边栏「GitHub 哨兵」页面；会话顶部按钮导航到同一页面。页头设置与模型胶囊、六项 KPI、仓库卡片网格、结果卡片与规则区形成完整工作台。
+- 参照 dsh-context 0.83.1 重做一级侧边栏「GitHub 哨兵」页面（本轮已收敛为唯一入口）。页头设置与模型胶囊、六项 KPI、仓库卡片网格、结果卡片与规则区形成完整工作台。
 - 页面改走宿主 `connection.fetch.register` 的 POST 路由，复用 ui-service 的校验、队列与存储，脱离活动 agent；保留 `/triage-ui` 和全部原命令。核对 rc.5 / rc.1 的服务名、路由路径和生命周期；兼容范围保持不变。
 - 结果支持三档、类型、仓库、搜索及排序；摘要先读、完整详情按条读取，规则按需读取，列表分批挂载；加入骨架、三步空状态、错误重试与运行状态。
 - 添加/编辑仓库使用分组 Modal，保留局部更新；删除需确认；增量和全量参数、纠正形成规则、复制/新文件导出及粘贴导入均在页面完成。没有新增 GitHub 写操作，也未改变分析逻辑。
@@ -35,11 +49,11 @@
 
 ## 0.3.1 · 2026-11-11
 
-- 中文用户可见名称统一为「GitHub 哨兵」，同步会话顶部按钮、弹窗、插件设置、命令描述、报告标题与文档；包名、命令名和功能逻辑保持不变。
+- 中文用户可见名称统一为「GitHub 哨兵」，同步页面、弹窗、插件设置、命令描述、报告标题与文档；包名、命令名和功能逻辑保持不变。
 
 ## 0.3.0 · 2026-11-11
 
-- 新增中文界面：会话顶部「GitHub 仓库研判」按钮，通过 rc.5 conversation.session.header.actions 插槽打开共享 Modal。遵循既有 UI 包的 dsh.client/platform:web/inject 与 lazy-CJS factory 协议，React/primitives 外部共享。
+- 新增中文管理界面与共享 Modal（旧版会话入口已于 0.4.4 移除）。遵循既有 UI 包的 dsh.client/platform:web/inject 与 lazy-CJS factory 协议，React/primitives 外部共享。
 - 管理仓库、业务说明与文件、本地 Git 路径/ref、类型、定时和上限；共享 zod 校验，按字段 patch 合并到最新配置。/triage-repo add 对同名仓库改为合并显式字段，六个旧命令和语法继续可用。
 - 模型状态及真实只读模型 ID 目录；手动普通/全量分析通过原串行队列异步执行，显示任务状态、同仓库防重复入队；三档分组、类型筛选、业务结论、本地证据和安全原链接。
 - 详情中纠正三档结论并填写理由，规则可查看和导出，默认不覆盖。没有新增 GitHub 写操作或本地代码修改。
@@ -55,30 +69,30 @@
 ## 0.2.0 · 2026-11-11
 
 - 新增可选 localRepoPath / localRef 与 add --local、local / --clear 命令。固定 argv、shell:false 的只读 Git 白名单，限制时间、取消与输出；对照本地提交快照、文件/函数片段、修复提交、提交包含关系和完整 patch-id，模型输出 localApplicability / localReason。
-- issue / PR 统一 recommendation：adopt、manual-review、not-recommended；两者均有优先级，卡片和简报按三档及优先级排序，保留细分判断、reason 与 businessReason。
+- issues / PR 统一 recommendation：adopt、manual-review、not-recommended；两者均有优先级，卡片和简报按三档及优先级排序，保留细分判断、reason 与 businessReason。
 - 新增 --full / --since / --until / --max，按更新时间扫描开放与关闭条目，默认 100、硬上限 500；支持全局/仓库 fullMax，超限仅取最近并提示费用和限流。定时仍用增量窗口；不支持标签区间。
 - /triage-fix 支持三档值；业务说明与纠正形成仓库级 Markdown 规则，新增 /triage-rules 查看/导出/导入及只读 rulesFile。导出只写显式指定路径，默认拒绝覆盖，--force 仍拒绝链接/特殊文件；模型注入有长度限制。
 - 内部状态 formatVersion:3，清除旧派生缓存、报告、待发简报，迁移保留用户纠正；本地提交和规则内容参与指纹。
 - 扩展真实临时 Git 测试与 rc.5 临时 profile 验证；smoke 支持本地对照、全量参数及三档模拟模型。重建 lib，保持 0.2.0，不发布 npm。
 
 
-- AI 主导最终研判，规则仅提供证据。无模型、调用失败、输出校验失败时只显示预筛证据和明确提示，不缓存为已研判。
+- AI 主导最终分析，规则仅提供证据。无模型、调用失败、输出校验失败时只显示预筛证据和明确提示，不缓存为已分析。
 - 新增业务说明 business / businessFile：仓库默认分支或本机普通文件；带引号命令增改清除，保存在自身存储域。
-- issue / PR 必填 businessReason，新增 exists / worthFixing / fitsDirection / testing；片段最多 3 文件、每文件 3KB，模型上下文最多 48KB。
+- issues / PR 必填 businessReason，新增 exists / worthFixing / fitsDirection / testing；片段最多 3 文件、每文件 3KB，模型上下文最多 48KB。
 - 模型路由、业务说明内容参与缓存指纹；新增 /triage-models，使用 rc.5 官方只读目录接口列出真实 ID。
 - 0.1.0 状态升级保留仓库设置与用户纠正，清除旧派生缓存、报告、待发简报。
 - 重写中文上手文档，smoke 支持业务说明与明确标注的 --mock-model；更新测试、临时 profile 加载验证与预构建 lib。
 
 ## 0.1.0 · 2026-11-11
 
-- 新增多仓库只读 issues/PR 研判、规则证据、可选 DSH llm.stream 最终判断。
+- 新增多仓库只读 issues / PR 分析、规则证据、可选 DSH llm.stream 最终判断。
 - 增量指纹缓存、用户纠正参考、每日/间隔调度、启动补跑和无变化静默。
 - 会话命令卡片、最近报告、定时简报，官方 storage-domain 独立持久化。
 - GET-only 与 GraphQL query 防线、凭据复用/脱敏、超时取消/代理/限流。
 - 预构建 lib、独立锁文件、node --test、精确 verify-pack 与真实 smoke 脚本。
 - 已做 rc.5 临时 profile 加载、命令、持久化重载验证；未做真实桌面和真实模型验收。
 - 全面使用 dsh-github-triage / github-triage 名称，存储域为 github_triage，安装子目录及包元数据同步。
-- 拉取前读取仓库功能开关；Issues/PR 关闭时跳过对应接口并明确提示，新增提示可进入简报，重复提示静默。
+- 拉取前读取仓库功能开关；issues / PR 关闭时跳过对应接口并明确提示，新增提示可进入简报，重复提示静默。
 - smoke 支持 [owner/repo] / --limit，默认 cordiverse/cordis；DSH 官方仓库功能关闭时正常退出。
 - 沙箱真实 smoke 通过：cordiverse/cordis 2 issues + 3 PR，第二轮命中 5 条缓存；DSH 官方仓库仅提示关闭。115 项测试通过。
 

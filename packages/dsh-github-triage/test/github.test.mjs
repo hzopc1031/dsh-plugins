@@ -10,7 +10,7 @@ test('fixed GitHub origin rejects attacker hosts and redirects',async()=>{let ca
 test('URL repository list and enrichment request only canonical fixed-origin paths',async()=>{
   const urls=[]
   const c=new Github({env,gh,fetch:async(url,init)=>{
-    urls.push(url);assert.equal(init.method,'GET');assert.equal(init.headers['User-Agent'],'dsh-github-triage/0.4.3')
+    urls.push(url);assert.equal(init.method,'GET');assert.equal(init.headers['User-Agent'],'dsh-github-triage/0.4.4')
     if(url.endsWith('/repos/o/r'))return response({default_branch:'main',has_issues:true})
     if(url.includes('/git/trees/'))return response({tree:[]})
     return response({items:[]})
@@ -54,7 +54,7 @@ for(const mode of ['issues','prs','both'])for(const [has_issues,has_pull_request
     assert.equal(items.filter(i=>i.kind==='pr').length,Number(prsEnabled))
     const disabledIssues=mode!=='prs'&&has_issues===false,disabledPrs=mode!=='issues'&&has_pull_requests===false
     const notices=client.warnings.filter(w=>w.startsWith('该仓库已关闭 '))
-    assert.deepEqual(notices,disabledIssues||disabledPrs?['该仓库已关闭 '+(disabledIssues&&disabledPrs?'Issues/PR':disabledIssues?'Issues':'PR')+' 功能；已跳过对应拉取。']:[])
+    assert.deepEqual(notices,disabledIssues||disabledPrs?['该仓库已关闭 '+(disabledIssues&&disabledPrs?'issues / PR':disabledIssues?'issues':'PR')+' 功能；已跳过对应拉取。']:[])
   })
 }
 test('metadata errors are not mistaken for disabled features',async()=>{
@@ -92,7 +92,7 @@ test('disabled Issues also skips linked issue enrichment while retaining PR evid
   const [item]=await client.list('o/r','both',5)
   const result=await client.enrich('o/r',item)
   assert.deepEqual(result.linked,[])
-  assert.ok(result.notes.some(w=>w.includes('已关闭 Issues 功能')))
+  assert.ok(result.notes.some(w=>w.includes('已关闭 issues 功能')))
   assert.ok(!urls.some(u=>u.includes('/issues/8')))
 })
 

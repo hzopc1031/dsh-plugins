@@ -142,7 +142,7 @@ test('temporary official profile loads prebuilt plugin, commands persist only in
     agent={id:session.id,session,ctx,status:'idle'}
     const unconfigured=(await execute('/triage o/r')).text
     assert.ok(unconfigured.startsWith('**未配置模型'))
-    assert.match(unconfigured,/仅规则预筛，未经 AI 研判/)
+    assert.match(unconfigured,/仅规则预筛，未经 AI 分析/)
     assert.ok(!/值得修|真实存在：/.test(unconfigured))
     assert.match((await execute('/triage-report o/r')).text,/业务说明：未配置/)
     await execute('/triage-repo remove o/r')

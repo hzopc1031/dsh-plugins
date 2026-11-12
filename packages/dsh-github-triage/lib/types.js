@@ -13,7 +13,7 @@ export const repoName = z.string().transform((input, ctx) => {
     if (/[\s\\\u0000-\u001f\u007f]/.test(value) || (!web && parts.length !== 2) || !owner || !repo
         || !/^[a-zA-Z0-9][a-zA-Z0-9-]{0,38}$/.test(owner)
         || !/^[a-zA-Z0-9_.-]{1,100}$/.test(repo) || repo === '.' || repo === '..') {
-        ctx.addIssue({ code: 'custom', message: '请输入 owner/repo 或 github.com 仓库地址；不接受其他主机或含凭据的地址' });
+        ctx.addIssue({ code: 'custom', message: '仓库地址无效，请改用 owner/repo 格式' });
         return z.NEVER;
     }
     return (owner + '/' + repo).toLowerCase();

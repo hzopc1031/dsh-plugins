@@ -80,7 +80,7 @@ export declare const outputJsonSchema: z.core.ZodStandardJSONSchemaPayload<z.Zod
     }>;
     testing: z.ZodString;
 }, z.core.$strict>], "kind">>;
-export declare const noModel = "\u672A\u914D\u7F6E\u6A21\u578B\uFF0C\u65E0\u6CD5 AI \u7814\u5224\uFF1A\u8BF7\u5728\u63D2\u4EF6\u914D\u7F6E\u4E2D\u586B\u5199 model\uFF08DSH \u5DF2\u6CE8\u518C\u7684 provider/model\uFF09\uFF1Bprovider \u4E0E model \u5206\u522B\u586B\u5199";
+export declare const noModel = "\u672A\u914D\u7F6E\u6A21\u578B\uFF0C\u65E0\u6CD5 AI \u5206\u6790\uFF1A\u8BF7\u5728\u63D2\u4EF6\u914D\u7F6E\u4E2D\u586B\u5199 model\uFF08DSH \u5DF2\u6CE8\u518C\u7684 provider/model\uFF09\uFF1Bprovider \u4E0E model \u5206\u522B\u586B\u5199";
 export declare function listModels(ctx: Context): Promise<string>;
 export declare function parseJudgment(input: string, kind: Judgment['kind']): Judgment;
 export declare function modelWarning(ctx: Context, config: Settings): string | undefined;

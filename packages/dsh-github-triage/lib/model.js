@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { judgmentSchema } from './types.js';
 // Generated from the same strict schema used to parse responses.
 export const outputJsonSchema = z.toJSONSchema(judgmentSchema);
-export const noModel = '未配置模型，无法 AI 研判：请在插件配置中填写 model（DSH 已注册的 provider/model）；provider 与 model 分别填写';
+export const noModel = '未配置模型，无法 AI 分析：请在插件配置中填写 model（DSH 已注册的 provider/model）；provider 与 model 分别填写';
 export async function listModels(ctx) {
     const llm = ctx.get('llm');
     if (!llm)
@@ -33,11 +33,11 @@ export function parseJudgment(input, kind) {
 }
 export function modelWarning(ctx, config) {
     if (!config.modelEnabled)
-        return '模型已禁用，无法 AI 研判；请在插件配置中启用 modelEnabled 并填写 provider、model。';
+        return '模型已禁用，无法 AI 分析；请在插件配置中启用 modelEnabled 并填写 provider、model。';
     if (!config.provider || !config.model)
         return noModel;
     if (!ctx.get('llm'))
-        return '模型服务不可用，无法 AI 研判；请先在 DSH 设置中启用模型服务商。';
+        return '模型服务不可用，无法 AI 分析；请先在 DSH 设置中启用模型服务商。';
     return undefined;
 }
 export function dshModel(ctx, config) {

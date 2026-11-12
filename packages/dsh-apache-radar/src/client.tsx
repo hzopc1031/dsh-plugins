@@ -1,3 +1,4 @@
+import { NetworkSettings, type NetworkSettingsProps } from './network-settings.js'
 import React, { useEffect, useRef, useState } from 'react'
 import { MarkdownText } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { DashboardData } from './dashboard.js'
@@ -11,7 +12,7 @@ const projectName = (id: string) => ({ kafka: 'Kafka', hadoop: 'Hadoop', flink: 
 const time = (value?: string | null) => value ? new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Singapore',
   year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(value)) : '尚未成功抓取'
 const statusName = (value: string) => ({ ok: '已更新', cached: '缓存', stale: '上次成功缓存', failed: '抓取失败', unavailable: '暂无来源' })[value] ?? value
-const sourceError = (error?: string) => error && /fetch failed|NETWORK_ERROR|ECONN|ETIMEDOUT|ENOTFOUND|UND_ERR_|CERT|SIGNATURE|ISSUER|HTTP[ _]\d{3}/i.test(error) ? '来源不可用 · 见网络诊断' : error
+const sourceError = (error?: string) => error && !error.includes('TLS_KEY_TOO_SMALL') && /fetch failed|NETWORK_ERROR|ECONN|ETIMEDOUT|ENOTFOUND|UND_ERR_|CERT|SIGNATURE|ISSUER|HTTP[ _]\d{3}/i.test(error) ? '来源不可用 · 见网络诊断' : error
 const labels = { code: { copyLabel: '复制', copiedLabel: '已复制' }, footnotes: '注释' }
 
 export function securityOverview(report: SecurityReport) {
@@ -319,6 +320,7 @@ export const inject = ['slots']
 export function apply(ctx: ClientContext) {
   ctx.slots.inject('main', () => ctx.slots.register({ name: 'main', key: 'apache-radar' }, Dashboard))
   ctx.slots.inject('sidebar.panellist', () => ctx.slots.register({ name: 'sidebar.panellist', id: 'apache-radar', order: 25, label: () => 'Apache 雷达' }, Icon))
+  ctx.slots.inject('plugins.row.config', () => ctx.slots.register({ name: 'plugins.row.config', key: 'dsh-apache-radar#apache-radar' }, props => <NetworkSettings {...props as NetworkSettingsProps}/>))
 }
 
 const css = `

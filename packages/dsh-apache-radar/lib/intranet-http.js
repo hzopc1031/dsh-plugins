@@ -7,17 +7,20 @@ import { connect } from 'node:net';
 import z from '@deepseek-ai/schemastery';
 import { systemProxy, createSystemProxy } from './system-proxy.js';
 import { isIP } from 'node:net';
+export const API_TLS_SKIP_LABEL = '不安全：仅跳过 OSV / GitHub API 证书校验';
+export const WEAK_CA_HINT = `公司网络的 HTTPS 拦截证书密钥太短，无法通过 OpenSSL 3 校验；导入 CA 证书解决不了。可在插件设置中开启「${API_TLS_SKIP_LABEL}」（仅限 api.osv.dev / api.github.com）。`;
 export const NETWORK_HINT = '可能是公司代理或网络拦截，可在插件设置里填写 HTTPS 代理，或把 HTTPS_PROXY 写入 %USERPROFILE%\\.dsh\\.env 后完全退出并重开 DSH';
 const CERT_HINT = '可能是公司 HTTPS 解密证书，请设置 NODE_EXTRA_CA_CERTS 指向公司根证书 PEM，或在插件设置里填写 CA 证书路径';
 export function describeNetworkError(error, _url) {
     const seen = new Set(), pending = [error];
-    let code = '', status = '', timeout = false;
-    while (pending.length) {
+    let code = '', status = '', timeout = false, weakKey = false;
+    while (pending.length && seen.size < 32) {
         const value = pending.shift();
         if (!value || typeof value !== 'object' || seen.has(value))
             continue;
         seen.add(value);
         const e = value;
+        weakKey ||= e.code === 67 || e.verifyCode === 67 || /(?:CA|EE|TLS)(?:_CERTIFICATE)?_KEY_TOO_(?:SMALL|WEAK)|key too (?:small|weak)|verify error\s*[:=]?\s*(?:num\s*=\s*)?67\b|verify return code:\s*67\b/i.test(`${e.code ?? ''} ${e.message ?? ''}`);
         if (typeof e.code === 'string' && /^(?:E[A-Z0-9_]+|UND_ERR_[A-Z0-9_]+|CERT_[A-Z0-9_]+|[A-Z_]*(?:CERT|SIGNATURE|ISSUER)[A-Z_]*)$/.test(e.code))
             code = e.code;
         if (typeof e.status === 'number')
@@ -29,8 +32,10 @@ export function describeNetworkError(error, _url) {
         if (http)
             status = `HTTP_${http[1]}`;
         timeout ||= e.name === 'TimeoutError' || e.name === 'AbortError';
-        pending.push(e.cause, ...(Array.isArray(e.errors) ? e.errors : []));
+        pending.push(e.cause, ...(Array.isArray(e.errors) ? e.errors.slice(0, 32) : []));
     }
+    if (weakKey)
+        return { code: 'TLS_KEY_TOO_SMALL', message: 'TLS_KEY_TOO_SMALL · 请求未完成', hintZh: WEAK_CA_HINT };
     code ||= status || (timeout ? 'ETIMEDOUT' : 'NETWORK_ERROR');
     return { code, message: `${code} · 请求未完成`, hintZh: /CERT|SIGNATURE|ISSUER|SELF_SIGNED/.test(code) ? CERT_HINT : NETWORK_HINT };
 }
@@ -43,7 +48,7 @@ export function collapseNetworkErrors(value) {
         const url = typeof obj.url === 'string' ? obj.url : parentUrl;
         for (const [key, item] of Object.entries(obj)) {
             if ((key === 'error' || key === 'cacheError') && typeof item === 'string'
-                && /fetch failed|NETWORK_ERROR|ECONN|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|UND_ERR_|CERT|SIGNATURE|ISSUER|HTTP[ _]\d{3}/i.test(item)) {
+                && /fetch failed|NETWORK_ERROR|ECONN|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|UND_ERR_|CERT|SIGNATURE|ISSUER|KEY_TOO_(?:SMALL|WEAK)|key too (?:small|weak)|verify error.*67|HTTP[ _]\d{3}/i.test(item)) {
                 const { code } = describeNetworkError(new Error(item));
                 const urls = item.match(/https?:\/\/[^\s;)]+/g);
                 const identities = urls?.length ? urls : [url || item];
@@ -102,6 +107,15 @@ export function createIntranetHttp(settings = {}, env = process.env, dependencie
         throw new Error('CA 证书路径必须是绝对路径');
     if (settings.insecureSkipTlsVerify !== undefined && typeof settings.insecureSkipTlsVerify !== 'boolean')
         throw new Error('不安全 TLS 选项必须是布尔值');
+    const apiSkipEnabled = () => {
+        const setting = settings.insecureSkipTlsVerifyHosts;
+        const value = setting && typeof setting === 'object' && 'get' in setting && typeof setting.get === 'function' ? setting.get() : setting === undefined ? false : setting;
+        if (typeof value !== 'boolean')
+            throw new Error('按主机跳过 TLS 校验选项必须是布尔值');
+        return value;
+    };
+    apiSkipEnabled();
+    const skipVerification = (host, apiSkip = apiSkipEnabled()) => !!settings.insecureSkipTlsVerify || apiSkip && ['api.osv.dev', 'api.github.com'].includes(host);
     const proxyUrl = (value, secure = false) => {
         try {
             const url = new URL(value);
@@ -163,12 +177,17 @@ export function createIntranetHttp(settings = {}, env = process.env, dependencie
     async function dispatcher(proxy) {
         if (closed)
             throw new Error('网络客户端已关闭');
-        const key = proxy ?? 'direct';
+        const apiSkip = apiSkipEnabled();
+        const key = `${proxy ?? 'direct'}|${apiSkip}`;
         if (!agents.has(key))
             agents.set(key, (async () => {
-                const { Agent, ProxyAgent } = await import('undici');
-                const tls = { ca: await ca(), rejectUnauthorized: !settings.insecureSkipTlsVerify };
-                return proxy ? new ProxyAgent({ uri: proxy, requestTls: tls, proxyTls: tls }) : new Agent({ connect: tls });
+                const { Agent, Pool, ProxyAgent } = await import('undici');
+                const proxyTls = { ca: await ca(), rejectUnauthorized: !settings.insecureSkipTlsVerify };
+                // Choose TLS policy per origin, including redirects; the proxy's own TLS keeps its global policy.
+                return new Agent({ factory(origin, options) {
+                        const tls = { ca: proxyTls.ca, rejectUnauthorized: !skipVerification(new URL(origin).hostname, apiSkip) };
+                        return proxy ? new ProxyAgent({ uri: proxy, requestTls: tls, proxyTls }) : new Pool(origin, { ...options, connect: tls });
+                    } });
             })());
         return agents.get(key);
     }
@@ -200,14 +219,14 @@ export function createIntranetHttp(settings = {}, env = process.env, dependencie
                 throw new Error('网络客户端已关闭');
             const routing = await resolveRoute(url);
             try {
-                return await globalThis.fetch(input, custom || routing.proxy ? { ...init, dispatcher: await dispatcher(routing.proxy) } : init);
+                return await globalThis.fetch(input, custom || apiSkipEnabled() || routing.proxy ? { ...init, dispatcher: await dispatcher(routing.proxy) } : init);
             }
             catch (error) {
                 if (!routing.proxy || !['Windows PAC', '静态系统代理'].includes(routing.source))
                     throw error;
                 if (lastDetection)
                     lastDetection.warning = '系统代理请求失败，已尝试原访问路径。';
-                return await globalThis.fetch(input, custom ? { ...init, dispatcher: await dispatcher(route(url).proxy) } : init);
+                return await globalThis.fetch(input, custom || apiSkipEnabled() ? { ...init, dispatcher: await dispatcher(route(url).proxy) } : init);
             }
         }
         catch (cause) {
@@ -240,22 +259,22 @@ export function createIntranetHttp(settings = {}, env = process.env, dependencie
             try {
                 const res = await fetch(url, { method: 'HEAD', redirect: 'error', signal: AbortSignal.timeout(8000) });
                 await res.body?.cancel();
-                result.tls = { authorized: !settings.insecureSkipTlsVerify, status: res.status };
+                result.tls = { authorized: !skipVerification(target.hostname), status: res.status };
             }
             catch (error) {
-                result.tls = { authorized: false, code: describeNetworkError(error).code };
+                result.tls = { authorized: false, ...describeNetworkError(error) };
             }
         }
         else if (target.protocol === 'https:') {
             const certs = await ca();
             result.tls = await new Promise(resolve => {
-                const socket = tlsConnect({ host, port: Number(target.port || 443), servername: host, ca: certs, rejectUnauthorized: !settings.insecureSkipTlsVerify, timeout: 5000 });
+                const socket = tlsConnect({ host, port: Number(target.port || 443), servername: host, ca: certs, rejectUnauthorized: !skipVerification(target.hostname), timeout: 5000 });
                 socket.once('secureConnect', () => { resolve({ authorized: socket.authorized, code: socket.authorizationError || undefined }); socket.destroy(); });
                 socket.once('timeout', () => { resolve({ authorized: false, code: 'ETIMEDOUT' }); socket.destroy(); });
-                socket.once('error', error => { resolve({ authorized: false, code: describeNetworkError(error).code }); socket.destroy(); });
+                socket.once('error', error => { resolve({ authorized: false, ...describeNetworkError(error) }); socket.destroy(); });
             });
         }
-        return { ...result, systemProxy: lastDetection, timeoutSeconds: effectiveTimeout(settings) / 1000 };
+        return { ...result, tlsVerification: { host: target.hostname, skipped: target.protocol === 'https:' && skipVerification(target.hostname) }, systemProxy: lastDetection, timeoutSeconds: effectiveTimeout(settings) / 1000 };
     }
     return { fetch, diagnose, detectProxy, proxyStatus: () => lastDetection && { ...lastDetection, automatic: automaticUsed }, route: (url) => ({ source: route(url).source, proxied: !!route(url).proxy }),
         async close() { if (closed)
@@ -268,4 +287,5 @@ export const intranetConfig = {
     noProxy: z.string().description('可选代理绕过列表，例如 localhost,127.0.0.1,.company.example'),
     caBundlePath: z.string().description('可选公司根证书 PEM 绝对路径，与 NODE_EXTRA_CA_CERTS 合并'),
     insecureSkipTlsVerify: z.boolean().default(false).description('不安全 / insecure：跳过 TLS 证书校验，仅在明确接受风险时开启'),
+    insecureSkipTlsVerifyHosts: z.boolean().default(false).volatile().description(API_TLS_SKIP_LABEL),
 };

@@ -11,7 +11,7 @@ export const SOURCES = {
   guidance: 'https://security.apache.org/report-dependency/',
 } as const
 
-export const USER_AGENT = 'dsh-advisory-impact/0.1.3 (https://github.com/hzopc1031/dsh-plugins)'
+export const USER_AGENT = 'dsh-advisory-impact/0.1.4 (https://github.com/hzopc1031/dsh-plugins)'
 const allowed = new Set<string>(Object.values(SOURCES))
 
 export class SourceError extends Error {

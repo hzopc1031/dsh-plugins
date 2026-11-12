@@ -24,9 +24,9 @@ export function projectDirectory(ctx, agent) {
     return service ? service.get(agent.session) : agent.session.header.cwd;
 }
 export function apply(ctx, config = {}) {
-    const { httpsProxy, noProxy, caBundlePath, insecureSkipTlsVerify, systemProxy, timeoutSeconds, offlineOnly, ...settings } = config;
+    const { httpsProxy, noProxy, caBundlePath, insecureSkipTlsVerify, insecureSkipTlsVerifyHosts, systemProxy, timeoutSeconds, offlineOnly, ...settings } = config;
     const cacheRoot = path.join(os.homedir(), '.cache', 'dsh-advisory-impact');
-    const networkSettings = { httpsProxy, noProxy, caBundlePath, insecureSkipTlsVerify, systemProxy, timeoutSeconds };
+    const networkSettings = { httpsProxy, noProxy, caBundlePath, insecureSkipTlsVerify, insecureSkipTlsVerifyHosts, systemProxy, timeoutSeconds };
     const network = createIntranetHttp(networkSettings, process.env, { cacheDirectory: cacheRoot });
     ctx.effect(() => () => network.close());
     const service = new AdvisoryService({ config: settings,

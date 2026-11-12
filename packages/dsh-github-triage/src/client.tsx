@@ -1,3 +1,4 @@
+import { NetworkSettings, type NetworkSettingsProps } from './network-settings.js'
 import type {Context} from '@deepseek-ai/cordis'
 export type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
 export type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
@@ -206,4 +207,6 @@ export function apply(ctx:Context):void {
   const Page=()=> <Dashboard call={call} openSettings={openSettings}/>
   ctx.slots.inject('main',()=>ctx.slots.register({name:'main',key:PANEL_ID,locale:NS},Page))
   ctx.slots.inject('sidebar.panellist',()=>ctx.slots.register({name:'sidebar.panellist',id:PANEL_ID,order:25,label:()=>t('title'),locale:NS},props=><Branch size={props.size}/>))
+  const settingsSlots=ctx.slots as unknown as {inject(name:string,setup:()=>unknown):unknown;register(options:Record<string,unknown>,component:(props:NetworkSettingsProps)=>ReactNode):unknown}
+  settingsSlots.inject('plugins.row.config',()=>settingsSlots.register({name:'plugins.row.config',key:'dsh-github-triage#github-triage'},props=><NetworkSettings {...props as NetworkSettingsProps}/>))
 }

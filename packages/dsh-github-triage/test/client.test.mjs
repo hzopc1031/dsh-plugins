@@ -68,12 +68,13 @@ async function setup(t){
     render:async(name,props={})=>{await act(async()=>root.render(React.createElement(client[name],{call,...props})))},
   }
 }
-test('lazy client registers only the sidebar and root page, with no session action',async t=>{
+test('lazy client registers sidebar, root page and network settings, with no session action',async t=>{
   const f=await setup(t),effects=[],registrations=[],injections=[]
   f.client.apply({get:()=>undefined,effect:fn=>{effects.push(fn())},slots:{inject:(slot,callback)=>{injections.push(slot);callback()},register:o=>registrations.push(o)}})
   t.after(()=>effects.reverse().forEach(dispose=>dispose?.()))
-  assert.deepEqual(injections,['main','sidebar.panellist'])
-  assert.equal(registrations.length,2)
+  assert.deepEqual(injections,['main','sidebar.panellist','plugins.row.config'])
+  assert.equal(registrations.length,3)
+  assert.ok(registrations.some(o=>o.name==='plugins.row.config'&&o.key==='dsh-github-triage#github-triage'))
   assert.ok(registrations.some(o=>o.name==='main'&&o.key==='dsh-github-triage'))
   assert.ok(registrations.some(o=>o.name==='sidebar.panellist'&&o.id==='dsh-github-triage'&&o.label()==='GitHub 哨兵'))
   assert.equal(f.client.TriageButton,undefined)

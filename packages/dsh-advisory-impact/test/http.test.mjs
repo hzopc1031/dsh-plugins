@@ -98,3 +98,17 @@ test('official redirects succeed only within source hosts and use configured 30s
     await assert.rejects(createHttpClient({fetch:async()=>new Response(null,{status:302,headers:{location:'https://api.github.com/a'}})})(SOURCES.kafka),/REDIRECT_BLOCKED/)
   }finally{AbortSignal.timeout=original}
 })
+
+
+test('OSV source failures retain the weak-key hint for reports and tools', async t => {
+  const { createOsvHttpClient } = await import('../lib/http.js')
+  const { WEAK_CA_HINT } = await import('../lib/intranet-http.js')
+  const http = createOsvHttpClient({ fetch: async () => { throw new TypeError('fetch failed', { cause: { code: 'ERR_SSL_CA_KEY_TOO_SMALL' } }) } })
+  t.after(() => http.close())
+  await assert.rejects(http('https://api.osv.dev/v1/vulns/CVE-2024-31141'), error => {
+    assert.ok(error instanceof SourceError)
+    assert.ok(error.message.includes(WEAK_CA_HINT))
+    assert.equal(error.message.split(WEAK_CA_HINT).length, 2)
+    return true
+  })
+})

@@ -1,4 +1,37 @@
-window.__ModuleLoader__.load({ id: 'dsh-apache-radar', factory: require => {
+window.__ModuleLoader__.load({ id: 'dsh-apache-radar', factory: hostRequire => {
+const settings = { exports: {} };
+((module, exports, require) => {"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.NetworkSettings = NetworkSettings;
+// Vendored identically in apache-radar, advisory-impact and github-triage; keep these copies in sync.
+const react_1 = require("react");
+function NetworkSettings({ view, form }) {
+    const [saving, setSaving] = (0, react_1.useState)(false), [error, setError] = (0, react_1.useState)('');
+    if (view === 'summary')
+        return '网络设置';
+    return (0, react_1.createElement)('section', { 'aria-label': '网络设置' }, (0, react_1.createElement)('label', null, (0, react_1.createElement)('input', {
+        type: 'checkbox', checked: form?.state.value?.insecureSkipTlsVerifyHosts === true,
+        disabled: !form?.state.writable || saving,
+        onChange: async (event) => {
+            const value = event.target.checked;
+            setSaving(true);
+            setError('');
+            try {
+                if (!await form?.mutate([{ op: 'set', path: ['insecureSkipTlsVerifyHosts'], value }], form.state.revision))
+                    throw new Error();
+            }
+            catch {
+                setError('网络设置保存失败，请重试。');
+            }
+            finally {
+                setSaving(false);
+            }
+        },
+    }), '不安全：仅跳过 OSV / GitHub API 证书校验'), error && (0, react_1.createElement)('span', { role: 'alert' }, error));
+}
+
+})(settings, settings.exports, hostRequire);
+const require = hostRequire;
 const module = { exports: {} }; const exports = module.exports;
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
@@ -48,6 +81,7 @@ exports.SecurityStrip = SecurityStrip;
 exports.Brief = Brief;
 exports.Dashboard = Dashboard;
 exports.apply = apply;
+const network_settings_js_1 = settings.exports;
 const react_1 = __importStar(require("react"));
 const dsh_client_ui_primitives_1 = require("@deepseek-ai/dsh-client-ui-primitives");
 const endpoint = '/api/apache-radar/dashboard';
@@ -55,7 +89,7 @@ const projectName = (id) => ({ kafka: 'Kafka', hadoop: 'Hadoop', flink: 'Flink' 
 const time = (value) => value ? new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Singapore',
     year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(value)) : '尚未成功抓取';
 const statusName = (value) => ({ ok: '已更新', cached: '缓存', stale: '上次成功缓存', failed: '抓取失败', unavailable: '暂无来源' })[value] ?? value;
-const sourceError = (error) => error && /fetch failed|NETWORK_ERROR|ECONN|ETIMEDOUT|ENOTFOUND|UND_ERR_|CERT|SIGNATURE|ISSUER|HTTP[ _]\d{3}/i.test(error) ? '来源不可用 · 见网络诊断' : error;
+const sourceError = (error) => error && !error.includes('TLS_KEY_TOO_SMALL') && /fetch failed|NETWORK_ERROR|ECONN|ETIMEDOUT|ENOTFOUND|UND_ERR_|CERT|SIGNATURE|ISSUER|HTTP[ _]\d{3}/i.test(error) ? '来源不可用 · 见网络诊断' : error;
 const labels = { code: { copyLabel: '复制', copiedLabel: '已复制' }, footnotes: '注释' };
 function securityOverview(report) {
     const affected = report.projects.filter(p => p.advisories.some(a => a.verdict === 'affected'));
@@ -704,6 +738,7 @@ exports.inject = ['slots'];
 function apply(ctx) {
     ctx.slots.inject('main', () => ctx.slots.register({ name: 'main', key: 'apache-radar' }, Dashboard));
     ctx.slots.inject('sidebar.panellist', () => ctx.slots.register({ name: 'sidebar.panellist', id: 'apache-radar', order: 25, label: () => 'Apache 雷达' }, Icon));
+    ctx.slots.inject('plugins.row.config', () => ctx.slots.register({ name: 'plugins.row.config', key: 'dsh-apache-radar#apache-radar' }, props => react_1.default.createElement(network_settings_js_1.NetworkSettings, { ...props })));
 }
 const css = `
 .ar-security-scope{display:flex;flex-wrap:wrap;gap:0 8px;font-size:10px}

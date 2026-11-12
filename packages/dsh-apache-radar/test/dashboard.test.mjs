@@ -83,7 +83,7 @@ test('dashboard failure retains last-good source times, errors, mismatch evidenc
 test('native slot registrations use a model-independent main panel, sidebar label and unload-owned callbacks', () => {
   const entries = [], disposers = []
   const ctx = { slots: {
-    inject: (slot, setup) => { assert.ok(['main', 'sidebar.panellist'].includes(slot)); const dispose = setup(); disposers.push(dispose); return dispose },
+    inject: (slot, setup) => { assert.ok(['main', 'sidebar.panellist', 'plugins.row.config'].includes(slot)); const dispose = setup(); disposers.push(dispose); return dispose },
     register: (options, component) => { const entry = { options, component }; entries.push(entry); return () => entries.splice(entries.indexOf(entry), 1) },
   } }
   client.apply(ctx)
@@ -91,6 +91,11 @@ test('native slot registrations use a model-independent main panel, sidebar labe
   assert.equal(entries[0].component, client.Dashboard)
   assert.equal(entries[1].options.id, 'apache-radar')
   assert.equal(entries[1].options.label(), 'Apache 雷达')
+  assert.equal(entries[2].options.key, 'dsh-apache-radar#apache-radar')
+  const settings = staticView(entries[2].component, { view: 'page', form: { state: { value: {}, writable: true } } })
+  assert.match(settings, /不安全：仅跳过 OSV \/ GitHub API 证书校验/)
+  assert.match(settings, /type="checkbox"/)
+  assert.doesNotMatch(settings, /checked=|disabled=/)
   assert.match(staticView(client.Dashboard, {}), /无需模型/)
   for (const dispose of disposers) dispose()
   assert.equal(entries.length, 0)

@@ -47,3 +47,9 @@ PAC 是网络提供的代码。**Node vm 不是对抗蓄意攻击者的安全边
 KIP 改为 https://cwiki.apache.org/confluence/spaces/KAFKA/pages/50859233/Kafka+Improvement+Proposals；FLIP 改为 https://cwiki.apache.org/confluence/spaces/FLINK/pages/65145551/Flink+Improvement+Proposals。2026-11-12 Linux curl -I 确认旧地址均 302、新地址均 200；全量 GET 均 200，解析得到 KIP 1176 / FLIP 104 条（无日期仍作为参考，不计本周新增）。新裁剪夹具记录 URL、实际抓取时间、原始/裁剪 SHA-256；历史夹具的来源信息保留。全部官方 URL 的状态与时间见本次外部验收汇总及 url-head-results.json；OSV 对 HEAD 返回 405，不是业务 GET/POST 失败。
 
 默认请求时限统一为 **30 000 ms**；timeoutSeconds 的有限数值限制 10–120 秒，其他输入用 30 秒，诊断显示有效值。未改变模型服务超时或本地截图超时。
+
+## 弱证书密钥与 TLS 跳过范围
+
+出现 `CA certificate key too weak`、`CA_KEY_TOO_SMALL` 或 OpenSSL 校验错误 67，表示证书密钥强度不足，与「证书不受信任」不同；OpenSSL 3 的默认安全级别通常要求 RSA 密钥至少 2048 位，报错本身不代表已测得实际位数。`caBundlePath` / `NODE_EXTRA_CA_CERTS` 只能补充信任，不能修复弱密钥。可在插件管理中打开目标插件条目的「配置」，开启「不安全：仅跳过 OSV / GitHub API 证书校验」（`insecureSkipTlsVerifyHosts`，默认 `false`），仅对精确主机 `api.osv.dev` / `api.github.com` 跳过校验；Apache、npm、其他主机、PAC 获取和 HTTPS 代理自身仍校验。跳过会失去目标证书身份保护，请仅在接受风险时开启；优先让网络管理员更新拦截证书。原有 `insecureSkipTlsVerify` 默认也为 `false`，开启会跳过该网络客户端所有目标和 HTTPS 代理的证书校验，范围更大。
+
+CONNECT 后的目标 TLS 与 HTTPS 代理自身的 TLS 分开配置；按主机开关只影响前者。每次跳转重新按目标主机选择校验策略，子域名和相似域名不会命中。更多错误提示与诊断字段见[内网配置](intranet-network.md#证书密钥太短)。

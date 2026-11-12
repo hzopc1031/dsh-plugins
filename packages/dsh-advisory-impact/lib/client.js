@@ -1,5 +1,37 @@
 window.__ModuleLoader__.load({id:'dsh-advisory-impact',factory:(hostRequire)=>{
 const PANEL_CSS=".ai-root {\n  --ai-ink: var(--dsw-alias-label-primary);\n  --ai-muted: var(--dsw-alias-label-secondary);\n  --ai-line: var(--dsw-alias-border-l2);\n  --ai-accent: var(--dsw-alias-state-business-primary);\n  height: 100%; min-height: 0; overflow: auto; color: var(--ai-ink);\n  background: var(--dsw-alias-bg-module-platform); font: inherit; font-size: 13px; line-height: 1.65;\n  container-type: inline-size;\n}\n.ai-root *, .ai-root *::before, .ai-root *::after { box-sizing: border-box; }\n.ai-content { max-width: 1240px; margin: auto; padding: 36px 32px 28px; }\n.ai-root h1, .ai-root h2, .ai-root h3, .ai-root p { margin: 0; }\n.ai-root h1 { font-size: 25px; font-weight: 650; letter-spacing: -.5px; line-height: 1.4; }\n.ai-root h2 { font-size: 16px; font-weight: 600; }\n.ai-root h3 { font-size: 15px; font-weight: 600; margin: 10px 0 6px; }\n.ai-root p + p { margin-top: 6px; }\n.ai-root a { color: var(--ai-accent); text-decoration: none; overflow-wrap: anywhere; }\n.ai-root a:hover { text-decoration: underline; }\n.ai-header, .ai-section-head, .ai-row, .ai-actions, .ai-brand { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }\n.ai-header, .ai-section-head { justify-content: space-between; }\n.ai-brand { gap: 12px; }\n.ai-logo { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 14px; color: var(--ai-accent); background: color-mix(in srgb, var(--ai-accent) 10%, transparent); }\n.ai-eyebrow { display: block; color: var(--ai-muted); font-size: 10px; letter-spacing: 1.8px; font-weight: 600; }\n.ai-lead { margin: 14px 0 24px !important; color: var(--ai-muted); font-size: 14px; }\n.ai-card { background: var(--dsw-alias-bg-layer-1); border: 1px solid var(--ai-line); border-radius: 12px; padding: 18px 20px; min-width: 0; overflow-wrap: anywhere; box-shadow: var(--dsw-shadow-lv1); }\n.ai-card + .ai-card { margin-top: 12px; }\n.ai-muted, .ai-root small { color: var(--ai-muted); }\n.ai-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 34px; padding: 6px 13px; border: 1px solid var(--ai-line); border-radius: 8px; background: var(--dsw-alias-bg-layer-1); color: var(--ai-ink); font: inherit; font-weight: 500; cursor: pointer; }\n.ai-button:hover { background: var(--dsw-alias-interactive-bg-hover); }\n.ai-button:disabled { opacity: .5; cursor: default; }\n.ai-primary, .ai-primary:hover { background: var(--ai-accent); color: var(--dsw-alias-label-primary-foreground); border-color: transparent; }\n.ai-root :is(button, input, textarea, summary, a):focus-visible { outline: 2px solid var(--ai-accent); outline-offset: 3px; }\n.ai-root summary { cursor: pointer; font-weight: 500; }\n.ai-setup { margin-bottom: 22px; }\n.ai-setup summary .ai-muted { margin-left: 8px; font-size: 12px; font-weight: 400; }\n.ai-form { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; margin: 14px 0; }\n.ai-form label { display: flex; flex: 1 1 150px; flex-direction: column; gap: 4px; font-size: 12px; color: var(--ai-muted); }\n.ai-form label.ai-wide { flex-basis: 70%; }\n.ai-root input, .ai-root textarea { background: var(--dsw-alias-bg-layer-2); color: var(--ai-ink); border: 1px solid var(--ai-line); border-radius: 7px; padding: 8px 10px; font: inherit; min-width: 0; width: 100%; }\n.ai-pin { justify-content: space-between; padding: 8px 0; border-top: 1px solid var(--ai-line); }\n.ai-empty { text-align: center; padding: 44px 22px; color: var(--ai-muted); }\n.ai-empty svg { margin: 0 auto 14px; color: var(--ai-accent); }\n.ai-empty h2 { color: var(--ai-ink); margin-bottom: 8px; }\n.ai-empty .ai-button { margin-top: 18px; }\n.ai-banner { border: 1px solid color-mix(in srgb, currentColor 28%, transparent); background: color-mix(in srgb, currentColor 5%, transparent); border-radius: 9px; padding: 12px 16px; margin-bottom: 16px !important; }\n.ai-loading { color: var(--ai-accent); padding: 10px 0; }\n.ai-affected, .ai-error { color: var(--dsw-alias-state-error-primary); }\n.ai-not_affected { color: var(--dsw-alias-state-success-primary); }\n.ai-unknown, .ai-notice { color: var(--dsw-alias-state-warn-label); }\n.ai-error, .ai-notice { overflow-wrap: anywhere; }\n.ai-section { margin: 24px 0 16px; }\n.ai-section-head { margin-bottom: 12px; }\n.ai-section-head .ai-muted { font-size: 12px; }\n.ai-metrics { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }\n.ai-metric { padding: 15px; display: flex; flex-direction: column; gap: 3px; box-shadow: none; }\n.ai-metric + .ai-metric { margin: 0; }\n.ai-metric strong { font-size: 30px; line-height: 1.25; font-weight: 600; font-variant-numeric: tabular-nums; }\n.ai-metric > span, .ai-metric small, .ai-metric details { color: var(--ai-muted); font-size: 12px; }\n.ai-metric details { margin-top: 8px; }\n.ai-metric .ai-evidence { flex-direction: column; align-items: start; }\n.ai-metric .ai-chip { white-space: normal; font-size: 10px; }\n.ai-tabs { display: flex; flex-wrap: wrap; gap: 4px; padding: 5px; margin-top: 24px; border-bottom: 1px solid var(--ai-line); }\n.ai-tabs .ai-button { border-color: transparent; background: transparent; color: var(--ai-muted); padding: 7px 20px; }\n.ai-tabs .ai-button[aria-pressed=true] { color: var(--ai-accent); background: color-mix(in srgb, var(--ai-accent) 10%, transparent); }\n.ai-verdict { color: var(--ai-ink); border-left: 3px solid var(--ai-line); }\n.ai-verdict.ai-affected { border-left-color: var(--dsw-alias-state-error-primary); }\n.ai-verdict.ai-not_affected { border-left-color: var(--dsw-alias-state-success-primary); }\n.ai-verdict.ai-unknown { border-left-color: var(--dsw-alias-state-warn-label); }\n.ai-badge { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 5px; font-size: 12px; font-weight: 600; background: color-mix(in srgb, currentColor 8%, transparent); }\n.ai-chip { display: inline-flex; align-items: center; padding: 2px 8px; border: 1px solid var(--ai-line); border-radius: 6px; font-size: 11px; line-height: 1.6; max-width: 100%; overflow-wrap: anywhere; }\n.ai-evidence { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; margin: 10px 0; color: var(--ai-muted); }\n.ai-evidence .ai-error { width: 100%; }\n.ai-range { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0; padding: 12px; background: var(--dsw-alias-bg-module-platform); border-radius: 8px; }\n.ai-range dt { color: var(--ai-muted); font-size: 11px; margin-bottom: 3px; }\n.ai-range dd { margin: 0; font-size: 12px; white-space: pre-wrap; }\n.ai-notes { margin: 12px 0; color: var(--ai-muted); }\n.ai-notes p { margin-top: 6px; font-size: 12px; }\n.ai-osv { border-top: 1px solid var(--ai-line); padding-top: 10px; margin-top: 12px; font-size: 12px; }\n.ai-more { width: 100%; margin: 14px 0; }\n.ai-suppression { padding-top: 20px; border-top: 1px solid var(--ai-line); }\n.ai-report { height: 320px; resize: vertical; margin-bottom: 12px; font-family: var(--ds-font-family-code, monospace) !important; font-size: 12px !important; }\n.ai-footer { padding: 24px 0 0; color: var(--ai-muted); font-size: 11px; }\n@container (max-width: 900px) { .ai-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); } }\n@container (max-width: 600px) { .ai-content { padding: 24px 16px; } .ai-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ai-range { grid-template-columns: 1fr; } .ai-actions { margin-top: 12px; } .ai-card { padding: 15px; } }\n";
+const settings={exports:{}};
+((module,exports,require)=>{"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.NetworkSettings = NetworkSettings;
+// Vendored identically in apache-radar, advisory-impact and github-triage; keep these copies in sync.
+const react_1 = require("react");
+function NetworkSettings({ view, form }) {
+    const [saving, setSaving] = (0, react_1.useState)(false), [error, setError] = (0, react_1.useState)('');
+    if (view === 'summary')
+        return '网络设置';
+    return (0, react_1.createElement)('section', { 'aria-label': '网络设置' }, (0, react_1.createElement)('label', null, (0, react_1.createElement)('input', {
+        type: 'checkbox', checked: form?.state.value?.insecureSkipTlsVerifyHosts === true,
+        disabled: !form?.state.writable || saving,
+        onChange: async (event) => {
+            const value = event.target.checked;
+            setSaving(true);
+            setError('');
+            try {
+                if (!await form?.mutate([{ op: 'set', path: ['insecureSkipTlsVerifyHosts'], value }], form.state.revision))
+                    throw new Error();
+            }
+            catch {
+                setError('网络设置保存失败，请重试。');
+            }
+            finally {
+                setSaving(false);
+            }
+        },
+    }), '不安全：仅跳过 OSV / GitHub API 证书校验'), error && (0, react_1.createElement)('span', { role: 'alert' }, error));
+}
+
+})(settings,settings.exports,hostRequire);
 const model={exports:{}};
 ((module,exports)=>{"use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -59,18 +91,19 @@ function panelOverview(view, now) {
 }
 
 })(model,model.exports);
-const require=id=>id==='./panel-model.js'?model.exports:hostRequire(id);
+const require=id=>id==='./panel-model.js'?model.exports:id==='./network-settings.js'?settings.exports:hostRequire(id);
 const module={exports:{}};const exports=module.exports;
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.inject = exports.name = void 0;
 exports.Panel = Panel;
 exports.apply = apply;
+const network_settings_js_1 = require("./network-settings.js");
 const React = require("react");
 const panel_model_js_1 = require("./panel-model.js");
 exports.name = 'advisory-impact';
 exports.inject = ['slots'];
-const sourceError = (error) => error && /fetch failed|NETWORK_ERROR|ECONN|ETIMEDOUT|ENOTFOUND|UND_ERR_|CERT|SIGNATURE|ISSUER|HTTP[ _]\d{3}/i.test(error) ? '来源不可用 · 见网络诊断' : error;
+const sourceError = (error) => error && !error.includes('TLS_KEY_TOO_SMALL') && /fetch failed|NETWORK_ERROR|ECONN|ETIMEDOUT|ENOTFOUND|UND_ERR_|CERT|SIGNATURE|ISSUER|HTTP[ _]\d{3}/i.test(error) ? '来源不可用 · 见网络诊断' : error;
 const title = (id) => ({ kafka: 'Kafka', hadoop: 'Hadoop', flink: 'Flink' })[id] ?? id;
 const safeUrl = (url) => (/^https?:\/\//.test(url) ? url : undefined);
 const Link = ({ url, children }) => (React.createElement("a", { href: safeUrl(url), target: "_blank", rel: "noreferrer" }, children, " \u2197"));
@@ -220,6 +253,7 @@ function apply(ctx) {
     });
     ctx.slots.inject('main', () => ctx.slots.register({ name: 'main', key: 'advisory-impact' }, () => React.createElement(Panel, null)));
     ctx.slots.inject('sidebar.panellist', () => ctx.slots.register({ name: 'sidebar.panellist', id: 'advisory-impact', order: 35, label: '公告影响' }, props => React.createElement(Shield, { size: props.size })));
+    ctx.slots.inject('plugins.row.config', () => ctx.slots.register({ name: 'plugins.row.config', key: 'dsh-advisory-impact#advisory-impact' }, props => React.createElement(network_settings_js_1.NetworkSettings, { ...props })));
 }
 
 return module.exports;

@@ -7,6 +7,10 @@ export interface Config extends IntranetSettings {
     watchList?: string[];
     offlineOnly?: boolean;
 }
-export declare const Config: z<Config>;
+export declare const Config: z<Config, Omit<Config, 'insecureSkipTlsVerifyHosts'> & {
+    insecureSkipTlsVerifyHosts: {
+        get(): boolean;
+    };
+}>;
 export declare const HELP: string;
 export declare function apply(ctx: Context, config?: Config): void;

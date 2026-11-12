@@ -26,7 +26,7 @@
 ## 三步快速上手
 
 1. **完全退出桌面 DSH。** 关闭所有窗口，并从系统托盘退出 DSH，确认已完全关闭后再安装或更新。需要 Node.js 22 及以上和 DSH 0.2.2-rc.1 及以上（排除 0.3.0 及其预发布版本）。
-2. **从 Git 安装。** `0.1.3` 尚未发布到 npm；包内已有界面和后台编译文件，无需允许安装脚本。
+2. **从 Git 安装。** `0.1.4` 尚未发布到 npm；包内已有界面和后台编译文件，无需允许安装脚本。
 
    ```powershell
    dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-apache-radar"
@@ -76,7 +76,9 @@ The one-hour cache preserves the last good response on failure. JIRA is a capped
 
 大公司常用代理自动配置脚本（PAC），按访问的网站选择出口，不一定有一个固定代理地址。这三个联网插件会读取 Windows 当前用户的 PAC / 静态系统代理，使用解析出的 HTTP(S) 代理；常见公司内网可少一步寻找代理地址和手写 `.env`。已有 `httpsProxy` 或 HTTP(S)/ALL_PROXY 环境变量时完全沿用原策略，不运行 PAC 检测；没有系统代理、PAC 返回 DIRECT 或检测失败时沿用原请求路径。`systemProxy: "off"` 关闭检测。不修改 `.dsh/.env` 或进程环境；仅点击雷达的「应用到插件设置」才保存代理到该插件的 `httpsProxy`，清空恢复自动检测。
 
-请求默认超时 **30 秒（30 000 ms）**，`timeoutSeconds` 可调整，限制 10–120 秒；无效值回到 30 秒。系统设置与 PAC 脚本在进程中缓存 30 分钟，可手动重新检测。仅支持 HTTP(S) PAC 地址，file:// 和 SOCKS 会提示并回到原路径。公司根证书仍可通过 `caBundlePath` / `NODE_EXTRA_CA_CERTS` 配置；不要随意开启 `insecureSkipTlsVerify`。
+请求默认超时 **30 秒（30 000 ms）**，`timeoutSeconds` 可调整，限制 10–120 秒；无效值回到 30 秒。系统设置与 PAC 脚本在进程中缓存 30 分钟，可手动重新检测。仅支持 HTTP(S) PAC 地址，file:// 和 SOCKS 会提示并回到原路径。证书不受信任时可通过 `caBundlePath` / `NODE_EXTRA_CA_CERTS` 补充公司根证书。
+
+出现 `CA certificate key too weak`、`CA_KEY_TOO_SMALL` 或 OpenSSL 校验错误 67，表示证书密钥强度不足，与「证书不受信任」不同；OpenSSL 3 的默认安全级别通常要求 RSA 密钥至少 2048 位，报错本身不代表已测得实际位数。`caBundlePath` / `NODE_EXTRA_CA_CERTS` 只能补充信任，不能修复弱密钥。可在插件管理中打开目标插件条目的「配置」，开启「不安全：仅跳过 OSV / GitHub API 证书校验」（`insecureSkipTlsVerifyHosts`，默认 `false`），仅对精确主机 `api.osv.dev` / `api.github.com` 跳过校验；Apache、npm、其他主机、PAC 获取和 HTTPS 代理自身仍校验。跳过会失去目标证书身份保护，请仅在接受风险时开启；优先让网络管理员更新拦截证书。原有 `insecureSkipTlsVerify` 默认也为 `false`，开启会跳过该网络客户端所有目标和 HTTPS 代理的证书校验，范围更大。
 
 Windows 注册表读取由模拟注册表的单元测试覆盖，本次只在 Linux 验证，未在真实公司 PAC、Windows Desktop 上实测。PAC 来自公司网络且本身是代码，Node vm 不是抵御蓄意攻击者的安全边界；无宿主对象、禁止动态代码生成、大小/时间限制和输出转字符串用于降低风险。完整配置及边界见[公司内网配置](../../docs/intranet-network.md)和[PAC 范围说明](../../docs/intranet-pac.md)。
 
@@ -86,11 +88,13 @@ Large companies commonly use PAC auto-configuration to select a proxy per websit
 
 选择项目目录后点击「网络诊断」，查看 DNS / TCP / TLS 及代理来源；同原因错误合并显示失败来源数量。「导出快照」「导入快照」可在断网机器复用官方响应，数据标为「本地快照」，保留原抓取时间。`offlineOnly: true` 使刷新也仅使用本地缓存。
 
+Weak certificate keys (`CA certificate key too weak`, `CA_KEY_TOO_SMALL`, verify error 67) differ from untrusted certificates: `caBundlePath` / `NODE_EXTRA_CA_CERTS` cannot repair key strength. The opt-in `insecureSkipTlsVerifyHosts` switch defaults to `false` and skips verification only for exact `api.osv.dev` / `api.github.com` origins, including through CONNECT. Other hosts, PAC retrieval and the HTTPS proxy’s own TLS still verify. The existing global `insecureSkipTlsVerify` also defaults to `false` and bypasses verification for all client targets and HTTPS proxies. Both bypasses remove certificate identity protection; prefer replacing the weak interception certificate.
+
 ## 补充说明
 
 ### 版本与验证范围
 
-版本 `0.1.3`（未发布），Node.js `>=22`，需要 DSH 0.2.2-rc.1 及以上（`>=0.2.2-rc.1 <0.3.0-0`，排除 0.3.0 及其预发布版本）。周报使用 rc.1 新增的 `MarkdownText.omitHtml` 禁用原始 HTML，因此保留 rc.1 下界。前次接口对照只读源码 `fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159`，内网分支另对照官方 tag 源码 `66491b05e3f05ad35bcdd4f6cd7ed26041d9e3db`；历史实际加载验证版本为 **DSH 0.2.2-rc.1**。本次在 Linux 重新加载真实 rc.1 Web，并回放 PAC 检测及 302 来源；不代表 Windows / Electron 桌面安装均已验证。
+版本 `0.1.4`（未发布），Node.js `>=22`，需要 DSH 0.2.2-rc.1 及以上（`>=0.2.2-rc.1 <0.3.0-0`，排除 0.3.0 及其预发布版本）。周报使用 rc.1 新增的 `MarkdownText.omitHtml` 禁用原始 HTML，因此保留 rc.1 下界。前次接口对照只读源码 `fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159`，内网分支另对照官方 tag 源码 `66491b05e3f05ad35bcdd4f6cd7ed26041d9e3db`；历史实际加载验证版本为 **DSH 0.2.2-rc.1**。本次在 Linux 重新加载真实 rc.1 Web，并回放 PAC 检测及 302 来源；不代表 Windows / Electron 桌面安装均已验证。
 
 Linux 烟测在隔离 profile 中加载真实 DSH Web，使用录制数据验证侧栏入口、无模型且无会话时的直接使用、明暗主题、项目切换、关注编辑、版本保存、公告判定、JIRA 跳转、OSV 404、周报复制、窄屏和失败回退。未验证 Electron 桌面安装；前次任务的公开计数与匿名 JIRA 请求记录仍作为历史证据。本次界面验证不请求实时 ASF 来源。测试夹具保留原 URL、抓取时间、完整性摘要和裁剪说明，历史快照不表示当前官方数量。
 

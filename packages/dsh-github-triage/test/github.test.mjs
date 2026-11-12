@@ -10,7 +10,7 @@ test('fixed GitHub origin rejects attacker hosts and redirects',async()=>{let ca
 test('URL repository list and enrichment request only canonical fixed-origin paths',async()=>{
   const urls=[]
   const c=new Github({env,gh,fetch:async(url,init)=>{
-    urls.push(url);assert.equal(init.method,'GET');assert.equal(init.headers['User-Agent'],'dsh-github-triage/0.4.4')
+    urls.push(url);assert.equal(init.method,'GET');assert.equal(init.headers['User-Agent'],'dsh-github-triage/0.4.5')
     if(url.endsWith('/repos/o/r'))return response({default_branch:'main',has_issues:true})
     if(url.includes('/git/trees/'))return response({tree:[]})
     return response({items:[]})
@@ -141,4 +141,18 @@ test('GitHub network timeout defaults to 30s and honors clamped timeoutSeconds',
     }
     assert.deepEqual(seen,[30000,45000,10000,120000,30000])
   }finally{AbortSignal.timeout=original}
+})
+
+
+test('GitHub failures retain the weak-key hint in the displayed GithubError', async t => {
+  const { WEAK_CA_HINT } = await import('../lib/intranet-http.js')
+  const client = new Github({ env, gh, fetch: async () => { throw new TypeError('fetch failed', { cause: { code: 'ERR_SSL_CA_KEY_TOO_SMALL' } }) } })
+  t.after(() => client.close())
+  await assert.rejects(client.request('/repos/o/r'), error => {
+    assert.ok(error instanceof GithubError)
+    assert.equal(error.code, 'TLS_KEY_TOO_SMALL')
+    assert.ok(error.message.includes(WEAK_CA_HINT))
+    assert.equal(error.message.split(WEAK_CA_HINT).length, 2)
+    return true
+  })
 })

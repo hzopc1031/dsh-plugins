@@ -13,9 +13,15 @@ Apache 雷达、官方公告影响核对和 GitHub 研判会显示网络错误�
    NO_PROXY=localhost,127.0.0.1
    ```
 
-3. **遇到公司 HTTPS 解密证书时，补充根证书。** 将公司提供的根证书保存为 PEM，在上述用户 `.env` 或系统环境中设置 `NODE_EXTRA_CA_CERTS=C:\certs\company-root.pem`，然后完全退出并重开 DSH。它必须在 Node 启动前生效；若桌面启动链仍未应用，使用插件设置 `caBundlePath`。不要把证书私钥、代理密码或令牌贴入日志。
-4. **需要仅修改某个插件时，使用插件设置。** `httpsProxy`、`noProxy` 和 `caBundlePath` 不需要重启操作系统会话；保存后按 DSH 正常方式重新加载插件/配置。`insecureSkipTlsVerify` 只在你明确接受风险时作为最后手段开启：它会关闭 TLS 证书校验，存在中间人攻击风险。
+3. **遇到公司 HTTPS 解密证书不受信任时，补充根证书。** 将公司提供的根证书保存为 PEM，在上述用户 `.env` 或系统环境中设置 `NODE_EXTRA_CA_CERTS=C:\certs\company-root.pem`，然后完全退出并重开 DSH。它必须在 Node 启动前生效；若桌面启动链仍未应用，使用插件设置 `caBundlePath`。不要把证书私钥、代理密码或令牌贴入日志。
+4. **需要仅修改某个插件时，使用插件设置。** `httpsProxy`、`noProxy` 和 `caBundlePath` 不需要重启操作系统会话；保存后按 DSH 正常方式重新加载插件/配置。弱密钥问题可选择下述仅限 API 主机的开关；原有 `insecureSkipTlsVerify` 是范围更大的全局开关。两者均默认关闭，存在中间人攻击风险。
 5. **代理也无法访问 apache.org 时，传递本地快照。** 在能访问来源的机器导出 JSON，拷贝到公司电脑导入，或继续使用最后成功缓存。导入数据明确标为「本地快照」，保留原 URL 与抓取时间，不称为实时官方数据。
+
+## 证书密钥太短
+
+出现 `CA certificate key too weak`、`CA_KEY_TOO_SMALL` 或 OpenSSL 校验错误 67，表示证书密钥强度不足，与「证书不受信任」不同；OpenSSL 3 的默认安全级别通常要求 RSA 密钥至少 2048 位，报错本身不代表已测得实际位数。`caBundlePath` / `NODE_EXTRA_CA_CERTS` 只能补充信任，不能修复弱密钥。可在插件管理中打开目标插件条目的「配置」，开启「不安全：仅跳过 OSV / GitHub API 证书校验」（`insecureSkipTlsVerifyHosts`，默认 `false`），仅对精确主机 `api.osv.dev` / `api.github.com` 跳过校验；Apache、npm、其他主机、PAC 获取和 HTTPS 代理自身仍校验。跳过会失去目标证书身份保护，请仅在接受风险时开启；优先让网络管理员更新拦截证书。原有 `insecureSkipTlsVerify` 默认也为 `false`，开启会跳过该网络客户端所有目标和 HTTPS 代理的证书校验，范围更大。
+
+弱密钥错误会在来源失败、面板网络提示、命令及工具输出中给出同一行中文建议。网络诊断的 `tlsVerification.host` / `skipped` 显示当前目标及是否已应用跳过；TLS 失败保留错误码和中文提示。
 
 ## 插件设置
 
@@ -28,7 +34,8 @@ Apache 雷达、官方公告影响核对和 GitHub 研判会显示网络错误�
 | `httpsProxy` | 可选 HTTP 代理 URL，形如 `http://host:port`，用于 HTTPS 请求；遵守绕过列表。 |
 | `noProxy` | 可选绕过列表，逗号或空白分隔，支持域名后缀、可选端口及 `*`；显式空字符串清空环境中的绕过规则，回环仍直连。 |
 | `caBundlePath` | 公司根证书 PEM 的绝对路径；与 Node 内置根证书、`NODE_EXTRA_CA_CERTS` 合并。 |
-| `insecureSkipTlsVerify` | 默认 `false`。**不安全 / insecure**：跳过 TLS 验证。 |
+| `insecureSkipTlsVerifyHosts` | 默认 `false`。界面标签「不安全：仅跳过 OSV / GitHub API 证书校验」；仅跳过上述两个精确 API 主机，代理自身仍校验。 |
+| `insecureSkipTlsVerify` | 默认 `false`。**不安全 / insecure**：跳过客户端所有目标及 HTTPS 代理的 TLS 校验。 |
 | `offlineOnly` | 雷达及公告插件提供，默认 `false`；开启后刷新也只使用缓存/快照，不发起来源 HTTP。 |
 
 没有系统代理（或 PAC DIRECT / 检测失败 / systemProxy off）且没有插件覆盖或代理 / CA 环境变量时直接使用 `globalThis.fetch`，沿用 DSH 已安装的代理 dispatcher。有插件覆盖或代理 / CA 环境变量时，插件按请求使用自己的 undici dispatcher，并在卸载时关闭；不会调用 `setGlobalDispatcher`。构造自己的 dispatcher 时仍遵守 `http_proxy` / `https_proxy` / `no_proxy` / `all_proxy`（小写优先、大写回退），插件对应设置优先，且读取 `NODE_EXTRA_CA_CERTS`。HTTPS 请求依次检查 `HTTPS_PROXY`、`HTTP_PROXY`、`ALL_PROXY`，保留原 GitHub 客户端仅设 `HTTP_PROXY` 时的回退行为。DSH 0.2.2-rc.1 将用户 `.env` 中解析出的代理策略发布到进程环境，因而 CA 覆盖仍能保留该代理。回环地址始终绕过代理。

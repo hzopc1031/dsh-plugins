@@ -38,9 +38,9 @@ export function projectDirectory(ctx: Pick<Context, 'get'>, agent: Agent): strin
 }
 
 export function apply(ctx: Context, config: unknown = {}): void {
-  const { httpsProxy, noProxy, caBundlePath, insecureSkipTlsVerify, systemProxy, timeoutSeconds, offlineOnly, ...settings } = config as IntranetSettings & { offlineOnly?: boolean }
+  const { httpsProxy, noProxy, caBundlePath, insecureSkipTlsVerify, insecureSkipTlsVerifyHosts, systemProxy, timeoutSeconds, offlineOnly, ...settings } = config as IntranetSettings & { offlineOnly?: boolean }
   const cacheRoot = path.join(os.homedir(), '.cache', 'dsh-advisory-impact')
-  const networkSettings = { httpsProxy, noProxy, caBundlePath, insecureSkipTlsVerify, systemProxy, timeoutSeconds }
+  const networkSettings = { httpsProxy, noProxy, caBundlePath, insecureSkipTlsVerify, insecureSkipTlsVerifyHosts, systemProxy, timeoutSeconds }
   const network = createIntranetHttp(networkSettings, process.env, { cacheDirectory: cacheRoot })
   ctx.effect(() => () => network.close())
   const service = new AdvisoryService({ config: settings,

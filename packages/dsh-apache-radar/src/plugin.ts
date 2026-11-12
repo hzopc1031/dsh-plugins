@@ -15,7 +15,7 @@ import { renderCommandResult } from './command.js'
 export const name = 'apache-radar'
 export const inject = ['commands', 'tools', 'agents']
 export interface Config extends IntranetSettings { watchList?: string[]; offlineOnly?: boolean }
-export const Config: z<Config> = z.object({
+export const Config: z<Config, Omit<Config, 'insecureSkipTlsVerifyHosts'> & { insecureSkipTlsVerifyHosts: { get(): boolean } }> = z.object({
   ...intranetConfig,
   offlineOnly: z.boolean().default(false).description('仅使用本地缓存或导入快照，不访问外网'),
   watchList: z.array(z.string()).default([...DEFAULT_WATCH_LIST]).description(message('config.watchList')),

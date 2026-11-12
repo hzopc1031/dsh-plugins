@@ -26,6 +26,6 @@ const [pack] = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json', '-
 const expected = ['package.json', 'index.js', 'cordis.patch.yml', 'locale/en.json', 'locale/zh.json',
   'icon.svg', 'README.md', 'LICENSE', 'CHANGELOG.md', 'docs/decisions.md',
   'docs/images/overview-light.png', 'docs/images/overview-dark.png', 'docs/images/watch-kafka.png',
-  ...['system-proxy', 'intranet-http', 'plugin', 'http', 'fetchers', 'counts', 'watch', 'feeds', 'feed-cache', 'local-files', 'brief', 'radar', 'messages', 'command', 'dashboard', 'client', 'security', 'advisory/types', 'advisory/http', 'advisory/fetchers', 'advisory/verdicts', 'advisory/osv'].flatMap(name => [`lib/${name}.js`, `lib/${name}.d.ts`])]
+  ...['network-settings', 'system-proxy', 'intranet-http', 'plugin', 'http', 'fetchers', 'counts', 'watch', 'feeds', 'feed-cache', 'local-files', 'brief', 'radar', 'messages', 'command', 'dashboard', 'client', 'security', 'advisory/types', 'advisory/http', 'advisory/fetchers', 'advisory/verdicts', 'advisory/osv'].flatMap(name => [`lib/${name}.js`, `lib/${name}.d.ts`])]
 assert.deepEqual(pack.files.map(f => f.path).sort(), expected.sort())
 console.log(`PASS: ${pack.filename}, ${pack.entryCount} files, prebuilt lib, no lifecycle hooks or internal fixtures`)

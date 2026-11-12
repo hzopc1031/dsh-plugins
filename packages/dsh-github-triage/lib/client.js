@@ -43,10 +43,41 @@ __export(client_exports, {
   safeLink: () => safeLink
 });
 module.exports = __toCommonJS(client_exports);
-var import_dsh_client_ui_primitives3 = require("@deepseek-ai/dsh-client-ui-primitives");
-var import_react3 = require("react");
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/classic/external.js
+// src/network-settings.ts
+var import_react = require("react");
+function NetworkSettings({ view, form }) {
+  const [saving, setSaving] = (0, import_react.useState)(false), [error51, setError] = (0, import_react.useState)("");
+  if (view === "summary") return "\u7F51\u7EDC\u8BBE\u7F6E";
+  return (0, import_react.createElement)(
+    "section",
+    { "aria-label": "\u7F51\u7EDC\u8BBE\u7F6E" },
+    (0, import_react.createElement)("label", null, (0, import_react.createElement)("input", {
+      type: "checkbox",
+      checked: form?.state.value?.insecureSkipTlsVerifyHosts === true,
+      disabled: !form?.state.writable || saving,
+      onChange: async (event) => {
+        const value = event.target.checked;
+        setSaving(true);
+        setError("");
+        try {
+          if (!await form?.mutate([{ op: "set", path: ["insecureSkipTlsVerifyHosts"], value }], form.state.revision)) throw new Error();
+        } catch {
+          setError("\u7F51\u7EDC\u8BBE\u7F6E\u4FDD\u5B58\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5\u3002");
+        } finally {
+          setSaving(false);
+        }
+      }
+    }), "\u4E0D\u5B89\u5168\uFF1A\u4EC5\u8DF3\u8FC7 OSV / GitHub API \u8BC1\u4E66\u6821\u9A8C"),
+    error51 && (0, import_react.createElement)("span", { role: "alert" }, error51)
+  );
+}
+
+// src/client.tsx
+var import_dsh_client_ui_primitives3 = require("@deepseek-ai/dsh-client-ui-primitives");
+var import_react4 = require("react");
+
+// node_modules/zod/v4/classic/external.js
 var external_exports = {};
 __export(external_exports, {
   $brand: () => $brand,
@@ -289,7 +320,7 @@ __export(external_exports, {
   xor: () => xor
 });
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/core/index.js
+// node_modules/zod/v4/core/index.js
 var core_exports2 = {};
 __export(core_exports2, {
   $ZodAny: () => $ZodAny,
@@ -568,7 +599,7 @@ __export(core_exports2, {
   version: () => version
 });
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/core/core.js
+// node_modules/zod/v4/core/core.js
 var _a;
 var NEVER = /* @__PURE__ */ Object.freeze({
   status: "aborted"
@@ -645,7 +676,7 @@ function config(newConfig) {
   return globalConfig;
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/core/util.js
+// node_modules/zod/v4/core/util.js
 var util_exports = {};
 __export(util_exports, {
   BIGINT_FORMAT_RANGES: () => BIGINT_FORMAT_RANGES,
@@ -1341,7 +1372,7 @@ var Class = class {
   }
 };
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/core/errors.js
+// node_modules/zod/v4/core/errors.js
 var initializer = (inst, def) => {
   inst.name = "$ZodError";
   Object.defineProperty(inst, "_zod", {
@@ -1480,7 +1511,7 @@ function prettifyError(error51) {
   return lines.join("\n");
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/core/parse.js
+// node_modules/zod/v4/core/parse.js
 var _parse = (_Err) => (schema, value, _ctx, _params) => {
   const ctx = _ctx ? { ..._ctx, async: false } : { async: false };
   const result = schema._zod.run({ value, issues: [] }, ctx);
@@ -1568,7 +1599,7 @@ var _safeDecodeAsync = (_Err) => async (schema, value, _ctx) => {
 };
 var safeDecodeAsync = /* @__PURE__ */ _safeDecodeAsync($ZodRealError);
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/core/regexes.js
+// node_modules/zod/v4/core/regexes.js
 var regexes_exports = {};
 __export(regexes_exports, {
   base64: () => base64,
@@ -1727,7 +1758,7 @@ var sha512_hex = /^[0-9a-fA-F]{128}$/;
 var sha512_base64 = /* @__PURE__ */ fixedBase64(86, "==");
 var sha512_base64url = /* @__PURE__ */ fixedBase64url(86);
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/core/checks.js
+// node_modules/zod/v4/core/checks.js
 var $ZodCheck = /* @__PURE__ */ $constructor("$ZodCheck", (inst, def) => {
   var _a3;
   inst._zod ?? (inst._zod = {});
@@ -2275,7 +2306,7 @@ var $ZodCheckOverwrite = /* @__PURE__ */ $constructor("$ZodCheckOverwrite", (ins
   };
 });
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/core/doc.js
+// node_modules/zod/v4/core/doc.js
 var Doc = class {
   constructor(args = []) {
     this.content = [];
@@ -2311,14 +2342,14 @@ var Doc = class {
   }
 };
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/core/versions.js
+// node_modules/zod/v4/core/versions.js
 var version = {
   major: 4,
   minor: 4,
   patch: 3
 };
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/core/schemas.js
+// node_modules/zod/v4/core/schemas.js
 var $ZodType = /* @__PURE__ */ $constructor("$ZodType", (inst, def) => {
   var _a3;
   inst ?? (inst = {});
@@ -4411,7 +4442,7 @@ function handleRefineResult(result, payload, input, inst) {
   }
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/index.js
+// node_modules/zod/v4/locales/index.js
 var locales_exports = {};
 __export(locales_exports, {
   ar: () => ar_default,
@@ -4468,7 +4499,7 @@ __export(locales_exports, {
   zhTW: () => zh_TW_default
 });
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/ar.js
+// node_modules/zod/v4/locales/ar.js
 var error = () => {
   const Sizable = {
     string: { unit: "\u062D\u0631\u0641", verb: "\u0623\u0646 \u064A\u062D\u0648\u064A" },
@@ -4575,7 +4606,7 @@ function ar_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/az.js
+// node_modules/zod/v4/locales/az.js
 var error2 = () => {
   const Sizable = {
     string: { unit: "simvol", verb: "olmal\u0131d\u0131r" },
@@ -4681,7 +4712,7 @@ function az_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/be.js
+// node_modules/zod/v4/locales/be.js
 function getBelarusianPlural(count, one, few, many) {
   const absCount = Math.abs(count);
   const lastDigit = absCount % 10;
@@ -4838,7 +4869,7 @@ function be_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/bg.js
+// node_modules/zod/v4/locales/bg.js
 var error4 = () => {
   const Sizable = {
     string: { unit: "\u0441\u0438\u043C\u0432\u043E\u043B\u0430", verb: "\u0434\u0430 \u0441\u044A\u0434\u044A\u0440\u0436\u0430" },
@@ -4959,7 +4990,7 @@ function bg_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/ca.js
+// node_modules/zod/v4/locales/ca.js
 var error5 = () => {
   const Sizable = {
     string: { unit: "car\xE0cters", verb: "contenir" },
@@ -5068,7 +5099,7 @@ function ca_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/cs.js
+// node_modules/zod/v4/locales/cs.js
 var error6 = () => {
   const Sizable = {
     string: { unit: "znak\u016F", verb: "m\xEDt" },
@@ -5180,7 +5211,7 @@ function cs_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/da.js
+// node_modules/zod/v4/locales/da.js
 var error7 = () => {
   const Sizable = {
     string: { unit: "tegn", verb: "havde" },
@@ -5296,7 +5327,7 @@ function da_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/de.js
+// node_modules/zod/v4/locales/de.js
 var error8 = () => {
   const Sizable = {
     string: { unit: "Zeichen", verb: "zu haben" },
@@ -5405,7 +5436,7 @@ function de_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/el.js
+// node_modules/zod/v4/locales/el.js
 var error9 = () => {
   const Sizable = {
     string: { unit: "\u03C7\u03B1\u03C1\u03B1\u03BA\u03C4\u03AE\u03C1\u03B5\u03C2", verb: "\u03BD\u03B1 \u03AD\u03C7\u03B5\u03B9" },
@@ -5515,7 +5546,7 @@ function el_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/en.js
+// node_modules/zod/v4/locales/en.js
 var error10 = () => {
   const Sizable = {
     string: { unit: "characters", verb: "to have" },
@@ -5628,7 +5659,7 @@ function en_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/eo.js
+// node_modules/zod/v4/locales/eo.js
 var error11 = () => {
   const Sizable = {
     string: { unit: "karaktrojn", verb: "havi" },
@@ -5738,7 +5769,7 @@ function eo_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/es.js
+// node_modules/zod/v4/locales/es.js
 var error12 = () => {
   const Sizable = {
     string: { unit: "caracteres", verb: "tener" },
@@ -5871,7 +5902,7 @@ function es_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/fa.js
+// node_modules/zod/v4/locales/fa.js
 var error13 = () => {
   const Sizable = {
     string: { unit: "\u06A9\u0627\u0631\u0627\u06A9\u062A\u0631", verb: "\u062F\u0627\u0634\u062A\u0647 \u0628\u0627\u0634\u062F" },
@@ -5986,7 +6017,7 @@ function fa_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/fi.js
+// node_modules/zod/v4/locales/fi.js
 var error14 = () => {
   const Sizable = {
     string: { unit: "merkki\xE4", subject: "merkkijonon" },
@@ -6099,7 +6130,7 @@ function fi_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/fr.js
+// node_modules/zod/v4/locales/fr.js
 var error15 = () => {
   const Sizable = {
     string: { unit: "caract\xE8res", verb: "avoir" },
@@ -6225,7 +6256,7 @@ function fr_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/fr-CA.js
+// node_modules/zod/v4/locales/fr-CA.js
 var error16 = () => {
   const Sizable = {
     string: { unit: "caract\xE8res", verb: "avoir" },
@@ -6333,7 +6364,7 @@ function fr_CA_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/he.js
+// node_modules/zod/v4/locales/he.js
 var error17 = () => {
   const TypeNames = {
     string: { label: "\u05DE\u05D7\u05E8\u05D5\u05D6\u05EA", gender: "f" },
@@ -6528,7 +6559,7 @@ function he_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/hr.js
+// node_modules/zod/v4/locales/hr.js
 var error18 = () => {
   const Sizable = {
     string: { unit: "znakova", verb: "imati" },
@@ -6651,7 +6682,7 @@ function hr_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/hu.js
+// node_modules/zod/v4/locales/hu.js
 var error19 = () => {
   const Sizable = {
     string: { unit: "karakter", verb: "legyen" },
@@ -6760,7 +6791,7 @@ function hu_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/hy.js
+// node_modules/zod/v4/locales/hy.js
 function getArmenianPlural(count, one, many) {
   return Math.abs(count) === 1 ? one : many;
 }
@@ -6908,7 +6939,7 @@ function hy_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/id.js
+// node_modules/zod/v4/locales/id.js
 var error21 = () => {
   const Sizable = {
     string: { unit: "karakter", verb: "memiliki" },
@@ -7015,7 +7046,7 @@ function id_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/is.js
+// node_modules/zod/v4/locales/is.js
 var error22 = () => {
   const Sizable = {
     string: { unit: "stafi", verb: "a\xF0 hafa" },
@@ -7125,7 +7156,7 @@ function is_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/it.js
+// node_modules/zod/v4/locales/it.js
 var error23 = () => {
   const Sizable = {
     string: { unit: "caratteri", verb: "avere" },
@@ -7234,7 +7265,7 @@ function it_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/ja.js
+// node_modules/zod/v4/locales/ja.js
 var error24 = () => {
   const Sizable = {
     string: { unit: "\u6587\u5B57", verb: "\u3067\u3042\u308B" },
@@ -7342,7 +7373,7 @@ function ja_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/ka.js
+// node_modules/zod/v4/locales/ka.js
 var error25 = () => {
   const Sizable = {
     string: { unit: "\u10E1\u10D8\u10DB\u10D1\u10DD\u10DA\u10DD", verb: "\u10E3\u10DC\u10D3\u10D0 \u10E8\u10D4\u10D8\u10EA\u10D0\u10D5\u10D3\u10D4\u10E1" },
@@ -7455,7 +7486,7 @@ function ka_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/km.js
+// node_modules/zod/v4/locales/km.js
 var error26 = () => {
   const Sizable = {
     string: { unit: "\u178F\u17BD\u17A2\u1780\u17D2\u179F\u179A", verb: "\u1782\u17BD\u179A\u1798\u17B6\u1793" },
@@ -7566,12 +7597,12 @@ function km_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/kh.js
+// node_modules/zod/v4/locales/kh.js
 function kh_default() {
   return km_default();
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/ko.js
+// node_modules/zod/v4/locales/ko.js
 var error27 = () => {
   const Sizable = {
     string: { unit: "\uBB38\uC790", verb: "to have" },
@@ -7683,7 +7714,7 @@ function ko_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/lt.js
+// node_modules/zod/v4/locales/lt.js
 var capitalizeFirstCharacter = (text) => {
   return text.charAt(0).toUpperCase() + text.slice(1);
 };
@@ -7887,7 +7918,7 @@ function lt_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/mk.js
+// node_modules/zod/v4/locales/mk.js
 var error29 = () => {
   const Sizable = {
     string: { unit: "\u0437\u043D\u0430\u0446\u0438", verb: "\u0434\u0430 \u0438\u043C\u0430\u0430\u0442" },
@@ -7997,7 +8028,7 @@ function mk_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/ms.js
+// node_modules/zod/v4/locales/ms.js
 var error30 = () => {
   const Sizable = {
     string: { unit: "aksara", verb: "mempunyai" },
@@ -8105,7 +8136,7 @@ function ms_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/nl.js
+// node_modules/zod/v4/locales/nl.js
 var error31 = () => {
   const Sizable = {
     string: { unit: "tekens", verb: "heeft" },
@@ -8216,7 +8247,7 @@ function nl_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/no.js
+// node_modules/zod/v4/locales/no.js
 var error32 = () => {
   const Sizable = {
     string: { unit: "tegn", verb: "\xE5 ha" },
@@ -8325,7 +8356,7 @@ function no_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/ota.js
+// node_modules/zod/v4/locales/ota.js
 var error33 = () => {
   const Sizable = {
     string: { unit: "harf", verb: "olmal\u0131d\u0131r" },
@@ -8435,7 +8466,7 @@ function ota_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/ps.js
+// node_modules/zod/v4/locales/ps.js
 var error34 = () => {
   const Sizable = {
     string: { unit: "\u062A\u0648\u06A9\u064A", verb: "\u0648\u0644\u0631\u064A" },
@@ -8550,7 +8581,7 @@ function ps_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/pl.js
+// node_modules/zod/v4/locales/pl.js
 var error35 = () => {
   const Sizable = {
     string: { unit: "znak\xF3w", verb: "mie\u0107" },
@@ -8660,7 +8691,7 @@ function pl_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/pt.js
+// node_modules/zod/v4/locales/pt.js
 var error36 = () => {
   const Sizable = {
     string: { unit: "caracteres", verb: "ter" },
@@ -8769,7 +8800,7 @@ function pt_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/ro.js
+// node_modules/zod/v4/locales/ro.js
 var error37 = () => {
   const Sizable = {
     string: { unit: "caractere", verb: "s\u0103 aib\u0103" },
@@ -8889,7 +8920,7 @@ function ro_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/ru.js
+// node_modules/zod/v4/locales/ru.js
 function getRussianPlural(count, one, few, many) {
   const absCount = Math.abs(count);
   const lastDigit = absCount % 10;
@@ -9046,7 +9077,7 @@ function ru_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/sl.js
+// node_modules/zod/v4/locales/sl.js
 var error39 = () => {
   const Sizable = {
     string: { unit: "znakov", verb: "imeti" },
@@ -9156,7 +9187,7 @@ function sl_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/sv.js
+// node_modules/zod/v4/locales/sv.js
 var error40 = () => {
   const Sizable = {
     string: { unit: "tecken", verb: "att ha" },
@@ -9267,7 +9298,7 @@ function sv_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/ta.js
+// node_modules/zod/v4/locales/ta.js
 var error41 = () => {
   const Sizable = {
     string: { unit: "\u0B8E\u0BB4\u0BC1\u0BA4\u0BCD\u0BA4\u0BC1\u0B95\u0BCD\u0B95\u0BB3\u0BCD", verb: "\u0B95\u0BCA\u0BA3\u0BCD\u0B9F\u0BBF\u0BB0\u0BC1\u0B95\u0BCD\u0B95 \u0BB5\u0BC7\u0BA3\u0BCD\u0B9F\u0BC1\u0BAE\u0BCD" },
@@ -9378,7 +9409,7 @@ function ta_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/th.js
+// node_modules/zod/v4/locales/th.js
 var error42 = () => {
   const Sizable = {
     string: { unit: "\u0E15\u0E31\u0E27\u0E2D\u0E31\u0E01\u0E29\u0E23", verb: "\u0E04\u0E27\u0E23\u0E21\u0E35" },
@@ -9489,7 +9520,7 @@ function th_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/tr.js
+// node_modules/zod/v4/locales/tr.js
 var error43 = () => {
   const Sizable = {
     string: { unit: "karakter", verb: "olmal\u0131" },
@@ -9595,7 +9626,7 @@ function tr_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/uk.js
+// node_modules/zod/v4/locales/uk.js
 var error44 = () => {
   const Sizable = {
     string: { unit: "\u0441\u0438\u043C\u0432\u043E\u043B\u0456\u0432", verb: "\u043C\u0430\u0442\u0438\u043C\u0435" },
@@ -9704,12 +9735,12 @@ function uk_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/ua.js
+// node_modules/zod/v4/locales/ua.js
 function ua_default() {
   return uk_default();
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/ur.js
+// node_modules/zod/v4/locales/ur.js
 var error45 = () => {
   const Sizable = {
     string: { unit: "\u062D\u0631\u0648\u0641", verb: "\u06C1\u0648\u0646\u0627" },
@@ -9820,7 +9851,7 @@ function ur_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/uz.js
+// node_modules/zod/v4/locales/uz.js
 var error46 = () => {
   const Sizable = {
     string: { unit: "belgi", verb: "bo\u2018lishi kerak" },
@@ -9931,7 +9962,7 @@ function uz_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/vi.js
+// node_modules/zod/v4/locales/vi.js
 var error47 = () => {
   const Sizable = {
     string: { unit: "k\xFD t\u1EF1", verb: "c\xF3" },
@@ -10040,7 +10071,7 @@ function vi_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/zh-CN.js
+// node_modules/zod/v4/locales/zh-CN.js
 var error48 = () => {
   const Sizable = {
     string: { unit: "\u5B57\u7B26", verb: "\u5305\u542B" },
@@ -10150,7 +10181,7 @@ function zh_CN_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/zh-TW.js
+// node_modules/zod/v4/locales/zh-TW.js
 var error49 = () => {
   const Sizable = {
     string: { unit: "\u5B57\u5143", verb: "\u64C1\u6709" },
@@ -10258,7 +10289,7 @@ function zh_TW_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/yo.js
+// node_modules/zod/v4/locales/yo.js
 var error50 = () => {
   const Sizable = {
     string: { unit: "\xE0mi", verb: "n\xED" },
@@ -10366,7 +10397,7 @@ function yo_default() {
   };
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/core/registries.js
+// node_modules/zod/v4/core/registries.js
 var _a2;
 var $output = Symbol("ZodOutput");
 var $input = Symbol("ZodInput");
@@ -10416,7 +10447,7 @@ function registry() {
 (_a2 = globalThis).__zod_globalRegistry ?? (_a2.__zod_globalRegistry = registry());
 var globalRegistry = globalThis.__zod_globalRegistry;
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/core/api.js
+// node_modules/zod/v4/core/api.js
 // @__NO_SIDE_EFFECTS__
 function _string(Class2, params) {
   return new Class2({
@@ -11455,7 +11486,7 @@ function _stringFormat(Class2, format, fnOrRegex, _params = {}) {
   return inst;
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/core/to-json-schema.js
+// node_modules/zod/v4/core/to-json-schema.js
 function initializeContext(params) {
   let target = params?.target ?? "draft-2020-12";
   if (target === "draft-4")
@@ -11814,7 +11845,7 @@ var createStandardJSONSchemaMethod = (schema, io, processors = {}) => (params) =
   return finalize(ctx, schema);
 };
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/core/json-schema-processors.js
+// node_modules/zod/v4/core/json-schema-processors.js
 var formatMap = {
   guid: "uuid",
   url: "uri",
@@ -12358,7 +12389,7 @@ function toJSONSchema(input, params) {
   return finalize(ctx, input);
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/core/json-schema-generator.js
+// node_modules/zod/v4/core/json-schema-generator.js
 var JSONSchemaGenerator = class {
   /** @deprecated Access via ctx instead */
   get metadataRegistry() {
@@ -12433,10 +12464,10 @@ var JSONSchemaGenerator = class {
   }
 };
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/core/json-schema.js
+// node_modules/zod/v4/core/json-schema.js
 var json_schema_exports = {};
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/classic/schemas.js
+// node_modules/zod/v4/classic/schemas.js
 var schemas_exports2 = {};
 __export(schemas_exports2, {
   ZodAny: () => ZodAny,
@@ -12607,7 +12638,7 @@ __export(schemas_exports2, {
   xor: () => xor
 });
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/classic/checks.js
+// node_modules/zod/v4/classic/checks.js
 var checks_exports2 = {};
 __export(checks_exports2, {
   endsWith: () => _endsWith,
@@ -12641,7 +12672,7 @@ __export(checks_exports2, {
   uppercase: () => _uppercase
 });
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/classic/iso.js
+// node_modules/zod/v4/classic/iso.js
 var iso_exports = {};
 __export(iso_exports, {
   ZodISODate: () => ZodISODate,
@@ -12682,7 +12713,7 @@ function duration2(params) {
   return _isoDuration(ZodISODuration, params);
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/classic/errors.js
+// node_modules/zod/v4/classic/errors.js
 var initializer2 = (inst, issues) => {
   $ZodError.init(inst, issues);
   inst.name = "ZodError";
@@ -12722,7 +12753,7 @@ var ZodRealError = /* @__PURE__ */ $constructor("ZodError", initializer2, {
   Parent: Error
 });
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/classic/parse.js
+// node_modules/zod/v4/classic/parse.js
 var parse2 = /* @__PURE__ */ _parse(ZodRealError);
 var parseAsync2 = /* @__PURE__ */ _parseAsync(ZodRealError);
 var safeParse2 = /* @__PURE__ */ _safeParse(ZodRealError);
@@ -12736,7 +12767,7 @@ var safeDecode2 = /* @__PURE__ */ _safeDecode(ZodRealError);
 var safeEncodeAsync2 = /* @__PURE__ */ _safeEncodeAsync(ZodRealError);
 var safeDecodeAsync2 = /* @__PURE__ */ _safeDecodeAsync(ZodRealError);
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/classic/schemas.js
+// node_modules/zod/v4/classic/schemas.js
 var _installedGroups = /* @__PURE__ */ new WeakMap();
 function _installLazyMethods(inst, group, methods) {
   const proto = Object.getPrototypeOf(inst);
@@ -14026,7 +14057,7 @@ function preprocess(fn, schema) {
   });
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/classic/compat.js
+// node_modules/zod/v4/classic/compat.js
 var ZodIssueCode = {
   invalid_type: "invalid_type",
   too_big: "too_big",
@@ -14052,7 +14083,7 @@ var ZodFirstPartyTypeKind;
 /* @__PURE__ */ (function(ZodFirstPartyTypeKind2) {
 })(ZodFirstPartyTypeKind || (ZodFirstPartyTypeKind = {}));
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/classic/from-json-schema.js
+// node_modules/zod/v4/classic/from-json-schema.js
 var z = {
   ...schemas_exports2,
   ...checks_exports2,
@@ -14532,7 +14563,7 @@ function fromJSONSchema(schema, params) {
   return convertSchema(normalized, ctx);
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/classic/coerce.js
+// node_modules/zod/v4/classic/coerce.js
 var coerce_exports = {};
 __export(coerce_exports, {
   bigint: () => bigint3,
@@ -14557,7 +14588,7 @@ function date4(params) {
   return _coercedDate(ZodDate, params);
 }
 
-// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/classic/external.js
+// node_modules/zod/v4/classic/external.js
 config(en_default());
 
 // src/types.ts
@@ -14852,13 +14883,13 @@ function commandCall(execute, sessionId) {
 }
 
 // src/client-controls.tsx
-var import_react = require("react");
+var import_react2 = require("react");
 var import_dsh_client_ui_primitives = require("@deepseek-ai/dsh-client-ui-primitives");
 var import_jsx_runtime = require("react/jsx-runtime");
 var modeOptions = [["both", "issues \u4E0E PR"], ["issues", "\u4EC5 issues"], ["prs", "\u4EC5 PR"]];
 var modeLabels = { both: "issues \u4E0E PR", issues: "\u4EC5 issues", prs: "\u4EC5 PR" };
 function Choice({ label, value, options, onChange, id, disabled = false, ...aria }) {
-  const [open, setOpen] = (0, import_react.useState)(false);
+  const [open, setOpen] = (0, import_react2.useState)(false);
   return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
     import_dsh_client_ui_primitives.Menu,
     {
@@ -14897,7 +14928,7 @@ function Choice({ label, value, options, onChange, id, disabled = false, ...aria
 }
 
 // src/client-forms.tsx
-var import_react2 = require("react");
+var import_react3 = require("react");
 var import_dsh_client_ui_primitives2 = require("@deepseek-ai/dsh-client-ui-primitives");
 var import_jsx_runtime2 = require("react/jsx-runtime");
 function message(error51) {
@@ -14908,7 +14939,7 @@ function Errors({ errors, name, id }) {
   return error51 ? /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { id, role: "alert", className: name === "repo" ? "gt-validation" : "gt-field-error", children: name === "repo" ? "\u4ED3\u5E93\u5730\u5740\u65E0\u6548\uFF0C\u8BF7\u6539\u7528 owner/repo \u683C\u5F0F" : error51 }) : null;
 }
 function RepoForm({ initial, call, onSaved, onCancel, onBusyChange }) {
-  const [form, setForm] = (0, import_react2.useState)(() => ({
+  const [form, setForm] = (0, import_react3.useState)(() => ({
     repo: initial?.repo ?? "",
     mode: initial?.mode ?? "both",
     business: initial?.business ?? "",
@@ -14922,9 +14953,9 @@ function RepoForm({ initial, call, onSaved, onCancel, onBusyChange }) {
     time: initial?.schedule?.kind === "daily" ? initial.schedule.time : "09:00",
     hours: initial?.schedule?.kind === "every" ? String(initial.schedule.hours) : "6"
   }));
-  const [errors, setErrors] = (0, import_react2.useState)({}), [busy, setBusy] = (0, import_react2.useState)(false), [notice, setNotice] = (0, import_react2.useState)("");
-  const dirty = (0, import_react2.useRef)(/* @__PURE__ */ new Set());
-  const id = (0, import_react2.useId)(), fieldId = (key) => id + "-" + key;
+  const [errors, setErrors] = (0, import_react3.useState)({}), [busy, setBusy] = (0, import_react3.useState)(false), [notice, setNotice] = (0, import_react3.useState)("");
+  const dirty = (0, import_react3.useRef)(/* @__PURE__ */ new Set());
+  const id = (0, import_react3.useId)(), fieldId = (key) => id + "-" + key;
   const invalid = (key) => Object.keys(errors).some((name) => name === key || name.startsWith(key + "."));
   const described = (key) => [fieldId(key) + "-hint", invalid(key) ? fieldId(key) + "-error" : ""].filter(Boolean).join(" ");
   const field = (key, value) => {
@@ -15109,10 +15140,10 @@ function ScanExplanation({ repo, defaults }) {
   ] });
 }
 function ScanControl({ repo, job, defaults, call, onStarted, initialFull = false }) {
-  const [full, setFull] = (0, import_react2.useState)(initialFull), [since, setSince] = (0, import_react2.useState)(""), [until, setUntil] = (0, import_react2.useState)(""), [limit, setLimit] = (0, import_react2.useState)("");
-  const [busy, setBusy] = (0, import_react2.useState)(false), [error51, setError] = (0, import_react2.useState)("");
-  const [errors, setErrors] = (0, import_react2.useState)({});
-  const id = (0, import_react2.useId)(), hintId = id + "-hint", errorId = id + "-error";
+  const [full, setFull] = (0, import_react3.useState)(initialFull), [since, setSince] = (0, import_react3.useState)(""), [until, setUntil] = (0, import_react3.useState)(""), [limit, setLimit] = (0, import_react3.useState)("");
+  const [busy, setBusy] = (0, import_react3.useState)(false), [error51, setError] = (0, import_react3.useState)("");
+  const [errors, setErrors] = (0, import_react3.useState)({});
+  const id = (0, import_react3.useId)(), hintId = id + "-hint", errorId = id + "-error";
   const active = busy || job?.status === "running" || job?.status === "queued";
   async function start() {
     if (active) return;
@@ -15201,7 +15232,7 @@ var Check = resolve("IconCheckOutlineRegular");
 var ChevronDown = resolve("IconChevronDownOutlineRegular");
 
 // src/client.css
-var client_default = ".gt-page,.gt-dialog{font-family:inherit;color:var(--dsw-alias-label-primary);font-size:13px;line-height:1.5}\r\n.gt-page{display:flex;flex-direction:column;height:100%;width:100%;min-height:0;min-width:0;overflow:hidden;container:gt-page / inline-size;background:var(--dsw-alias-bg-layer-2)}\r\n.gt-scroll{flex:1;min-height:0;overflow-y:auto;scrollbar-gutter:stable;overscroll-behavior:contain}\r\n.gt-content{max-width:1600px;margin:0 auto;padding:28px 28px 20px;box-sizing:border-box}\r\n.gt-page *, .gt-dialog *{box-sizing:border-box}\r\n.gt-page h1{font-size:20px;line-height:28px;font-weight:500;margin:3px 0 6px;letter-spacing:-.3px}\r\n.gt-page h2{font-size:14px;font-weight:500;margin:0;display:flex;align-items:center;gap:8px}\r\n.gt-page h3,.gt-dialog h3{font-size:14px;font-weight:500;margin:0}\r\n.gt-page h4,.gt-dialog h4{font-size:12px;font-weight:500;margin:12px 0 6px}\r\n.gt-page p,.gt-dialog p{margin:8px 0}\r\n.gt-page-head{display:flex;gap:20px;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;padding-left:var(--dsh-frame-leading-clearance,0px)}\r\n[data-platform='darwin'] .gt-content{padding-top:calc(28px + var(--dsh-frame-top-clearance,0px))}\r\n.gt-eyebrow{color:var(--dsw-alias-label-dimmed);font-size:10px;letter-spacing:1.6px;font-weight:500}\r\n.gt-muted,.gt-page small,.gt-dialog small{color:var(--dsw-alias-label-secondary)}\r\n.gt-row,.gt-head-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}\r\n.gt-head-actions{margin-left:auto;justify-content:flex-end}\r\n.gt-page :is(button,input,select,textarea,a):focus-visible,.gt-dialog :is(button,input,select,textarea):focus-visible{outline:2px solid var(--dsw-alias-state-business-primary);outline-offset:2px}\r\n.gt-kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:28px}\r\n.gt-stat{display:flex;flex-direction:column;gap:8px;background:var(--dsw-alias-settings-card-fill);border:0.5px solid var(--dsw-alias-settings-card-stroke);border-radius:var(--dsw-radius-xl);padding:15px 16px;min-width:0;min-height:118px}\r\n.gt-stat>span{font-size:12px;color:var(--dsw-alias-label-secondary)}\r\n.gt-stat>b{font-size:28px;line-height:32px;letter-spacing:-.6px;font-weight:500;font-variant-numeric:tabular-nums}\r\n.gt-stat>small{font-size:11px;white-space:normal;overflow-wrap:anywhere}\r\n.gt-run-stat>b{font-size:22px}\r\n.gt-section-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px}\r\n.gt-repos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:28px}\r\n.gt-card{background:var(--dsw-alias-settings-card-fill);border:0.5px solid var(--dsw-alias-settings-card-stroke);border-radius:var(--dsw-radius-xl);padding:18px;min-width:0;overflow-wrap:anywhere}\r\n.gt-repo{display:flex;flex-direction:column;gap:10px;min-height:304px;padding-bottom:0;transition:box-shadow .15s}\r\n.gt-repo h3{flex:1;min-width:0;overflow-wrap:anywhere}\r\n.gt-repo .gt-schedule{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--dsw-alias-label-secondary);margin:0}\r\n.gt-summary{color:var(--dsw-alias-label-secondary);line-height:1.6;overflow-wrap:anywhere}\r\n.gt-repo .gt-summary{margin:0}\r\n.gt-local{display:flex;flex-direction:column;gap:3px;padding:10px 12px;background:var(--dsw-alias-bg-layer-2);border-radius:var(--dsw-radius-lg);font-size:11px}\r\n.gt-local>span{color:var(--dsw-alias-label-dimmed)}\r\n.gt-local code{font-size:12px;white-space:normal;overflow-wrap:anywhere;font-family:var(--ds-font-family-code,monospace)}\r\n.gt-local small{white-space:normal;overflow-wrap:anywhere}\r\n.gt-run{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:11px;min-height:23px}\r\n.gt-run>.gt-muted{flex:1;min-width:0;overflow-wrap:anywhere}\r\n.gt-run progress{width:100%;height:4px;accent-color:var(--dsw-alias-state-business-primary)}\r\n.gt-repo-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto}\r\n.gt-repo-footer{display:flex;align-items:center;gap:4px;border-top:0.5px solid var(--dsw-alias-border-l2);padding:9px 0;margin-top:2px}\r\n.gt-repo-footer button:last-child{margin-left:auto}\r\n.gt-page .gt-danger,.gt-dialog .gt-danger,.gt-page .gt-repo-footer .gt-danger{color:var(--dsw-alias-state-error-primary)}\r\n.gt-adopt{color:var(--dsw-alias-state-success-primary,var(--dsw-alias-state-business-primary))}\r\n.gt-manual-review,.gt-page .gt-warn{color:var(--dsw-alias-state-warn-primary)}\r\n.gt-not-recommended{color:var(--dsw-alias-label-secondary)}\r\n.gt-toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}\r\n.gt-input{width:100%;max-width:100%;min-width:0;box-sizing:border-box}\r\n.gt-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}\r\n.gt-result{margin-bottom:10px;padding:15px 18px}\r\n.gt-priority{margin-left:auto;font-size:11px;color:var(--dsw-alias-label-dimmed)}\r\n.gt-result-title.gt-result-title{width:100%;height:auto;min-height:36px;justify-content:space-between;text-align:left;white-space:normal;gap:12px;font-size:14px;line-height:22px;font-weight:500;padding:8px 0}\r\n.gt-expand-icon{display:inline-flex;flex:none;color:inherit}\r\n.gt-expanded{transform:rotate(180deg)}\r\n.gt-result .gt-summary{margin:6px 0 10px}\r\n.gt-result-foot{font-size:11px}\r\n.gt-result-foot>span{margin-right:auto}\r\n.gt-page a{color:var(--dsw-alias-link,var(--dsw-alias-state-business-primary));font-weight:500;text-decoration:none}\r\n.gt-detail{margin-top:14px;padding-top:2px;border-top:0.5px solid var(--dsw-alias-border-l2)}\r\n.gt-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}\r\n.gt-detail p,.gt-detail li{font-size:12px;line-height:1.8}\r\n.gt-detail ul{margin:6px 0 12px;padding-left:20px}\r\n.gt-correction{background:var(--dsw-alias-bg-layer-2);padding:1px 14px 8px;border-radius:var(--dsw-radius-lg);margin-top:14px}\r\n.gt-correction h4 .gt-muted{font-weight:400;margin-left:6px;font-size:11px}\r\n.gt-correction .gt-row{align-items:flex-end}\r\n.gt-grow{flex:1;min-width:160px}\r\n.gt-report-note{color:var(--dsw-alias-label-dimmed);font-size:11px;margin:10px 0}\r\n.gt-page summary{cursor:pointer}\r\n.gt-empty{text-align:center;border:1px dashed var(--dsw-alias-border-l3);background:var(--dsw-alias-bg-layer-1);border-radius:var(--dsw-radius-xl);padding:42px 20px;color:var(--dsw-alias-label-secondary);margin-bottom:28px}\r\n.gt-empty>svg{display:inline-block;color:var(--dsw-alias-label-dimmed);margin-bottom:12px}\r\n.gt-empty h3{color:var(--dsw-alias-label-primary)}\r\n.gt-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;max-width:760px;margin:24px auto 0;text-align:left}\r\n.gt-steps>div,.gt-steps>button{height:auto;min-height:100px;display:flex;align-items:flex-start;flex-direction:column;text-align:left;padding:14px 16px}\r\n.gt-steps b{color:var(--dsw-alias-state-business-primary);font-size:18px;line-height:24px;font-weight:500;margin-bottom:8px;font-variant-numeric:tabular-nums}\r\n.gt-steps span{color:var(--dsw-alias-label-dimmed);font-size:11px;margin-top:3px}\r\n.gt-model{margin-bottom:16px;border:1px solid color-mix(in srgb,var(--dsw-alias-state-warn-primary) 30%,transparent)}\r\n.gt-error{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid color-mix(in srgb,var(--dsw-alias-state-error-primary) 25%,transparent);color:var(--dsw-alias-state-error-primary);background:color-mix(in srgb,var(--dsw-alias-state-error-primary) 6%,var(--dsw-alias-bg-layer-1));border-radius:var(--dsw-radius-lg);padding:12px 16px;margin-bottom:16px}\r\n.gt-rule-text{white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow:auto;user-select:text;background:var(--dsw-alias-bg-layer-2);border:0.5px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-lg);padding:14px;font:12px/1.8 var(--ds-font-family-code,monospace)}\r\n.gt-rule-import{margin-top:16px;border-top:0.5px solid var(--dsw-alias-border-l2);padding-top:14px}\r\n.gt-rule-editor{min-height:200px;margin-bottom:10px;font-family:var(--ds-font-family-code,monospace)}\r\n.gt-dialog{width:100%;min-width:0;min-height:0;overflow-wrap:anywhere}\r\n/* Official plugin-manager headless Modal pattern: capped card, scrollable body,\r\n   persistent actions. Override the host's 380px card, not just its children. */\r\n.gt-repo-modal.gt-repo-modal{width:min(760px,100%);height:min(860px,100%);max-height:100%;padding:0;gap:0}\r\n.gt-dialog.gt-repo-dialog{display:flex;flex:1;flex-direction:column;width:100%;min-width:0;min-height:0;max-height:none;overflow:hidden;padding:0;container:gt-repo-form / inline-size}\r\n.gt-form{display:flex;flex-direction:column;flex:1;min-width:0;min-height:0;max-width:100%;margin:0}\r\n.gt-form-head{display:flex;flex:none;align-items:center;justify-content:space-between;gap:12px;padding:18px 24px;border-bottom:0.5px solid var(--dsw-alias-border-l2)}\r\n.gt-form-body{flex:1;min-height:0;overflow-y:auto;padding:20px 24px;scrollbar-gutter:stable;overscroll-behavior:contain}\r\n.gt-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}\r\n.gt-form-section{min-width:0;margin:0;padding:0;border:0}\r\n.gt-form-section+.gt-form-section{margin-top:22px;padding-top:18px;border-top:0.5px solid var(--dsw-alias-border-l2)}\r\n.gt-form-section legend{padding:0;margin-bottom:12px;font-size:14px;font-weight:500;color:var(--dsw-alias-label-primary)}\r\n.gt-form-field{display:flex;flex-direction:column;min-width:0;gap:6px}\r\n.gt-form-field label{font-size:13px;color:var(--dsw-alias-label-primary);overflow-wrap:anywhere}\r\n.gt-field-wide{grid-column:1/-1}\r\n.gt-form-field .gt-input{width:100%;max-width:100%;min-width:0;box-sizing:border-box;margin:0}\r\n.gt-form-field [aria-invalid=true]{outline:1px solid var(--dsw-alias-state-error-primary);outline-offset:1px}\r\n.gt-field-hint{font-size:12px;line-height:1.5;color:var(--dsw-alias-label-secondary);overflow-wrap:anywhere}\r\n.gt-path-preview{display:block;max-width:100%;min-width:0;white-space:pre-wrap;overflow-wrap:anywhere;user-select:text;font:12px/1.5 var(--ds-font-family-code,monospace);color:var(--dsw-alias-label-secondary)}\r\n.gt-form-footer{flex:none;padding:14px 24px;border-top:0.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-2)}\r\n.gt-form-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px}\r\n@container gt-repo-form (max-width:560px){.gt-form-grid{grid-template-columns:minmax(0,1fr)}.gt-form-head,.gt-form-body,.gt-form-footer{padding-left:16px;padding-right:16px}}\r\n.gt-textarea{min-height:100px;resize:vertical}\r\n.gt-field-error{display:block;font-size:12px;color:var(--dsw-alias-state-error-primary);margin-top:5px}\r\n.gt-validation{display:block;font-size:12px;line-height:1.5;color:var(--dsw-alias-label-secondary);overflow-wrap:anywhere}\r\n.gt-scan-help{font-size:12px;line-height:1.6;color:var(--dsw-alias-label-secondary);overflow-wrap:anywhere}\r\n.gt-scan-help p{margin:6px 0}\r\n.gt-scan-control{display:flex;flex-direction:column;gap:12px;min-width:0}\r\n.gt-scan-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:14px;min-width:0}\r\n.gt-scan-fields>label{display:flex;flex-direction:column;gap:6px;min-width:0}\r\n.gt-scan-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px}\r\n.gt-footnote{font-size:11px;color:var(--dsw-alias-label-dimmed);text-align:center;padding-top:14px}\r\n.gt-more{text-align:center;padding:10px 0 20px}\r\n.gt-skeleton{pointer-events:none}\r\n.gt-skeleton :is(i,b){display:block;border-radius:var(--dsw-radius-xs);background:var(--dsw-alias-bg-layer-3);animation:gt-pulse 1.5s ease-in-out infinite;min-height:12px;width:80%}\r\n.gt-skeleton b{height:30px;width:55%;margin:8px 0}\r\n.gt-skeleton i:nth-child(3){width:65%}\r\n.gt-sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}\r\n@keyframes gt-pulse{50%{opacity:.35}}\r\n@media(prefers-reduced-motion:reduce){.gt-page *{animation:none;transition:none}}\r\n@container gt-page (max-width:1200px){.gt-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.gt-repos{grid-template-columns:repeat(2,minmax(0,1fr))}.gt-content{padding:24px 20px}}\r\n@container gt-page (max-width:700px){.gt-repos{grid-template-columns:minmax(0,1fr)}.gt-content{padding:20px 14px}.gt-page-head{gap:12px}.gt-head-actions{margin-left:0;justify-content:flex-start}.gt-detail-grid{grid-template-columns:1fr;gap:4px}.gt-steps{grid-template-columns:1fr}.gt-kpis{gap:7px}.gt-stat{padding:12px;min-height:104px}.gt-stat>b{font-size:24px}.gt-run-stat>b{font-size:20px}}\r\n@container gt-page (max-width:440px){.gt-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.gt-toolbar{align-items:stretch}.gt-search{flex-basis:100%}.gt-result{padding:12px}}\r\n\r\n/* Layout hooks only: shared primitives own control fills, borders and states. */\r\n.gt-row>label:has(>.gt-input){display:flex;flex-direction:column;gap:6px;min-width:0}\r\n.gt-search{display:flex;align-items:center;gap:8px;flex:1;min-width:180px}\r\n.gt-search>.gt-input,.gt-search>span{flex:1;min-width:0}\r\n.gt-search svg{color:var(--dsw-alias-label-dimmed)}\r\n.gt-choice{display:inline-flex;min-width:0;max-width:100%}\r\n.gt-choice>button{width:100%;height:auto;min-height:36px;justify-content:space-between;gap:8px}\r\n.gt-choice>button>span{min-width:0;white-space:normal;overflow-wrap:anywhere;text-align:left}\r\n.gt-choice-menu{max-width:calc(100vw - 48px);max-height:min(360px,60dvh);overflow-y:auto;overflow-wrap:anywhere}\r\n.gt-form-field>.gt-choice{width:100%}\r\n.gt-form-field:has(>.gt-choice){align-self:start}\r\n.gt-tier-tabs{flex-basis:100%;min-width:0;overflow-x:auto;padding:2px}\r\n.gt-tier-tabs>[role=tablist]{min-width:760px}\r\n.gt-tier-tabs [role=tab]{font-weight:500}\r\n.gt-model-trigger{height:auto;min-height:36px;max-width:100%;white-space:normal;overflow-wrap:anywhere}\r\n.gt-repo-footer{flex-wrap:wrap}\r\n.gt-options-modal.gt-options-modal{width:min(640px,100%);max-height:100%;min-height:0}\r\n.gt-options-content{min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;overflow-wrap:anywhere;color:var(--dsw-alias-label-primary)}\r\n.gt-error>span,.gt-page-head>div:first-child{min-width:0;overflow-wrap:anywhere}\r\n.gt-error{flex-wrap:wrap}\r\n.gt-repo-actions>button,.gt-scan-actions>button,.gt-form-actions>button{flex-shrink:0}\r\n.gt-dialog button,.gt-page button{max-width:100%}\r\n.gt-dialog .gt-row>button{height:auto;min-height:36px;white-space:normal}\r\ntextarea.gt-input{display:block;border:0.5px solid var(--dsw-alias-border-l4);border-radius:var(--dsw-radius-md);padding:8px 12px;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);font:inherit;resize:vertical}\r\n.gt-form-field>div{min-width:0}\r\n.gt-form-field input{min-width:0;max-width:100%}\r\n.gt-form-field:has(input[inputmode=numeric]){align-self:start}\r\n.gt-form-field:has(input[inputmode=numeric])>div{padding:0}\r\n.gt-form-field:has(input[inputmode=numeric])>div>div{flex-wrap:wrap}\r\n.gt-page a:focus-visible{text-decoration:underline dotted;text-underline-offset:3px}\r\n@media(hover:hover){.gt-page a:hover{text-decoration:underline dotted;text-underline-offset:3px}}\r\n@media(pointer:coarse){.gt-page input,.gt-dialog input,.gt-page textarea,.gt-dialog textarea{font-size:16px}}\r\n\r\n.gt-chips>button{max-width:100%;height:auto;min-height:24px;white-space:normal;overflow-wrap:anywhere}\r\n\n.gt-network{margin-bottom:16px}\n.gt-network-text{white-space:pre-wrap;overflow-wrap:anywhere;min-width:0;max-width:100%;user-select:text;font:12px/1.8 var(--ds-font-family-code,monospace)}\n";
+var client_default = ".gt-page,.gt-dialog{font-family:inherit;color:var(--dsw-alias-label-primary);font-size:13px;line-height:1.5}\n.gt-page{display:flex;flex-direction:column;height:100%;width:100%;min-height:0;min-width:0;overflow:hidden;container:gt-page / inline-size;background:var(--dsw-alias-bg-layer-2)}\n.gt-scroll{flex:1;min-height:0;overflow-y:auto;scrollbar-gutter:stable;overscroll-behavior:contain}\n.gt-content{max-width:1600px;margin:0 auto;padding:28px 28px 20px;box-sizing:border-box}\n.gt-page *, .gt-dialog *{box-sizing:border-box}\n.gt-page h1{font-size:20px;line-height:28px;font-weight:500;margin:3px 0 6px;letter-spacing:-.3px}\n.gt-page h2{font-size:14px;font-weight:500;margin:0;display:flex;align-items:center;gap:8px}\n.gt-page h3,.gt-dialog h3{font-size:14px;font-weight:500;margin:0}\n.gt-page h4,.gt-dialog h4{font-size:12px;font-weight:500;margin:12px 0 6px}\n.gt-page p,.gt-dialog p{margin:8px 0}\n.gt-page-head{display:flex;gap:20px;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;padding-left:var(--dsh-frame-leading-clearance,0px)}\n[data-platform='darwin'] .gt-content{padding-top:calc(28px + var(--dsh-frame-top-clearance,0px))}\n.gt-eyebrow{color:var(--dsw-alias-label-dimmed);font-size:10px;letter-spacing:1.6px;font-weight:500}\n.gt-muted,.gt-page small,.gt-dialog small{color:var(--dsw-alias-label-secondary)}\n.gt-row,.gt-head-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}\n.gt-head-actions{margin-left:auto;justify-content:flex-end}\n.gt-page :is(button,input,select,textarea,a):focus-visible,.gt-dialog :is(button,input,select,textarea):focus-visible{outline:2px solid var(--dsw-alias-state-business-primary);outline-offset:2px}\n.gt-kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:28px}\n.gt-stat{display:flex;flex-direction:column;gap:8px;background:var(--dsw-alias-settings-card-fill);border:0.5px solid var(--dsw-alias-settings-card-stroke);border-radius:var(--dsw-radius-xl);padding:15px 16px;min-width:0;min-height:118px}\n.gt-stat>span{font-size:12px;color:var(--dsw-alias-label-secondary)}\n.gt-stat>b{font-size:28px;line-height:32px;letter-spacing:-.6px;font-weight:500;font-variant-numeric:tabular-nums}\n.gt-stat>small{font-size:11px;white-space:normal;overflow-wrap:anywhere}\n.gt-run-stat>b{font-size:22px}\n.gt-section-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px}\n.gt-repos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:28px}\n.gt-card{background:var(--dsw-alias-settings-card-fill);border:0.5px solid var(--dsw-alias-settings-card-stroke);border-radius:var(--dsw-radius-xl);padding:18px;min-width:0;overflow-wrap:anywhere}\n.gt-repo{display:flex;flex-direction:column;gap:10px;min-height:304px;padding-bottom:0;transition:box-shadow .15s}\n.gt-repo h3{flex:1;min-width:0;overflow-wrap:anywhere}\n.gt-repo .gt-schedule{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--dsw-alias-label-secondary);margin:0}\n.gt-summary{color:var(--dsw-alias-label-secondary);line-height:1.6;overflow-wrap:anywhere}\n.gt-repo .gt-summary{margin:0}\n.gt-local{display:flex;flex-direction:column;gap:3px;padding:10px 12px;background:var(--dsw-alias-bg-layer-2);border-radius:var(--dsw-radius-lg);font-size:11px}\n.gt-local>span{color:var(--dsw-alias-label-dimmed)}\n.gt-local code{font-size:12px;white-space:normal;overflow-wrap:anywhere;font-family:var(--ds-font-family-code,monospace)}\n.gt-local small{white-space:normal;overflow-wrap:anywhere}\n.gt-run{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:11px;min-height:23px}\n.gt-run>.gt-muted{flex:1;min-width:0;overflow-wrap:anywhere}\n.gt-run progress{width:100%;height:4px;accent-color:var(--dsw-alias-state-business-primary)}\n.gt-repo-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto}\n.gt-repo-footer{display:flex;align-items:center;gap:4px;border-top:0.5px solid var(--dsw-alias-border-l2);padding:9px 0;margin-top:2px}\n.gt-repo-footer button:last-child{margin-left:auto}\n.gt-page .gt-danger,.gt-dialog .gt-danger,.gt-page .gt-repo-footer .gt-danger{color:var(--dsw-alias-state-error-primary)}\n.gt-adopt{color:var(--dsw-alias-state-success-primary,var(--dsw-alias-state-business-primary))}\n.gt-manual-review,.gt-page .gt-warn{color:var(--dsw-alias-state-warn-primary)}\n.gt-not-recommended{color:var(--dsw-alias-label-secondary)}\n.gt-toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}\n.gt-input{width:100%;max-width:100%;min-width:0;box-sizing:border-box}\n.gt-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}\n.gt-result{margin-bottom:10px;padding:15px 18px}\n.gt-priority{margin-left:auto;font-size:11px;color:var(--dsw-alias-label-dimmed)}\n.gt-result-title.gt-result-title{width:100%;height:auto;min-height:36px;justify-content:space-between;text-align:left;white-space:normal;gap:12px;font-size:14px;line-height:22px;font-weight:500;padding:8px 0}\n.gt-expand-icon{display:inline-flex;flex:none;color:inherit}\n.gt-expanded{transform:rotate(180deg)}\n.gt-result .gt-summary{margin:6px 0 10px}\n.gt-result-foot{font-size:11px}\n.gt-result-foot>span{margin-right:auto}\n.gt-page a{color:var(--dsw-alias-link,var(--dsw-alias-state-business-primary));font-weight:500;text-decoration:none}\n.gt-detail{margin-top:14px;padding-top:2px;border-top:0.5px solid var(--dsw-alias-border-l2)}\n.gt-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}\n.gt-detail p,.gt-detail li{font-size:12px;line-height:1.8}\n.gt-detail ul{margin:6px 0 12px;padding-left:20px}\n.gt-correction{background:var(--dsw-alias-bg-layer-2);padding:1px 14px 8px;border-radius:var(--dsw-radius-lg);margin-top:14px}\n.gt-correction h4 .gt-muted{font-weight:400;margin-left:6px;font-size:11px}\n.gt-correction .gt-row{align-items:flex-end}\n.gt-grow{flex:1;min-width:160px}\n.gt-report-note{color:var(--dsw-alias-label-dimmed);font-size:11px;margin:10px 0}\n.gt-page summary{cursor:pointer}\n.gt-empty{text-align:center;border:1px dashed var(--dsw-alias-border-l3);background:var(--dsw-alias-bg-layer-1);border-radius:var(--dsw-radius-xl);padding:42px 20px;color:var(--dsw-alias-label-secondary);margin-bottom:28px}\n.gt-empty>svg{display:inline-block;color:var(--dsw-alias-label-dimmed);margin-bottom:12px}\n.gt-empty h3{color:var(--dsw-alias-label-primary)}\n.gt-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;max-width:760px;margin:24px auto 0;text-align:left}\n.gt-steps>div,.gt-steps>button{height:auto;min-height:100px;display:flex;align-items:flex-start;flex-direction:column;text-align:left;padding:14px 16px}\n.gt-steps b{color:var(--dsw-alias-state-business-primary);font-size:18px;line-height:24px;font-weight:500;margin-bottom:8px;font-variant-numeric:tabular-nums}\n.gt-steps span{color:var(--dsw-alias-label-dimmed);font-size:11px;margin-top:3px}\n.gt-model{margin-bottom:16px;border:1px solid color-mix(in srgb,var(--dsw-alias-state-warn-primary) 30%,transparent)}\n.gt-error{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid color-mix(in srgb,var(--dsw-alias-state-error-primary) 25%,transparent);color:var(--dsw-alias-state-error-primary);background:color-mix(in srgb,var(--dsw-alias-state-error-primary) 6%,var(--dsw-alias-bg-layer-1));border-radius:var(--dsw-radius-lg);padding:12px 16px;margin-bottom:16px}\n.gt-rule-text{white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow:auto;user-select:text;background:var(--dsw-alias-bg-layer-2);border:0.5px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-lg);padding:14px;font:12px/1.8 var(--ds-font-family-code,monospace)}\n.gt-rule-import{margin-top:16px;border-top:0.5px solid var(--dsw-alias-border-l2);padding-top:14px}\n.gt-rule-editor{min-height:200px;margin-bottom:10px;font-family:var(--ds-font-family-code,monospace)}\n.gt-dialog{width:100%;min-width:0;min-height:0;overflow-wrap:anywhere}\n/* Official plugin-manager headless Modal pattern: capped card, scrollable body,\n   persistent actions. Override the host's 380px card, not just its children. */\n.gt-repo-modal.gt-repo-modal{width:min(760px,100%);height:min(860px,100%);max-height:100%;padding:0;gap:0}\n.gt-dialog.gt-repo-dialog{display:flex;flex:1;flex-direction:column;width:100%;min-width:0;min-height:0;max-height:none;overflow:hidden;padding:0;container:gt-repo-form / inline-size}\n.gt-form{display:flex;flex-direction:column;flex:1;min-width:0;min-height:0;max-width:100%;margin:0}\n.gt-form-head{display:flex;flex:none;align-items:center;justify-content:space-between;gap:12px;padding:18px 24px;border-bottom:0.5px solid var(--dsw-alias-border-l2)}\n.gt-form-body{flex:1;min-height:0;overflow-y:auto;padding:20px 24px;scrollbar-gutter:stable;overscroll-behavior:contain}\n.gt-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}\n.gt-form-section{min-width:0;margin:0;padding:0;border:0}\n.gt-form-section+.gt-form-section{margin-top:22px;padding-top:18px;border-top:0.5px solid var(--dsw-alias-border-l2)}\n.gt-form-section legend{padding:0;margin-bottom:12px;font-size:14px;font-weight:500;color:var(--dsw-alias-label-primary)}\n.gt-form-field{display:flex;flex-direction:column;min-width:0;gap:6px}\n.gt-form-field label{font-size:13px;color:var(--dsw-alias-label-primary);overflow-wrap:anywhere}\n.gt-field-wide{grid-column:1/-1}\n.gt-form-field .gt-input{width:100%;max-width:100%;min-width:0;box-sizing:border-box;margin:0}\n.gt-form-field [aria-invalid=true]{outline:1px solid var(--dsw-alias-state-error-primary);outline-offset:1px}\n.gt-field-hint{font-size:12px;line-height:1.5;color:var(--dsw-alias-label-secondary);overflow-wrap:anywhere}\n.gt-path-preview{display:block;max-width:100%;min-width:0;white-space:pre-wrap;overflow-wrap:anywhere;user-select:text;font:12px/1.5 var(--ds-font-family-code,monospace);color:var(--dsw-alias-label-secondary)}\n.gt-form-footer{flex:none;padding:14px 24px;border-top:0.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-2)}\n.gt-form-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px}\n@container gt-repo-form (max-width:560px){.gt-form-grid{grid-template-columns:minmax(0,1fr)}.gt-form-head,.gt-form-body,.gt-form-footer{padding-left:16px;padding-right:16px}}\n.gt-textarea{min-height:100px;resize:vertical}\n.gt-field-error{display:block;font-size:12px;color:var(--dsw-alias-state-error-primary);margin-top:5px}\n.gt-validation{display:block;font-size:12px;line-height:1.5;color:var(--dsw-alias-label-secondary);overflow-wrap:anywhere}\n.gt-scan-help{font-size:12px;line-height:1.6;color:var(--dsw-alias-label-secondary);overflow-wrap:anywhere}\n.gt-scan-help p{margin:6px 0}\n.gt-scan-control{display:flex;flex-direction:column;gap:12px;min-width:0}\n.gt-scan-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:14px;min-width:0}\n.gt-scan-fields>label{display:flex;flex-direction:column;gap:6px;min-width:0}\n.gt-scan-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px}\n.gt-footnote{font-size:11px;color:var(--dsw-alias-label-dimmed);text-align:center;padding-top:14px}\n.gt-more{text-align:center;padding:10px 0 20px}\n.gt-skeleton{pointer-events:none}\n.gt-skeleton :is(i,b){display:block;border-radius:var(--dsw-radius-xs);background:var(--dsw-alias-bg-layer-3);animation:gt-pulse 1.5s ease-in-out infinite;min-height:12px;width:80%}\n.gt-skeleton b{height:30px;width:55%;margin:8px 0}\n.gt-skeleton i:nth-child(3){width:65%}\n.gt-sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}\n@keyframes gt-pulse{50%{opacity:.35}}\n@media(prefers-reduced-motion:reduce){.gt-page *{animation:none;transition:none}}\n@container gt-page (max-width:1200px){.gt-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.gt-repos{grid-template-columns:repeat(2,minmax(0,1fr))}.gt-content{padding:24px 20px}}\n@container gt-page (max-width:700px){.gt-repos{grid-template-columns:minmax(0,1fr)}.gt-content{padding:20px 14px}.gt-page-head{gap:12px}.gt-head-actions{margin-left:0;justify-content:flex-start}.gt-detail-grid{grid-template-columns:1fr;gap:4px}.gt-steps{grid-template-columns:1fr}.gt-kpis{gap:7px}.gt-stat{padding:12px;min-height:104px}.gt-stat>b{font-size:24px}.gt-run-stat>b{font-size:20px}}\n@container gt-page (max-width:440px){.gt-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.gt-toolbar{align-items:stretch}.gt-search{flex-basis:100%}.gt-result{padding:12px}}\n\n/* Layout hooks only: shared primitives own control fills, borders and states. */\n.gt-row>label:has(>.gt-input){display:flex;flex-direction:column;gap:6px;min-width:0}\n.gt-search{display:flex;align-items:center;gap:8px;flex:1;min-width:180px}\n.gt-search>.gt-input,.gt-search>span{flex:1;min-width:0}\n.gt-search svg{color:var(--dsw-alias-label-dimmed)}\n.gt-choice{display:inline-flex;min-width:0;max-width:100%}\n.gt-choice>button{width:100%;height:auto;min-height:36px;justify-content:space-between;gap:8px}\n.gt-choice>button>span{min-width:0;white-space:normal;overflow-wrap:anywhere;text-align:left}\n.gt-choice-menu{max-width:calc(100vw - 48px);max-height:min(360px,60dvh);overflow-y:auto;overflow-wrap:anywhere}\n.gt-form-field>.gt-choice{width:100%}\n.gt-form-field:has(>.gt-choice){align-self:start}\n.gt-tier-tabs{flex-basis:100%;min-width:0;overflow-x:auto;padding:2px}\n.gt-tier-tabs>[role=tablist]{min-width:760px}\n.gt-tier-tabs [role=tab]{font-weight:500}\n.gt-model-trigger{height:auto;min-height:36px;max-width:100%;white-space:normal;overflow-wrap:anywhere}\n.gt-repo-footer{flex-wrap:wrap}\n.gt-options-modal.gt-options-modal{width:min(640px,100%);max-height:100%;min-height:0}\n.gt-options-content{min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;overflow-wrap:anywhere;color:var(--dsw-alias-label-primary)}\n.gt-error>span,.gt-page-head>div:first-child{min-width:0;overflow-wrap:anywhere}\n.gt-error{flex-wrap:wrap}\n.gt-repo-actions>button,.gt-scan-actions>button,.gt-form-actions>button{flex-shrink:0}\n.gt-dialog button,.gt-page button{max-width:100%}\n.gt-dialog .gt-row>button{height:auto;min-height:36px;white-space:normal}\ntextarea.gt-input{display:block;border:0.5px solid var(--dsw-alias-border-l4);border-radius:var(--dsw-radius-md);padding:8px 12px;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);font:inherit;resize:vertical}\n.gt-form-field>div{min-width:0}\n.gt-form-field input{min-width:0;max-width:100%}\n.gt-form-field:has(input[inputmode=numeric]){align-self:start}\n.gt-form-field:has(input[inputmode=numeric])>div{padding:0}\n.gt-form-field:has(input[inputmode=numeric])>div>div{flex-wrap:wrap}\n.gt-page a:focus-visible{text-decoration:underline dotted;text-underline-offset:3px}\n@media(hover:hover){.gt-page a:hover{text-decoration:underline dotted;text-underline-offset:3px}}\n@media(pointer:coarse){.gt-page input,.gt-dialog input,.gt-page textarea,.gt-dialog textarea{font-size:16px}}\n\n.gt-chips>button{max-width:100%;height:auto;min-height:24px;white-space:normal;overflow-wrap:anywhere}\n\n.gt-network{margin-bottom:16px}\n.gt-network-text{white-space:pre-wrap;overflow-wrap:anywhere;min-width:0;max-width:100%;user-select:text;font:12px/1.8 var(--ds-font-family-code,monospace)}\n";
 
 // src/client.tsx
 var import_jsx_runtime3 = require("react/jsx-runtime");
@@ -15227,7 +15258,7 @@ function safeLink(raw) {
   }
 }
 function Details({ result: r, repo, call, onChanged }) {
-  const j = r.judgment, [value, setValue] = (0, import_react3.useState)(j?.recommendation ?? "manual-review"), [reason, setReason] = (0, import_react3.useState)(""), [busy, setBusy] = (0, import_react3.useState)(false), [notice, setNotice] = (0, import_react3.useState)("");
+  const j = r.judgment, [value, setValue] = (0, import_react4.useState)(j?.recommendation ?? "manual-review"), [reason, setReason] = (0, import_react4.useState)(""), [busy, setBusy] = (0, import_react4.useState)(false), [notice, setNotice] = (0, import_react4.useState)("");
   async function fix(e) {
     e.preventDefault();
     if (busy) return;
@@ -15296,8 +15327,8 @@ function Details({ result: r, repo, call, onChanged }) {
   ] });
 }
 function DeferredDetails({ r, repo, call, onChanged }) {
-  const [detail, setDetail] = (0, import_react3.useState)(), [error51, setError] = (0, import_react3.useState)(""), [retry, setRetry] = (0, import_react3.useState)(0);
-  (0, import_react3.useEffect)(() => {
+  const [detail, setDetail] = (0, import_react4.useState)(), [error51, setError] = (0, import_react4.useState)(""), [retry, setRetry] = (0, import_react4.useState)(0);
+  (0, import_react4.useEffect)(() => {
     let alive = true;
     setDetail(void 0);
     setError("");
@@ -15321,7 +15352,7 @@ function DeferredDetails({ r, repo, call, onChanged }) {
   ] });
 }
 function ResultCard({ r, repo, call, onChanged }) {
-  const [open, setOpen] = (0, import_react3.useState)(false), url2 = safeLink(r.url);
+  const [open, setOpen] = (0, import_react4.useState)(false), url2 = safeLink(r.url);
   return /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("article", { className: "gt-card gt-result " + (open ? "gt-result-open" : ""), children: [
     /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: "gt-row", children: [
       /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(Badge, { tone: r.judgment?.recommendation ?? "neutral", children: r.judgment ? labels[r.judgment.recommendation] : "\u4EC5\u89C4\u5219\u9884\u7B5B" }),
@@ -15349,13 +15380,13 @@ function ResultCard({ r, repo, call, onChanged }) {
   ] });
 }
 function Results({ reports, selected, call, onChanged, onSelect }) {
-  const [kind, setKind] = (0, import_react3.useState)("both"), [tier, setTier] = (0, import_react3.useState)("all"), [search, setSearch] = (0, import_react3.useState)(""), [sort, setSort] = (0, import_react3.useState)("priority"), [count, setCount] = (0, import_react3.useState)(30);
-  const tabsId = (0, import_react3.useId)(), tiers = [["all", "\u5168\u90E8"], ...Object.entries(labels), ["unassessed", "\u4EC5\u89C4\u5219\u9884\u7B5B"]];
-  const sentinel = (0, import_react3.useRef)(null);
-  const rows = (0, import_react3.useMemo)(() => reports.filter((r) => !selected || r.repo === selected).flatMap((report) => report.results.map((r) => ({ r, repo: report.repo, at: report.at }))), [reports, selected]);
-  const filtered = (0, import_react3.useMemo)(() => rows.filter(({ r, repo }) => (kind === "both" || r.kind === kind) && (tier === "all" || (r.judgment?.recommendation ?? "unassessed") === tier) && (!search || [r.title, r.number, repo, r.judgment?.businessReason].join(" ").toLocaleLowerCase().includes(search.toLocaleLowerCase()))).sort((a, b) => sort === "recent" ? b.at - a.at || b.r.number - a.r.number : sort === "number" ? b.r.number - a.r.number : ["\u9AD8", "\u4E2D", "\u4F4E"].indexOf(a.r.judgment?.priority ?? "\u4F4E") - ["\u9AD8", "\u4E2D", "\u4F4E"].indexOf(b.r.judgment?.priority ?? "\u4F4E") || b.at - a.at), [rows, kind, tier, search, sort]);
-  (0, import_react3.useEffect)(() => setCount(30), [kind, tier, search, sort, selected]);
-  (0, import_react3.useEffect)(() => {
+  const [kind, setKind] = (0, import_react4.useState)("both"), [tier, setTier] = (0, import_react4.useState)("all"), [search, setSearch] = (0, import_react4.useState)(""), [sort, setSort] = (0, import_react4.useState)("priority"), [count, setCount] = (0, import_react4.useState)(30);
+  const tabsId = (0, import_react4.useId)(), tiers = [["all", "\u5168\u90E8"], ...Object.entries(labels), ["unassessed", "\u4EC5\u89C4\u5219\u9884\u7B5B"]];
+  const sentinel = (0, import_react4.useRef)(null);
+  const rows = (0, import_react4.useMemo)(() => reports.filter((r) => !selected || r.repo === selected).flatMap((report) => report.results.map((r) => ({ r, repo: report.repo, at: report.at }))), [reports, selected]);
+  const filtered = (0, import_react4.useMemo)(() => rows.filter(({ r, repo }) => (kind === "both" || r.kind === kind) && (tier === "all" || (r.judgment?.recommendation ?? "unassessed") === tier) && (!search || [r.title, r.number, repo, r.judgment?.businessReason].join(" ").toLocaleLowerCase().includes(search.toLocaleLowerCase()))).sort((a, b) => sort === "recent" ? b.at - a.at || b.r.number - a.r.number : sort === "number" ? b.r.number - a.r.number : ["\u9AD8", "\u4E2D", "\u4F4E"].indexOf(a.r.judgment?.priority ?? "\u4F4E") - ["\u9AD8", "\u4E2D", "\u4F4E"].indexOf(b.r.judgment?.priority ?? "\u4F4E") || b.at - a.at), [rows, kind, tier, search, sort]);
+  (0, import_react4.useEffect)(() => setCount(30), [kind, tier, search, sort, selected]);
+  (0, import_react4.useEffect)(() => {
     const node = sentinel.current;
     if (!node || typeof IntersectionObserver === "undefined") return;
     const observer = new IntersectionObserver((entries) => {
@@ -15449,8 +15480,8 @@ function Skeleton() {
   ] });
 }
 function Rules({ repo, call, onClose }) {
-  const [text, setText] = (0, import_react3.useState)(), [draft, setDraft] = (0, import_react3.useState)(""), [path, setPath] = (0, import_react3.useState)(""), [notice, setNotice] = (0, import_react3.useState)(""), [busy, setBusy] = (0, import_react3.useState)(false), [retry, setRetry] = (0, import_react3.useState)(0);
-  (0, import_react3.useEffect)(() => {
+  const [text, setText] = (0, import_react4.useState)(), [draft, setDraft] = (0, import_react4.useState)(""), [path, setPath] = (0, import_react4.useState)(""), [notice, setNotice] = (0, import_react4.useState)(""), [busy, setBusy] = (0, import_react4.useState)(false), [retry, setRetry] = (0, import_react4.useState)(0);
+  (0, import_react4.useEffect)(() => {
     let alive = true;
     setNotice("");
     void call({ action: "rules", repo }).then((v) => {
@@ -15519,12 +15550,12 @@ function Rules({ repo, call, onClose }) {
   ] });
 }
 function Dashboard({ call, openSettings }) {
-  const [snapshot, setSnapshot] = (0, import_react3.useState)(), [error51, setError] = (0, import_react3.useState)(""), [edit, setEdit] = (0, import_react3.useState)(), [selected, setSelected] = (0, import_react3.useState)(""), [models, setModels] = (0, import_react3.useState)(""), [guide, setGuide] = (0, import_react3.useState)(false);
-  const [networkInfo, setNetworkInfo] = (0, import_react3.useState)("");
-  const [ruleRepo, setRuleRepo] = (0, import_react3.useState)(""), [deleting, setDeleting] = (0, import_react3.useState)(""), [busy, setBusy] = (0, import_react3.useState)(false), [scan, setScan] = (0, import_react3.useState)();
-  const [repoSaving, setRepoSaving] = (0, import_react3.useState)(false);
-  const [deleteError, setDeleteError] = (0, import_react3.useState)("");
-  const alive = (0, import_react3.useRef)(true), seq = (0, import_react3.useRef)(0);
+  const [snapshot, setSnapshot] = (0, import_react4.useState)(), [error51, setError] = (0, import_react4.useState)(""), [edit, setEdit] = (0, import_react4.useState)(), [selected, setSelected] = (0, import_react4.useState)(""), [models, setModels] = (0, import_react4.useState)(""), [guide, setGuide] = (0, import_react4.useState)(false);
+  const [networkInfo, setNetworkInfo] = (0, import_react4.useState)("");
+  const [ruleRepo, setRuleRepo] = (0, import_react4.useState)(""), [deleting, setDeleting] = (0, import_react4.useState)(""), [busy, setBusy] = (0, import_react4.useState)(false), [scan, setScan] = (0, import_react4.useState)();
+  const [repoSaving, setRepoSaving] = (0, import_react4.useState)(false);
+  const [deleteError, setDeleteError] = (0, import_react4.useState)("");
+  const alive = (0, import_react4.useRef)(true), seq = (0, import_react4.useRef)(0);
   async function refresh() {
     const n = ++seq.current;
     try {
@@ -15537,7 +15568,7 @@ function Dashboard({ call, openSettings }) {
       if (alive.current && seq.current === n) setError(message2(e));
     }
   }
-  (0, import_react3.useEffect)(() => {
+  (0, import_react4.useEffect)(() => {
     alive.current = true;
     setSnapshot(void 0);
     setError("");
@@ -15548,7 +15579,7 @@ function Dashboard({ call, openSettings }) {
     };
   }, [call]);
   const active = snapshot?.jobs.some(activeJob);
-  (0, import_react3.useEffect)(() => {
+  (0, import_react4.useEffect)(() => {
     if (!active) return;
     let disposed = false, timer;
     const poll = async () => {
@@ -15809,5 +15840,7 @@ function apply(ctx) {
   const Page = () => /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(Dashboard, { call, openSettings });
   ctx.slots.inject("main", () => ctx.slots.register({ name: "main", key: PANEL_ID, locale: NS }, Page));
   ctx.slots.inject("sidebar.panellist", () => ctx.slots.register({ name: "sidebar.panellist", id: PANEL_ID, order: 25, label: () => t("title"), locale: NS }, (props) => /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(Branch, { size: props.size })));
+  const settingsSlots = ctx.slots;
+  settingsSlots.inject("plugins.row.config", () => settingsSlots.register({ name: "plugins.row.config", key: "dsh-github-triage#github-triage" }, (props) => /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(NetworkSettings, { ...props })));
 }
 return module.exports;}});

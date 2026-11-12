@@ -204,6 +204,7 @@ test('client factory registers native keyed main and sidebar seats, materializes
   assert.equal(registrations[1].options.name, 'sidebar.panellist')
   assert.equal(registrations[1].options.id, 'advisory-impact')
   assert.equal(registrations[1].options.label, '公告影响')
+  assert.equal(registrations[2].options.key, 'dsh-advisory-impact#advisory-impact')
   assert.equal(registrations[0].render({}).type, client.Panel)
   assert.equal(styles.length, 1)
   assert.ok(styles[0].textContent.includes('--dsw-alias-state-error-primary'))
@@ -431,4 +432,31 @@ test('panel does not present unavailable inventories as zero or not affected', a
     h.tree.root.findAll(n => n.type === 'article' && n.props.className?.includes('ai-verdict')).length,
     0
   )
+})
+
+
+test('network settings shows the exact hint label, saves one boolean and surfaces write failures', async () => {
+  const { NetworkSettings } = await import('../lib/network-settings.js')
+  const { API_TLS_SKIP_LABEL } = await import('../lib/intranet-http.js')
+  const calls = []
+  const form = { state: { value: { watch: ['kafka'] }, writable: true, revision: 7 },
+    mutate: async (...args) => { calls.push(args); return true } }
+  let tree
+  act(() => { tree = create(React.createElement(NetworkSettings, { view: 'page', form })) })
+  assert.ok(JSON.stringify(tree.toJSON()).includes(API_TLS_SKIP_LABEL))
+  const input = () => tree.root.findByType('input')
+  assert.equal(input().props.checked, false)
+  assert.equal(input().props.disabled, false)
+  await act(async () => { await input().props.onChange({ target: { checked: true } }) })
+  assert.deepEqual(calls, [[[ { op: 'set', path: ['insecureSkipTlsVerifyHosts'], value: true } ], 7]])
+  form.state.value.insecureSkipTlsVerifyHosts = true
+  act(() => tree.update(React.createElement(NetworkSettings, { view: 'page', form })))
+  assert.equal(input().props.checked, true)
+  form.mutate = async () => false
+  await act(async () => { await input().props.onChange({ target: { checked: false } }) })
+  assert.equal(tree.root.findByProps({ role: 'alert' }).children.join(''), '网络设置保存失败，请重试。')
+  form.state.writable = false
+  act(() => tree.update(React.createElement(NetworkSettings, { view: 'page', form })))
+  assert.equal(input().props.disabled, true)
+  act(() => tree.unmount())
 })

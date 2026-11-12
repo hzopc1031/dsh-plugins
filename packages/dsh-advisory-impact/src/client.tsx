@@ -1,3 +1,4 @@
+import { NetworkSettings, type NetworkSettingsProps } from './network-settings.js'
 import * as React from 'react'
 import { panelOverview, sourceExpired, type PanelSource } from './panel-model.js'
 import type { AdvisoryViewModel } from './view-model.js'
@@ -7,7 +8,7 @@ import type { Settings } from './config.js'
 export const name = 'advisory-impact'
 export const inject = ['slots']
 declare const PANEL_CSS: string
-const sourceError = (error?: string) => error && /fetch failed|NETWORK_ERROR|ECONN|ETIMEDOUT|ENOTFOUND|UND_ERR_|CERT|SIGNATURE|ISSUER|HTTP[ _]\d{3}/i.test(error) ? '来源不可用 · 见网络诊断' : error
+const sourceError = (error?: string) => error && !error.includes('TLS_KEY_TOO_SMALL') && /fetch failed|NETWORK_ERROR|ECONN|ETIMEDOUT|ENOTFOUND|UND_ERR_|CERT|SIGNATURE|ISSUER|HTTP[ _]\d{3}/i.test(error) ? '来源不可用 · 见网络诊断' : error
 const title = (id: string) => ({ kafka: 'Kafka', hadoop: 'Hadoop', flink: 'Flink' })[id] ?? id
 const safeUrl = (url: string) => (/^https?:\/\//.test(url) ? url : undefined)
 const Link = ({ url, children }: { url: string; children: React.ReactNode }) => (
@@ -704,4 +705,5 @@ export function apply(ctx: ClientContext) {
       props => <Shield size={props.size} />
     )
   )
+  ctx.slots.inject('plugins.row.config', () => ctx.slots.register({ name: 'plugins.row.config', key: 'dsh-advisory-impact#advisory-impact' }, props => <NetworkSettings {...props as NetworkSettingsProps}/>))
 }

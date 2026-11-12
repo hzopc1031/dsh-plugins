@@ -1,6 +1,6 @@
 /** Browser-safe schemas shared by forms and the command-backed UI service. */
 import { z } from 'zod'
-import { repoSchema, repoName, limitSchema, fullLimitSchema, scheduleSchema, type Repo, type Report } from './types.js'
+import { repoSchema, repoName, limitSchema, fullLimitSchema, scheduleSchema, reportSchema, resultSchema, type Repo, type Report } from './types.js'
 export const editableRepoSchema=repoSchema.strict().superRefine((r,c)=>{
   if(r.localRef&&!r.localRepoPath)c.addIssue({code:'custom',path:['localRef'],message:'填写 ref 前请先配置本地代码路径'})
 })
@@ -20,7 +20,8 @@ export const scanSchema = z.object({ full:z.boolean().optional(), since:date.opt
 })
 export type UiScan = z.infer<typeof scanSchema>
 export const requestSchema = z.discriminatedUnion('action',[
-  z.object({action:z.literal('snapshot')}).strict(),
+  z.object({action:z.literal('snapshot'),compact:z.boolean().optional()}).strict(),
+  z.object({action:z.literal('detail'),repo:repoName,number:z.number().int().positive()}).strict(),
   z.object({action:z.literal('jobs')}).strict(),
   z.object({action:z.literal('models')}).strict(),
   z.object({action:z.literal('add'),value:editableRepoSchema}).strict(),
@@ -30,13 +31,35 @@ export const requestSchema = z.discriminatedUnion('action',[
   z.object({action:z.literal('fix'),repo:repoName,number:z.number().int().positive(),recommendation:z.enum(['adopt','manual-review','not-recommended']),reason:z.string().trim().min(1).max(1200)}).strict(),
   z.object({action:z.literal('rules'),repo:repoName}).strict(),
   z.object({action:z.literal('export'),repo:repoName,path:z.string().min(1).max(4096)}).strict(),
+  z.object({action:z.literal('import'),repo:repoName,text:z.string().min(1).max(16384)}).strict(),
 ])
 export type UiRequest = z.infer<typeof requestSchema>
-export interface Job { repo:string; status:'queued'|'running'|'completed'|'failed'; message?:string }
+export interface Job { repo:string; status:'queued'|'running'|'completed'|'failed'; message?:string; at?:number }
 export interface ModelStatus { enabled:boolean; provider:string; model:string; available:boolean; warning?:string }
-export interface Snapshot { repositories:Repo[]; reports:Report[]; jobs:Job[]; model:ModelStatus; defaults:{limit:number;fullMax:number} }
+const summaryJudgment=z.object({kind:z.enum(['issue','pr']),recommendation:z.enum(['adopt','manual-review','not-recommended']),priority:z.enum(['高','中','低']),businessReason:z.string()})
+export const summaryResult=resultSchema.omit({evidence:true,judgment:true}).extend({deferred:z.literal(true),judgment:summaryJudgment.optional()})
+export type UiResult=z.infer<typeof summaryResult>|z.infer<typeof resultSchema>
+export type UiReport=Omit<Report,'results'>&{results:UiResult[]}
+export interface Snapshot { repositories:Repo[]; reports:UiReport[]; jobs:Job[]; model:ModelStatus; defaults:{limit:number;fullMax:number} }
 export type Reply<T=unknown> = {ok:true;data:T}|{ok:false;error:string;fields?:Record<string,string>}
 export type UiCall = <T=unknown>(request:UiRequest)=>Promise<T>
+export const jobSchema=z.object({repo:repoName,status:z.enum(['queued','running','completed','failed']),message:z.string().optional(),at:z.number().optional()})
+export const snapshotSchema=z.object({repositories:z.array(repoSchema),reports:z.array(reportSchema.extend({results:z.array(z.union([summaryResult,resultSchema]))})),jobs:z.array(jobSchema),model:z.object({enabled:z.boolean(),provider:z.string(),model:z.string(),available:z.boolean(),warning:z.string().optional()}),defaults:z.object({limit:limitSchema,fullMax:fullLimitSchema})})
+/** Decode every transport response before exposing it to React. */
+export function decodeValue(request:UiRequest,value:unknown):unknown {
+  if(request.action==='snapshot')return snapshotSchema.parse(value)
+  if(request.action==='jobs')return z.array(jobSchema).parse(value)
+  if(request.action==='start')return jobSchema.parse(value)
+  if(request.action==='detail')return resultSchema.parse(value)
+  if(request.action==='add'||request.action==='patch')return repoSchema.parse(value)
+  return z.string().parse(value)
+}
+export const routeActions={snapshot:['snapshot'],detail:['detail'],repos:['add','patch','remove'],run:['start'],correct:['fix'],rules:['rules','export','import'],models:['models'],jobs:['jobs']} as const
+export type RouteName=keyof typeof routeActions
+export const routePath=(name:RouteName)=>'/api/dsh-github-triage/'+name
+export function routeFor(action:UiRequest['action']):RouteName {
+  return (Object.keys(routeActions) as RouteName[]).find(name=>(routeActions[name] as readonly string[]).includes(action))!
+}
 /** Null clears an optional value. Omitted keys retain the latest server value. */
 export function mergeRepo(existing:Repo, patch:RepoPatch):Repo {
   const next:Record<string,unknown>={...existing}

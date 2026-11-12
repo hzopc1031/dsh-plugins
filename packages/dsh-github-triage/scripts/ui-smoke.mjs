@@ -21,7 +21,8 @@ if(args.includes('--help')){
 系统 TEMP 下创建临时 DSH_HOME，基于官方 web 模板，通过桌面 CLI 执行：
   plugin --profile web add --offline --ignore-scripts --config.auto-install-peers=false <本包绝对路径>
 仅将本包以本地路径装入临时 profile，不下载依赖、不运行安装脚本。
-启动 web，进入临时空会话，检查顶部按钮、共享弹窗、仓库列表、未配模型提示。
+启动 web，先检查侧边栏「GitHub 哨兵」及无活动 agent 的中央页面，
+核对 KPI、仓库列表、研判结果、模型指引，再进入临时空会话检查顶部快捷按钮。
 截图 ui.png、result.json、脱敏日志留在 TEMP/dsh-github-triage-ui-artifacts-* 并打印路径。
 最后关闭自建进程，删除临时 DSH_HOME 和浏览器目录；保留截图诊断。
 退出码：0 通过/help；1 安装或 UI 失败；2 参数/环境不足；3 清理失败。
@@ -53,8 +54,12 @@ process.once('SIGINT',interrupt);process.once('SIGTERM',interrupt)
 const pause=async ms=>{shutdown.signal.throwIfAborted();await new Promise(resolve=>setTimeout(resolve,ms));shutdown.signal.throwIfAborted()}
 function stop(child){
   if(!child?.pid||child.exitCode!==null||child.signalCode!==null)return
-  if(process.platform==='win32')spawnSync('taskkill',['/PID',String(child.pid),'/T','/F'],{windowsHide:true,stdio:'ignore',shell:false})
+  if(process.platform==='win32'){
+    const killed=spawnSync('taskkill',['/PID',String(child.pid),'/T','/F'],{windowsHide:true,stdio:'ignore',shell:false})
+    if(killed.error||killed.status!==0)console.error('无法确认自建进程树已停止：PID '+child.pid+'；请在沙箱外检查。')
+  }
   else child.kill('SIGTERM')
+  child.stdout?.destroy();child.stderr?.destroy();child.unref()
 }
 const env={...process.env}
 for(const key of Object.keys(env))if(/(?:TOKEN|COOKIE|API_KEY|SECRET|NODE_OPTIONS|^DSH_)/i.test(key))delete env[key]
@@ -91,7 +96,7 @@ async function freePort(){
   const port=server.address().port;await new Promise(resolve=>server.close(resolve));return port
 }
 try{
-  const version=(await cliRun(['--version'],'version',15000)).trim()
+  const version=(await cliRun(['--version'],'version',15000)).split(/\r?\n/).map(s=>s.trim()).find(s=>/^\d+\.\d+\.\d+(?:-[\w.-]+)?$/.test(s))
   assert.equal(version,'0.2.1-rc.5','桌面 CLI 不是本次核对的 rc.5')
   const profile=path.join(env.DSH_HOME,'profiles','web')
   initProfile(profile,PROFILE_TEMPLATES.web.bundles)
@@ -150,37 +155,46 @@ try{
   const announced=[...log.matchAll(/dsh web: (https?:\/\/[^\s\x1b]+)/g)].at(-1)?.[1]
   assert.ok(announced,'未收到官方 web 就绪 URL');assert.equal(new URL(announced).origin,new URL(url).origin)
   await cdp('Page.navigate',{url:announced})
-  // Dismiss the official preview notice, then open a session so session header actions mount.
+  // Dismiss the official preview notice. The main page needs no active agent.
   for(let n=0;n<40;n++){
     if(await evaluate("(()=>{const b=Array.from(document.querySelectorAll('button')).find(b=>b.textContent.trim()==='继续');if(b){b.click();return true}return false})()"))break
     await pause(250)
   }
   await pause(500)
 
-  let found=false
+  let sidebar=false
   for(let n=0;n<120;n++){
-    found=await evaluate("Array.from(document.querySelectorAll('button')).some(b=>b.textContent.trim()==='GitHub 哨兵')")
-    if(found)break
-    await evaluate("(()=>{const row=document.querySelector('[data-row-key^=\"session:\"]');if(row){row.click();return}const g=Array.from(document.querySelectorAll('*')).find(e=>e.children.length===0&&e.textContent.trim()==='未分组');g?.click()})()")
+    sidebar=await evaluate("!!document.querySelector('button[aria-label=\"GitHub 哨兵\"]')")
+    if(sidebar)break
     await pause(500)
   }
-  if(found){
-    await evaluate("Array.from(document.querySelectorAll('button')).find(b=>b.textContent.trim()==='GitHub 哨兵').click()")
+  if(sidebar){
+    await evaluate("document.querySelector('button[aria-label=\"GitHub 哨兵\"]').click()")
     for(let n=0;n<40;n++){
       if(await evaluate("!!document.querySelector('[aria-label=\"仓库列表\"]')"))break
       await pause(250)
     }
   }
-  const state=await evaluate("({title:document.title,entry:Array.from(document.querySelectorAll('button')).some(b=>b.textContent.trim()==='GitHub 哨兵'),dialog:!!document.querySelector('[role=\"dialog\"][aria-label=\"GitHub 哨兵\"]'),list:!!document.querySelector('[aria-label=\"仓库列表\"]'),modelPrompt:document.body.textContent.includes('modelEnabled'),text:document.body.innerText.slice(0,12000),rows:Array.from(document.querySelectorAll('[data-row-key]')).map(e=>e.getAttribute('data-row-key')).slice(0,20)})")
+  const state=await evaluate("({title:document.title,sidebar:!!document.querySelector('button[aria-label=\"GitHub 哨兵\"]'),page:!!document.querySelector('.gt-page'),kpis:document.querySelectorAll('.gt-stat').length,list:!!document.querySelector('[aria-label=\"仓库列表\"]'),results:!!document.querySelector('[aria-label=\"研判结果\"]'),modelPrompt:document.body.textContent.includes('modelEnabled'),error:document.querySelector('.gt-error')?.textContent,text:document.body.innerText.slice(0,12000)})")
   await writeFile(path.join(artifacts,'result.json'),scrub(JSON.stringify({...state,cliVersion:version},null,2)))
   const screenshot=await cdp('Page.captureScreenshot',{format:'png',captureBeyondViewport:false})
   const screenshotPath=path.join(artifacts,'ui.png')
   await writeFile(screenshotPath,Buffer.from(screenshot.data,'base64'))
   console.log('截图：'+screenshotPath)
-  assert.ok(found&&state.dialog,'会话顶部入口按钮或弹窗未出现；检查 result.json 和 ui.png')
-  // The seeded session is created without a live agent, so remote command calls may fail here (gateway/internal); data loading is covered by tests, not by this smoke.
-  const status=(state.text.split('\n').find(l=>/界面接口|加载仓库/.test(l))??'').slice(0,120)
-  console.log('PASS：官方临时 web profile 的会话顶部按钮「GitHub 哨兵」与共享 Modal 真实出现'+(state.list&&state.modelPrompt?'；仓库列表与未配模型提示也已出现':'；数据加载未验证（种子会话无活动 agent）：'+status))
+  assert.ok(sidebar&&state.page&&state.list&&state.results&&state.kpis===6&&state.modelPrompt&&!state.error,'侧边栏或无会话中央页面未通过；检查 result.json 和 ui.png')
+  let header=false
+  for(let n=0;n<80;n++){
+    await evaluate("(()=>{const row=document.querySelector('[data-row-key^=\"session:\"]');if(row){row.click();return}const g=Array.from(document.querySelectorAll('*')).find(e=>e.children.length===0&&e.textContent.trim()==='未分组');g?.click()})()")
+    header=await evaluate("!!document.querySelector('button.gt-entry')")
+    if(header)break
+    await pause(500)
+  }
+  assert.ok(header,'会话顶部快捷按钮未出现')
+  await evaluate("document.querySelector('button.gt-entry').click()")
+  for(let n=0;n<40;n++){if(await evaluate("!!document.querySelector('.gt-page [aria-label=\"仓库列表\"]')"))break;await pause(250)}
+  assert.ok(await evaluate("!!document.querySelector('.gt-page [aria-label=\"仓库列表\"]')"),'快捷按钮没有打开同一页面')
+  await writeFile(path.join(artifacts,'result.json'),scrub(JSON.stringify({...state,header,cliVersion:version},null,2)))
+  console.log('PASS：侧边栏、无活动 agent 的中央页面、六项 KPI、仓库列表、结果列表、模型指引与会话快捷按钮均通过。')
 }catch(error){
   exitCode=1;console.error('UI smoke 未通过：'+scrub(error.message)+'\n产物目录：'+artifacts)
 }finally{

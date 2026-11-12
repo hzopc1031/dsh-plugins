@@ -1,4 +1,100 @@
-# 开发状态 · GitHub 哨兵（dsh-github-triage）0.3.1
+# 开发状态 · GitHub 哨兵（dsh-github-triage）0.4.0
+
+日期：2026-11-12。工作目录为本 worktree，分支 `feat/triage-ui-v4`，HEAD `cb2a882`。本轮从 0.3.2 重做页面与数据接入，保留分析逻辑、GitHub GET 边界、原命令、存储域及共享串行队列。未安装依赖、未新增依赖、未改 junction/node_modules、未读 `_private` / `_tools`、未改全局 DSH 配置、未安装到用户 profile、未发布、未 commit/push。
+
+## 页面与 dsh-context 对照
+
+只读参考：`../_wip/triage-ui/dsh-context-ref`（实际目录与当前 worktree 同属“插件开发”，非本包内目录），commit `4d8fb8a`，包版本 0.83.1。没有运行参考仓库脚本，也未移植其源码或 CSS。THIRD_PARTY_NOTICES 已列出 Apache-2.0 来源与所研究的做法。
+
+| 参考文件（相对于 dsh-context-ref） | 核实后落地的做法 |
+| --- | --- |
+| `src/client/insightPage.ts` | 同 ID 的 `sidebar.panellist` list/root 与 `main` keyed/root，侧栏入口 `order:25`，中央完整页面。会话顶部按钮调用 `layout.selectPanel` 打开同一页面，保留工作空间、避免两份操作流程；仅缺少布局能力的宿主回退紧凑 Modal。 |
+| `src/host/connection.ts`、`postRoute.ts`；`src/client/route.ts`、`apiRoutes.ts` | `ctx.inject(['connection'], ...)` 能力检测，精确 POST 路由、buffered body、effect 生命周期、`{ok,value,error}` 信封、no-store；浏览器 fetch 与 zod 按动作解码。复用现有 ui-service，没有新端口或会话 agent 依赖。 |
+| `src/client/components/overviewPanel.tsx`、`styles/overview.css` | 全高 flex 页面 → 独立滚动区 → 页头与胶囊 → 六项 KPI → 仓库卡片网格 → 结果工具栏、仓库 chip、结果卡片 → 按需规则区。 |
+| `src/client/styles/base.css`、`stats.css` | `gt-` 类名前缀、DSH bg/border/label/button/state/shadow 令牌、亮暗主题、color-mix、容器查询、分段控件与可清空搜索、三步空状态。CSS 以 esbuild text loader 注入并随插件卸载移除。 |
+| `src/client/components/cardSkeletons.tsx` | 与最终 KPI/仓库卡结构对应的骨架；详情也有占位；错误可重试，运行中显示排队/进行中状态和不确定进度条，不编造百分比。 |
+| `src/client/primitives.ts`、`dshFaces.ts` | 安全解析宿主 Icon 导出、缺失时空组件；设置胶囊调用 `pluginNavigation.openBundle('dsh-github-triage')`，缺能力则显示配置指引。 |
+| `src/client/index.ts`、`components/settingsCard.tsx` | 本轮选择页面内模型配置指引卡，未覆盖宿主已有配置表单，也未另建 configForms 设置卡。可看 provider/model/modelEnabled 与真实可复制模型 ID。 |
+| `docs/host-client-principles.md` | 首次只读摘要（不含完整证据/理由/本地对照正文），展开单项请求 detail；规则点开才读。列表先挂载 30 条、IntersectionObserver 续载，保留手动续载兜底；关闭详情即释放、离开页面停止轮询与观察器，无 localStorage 缓存。 |
+
+UI 源码拆分为 `client.tsx`、`client-forms.tsx`、`client-route.ts`、`client-icons.tsx` 和 `client.css`。保留中文全文；侧栏命名空间用 locale.register/bind 注册（英文环境当前也显示中文名称，未承诺完整英文翻译）。仓库表单按仓库/本地代码/业务规则/定时上限分组，沿用 dirty 字段集合 + changedFields delta；`null` 显式清空，遗漏字段保留服务端最新值。
+
+## 官方接口证据
+
+通过只读 GitHub 连接器按两个固定 tag 读取原始源码，不用 main 推断。rc.5 为 `b830ec950faba0a46dda564be3e2d854afed94f1`，rc.1 为 `66491b05e3f05ad35bcdd4f6cd7ed26041d9e3db`。两个版本的下列 connection 文件 blob 相同：index.ts `d563cd40e83f6048dd993f297650f821f6921d62`，rpc-host.ts `88e7b48baa54df58392b0f1bcec6d4416cb30c7a`，rpc.ts `aec79d07285e43d9bc0659499dbec18cf0940d98`。
+
+| 官方源码位置 | 证据与决定 |
+| --- | --- |
+| [rc.5 connection/src/index.ts L136–160](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/connection/src/index.ts#L136)、[rc.1 同文件](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.2-rc.1/packages/client/connection/src/index.ts#L136) | HostConnectionService 与 `/api` 共享 Fetch bridge 已存在。插件名 `client-connection`（L59）与读取的服务名不是同一概念。 |
+| [rc.5 rpc-host.ts L62–118](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/connection/src/rpc-host.ts#L62)、[rc.1 同文件](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.2-rc.1/packages/client/connection/src/rpc-host.ts#L62) | Context 合并与 `super(ctx,'connection')`（L92）确认服务名 **connection**；fetch getter/register（L115–118）确认注册方法。采用局部结构类型，不补装 SDK。 |
+| [rpc-host.ts L207–250](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/connection/src/rpc-host.ts#L207)、[rc.1 对照](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.2-rc.1/packages/client/connection/src/rpc-host.ts#L207) | 按完整 pathname 匹配；L219–222 只允许 owner；L244–249 注册归属调用方 effect，卸载移除。宿主原有 Host/Origin 与认证照常生效。 |
+| [rpc.ts L146–175](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/connection/src/rpc.ts#L146)、[rc.1 同文件](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.2-rc.1/packages/client/connection/src/rpc.ts#L146) | 精确路由结构包含 path/methods/requestBody/fetch，register 返回卸载函数；`buffered` 可用。 |
+| [ui-sidebar index.ts L51–89](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-sidebar/src/client/index.ts#L51)、[contract/slots.ts L44](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-sidebar/src/client/contract/slots.ts#L44) | 宿主按 panellist id/label/order 整理入口，点击交给 layout.selectPanel；插件只贡献图标与元数据。 |
+| [ui-layout index.ts L73、L183](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-layout/src/client/index.ts#L73) | main 是 keyed/root，除 conversation 外不带 Session。用相同 id/key 配对即可，不覆盖 root/sidebar。 |
+| [ui-plugin-manager index.ts L36–42、L137–146](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-plugin-manager/src/client/index.ts#L137) | pluginNavigation.openBundle 是打开该包设置的真实接口。只加相应 `dsh.client.inject`（sidebar/layout/locale/ui-plugin-manager），无新增 devDependencies 或运行依赖。 |
+
+结论：**rc.5 已支持 POST，无需默认回退 remote.commands**。Host 用可选注入检测 connection.fetch.register，命令环境即使没有 connection 仍可正常加载。主页面只用 POST；保留 `/triage-ui` JSON 命令。仅紧凑会话适配器遇到 HTTP 404/405 才用既有命令 transport；403/网络超时/解码失败不重提，防止重复变更。
+
+路由均为 `/api/dsh-github-triage/` 下的 POST：snapshot、repos、run、correct、rules、models、jobs、detail。以 requestSchema 校验动作和严格字段，并校验动作所属路由，最多 150KB；无效 JSON、字段、服务失败均返回结构化错误。仓库、扫描与纠正仍调用 ui-service；规则导入复用 importDocument，导出复用默认 O_EXCL 的只写新文件逻辑。未修改 pipeline/model/local/rules 的分析实现。
+
+## 功能逐项回归（自动测试）
+
+| 项目 | 结果 / 证据 |
+| --- | --- |
+| 一级侧栏页面与会话顶部按钮 | 通过。真实 rc.5 renderer 的 main/root、sidebar/list、header/session 同时渲染，顶部导航同 ID；命令执行替身故意拒绝，页面仍靠 POST 加载。另测缺布局的紧凑 Modal。 |
+| 仓库添加、删除确认、编辑与所有字段 | 通过。类型、业务/文件、本地路径/ref、规则文件、每天/间隔、两种上限均保留；前后端校验、并发最新字段保留与显式清空。 |
+| 模型状态、配置指引、真实 ID | 通过。已配置/禁用/缺失状态、设置入口和可复制模型目录；真实服务商调用未实测。 |
+| 增量/全量、since/until/上限、全部分析 | 通过。表单校验、请求形状、防重复、非阻塞入队、进度状态；与命令/定时共享串行队列。 |
+| 三档、类型、仓库筛选、搜索/清空/排序 | 通过。KPI 与分段计数不把仅规则预筛算入三档；类型及搜索可叠加，列表排序与筛选后空态。 |
+| 展开详情、证据与 GitHub 外链 | 通过。详情按需读取及释放，包含 businessReason、本地对照、PR 测试与规则证据；外链仅固定 https GitHub 条目 URL，noopener/noreferrer，拒绝危险协议与注入。 |
+| 纠正结论形成规则 | 通过。三档与必填理由，请求等价 triage-fix；现有 pipeline 测试验证报告更新、规则、历史纠正优先。 |
+| 规则查看、复制、导出/导入 | 通过。按需读取；剪贴板动作替身、新文件绝不覆盖、同仓库首行和 UTF-8 字节上限、错误不保存。 |
+| 骨架、三步空态、错误重试、运行中 | 通过。首屏骨架、无仓库指引、失败重试、运行按钮禁用与 progress；定时器/观察器/样式卸载清理。 |
+| `/triage`、`/triage-repo`、`/triage-fix`、`/triage-report`、`/triage-models`、`/triage-rules`、`/triage-ui` | 全部通过。原官方临时 profile 测试验证注册、分析、局部配置、报告、纠正、规则、持久化、卸载重载。 |
+| POST 信封、校验与错误 | 通过。成功、字段错误、JSON/大小/方法/动作路由不匹配、异常脱敏、解码错误、404/405 专属回退、认证错误和不确定网络失败不重提、注册卸载与缺能力。 |
+| GitHub 只读与既有分析逻辑 | 原回归全部通过；本轮仅 User-Agent 版本变化，没有新增 GitHub 写请求或分析算法变化。 |
+
+## 最终验证
+
+环境：Windows / Node.js 24.20.0 / npm 11.19.0。使用用户预先提供的只读依赖 junction，不执行 npm/pip install 或参考仓库脚本。
+
+- `npm --prefix packages/dsh-github-triage run build`：通过，tsc + esbuild（CSS text loader），预构建 lib 已更新。
+- `npm --prefix packages/dsh-github-triage run typecheck`：通过。
+- `npm --prefix packages/dsh-github-triage test`：**413/413 通过，0 失败、0 跳过**。原 391 项保留并按新交互更新，新增 22 项。jsdom Modal 为明确的 DOM 替身，不能当作真实宿主 Modal 视觉验证。
+- `npm --prefix packages/dsh-github-triage run verify-pack`：通过，**0.4.0、50 文件**精确白名单；client CSS 内嵌、8 个新增 JS/d.ts 产物，安装脚本为空、运行依赖仍仅 undici/zod。校验命令自身使用包内 `.tmp/npm-cache`，避免 npm 默认全局缓存写权限失败。
+- 版本已同步 package.json / lock 顶层及根包 / User-Agent / THIRD_PARTY_NOTICES / verify-pack；engines.dsh 原值 `>=0.2.1-rc.5 <0.3.0-0` 未变；根 README 行同步。`git diff --check` 通过。
+
+## 真实 UI smoke 与未验证项
+
+已更新 `scripts/ui-smoke.mjs`：系统 TEMP 下独立 DSH_HOME/web profile，使用现有桌面 rc.5 CLI **离线、本地路径、ignore-scripts** 安装，只启动独立无头 Edge；检查侧栏入口、无活动 agent 的中央页面、六 KPI、仓库与结果区、模型指引，再检查会话快捷导航。加入带诊断噪声的版本行提取、失败时自建进程停止诊断与句柄释放；三个离线脚本契约测试通过。
+
+本机实际执行：CLI 为 0.2.1-rc.5，TEMP profile 本地安装与 web 启动完成，日志宣布 loopback `127.0.0.1:52060`。随后 **CDP `Page.enable` 超时**，尚未进入页面 DOM/截图检查，不能声称真实 UI 通过。退出清理初次报 EBUSY；对本次工具会话发出中断后再核对，该监听端口已停止。TEMP 根目录仍存在，进一步单独清理也被自动审批策略以 `blocked by policy` 拒绝，没有继续绕过。
+
+- 诊断：`C:\Users\Mayn\AppData\Local\Temp\dsh-github-triage-ui-artifacts-Rk5NPu`（version/install-local/host 脱敏日志；未生成成功页面截图）。
+- 待沙箱外清理的本次测试目录：`C:\Users\Mayn\AppData\Local\Temp\dsh-github-triage-ui-home-Y0OJwF`。不属于用户 desktop profile 或 D:\AIInfra\DSHarness。
+- 未验证：真实 Electron/浏览器亮暗主题与响应式视觉、宿主 Modal 焦点/滚动行为、rc.1 实际运行、真实 GitHub/模型端到端、长期定时与大数据量内存表现。rc.1 只核验上述源码，自动测试不能替代这些实测。
+- 沙箱外复核：在包目录运行 `npm run ui-smoke`，再用自己的真实仓库/小上限手工检查亮暗主题、窄窗口、编辑/纠正与规则；不要将本轮 413 项自动通过解释为已做这些实测。
+
+## README skill 自检（本轮）
+
+按 `C:\Users\Mayn\.dsh\skills\dsh-plugin-readme\SKILL.md` 权威版本逐项核对：
+
+- [x] 标题后一句话说明用户收益，未先讲实现。
+- [x] 四条各不重复亮点，以管理、业务判断、筛选和规则复用为收益。
+- [x] 与逐条翻 GitHub 的差异有功能依据，无性能或竞品优越性宣传。
+- [x] 亮点后提供明确标注虚构内容的示意输入/输出，无冒充实机截图。
+- [x] 本地链接目标存在；未加入失效图片、锚点或截图占位；官方链接固定版本，来源链接对应已读取项目。
+- [x] 快速上手恰好三步，包含完全退出桌面与托盘、安装、重开配置使用。
+- [x] Git 安装地址严格为带引号的 `github:hzopc1031/dsh-plugins#main&path:/packages/dsh-github-triage`。
+- [x] 首次入口改为侧栏页面，provider/model/modelEnabled、最小分析、预期结果清楚；desktop profile 沿用已核实 CLI。
+- [x] 业务语言解释问题/待合并改动，必要命令与正式键名保持准确。
+- [x] 版本、限制、机制与验证范围放文末；发送代码给模型的必要提醒保留在首次操作处。
+- [x] 开头没有测试数、typecheck、commit 或验收日志。
+- [x] 区分声明兼容、源码核对、自动测试与真实界面验证，不扩大承诺。
+- [x] 名称/入口/描述一致，示例无账号凭据与私人信息。
+- [x] 文档修改均在授权范围；实现与隔离 smoke 另有本次任务书授权，未向用户 DSH 安装、发布或执行 Git 写操作。
+
+## 历史记录 · 0.3.1
 
 日期：2026-11-11。本次基于 origin/main `8df6a00`，在 `feat/github-triage` 更新中文名称与版本。会话入口、弹窗、插件设置、命令描述、报告标题、README 和测试断言同步；包名、命令名和功能逻辑不变。系统提示改用中性的“只读 GitHub 仓库分析员”。
 
@@ -212,3 +308,11 @@ Windows / Node.js 24.20.0 / npm 11.19.0，Git 临时仓库真实运行。最终 
 - [x] 所有能力及兼容性承诺都有依据，安装、运行和界面验证的结论没有混淆。未承诺真实模型、桌面、全历史或标签区间已支持/验证。
 - [x] 名称、描述、入口与插件实际情况一致，示例和素材没有凭据或私人信息。locale 描述同步，版本保持 0.2.0。
 - [x] 只改授权文档，未因写作而执行安装、发布或未授权的 Git 写操作。本任务另有明确实现与临时 Git 测试授权；没有对本 worktree 暂存/提交/推送或对 GitHub 写入。
+
+## 0.4.0 沙箱外 ui-smoke 实测（2026-11-12，审核者复跑）
+
+- 环境：桌面自带 CLI 0.2.1-rc.5，系统 TEMP 下临时 DSH_HOME 的 web profile，本地路径离线安装，独立无头 Edge；不涉及用户 desktop profile。
+- 两次复跑结果一致（退出码 1）：侧边栏「GitHub 哨兵」入口、无活动 agent 的中央整页、6 项 KPI、仓库列表、研判结果列表、模型未配置指引均真实出现，数据经宿主 POST 路由加载成功，无错误条。
+- 失败项：会话顶部快捷按钮未检出。临时 web 左栏显示「暂无会话」并弹出登录引导，种子会话未在列表出现，无法进入会话；判断为 smoke 环境未种出可见会话，而非按钮缺失。代码中按钮仍注册于 `conversation.session.header.actions`，点击调用 `layout.selectPanel('dsh-github-triage')` 打开同一页面，失败时回退共享 Modal 渲染同一 Dashboard；jsdom 测试覆盖。
+- 未验证：真实桌面 DSH（Electron）中的会话顶部按钮、页面视觉与交互；DSH 0.2.2-rc.1 实机；真实 GitHub/模型长跑与定时。
+- 上文列出的 TEMP 遗留目录（dsh-github-triage-ui-home-*、ui-artifacts-*）已由审核者在沙箱外清理。

@@ -1,8 +1,10 @@
 window.__ModuleLoader__.load({id:"dsh-github-triage",factory:(require)=>{var module={exports:{}};var exports=module.exports;
 "use strict";
+var __create = Object.create;
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -16,12 +18,21 @@ var __copyProps = (to, from, except, desc) => {
   }
   return to;
 };
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
 // src/client.tsx
 var client_exports = {};
 __export(client_exports, {
   Dashboard: () => Dashboard,
+  PANEL_ID: () => PANEL_ID,
   RepoForm: () => RepoForm,
   Results: () => Results,
   TriageButton: () => TriageButton,
@@ -29,13 +40,14 @@ __export(client_exports, {
   apply: () => apply,
   commandCall: () => commandCall,
   inject: () => inject,
+  postCall: () => postCall,
   safeLink: () => safeLink
 });
 module.exports = __toCommonJS(client_exports);
 var import_dsh_client_ui_primitives = require("@deepseek-ai/dsh-client-ui-primitives");
-var import_react = require("react");
+var import_react2 = require("react");
 
-// node_modules/zod/v4/classic/external.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/classic/external.js
 var external_exports = {};
 __export(external_exports, {
   $brand: () => $brand,
@@ -278,7 +290,7 @@ __export(external_exports, {
   xor: () => xor
 });
 
-// node_modules/zod/v4/core/index.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/core/index.js
 var core_exports2 = {};
 __export(core_exports2, {
   $ZodAny: () => $ZodAny,
@@ -557,7 +569,7 @@ __export(core_exports2, {
   version: () => version
 });
 
-// node_modules/zod/v4/core/core.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/core/core.js
 var _a;
 var NEVER = /* @__PURE__ */ Object.freeze({
   status: "aborted"
@@ -634,7 +646,7 @@ function config(newConfig) {
   return globalConfig;
 }
 
-// node_modules/zod/v4/core/util.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/core/util.js
 var util_exports = {};
 __export(util_exports, {
   BIGINT_FORMAT_RANGES: () => BIGINT_FORMAT_RANGES,
@@ -1221,14 +1233,14 @@ function prefixIssues(path, issues) {
     return iss;
   });
 }
-function unwrapMessage(message2) {
-  return typeof message2 === "string" ? message2 : message2?.message;
+function unwrapMessage(message3) {
+  return typeof message3 === "string" ? message3 : message3?.message;
 }
 function finalizeIssue(iss, ctx, config2) {
-  const message2 = iss.message ? iss.message : unwrapMessage(iss.inst?._zod.def?.error?.(iss)) ?? unwrapMessage(ctx?.error?.(iss)) ?? unwrapMessage(config2.customError?.(iss)) ?? unwrapMessage(config2.localeError?.(iss)) ?? "Invalid input";
+  const message3 = iss.message ? iss.message : unwrapMessage(iss.inst?._zod.def?.error?.(iss)) ?? unwrapMessage(ctx?.error?.(iss)) ?? unwrapMessage(config2.customError?.(iss)) ?? unwrapMessage(config2.localeError?.(iss)) ?? "Invalid input";
   const { inst: _inst, continue: _continue, input: _input, ...rest } = iss;
   rest.path ?? (rest.path = []);
-  rest.message = message2;
+  rest.message = message3;
   if (ctx?.reportInput) {
     rest.input = _input;
   }
@@ -1330,7 +1342,7 @@ var Class = class {
   }
 };
 
-// node_modules/zod/v4/core/errors.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/core/errors.js
 var initializer = (inst, def) => {
   inst.name = "$ZodError";
   Object.defineProperty(inst, "_zod", {
@@ -1469,7 +1481,7 @@ function prettifyError(error51) {
   return lines.join("\n");
 }
 
-// node_modules/zod/v4/core/parse.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/core/parse.js
 var _parse = (_Err) => (schema, value, _ctx, _params) => {
   const ctx = _ctx ? { ..._ctx, async: false } : { async: false };
   const result = schema._zod.run({ value, issues: [] }, ctx);
@@ -1557,7 +1569,7 @@ var _safeDecodeAsync = (_Err) => async (schema, value, _ctx) => {
 };
 var safeDecodeAsync = /* @__PURE__ */ _safeDecodeAsync($ZodRealError);
 
-// node_modules/zod/v4/core/regexes.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/core/regexes.js
 var regexes_exports = {};
 __export(regexes_exports, {
   base64: () => base64,
@@ -1716,7 +1728,7 @@ var sha512_hex = /^[0-9a-fA-F]{128}$/;
 var sha512_base64 = /* @__PURE__ */ fixedBase64(86, "==");
 var sha512_base64url = /* @__PURE__ */ fixedBase64url(86);
 
-// node_modules/zod/v4/core/checks.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/core/checks.js
 var $ZodCheck = /* @__PURE__ */ $constructor("$ZodCheck", (inst, def) => {
   var _a3;
   inst._zod ?? (inst._zod = {});
@@ -2264,7 +2276,7 @@ var $ZodCheckOverwrite = /* @__PURE__ */ $constructor("$ZodCheckOverwrite", (ins
   };
 });
 
-// node_modules/zod/v4/core/doc.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/core/doc.js
 var Doc = class {
   constructor(args = []) {
     this.content = [];
@@ -2300,14 +2312,14 @@ var Doc = class {
   }
 };
 
-// node_modules/zod/v4/core/versions.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/core/versions.js
 var version = {
   major: 4,
   minor: 4,
   patch: 3
 };
 
-// node_modules/zod/v4/core/schemas.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/core/schemas.js
 var $ZodType = /* @__PURE__ */ $constructor("$ZodType", (inst, def) => {
   var _a3;
   inst ?? (inst = {});
@@ -4400,7 +4412,7 @@ function handleRefineResult(result, payload, input, inst) {
   }
 }
 
-// node_modules/zod/v4/locales/index.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/index.js
 var locales_exports = {};
 __export(locales_exports, {
   ar: () => ar_default,
@@ -4457,7 +4469,7 @@ __export(locales_exports, {
   zhTW: () => zh_TW_default
 });
 
-// node_modules/zod/v4/locales/ar.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/ar.js
 var error = () => {
   const Sizable = {
     string: { unit: "\u062D\u0631\u0641", verb: "\u0623\u0646 \u064A\u062D\u0648\u064A" },
@@ -4564,7 +4576,7 @@ function ar_default() {
   };
 }
 
-// node_modules/zod/v4/locales/az.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/az.js
 var error2 = () => {
   const Sizable = {
     string: { unit: "simvol", verb: "olmal\u0131d\u0131r" },
@@ -4670,7 +4682,7 @@ function az_default() {
   };
 }
 
-// node_modules/zod/v4/locales/be.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/be.js
 function getBelarusianPlural(count, one, few, many) {
   const absCount = Math.abs(count);
   const lastDigit = absCount % 10;
@@ -4827,7 +4839,7 @@ function be_default() {
   };
 }
 
-// node_modules/zod/v4/locales/bg.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/bg.js
 var error4 = () => {
   const Sizable = {
     string: { unit: "\u0441\u0438\u043C\u0432\u043E\u043B\u0430", verb: "\u0434\u0430 \u0441\u044A\u0434\u044A\u0440\u0436\u0430" },
@@ -4948,7 +4960,7 @@ function bg_default() {
   };
 }
 
-// node_modules/zod/v4/locales/ca.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/ca.js
 var error5 = () => {
   const Sizable = {
     string: { unit: "car\xE0cters", verb: "contenir" },
@@ -5057,7 +5069,7 @@ function ca_default() {
   };
 }
 
-// node_modules/zod/v4/locales/cs.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/cs.js
 var error6 = () => {
   const Sizable = {
     string: { unit: "znak\u016F", verb: "m\xEDt" },
@@ -5169,7 +5181,7 @@ function cs_default() {
   };
 }
 
-// node_modules/zod/v4/locales/da.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/da.js
 var error7 = () => {
   const Sizable = {
     string: { unit: "tegn", verb: "havde" },
@@ -5285,7 +5297,7 @@ function da_default() {
   };
 }
 
-// node_modules/zod/v4/locales/de.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/de.js
 var error8 = () => {
   const Sizable = {
     string: { unit: "Zeichen", verb: "zu haben" },
@@ -5394,7 +5406,7 @@ function de_default() {
   };
 }
 
-// node_modules/zod/v4/locales/el.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/el.js
 var error9 = () => {
   const Sizable = {
     string: { unit: "\u03C7\u03B1\u03C1\u03B1\u03BA\u03C4\u03AE\u03C1\u03B5\u03C2", verb: "\u03BD\u03B1 \u03AD\u03C7\u03B5\u03B9" },
@@ -5504,7 +5516,7 @@ function el_default() {
   };
 }
 
-// node_modules/zod/v4/locales/en.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/en.js
 var error10 = () => {
   const Sizable = {
     string: { unit: "characters", verb: "to have" },
@@ -5617,7 +5629,7 @@ function en_default() {
   };
 }
 
-// node_modules/zod/v4/locales/eo.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/eo.js
 var error11 = () => {
   const Sizable = {
     string: { unit: "karaktrojn", verb: "havi" },
@@ -5727,7 +5739,7 @@ function eo_default() {
   };
 }
 
-// node_modules/zod/v4/locales/es.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/es.js
 var error12 = () => {
   const Sizable = {
     string: { unit: "caracteres", verb: "tener" },
@@ -5860,7 +5872,7 @@ function es_default() {
   };
 }
 
-// node_modules/zod/v4/locales/fa.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/fa.js
 var error13 = () => {
   const Sizable = {
     string: { unit: "\u06A9\u0627\u0631\u0627\u06A9\u062A\u0631", verb: "\u062F\u0627\u0634\u062A\u0647 \u0628\u0627\u0634\u062F" },
@@ -5975,7 +5987,7 @@ function fa_default() {
   };
 }
 
-// node_modules/zod/v4/locales/fi.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/fi.js
 var error14 = () => {
   const Sizable = {
     string: { unit: "merkki\xE4", subject: "merkkijonon" },
@@ -6088,7 +6100,7 @@ function fi_default() {
   };
 }
 
-// node_modules/zod/v4/locales/fr.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/fr.js
 var error15 = () => {
   const Sizable = {
     string: { unit: "caract\xE8res", verb: "avoir" },
@@ -6214,7 +6226,7 @@ function fr_default() {
   };
 }
 
-// node_modules/zod/v4/locales/fr-CA.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/fr-CA.js
 var error16 = () => {
   const Sizable = {
     string: { unit: "caract\xE8res", verb: "avoir" },
@@ -6322,7 +6334,7 @@ function fr_CA_default() {
   };
 }
 
-// node_modules/zod/v4/locales/he.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/he.js
 var error17 = () => {
   const TypeNames = {
     string: { label: "\u05DE\u05D7\u05E8\u05D5\u05D6\u05EA", gender: "f" },
@@ -6517,7 +6529,7 @@ function he_default() {
   };
 }
 
-// node_modules/zod/v4/locales/hr.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/hr.js
 var error18 = () => {
   const Sizable = {
     string: { unit: "znakova", verb: "imati" },
@@ -6640,7 +6652,7 @@ function hr_default() {
   };
 }
 
-// node_modules/zod/v4/locales/hu.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/hu.js
 var error19 = () => {
   const Sizable = {
     string: { unit: "karakter", verb: "legyen" },
@@ -6749,7 +6761,7 @@ function hu_default() {
   };
 }
 
-// node_modules/zod/v4/locales/hy.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/hy.js
 function getArmenianPlural(count, one, many) {
   return Math.abs(count) === 1 ? one : many;
 }
@@ -6897,7 +6909,7 @@ function hy_default() {
   };
 }
 
-// node_modules/zod/v4/locales/id.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/id.js
 var error21 = () => {
   const Sizable = {
     string: { unit: "karakter", verb: "memiliki" },
@@ -7004,7 +7016,7 @@ function id_default() {
   };
 }
 
-// node_modules/zod/v4/locales/is.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/is.js
 var error22 = () => {
   const Sizable = {
     string: { unit: "stafi", verb: "a\xF0 hafa" },
@@ -7114,7 +7126,7 @@ function is_default() {
   };
 }
 
-// node_modules/zod/v4/locales/it.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/it.js
 var error23 = () => {
   const Sizable = {
     string: { unit: "caratteri", verb: "avere" },
@@ -7223,7 +7235,7 @@ function it_default() {
   };
 }
 
-// node_modules/zod/v4/locales/ja.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/ja.js
 var error24 = () => {
   const Sizable = {
     string: { unit: "\u6587\u5B57", verb: "\u3067\u3042\u308B" },
@@ -7331,7 +7343,7 @@ function ja_default() {
   };
 }
 
-// node_modules/zod/v4/locales/ka.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/ka.js
 var error25 = () => {
   const Sizable = {
     string: { unit: "\u10E1\u10D8\u10DB\u10D1\u10DD\u10DA\u10DD", verb: "\u10E3\u10DC\u10D3\u10D0 \u10E8\u10D4\u10D8\u10EA\u10D0\u10D5\u10D3\u10D4\u10E1" },
@@ -7444,7 +7456,7 @@ function ka_default() {
   };
 }
 
-// node_modules/zod/v4/locales/km.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/km.js
 var error26 = () => {
   const Sizable = {
     string: { unit: "\u178F\u17BD\u17A2\u1780\u17D2\u179F\u179A", verb: "\u1782\u17BD\u179A\u1798\u17B6\u1793" },
@@ -7555,12 +7567,12 @@ function km_default() {
   };
 }
 
-// node_modules/zod/v4/locales/kh.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/kh.js
 function kh_default() {
   return km_default();
 }
 
-// node_modules/zod/v4/locales/ko.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/ko.js
 var error27 = () => {
   const Sizable = {
     string: { unit: "\uBB38\uC790", verb: "to have" },
@@ -7672,7 +7684,7 @@ function ko_default() {
   };
 }
 
-// node_modules/zod/v4/locales/lt.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/lt.js
 var capitalizeFirstCharacter = (text) => {
   return text.charAt(0).toUpperCase() + text.slice(1);
 };
@@ -7876,7 +7888,7 @@ function lt_default() {
   };
 }
 
-// node_modules/zod/v4/locales/mk.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/mk.js
 var error29 = () => {
   const Sizable = {
     string: { unit: "\u0437\u043D\u0430\u0446\u0438", verb: "\u0434\u0430 \u0438\u043C\u0430\u0430\u0442" },
@@ -7986,7 +7998,7 @@ function mk_default() {
   };
 }
 
-// node_modules/zod/v4/locales/ms.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/ms.js
 var error30 = () => {
   const Sizable = {
     string: { unit: "aksara", verb: "mempunyai" },
@@ -8094,7 +8106,7 @@ function ms_default() {
   };
 }
 
-// node_modules/zod/v4/locales/nl.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/nl.js
 var error31 = () => {
   const Sizable = {
     string: { unit: "tekens", verb: "heeft" },
@@ -8205,7 +8217,7 @@ function nl_default() {
   };
 }
 
-// node_modules/zod/v4/locales/no.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/no.js
 var error32 = () => {
   const Sizable = {
     string: { unit: "tegn", verb: "\xE5 ha" },
@@ -8314,7 +8326,7 @@ function no_default() {
   };
 }
 
-// node_modules/zod/v4/locales/ota.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/ota.js
 var error33 = () => {
   const Sizable = {
     string: { unit: "harf", verb: "olmal\u0131d\u0131r" },
@@ -8424,7 +8436,7 @@ function ota_default() {
   };
 }
 
-// node_modules/zod/v4/locales/ps.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/ps.js
 var error34 = () => {
   const Sizable = {
     string: { unit: "\u062A\u0648\u06A9\u064A", verb: "\u0648\u0644\u0631\u064A" },
@@ -8539,7 +8551,7 @@ function ps_default() {
   };
 }
 
-// node_modules/zod/v4/locales/pl.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/pl.js
 var error35 = () => {
   const Sizable = {
     string: { unit: "znak\xF3w", verb: "mie\u0107" },
@@ -8649,7 +8661,7 @@ function pl_default() {
   };
 }
 
-// node_modules/zod/v4/locales/pt.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/pt.js
 var error36 = () => {
   const Sizable = {
     string: { unit: "caracteres", verb: "ter" },
@@ -8758,7 +8770,7 @@ function pt_default() {
   };
 }
 
-// node_modules/zod/v4/locales/ro.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/ro.js
 var error37 = () => {
   const Sizable = {
     string: { unit: "caractere", verb: "s\u0103 aib\u0103" },
@@ -8878,7 +8890,7 @@ function ro_default() {
   };
 }
 
-// node_modules/zod/v4/locales/ru.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/ru.js
 function getRussianPlural(count, one, few, many) {
   const absCount = Math.abs(count);
   const lastDigit = absCount % 10;
@@ -9035,7 +9047,7 @@ function ru_default() {
   };
 }
 
-// node_modules/zod/v4/locales/sl.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/sl.js
 var error39 = () => {
   const Sizable = {
     string: { unit: "znakov", verb: "imeti" },
@@ -9145,7 +9157,7 @@ function sl_default() {
   };
 }
 
-// node_modules/zod/v4/locales/sv.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/sv.js
 var error40 = () => {
   const Sizable = {
     string: { unit: "tecken", verb: "att ha" },
@@ -9256,7 +9268,7 @@ function sv_default() {
   };
 }
 
-// node_modules/zod/v4/locales/ta.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/ta.js
 var error41 = () => {
   const Sizable = {
     string: { unit: "\u0B8E\u0BB4\u0BC1\u0BA4\u0BCD\u0BA4\u0BC1\u0B95\u0BCD\u0B95\u0BB3\u0BCD", verb: "\u0B95\u0BCA\u0BA3\u0BCD\u0B9F\u0BBF\u0BB0\u0BC1\u0B95\u0BCD\u0B95 \u0BB5\u0BC7\u0BA3\u0BCD\u0B9F\u0BC1\u0BAE\u0BCD" },
@@ -9367,7 +9379,7 @@ function ta_default() {
   };
 }
 
-// node_modules/zod/v4/locales/th.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/th.js
 var error42 = () => {
   const Sizable = {
     string: { unit: "\u0E15\u0E31\u0E27\u0E2D\u0E31\u0E01\u0E29\u0E23", verb: "\u0E04\u0E27\u0E23\u0E21\u0E35" },
@@ -9478,7 +9490,7 @@ function th_default() {
   };
 }
 
-// node_modules/zod/v4/locales/tr.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/tr.js
 var error43 = () => {
   const Sizable = {
     string: { unit: "karakter", verb: "olmal\u0131" },
@@ -9584,7 +9596,7 @@ function tr_default() {
   };
 }
 
-// node_modules/zod/v4/locales/uk.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/uk.js
 var error44 = () => {
   const Sizable = {
     string: { unit: "\u0441\u0438\u043C\u0432\u043E\u043B\u0456\u0432", verb: "\u043C\u0430\u0442\u0438\u043C\u0435" },
@@ -9693,12 +9705,12 @@ function uk_default() {
   };
 }
 
-// node_modules/zod/v4/locales/ua.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/ua.js
 function ua_default() {
   return uk_default();
 }
 
-// node_modules/zod/v4/locales/ur.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/ur.js
 var error45 = () => {
   const Sizable = {
     string: { unit: "\u062D\u0631\u0648\u0641", verb: "\u06C1\u0648\u0646\u0627" },
@@ -9809,7 +9821,7 @@ function ur_default() {
   };
 }
 
-// node_modules/zod/v4/locales/uz.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/uz.js
 var error46 = () => {
   const Sizable = {
     string: { unit: "belgi", verb: "bo\u2018lishi kerak" },
@@ -9920,7 +9932,7 @@ function uz_default() {
   };
 }
 
-// node_modules/zod/v4/locales/vi.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/vi.js
 var error47 = () => {
   const Sizable = {
     string: { unit: "k\xFD t\u1EF1", verb: "c\xF3" },
@@ -10029,7 +10041,7 @@ function vi_default() {
   };
 }
 
-// node_modules/zod/v4/locales/zh-CN.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/zh-CN.js
 var error48 = () => {
   const Sizable = {
     string: { unit: "\u5B57\u7B26", verb: "\u5305\u542B" },
@@ -10139,7 +10151,7 @@ function zh_CN_default() {
   };
 }
 
-// node_modules/zod/v4/locales/zh-TW.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/zh-TW.js
 var error49 = () => {
   const Sizable = {
     string: { unit: "\u5B57\u5143", verb: "\u64C1\u6709" },
@@ -10247,7 +10259,7 @@ function zh_TW_default() {
   };
 }
 
-// node_modules/zod/v4/locales/yo.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/locales/yo.js
 var error50 = () => {
   const Sizable = {
     string: { unit: "\xE0mi", verb: "n\xED" },
@@ -10355,7 +10367,7 @@ function yo_default() {
   };
 }
 
-// node_modules/zod/v4/core/registries.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/core/registries.js
 var _a2;
 var $output = Symbol("ZodOutput");
 var $input = Symbol("ZodInput");
@@ -10405,7 +10417,7 @@ function registry() {
 (_a2 = globalThis).__zod_globalRegistry ?? (_a2.__zod_globalRegistry = registry());
 var globalRegistry = globalThis.__zod_globalRegistry;
 
-// node_modules/zod/v4/core/api.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/core/api.js
 // @__NO_SIDE_EFFECTS__
 function _string(Class2, params) {
   return new Class2({
@@ -11444,7 +11456,7 @@ function _stringFormat(Class2, format, fnOrRegex, _params = {}) {
   return inst;
 }
 
-// node_modules/zod/v4/core/to-json-schema.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/core/to-json-schema.js
 function initializeContext(params) {
   let target = params?.target ?? "draft-2020-12";
   if (target === "draft-4")
@@ -11803,7 +11815,7 @@ var createStandardJSONSchemaMethod = (schema, io, processors = {}) => (params) =
   return finalize(ctx, schema);
 };
 
-// node_modules/zod/v4/core/json-schema-processors.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/core/json-schema-processors.js
 var formatMap = {
   guid: "uuid",
   url: "uri",
@@ -12347,7 +12359,7 @@ function toJSONSchema(input, params) {
   return finalize(ctx, input);
 }
 
-// node_modules/zod/v4/core/json-schema-generator.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/core/json-schema-generator.js
 var JSONSchemaGenerator = class {
   /** @deprecated Access via ctx instead */
   get metadataRegistry() {
@@ -12422,10 +12434,10 @@ var JSONSchemaGenerator = class {
   }
 };
 
-// node_modules/zod/v4/core/json-schema.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/core/json-schema.js
 var json_schema_exports = {};
 
-// node_modules/zod/v4/classic/schemas.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/classic/schemas.js
 var schemas_exports2 = {};
 __export(schemas_exports2, {
   ZodAny: () => ZodAny,
@@ -12596,7 +12608,7 @@ __export(schemas_exports2, {
   xor: () => xor
 });
 
-// node_modules/zod/v4/classic/checks.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/classic/checks.js
 var checks_exports2 = {};
 __export(checks_exports2, {
   endsWith: () => _endsWith,
@@ -12630,7 +12642,7 @@ __export(checks_exports2, {
   uppercase: () => _uppercase
 });
 
-// node_modules/zod/v4/classic/iso.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/classic/iso.js
 var iso_exports = {};
 __export(iso_exports, {
   ZodISODate: () => ZodISODate,
@@ -12671,7 +12683,7 @@ function duration2(params) {
   return _isoDuration(ZodISODuration, params);
 }
 
-// node_modules/zod/v4/classic/errors.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/classic/errors.js
 var initializer2 = (inst, issues) => {
   $ZodError.init(inst, issues);
   inst.name = "ZodError";
@@ -12711,7 +12723,7 @@ var ZodRealError = /* @__PURE__ */ $constructor("ZodError", initializer2, {
   Parent: Error
 });
 
-// node_modules/zod/v4/classic/parse.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/classic/parse.js
 var parse2 = /* @__PURE__ */ _parse(ZodRealError);
 var parseAsync2 = /* @__PURE__ */ _parseAsync(ZodRealError);
 var safeParse2 = /* @__PURE__ */ _safeParse(ZodRealError);
@@ -12725,7 +12737,7 @@ var safeDecode2 = /* @__PURE__ */ _safeDecode(ZodRealError);
 var safeEncodeAsync2 = /* @__PURE__ */ _safeEncodeAsync(ZodRealError);
 var safeDecodeAsync2 = /* @__PURE__ */ _safeDecodeAsync(ZodRealError);
 
-// node_modules/zod/v4/classic/schemas.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/classic/schemas.js
 var _installedGroups = /* @__PURE__ */ new WeakMap();
 function _installLazyMethods(inst, group, methods) {
   const proto = Object.getPrototypeOf(inst);
@@ -14015,7 +14027,7 @@ function preprocess(fn, schema) {
   });
 }
 
-// node_modules/zod/v4/classic/compat.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/classic/compat.js
 var ZodIssueCode = {
   invalid_type: "invalid_type",
   too_big: "too_big",
@@ -14041,7 +14053,7 @@ var ZodFirstPartyTypeKind;
 /* @__PURE__ */ (function(ZodFirstPartyTypeKind2) {
 })(ZodFirstPartyTypeKind || (ZodFirstPartyTypeKind = {}));
 
-// node_modules/zod/v4/classic/from-json-schema.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/classic/from-json-schema.js
 var z = {
   ...schemas_exports2,
   ...checks_exports2,
@@ -14521,7 +14533,7 @@ function fromJSONSchema(schema, params) {
   return convertSchema(normalized, ctx);
 }
 
-// node_modules/zod/v4/classic/coerce.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/classic/coerce.js
 var coerce_exports = {};
 __export(coerce_exports, {
   bigint: () => bigint3,
@@ -14546,7 +14558,7 @@ function date4(params) {
   return _coercedDate(ZodDate, params);
 }
 
-// node_modules/zod/v4/classic/external.js
+// ../../../dsh-plugins-wt-github-triage/packages/dsh-github-triage/node_modules/zod/v4/classic/external.js
 config(en_default());
 
 // src/types.ts
@@ -14725,7 +14737,8 @@ var scanSchema = external_exports.object({ full: external_exports.boolean().opti
   if (s.since && s.until && s.since > s.until) c.addIssue({ code: "custom", path: ["until"], message: "\u7ED3\u675F\u65E5\u671F\u4E0D\u80FD\u65E9\u4E8E\u5F00\u59CB\u65E5\u671F" });
 });
 var requestSchema = external_exports.discriminatedUnion("action", [
-  external_exports.object({ action: external_exports.literal("snapshot") }).strict(),
+  external_exports.object({ action: external_exports.literal("snapshot"), compact: external_exports.boolean().optional() }).strict(),
+  external_exports.object({ action: external_exports.literal("detail"), repo: repoName, number: external_exports.number().int().positive() }).strict(),
   external_exports.object({ action: external_exports.literal("jobs") }).strict(),
   external_exports.object({ action: external_exports.literal("models") }).strict(),
   external_exports.object({ action: external_exports.literal("add"), value: editableRepoSchema }).strict(),
@@ -14734,8 +14747,26 @@ var requestSchema = external_exports.discriminatedUnion("action", [
   external_exports.object({ action: external_exports.literal("start"), repo: repoName, scan: scanSchema }).strict(),
   external_exports.object({ action: external_exports.literal("fix"), repo: repoName, number: external_exports.number().int().positive(), recommendation: external_exports.enum(["adopt", "manual-review", "not-recommended"]), reason: external_exports.string().trim().min(1).max(1200) }).strict(),
   external_exports.object({ action: external_exports.literal("rules"), repo: repoName }).strict(),
-  external_exports.object({ action: external_exports.literal("export"), repo: repoName, path: external_exports.string().min(1).max(4096) }).strict()
+  external_exports.object({ action: external_exports.literal("export"), repo: repoName, path: external_exports.string().min(1).max(4096) }).strict(),
+  external_exports.object({ action: external_exports.literal("import"), repo: repoName, text: external_exports.string().min(1).max(16384) }).strict()
 ]);
+var summaryJudgment = external_exports.object({ kind: external_exports.enum(["issue", "pr"]), recommendation: external_exports.enum(["adopt", "manual-review", "not-recommended"]), priority: external_exports.enum(["\u9AD8", "\u4E2D", "\u4F4E"]), businessReason: external_exports.string() });
+var summaryResult = resultSchema.omit({ evidence: true, judgment: true }).extend({ deferred: external_exports.literal(true), judgment: summaryJudgment.optional() });
+var jobSchema = external_exports.object({ repo: repoName, status: external_exports.enum(["queued", "running", "completed", "failed"]), message: external_exports.string().optional(), at: external_exports.number().optional() });
+var snapshotSchema = external_exports.object({ repositories: external_exports.array(repoSchema), reports: external_exports.array(reportSchema.extend({ results: external_exports.array(external_exports.union([summaryResult, resultSchema])) })), jobs: external_exports.array(jobSchema), model: external_exports.object({ enabled: external_exports.boolean(), provider: external_exports.string(), model: external_exports.string(), available: external_exports.boolean(), warning: external_exports.string().optional() }), defaults: external_exports.object({ limit: limitSchema, fullMax: fullLimitSchema }) });
+function decodeValue(request, value) {
+  if (request.action === "snapshot") return snapshotSchema.parse(value);
+  if (request.action === "jobs") return external_exports.array(jobSchema).parse(value);
+  if (request.action === "start") return jobSchema.parse(value);
+  if (request.action === "detail") return resultSchema.parse(value);
+  if (request.action === "add" || request.action === "patch") return repoSchema.parse(value);
+  return external_exports.string().parse(value);
+}
+var routeActions = { snapshot: ["snapshot"], detail: ["detail"], repos: ["add", "patch", "remove"], run: ["start"], correct: ["fix"], rules: ["rules", "export", "import"], models: ["models"], jobs: ["jobs"] };
+var routePath = (name) => "/api/dsh-github-triage/" + name;
+function routeFor(action) {
+  return Object.keys(routeActions).find((name) => routeActions[name].includes(action));
+}
 function changedFields(before, after) {
   const patch = {};
   for (const key of Object.keys(patchSchema.shape))
@@ -14753,19 +14784,37 @@ function fieldErrors(error51) {
   return out;
 }
 
-// src/client.tsx
-var import_jsx_runtime = require("react/jsx-runtime");
-var inject = ["slots", "remote", "remote.commands"];
-var labels = { adopt: "\u5EFA\u8BAE\u91C7\u7EB3", "manual-review": "\u9700\u4EBA\u5DE5\u770B", "not-recommended": "\u4E0D\u63A8\u8350" };
-var box = { border: "1px solid var(--dsw-alias-border, #8885)", borderRadius: 10, padding: 14, margin: "12px 0" };
-var row = { display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 };
-var control = { display: "block", width: "100%", boxSizing: "border-box", padding: 8, margin: "5px 0", border: "1px solid #8888", borderRadius: 6, background: "transparent", color: "inherit", font: "inherit" };
+// src/client-route.ts
 var UiError = class extends Error {
-  constructor(message2, fields) {
-    super(message2);
+  constructor(message3, fields) {
+    super(message3);
     this.fields = fields;
   }
 };
+function postCall(fetcher = (...args) => globalThis.fetch(...args), fallback) {
+  return async (input) => {
+    const request = requestSchema.parse(input);
+    let response;
+    try {
+      response = await fetcher(routePath(routeFor(request.action)), { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(request), signal: AbortSignal.timeout(6e4) });
+    } catch {
+      throw new UiError("\u8BF7\u6C42\u672A\u5B8C\u6210\uFF1B\u64CD\u4F5C\u53EF\u80FD\u5DF2\u63D0\u4EA4\uFF0C\u8BF7\u5237\u65B0\u786E\u8BA4\u3002");
+    }
+    if ((response.status === 404 || response.status === 405) && fallback) return fallback(request);
+    if (!response.ok) throw new UiError("\u754C\u9762\u8BF7\u6C42\u5931\u8D25\uFF08HTTP " + response.status + "\uFF09\uFF0C\u8BF7\u91CD\u8BD5\u3002");
+    try {
+      const envelope = external_exports.discriminatedUnion("ok", [
+        external_exports.object({ ok: external_exports.literal(true), value: external_exports.unknown() }),
+        external_exports.object({ ok: external_exports.literal(false), error: external_exports.object({ code: external_exports.string(), message: external_exports.string(), fields: external_exports.record(external_exports.string(), external_exports.string()).optional() }) })
+      ]).parse(await response.json());
+      if (!envelope.ok) throw new UiError(envelope.error.message, envelope.error.fields);
+      return decodeValue(request, envelope.value);
+    } catch (e) {
+      if (e instanceof UiError) throw e;
+      throw new UiError("\u754C\u9762\u8FD4\u56DE\u6570\u636E\u683C\u5F0F\u65E0\u6548\uFF0C\u8BF7\u5237\u65B0\u91CD\u8BD5\u3002");
+    }
+  };
+}
 function commandCall(execute, sessionId) {
   return async (request) => {
     requestSchema.parse(request);
@@ -14788,12 +14837,16 @@ function commandCall(execute, sessionId) {
     }
   };
 }
+
+// src/client-forms.tsx
+var import_react = require("react");
+var import_jsx_runtime = require("react/jsx-runtime");
 function message(error51) {
   return error51 instanceof Error ? error51.message : "\u64CD\u4F5C\u5931\u8D25\uFF0C\u8BF7\u5237\u65B0\u91CD\u8BD5\u3002";
 }
 function Errors({ errors, name }) {
   const error51 = Object.entries(errors).filter(([key]) => key === name || key.startsWith(name + ".")).map(([, v]) => v).join("\uFF1B");
-  return error51 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { role: "alert", style: { color: "var(--dsw-alias-error, #c33)", display: "block" }, children: error51 }) : null;
+  return error51 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { role: "alert", className: "gt-field-error", children: error51 }) : null;
 }
 function RepoForm({ initial, call, onSaved, onCancel }) {
   const [form, setForm] = (0, import_react.useState)(() => ({
@@ -14853,56 +14906,60 @@ function RepoForm({ initial, call, onSaved, onCancel }) {
   }
   const text = (key, label) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { children: [
     label,
-    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { style: control, "aria-label": label, value: form[key], disabled: key === "repo" && !!initial, onChange: (e) => field(key, e.target.value) }),
+    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { className: "gt-input", "aria-label": label, value: form[key], disabled: key === "repo" && !!initial, onChange: (e) => field(key, e.target.value) }),
     /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Errors, { errors, name: key })
   ] });
-  return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("form", { onSubmit: (e) => void submit(e), style: box, "aria-label": initial ? "\u7F16\u8F91\u4ED3\u5E93" : "\u6DFB\u52A0\u4ED3\u5E93", noValidate: true, children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("form", { onSubmit: (e) => void submit(e), className: "gt-form", "aria-label": initial ? "\u7F16\u8F91\u4ED3\u5E93" : "\u6DFB\u52A0\u4ED3\u5E93", noValidate: true, children: [
     /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: initial ? "\u7F16\u8F91\u4ED3\u5E93" : "\u6DFB\u52A0\u4ED3\u5E93" }),
-    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(230px,1fr))", gap: 12 }, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "gt-form-grid", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { className: "gt-form-section", children: "\u4ED3\u5E93" }),
       text("repo", "GitHub \u4ED3\u5E93\uFF08owner/repo\uFF09"),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { children: [
         "\u5206\u6790\u7C7B\u578B",
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", { style: control, "aria-label": "\u5206\u6790\u7C7B\u578B", value: form.mode, onChange: (e) => field("mode", e.target.value), children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", { className: "gt-input", "aria-label": "\u5206\u6790\u7C7B\u578B", value: form.mode, onChange: (e) => field("mode", e.target.value), children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: "both", children: "\u95EE\u9898\u4E0E\u4EE3\u7801\u6539\u52A8\uFF08\u4E24\u8005\uFF09" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: "issues", children: "\u4EC5 issues" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: "prs", children: "\u4EC5 PR" })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Errors, { errors, name: "mode" })
       ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { className: "gt-form-section", children: "\u672C\u5730\u4EE3\u7801\u5BF9\u7167" }),
       text("localRepoPath", "\u672C\u5730\u4EE3\u7801\u8DEF\u5F84\uFF08\u53EF\u7A7A\uFF0C\u7EDD\u5BF9\u8DEF\u5F84\uFF09"),
       text("localRef", "\u672C\u5730 ref\uFF08\u53EF\u7A7A\uFF0C\u9ED8\u8BA4 HEAD\uFF09"),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { className: "gt-form-section", children: "\u4E1A\u52A1\u4E0E\u89C4\u5219" }),
       text("businessFile", "\u4E1A\u52A1\u8BF4\u660E\u6587\u4EF6\uFF08\u4ED3\u5E93\u76F8\u5BF9\u8DEF\u5F84\u6216\u672C\u673A\u7EDD\u5BF9\u8DEF\u5F84\uFF09"),
       text("rulesFile", "\u53EA\u8BFB\u89C4\u5219\u6587\u4EF6\uFF08\u53EF\u7A7A\uFF0C\u672C\u673A\u7EDD\u5BF9\u8DEF\u5F84\uFF09"),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { className: "gt-form-section", children: "\u5B9A\u65F6\u4E0E\u4E0A\u9650" }),
       text("limit", "\u666E\u901A\u5206\u6790\u5355\u6B21\u4E0A\u9650\uFF081\u2013100\uFF0C\u7A7A\u4E3A\u7EE7\u627F\uFF09"),
       text("fullMax", "\u5168\u91CF\u5355\u6B21\u4E0A\u9650\uFF081\u2013500\uFF0C\u7A7A\u4E3A\u7EE7\u627F\uFF09"),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { children: [
         "\u5B9A\u65F6",
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", { style: control, "aria-label": "\u5B9A\u65F6", value: form.schedule, onChange: (e) => field("schedule", e.target.value), children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", { className: "gt-input", "aria-label": "\u5B9A\u65F6", value: form.schedule, onChange: (e) => field("schedule", e.target.value), children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: "none", children: "\u4E0D\u5B9A\u65F6" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: "daily", children: "\u6BCF\u5929 HH:MM" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: "every", children: "\u6BCF N \u5C0F\u65F6" })
         ] }),
-        form.schedule === "daily" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { style: control, "aria-label": "\u6BCF\u5929\u65F6\u95F4", value: form.time, onChange: (e) => field("time", e.target.value) }),
-        form.schedule === "every" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { style: control, "aria-label": "\u95F4\u9694\u5C0F\u65F6", value: form.hours, onChange: (e) => field("hours", e.target.value) }),
+        form.schedule === "daily" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { className: "gt-input", "aria-label": "\u6BCF\u5929\u65F6\u95F4", value: form.time, onChange: (e) => field("time", e.target.value) }),
+        form.schedule === "every" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { className: "gt-input", "aria-label": "\u95F4\u9694\u5C0F\u65F6", value: form.hours, onChange: (e) => field("hours", e.target.value) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Errors, { errors, name: "schedule" })
       ] })
     ] }),
     /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { children: [
       "\u4E1A\u52A1\u8BF4\u660E",
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("textarea", { style: { ...control, minHeight: 100 }, "aria-label": "\u4E1A\u52A1\u8BF4\u660E", value: form.business, onChange: (e) => field("business", e.target.value), placeholder: "\u4EA7\u54C1\u505A\u4EC0\u4E48\u3001\u6838\u5FC3\u7528\u6237\u573A\u666F\u3001\u54EA\u4E9B\u95EE\u9898\u91CD\u8981\u3001\u54EA\u4E9B\u65B9\u5411\u6682\u4E0D\u9700\u8981" }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("textarea", { className: "gt-input gt-textarea", "aria-label": "\u4E1A\u52A1\u8BF4\u660E", value: form.business, onChange: (e) => field("business", e.target.value), placeholder: "\u4EA7\u54C1\u505A\u4EC0\u4E48\u3001\u6838\u5FC3\u7528\u6237\u573A\u666F\u3001\u54EA\u4E9B\u95EE\u9898\u91CD\u8981\u3001\u54EA\u4E9B\u65B9\u5411\u6682\u4E0D\u9700\u8981" }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Errors, { errors, name: "business" })
     ] }),
     /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u4E1A\u52A1\u6587\u5B57\u3001\u89C4\u5219\u548C\u9009\u5B9A ref \u7684\u5DF2\u63D0\u4EA4\u4EE3\u7801\u7247\u6BB5\u4F1A\u4EA4\u7ED9\u6240\u9009\u6A21\u578B\u3002\u63D2\u4EF6\u4E0D\u4FEE\u6539 GitHub \u6216\u672C\u5730\u4EE3\u7801\uFF1B\u5B9A\u65F6\u9700\u8981 DSH \u6301\u7EED\u8FD0\u884C\u3002" }),
     /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Errors, { errors, name: "form" }),
     /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { role: "alert", children: notice }),
-    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: row, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "gt-row", children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "submit", disabled: busy, children: busy ? "\u4FDD\u5B58\u4E2D\u2026" : "\u4FDD\u5B58\u4ED3\u5E93" }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", disabled: busy, onClick: onCancel, children: "\u53D6\u6D88\u7F16\u8F91" })
     ] })
   ] });
 }
-function ScanControl({ repo, job, defaults, call, onStarted }) {
-  const [full, setFull] = (0, import_react.useState)(false), [since, setSince] = (0, import_react.useState)(""), [until, setUntil] = (0, import_react.useState)(""), [limit, setLimit] = (0, import_react.useState)("");
+function ScanControl({ repo, job, defaults, call, onStarted, initialFull = false }) {
+  const [full, setFull] = (0, import_react.useState)(initialFull), [since, setSince] = (0, import_react.useState)(""), [until, setUntil] = (0, import_react.useState)(""), [limit, setLimit] = (0, import_react.useState)("");
   const [busy, setBusy] = (0, import_react.useState)(false), [error51, setError] = (0, import_react.useState)("");
   const active = busy || job?.status === "running" || job?.status === "queued";
   async function start() {
@@ -14919,7 +14976,7 @@ function ScanControl({ repo, job, defaults, call, onStarted }) {
     }
   }
   return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: row, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "gt-row", children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: full, onChange: (e) => {
           setFull(e.target.checked);
@@ -14930,16 +14987,16 @@ function ScanControl({ repo, job, defaults, call, onStarted }) {
       full && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { children: [
           "\u5F00\u59CB\u65E5\u671F",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { "aria-label": "\u5F00\u59CB\u65E5\u671F " + repo.repo, type: "date", value: since, onChange: (e) => setSince(e.target.value) })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { className: "gt-input", "aria-label": "\u5F00\u59CB\u65E5\u671F " + repo.repo, type: "date", value: since, onChange: (e) => setSince(e.target.value) })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { children: [
           "\u7ED3\u675F\u65E5\u671F",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { "aria-label": "\u7ED3\u675F\u65E5\u671F " + repo.repo, type: "date", value: until, onChange: (e) => setUntil(e.target.value) })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { className: "gt-input", "aria-label": "\u7ED3\u675F\u65E5\u671F " + repo.repo, type: "date", value: until, onChange: (e) => setUntil(e.target.value) })
         ] })
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { children: [
         "\u672C\u6B21\u4E0A\u9650",
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { style: { width: 65 }, "aria-label": "\u672C\u6B21\u4E0A\u9650 " + repo.repo, value: limit, placeholder: String(full ? repo.fullMax ?? defaults.fullMax : repo.limit ?? defaults.limit), onChange: (e) => setLimit(e.target.value) })
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { className: "gt-input gt-limit", "aria-label": "\u672C\u6B21\u4E0A\u9650 " + repo.repo, value: limit, placeholder: String(full ? repo.fullMax ?? defaults.fullMax : repo.limit ?? defaults.limit), onChange: (e) => setLimit(e.target.value) })
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { disabled: active, onClick: () => void start(), children: active ? "\u5206\u6790\u8FDB\u884C\u4E2D\u2026" : "\u7ACB\u5373\u5206\u6790" }),
       job && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { role: "status", children: [
@@ -14952,6 +15009,40 @@ function ScanControl({ repo, job, defaults, call, onStarted }) {
     /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { role: "alert", children: error51 })
   ] });
 }
+
+// src/client-icons.tsx
+var primitives = __toESM(require("@deepseek-ai/dsh-client-ui-primitives"), 1);
+function resolve(name) {
+  try {
+    const found = primitives[name];
+    if (typeof found === "function") return found;
+  } catch {
+  }
+  return () => null;
+}
+var Branch = resolve("IconBranchOutlineRegular");
+var Plus = resolve("IconPlusOutlineRegular");
+var Settings = resolve("IconSettingsOutlineMedium");
+var Search = resolve("IconSearchOutlineRegular");
+var Clock = resolve("IconClockOutlineRegular");
+var Check = resolve("IconCheckOutlineRegular");
+
+// src/client.css
+var client_default = ".gt-page,.gt-dialog,.gt-entry{font-family:inherit;color:var(--dsw-alias-label-primary);font-size:13px;line-height:1.5}\n.gt-page{display:flex;flex-direction:column;height:100%;width:100%;min-height:0;min-width:0;overflow:hidden;container:gt-page / inline-size;background:var(--dsw-alias-bg-layer-2)}\n.gt-scroll{flex:1;min-height:0;overflow-y:auto;scrollbar-gutter:stable;overscroll-behavior:contain}\n.gt-content{max-width:1600px;margin:0 auto;padding:28px 28px 20px;box-sizing:border-box}\n.gt-page *, .gt-dialog *{box-sizing:border-box}\n.gt-page h1{font-size:20px;line-height:28px;font-weight:600;margin:3px 0 6px;letter-spacing:-.3px}\n.gt-page h2{font-size:14px;font-weight:600;margin:0;display:flex;align-items:center;gap:8px}\n.gt-page h3,.gt-dialog h3{font-size:14px;font-weight:600;margin:0}\n.gt-page h4,.gt-dialog h4{font-size:12px;font-weight:600;margin:12px 0 6px}\n.gt-page p,.gt-dialog p{margin:8px 0}\n.gt-page-head{display:flex;gap:20px;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;padding-left:var(--dsh-frame-leading-clearance,0px)}\n[data-platform='darwin'] .gt-content{padding-top:calc(28px + var(--dsh-frame-top-clearance,0px))}\n.gt-eyebrow{color:var(--dsw-alias-label-dimmed);font-size:10px;letter-spacing:1.6px;font-weight:600}\n.gt-muted,.gt-page small,.gt-dialog small{color:var(--dsw-alias-label-secondary)}\n.gt-row,.gt-head-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}\n.gt-head-actions{margin-left:auto;justify-content:flex-end}\n.gt-page button,.gt-dialog button,.gt-entry{font:inherit;display:inline-flex;align-items:center;justify-content:center;gap:5px;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);border:1px solid var(--dsw-alias-border-l3);border-radius:7px;padding:6px 11px;cursor:pointer;line-height:18px;transition:background .15s,border-color .15s}\n.gt-page button:hover,.gt-dialog button:hover,.gt-entry:hover{background:var(--dsw-alias-interactive-bg-hover);border-color:var(--dsw-alias-border-l4)}\n.gt-page button:disabled,.gt-dialog button:disabled{opacity:.45;cursor:not-allowed}\n.gt-page :is(button,input,select,textarea,a):focus-visible,.gt-dialog :is(button,input,select,textarea):focus-visible{outline:2px solid var(--dsw-alias-state-business-primary);outline-offset:2px}\n.gt-page button.gt-primary,.gt-dialog button.gt-primary{background:var(--dsw-alias-button-primary-fill);border-color:transparent;color:var(--dsw-alias-label-primary-foreground)}\n.gt-page button.gt-primary:hover{filter:brightness(1.06)}\n.gt-page button.gt-pill{border-radius:999px;padding:3px 11px;font-size:12px;color:var(--dsw-alias-label-secondary);max-width:300px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}\n.gt-kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:28px}\n.gt-stat{display:flex;flex-direction:column;gap:8px;background:var(--dsw-alias-bg-layer-1);border:1px solid var(--dsw-alias-border-l2);border-radius:12px;padding:15px 16px;min-width:0;min-height:118px}\n.gt-stat>span{font-size:12px;color:var(--dsw-alias-label-secondary)}\n.gt-stat>b{font-size:28px;line-height:32px;letter-spacing:-.6px;font-weight:600;font-variant-numeric:tabular-nums}\n.gt-stat>small{font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}\n.gt-run-stat>b{font-size:22px}\n.gt-section-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px}\n.gt-repos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:28px}\n.gt-card{background:var(--dsw-alias-bg-layer-1);border:1px solid var(--dsw-alias-border-l2);border-radius:12px;padding:18px;min-width:0;overflow-wrap:anywhere}\nbody:not([data-ds-dark-theme]) .gt-card,body:not([data-ds-dark-theme]) .gt-stat{box-shadow:var(--dsw-shadow-lv1)}\nbody[data-ds-dark-theme] .gt-card{border-color:var(--dsw-alias-border-l3)}\n.gt-repo{display:flex;flex-direction:column;gap:10px;min-height:304px;padding-bottom:0;transition:box-shadow .15s}\n.gt-repo:hover{box-shadow:var(--dsw-shadow-lv2)}\n.gt-repo h3{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;min-width:0}\n.gt-repo .gt-schedule{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--dsw-alias-label-secondary);margin:0}\n.gt-summary{color:var(--dsw-alias-label-secondary);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:21px;min-height:21px}\n.gt-repo .gt-summary{height:42px;margin:0}\n.gt-local{display:flex;flex-direction:column;gap:3px;padding:10px 12px;background:var(--dsw-alias-bg-layer-2);border-radius:8px;font-size:11px}\n.gt-local>span{color:var(--dsw-alias-label-dimmed)}\n.gt-local code{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--ds-font-family-code,monospace)}\n.gt-local small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}\n.gt-run{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:11px;min-height:23px}\n.gt-run>.gt-muted{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:40px}\n.gt-run progress{width:100%;height:4px;accent-color:var(--dsw-alias-state-business-primary)}\n.gt-repo-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto}\n.gt-repo-actions button{font-size:12px;padding:4px 9px}\n.gt-repo-footer{display:flex;align-items:center;gap:4px;border-top:1px solid var(--dsw-alias-border-l2);padding:9px 0;margin-top:2px}\n.gt-page .gt-repo-footer button{border:0;background:transparent;color:var(--dsw-alias-label-secondary);font-size:11px;padding:3px 6px}\n.gt-repo-footer button:last-child{margin-left:auto}\n.gt-page .gt-danger,.gt-dialog .gt-danger,.gt-page .gt-repo-footer .gt-danger{color:var(--dsw-alias-state-error-primary)}\n.gt-badge{display:inline-flex;align-items:center;border-radius:5px;padding:2px 7px;font-size:11px;line-height:17px;white-space:nowrap;background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums}\n.gt-adopt{color:var(--dsw-alias-state-success-primary,var(--dsw-alias-state-business-primary))}\n.gt-manual-review,.gt-page .gt-warn{color:var(--dsw-alias-state-warn-primary)}\n.gt-not-recommended{color:var(--dsw-alias-label-secondary)}\n.gt-badge.gt-adopt{background:color-mix(in srgb,var(--dsw-alias-state-success-primary,var(--dsw-alias-state-business-primary)) 11%,transparent)}\n.gt-badge.gt-manual-review{background:color-mix(in srgb,var(--dsw-alias-state-warn-primary) 12%,transparent)}\n.gt-badge.gt-error{background:color-mix(in srgb,var(--dsw-alias-state-error-primary) 10%,transparent);color:var(--dsw-alias-state-error-primary)}\n.gt-toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}\n.gt-segment{display:flex;flex-wrap:wrap;gap:2px;padding:3px;background:var(--dsw-alias-bg-layer-1);border:1px solid var(--dsw-alias-border-l3);border-radius:8px}\n.gt-page .gt-segment button{font-size:11px;background:transparent;border:0;padding:4px 8px;color:var(--dsw-alias-label-secondary)}\n.gt-page .gt-segment button.gt-on{background:var(--dsw-alias-button-primary-fill);color:var(--dsw-alias-label-primary-foreground)}\n.gt-search{display:flex;align-items:center;gap:6px;padding:0 9px;background:var(--dsw-alias-bg-layer-1);border:1px solid var(--dsw-alias-border-l3);border-radius:7px;flex:1;min-width:170px;color:var(--dsw-alias-label-dimmed);height:32px}\n.gt-search input{font:inherit;background:transparent;border:0;color:var(--dsw-alias-label-primary);outline:0;min-width:0;width:100%;height:100%}\n.gt-search:focus-within{border-color:var(--dsw-alias-state-business-primary)}\n.gt-page .gt-search button{border:0;background:transparent;padding:0 3px}\n.gt-input{display:block;border:1px solid var(--dsw-alias-border-l3);border-radius:7px;padding:7px 9px;width:100%;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);font:inherit;min-width:0;margin-top:5px}\n.gt-toolbar>.gt-input{width:auto;max-width:180px;font-size:12px;margin:0;padding:6px 8px}\n.gt-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}\n.gt-page button.gt-chip{border-radius:999px;font-size:11px;padding:2px 10px;color:var(--dsw-alias-label-secondary);background:transparent}\n.gt-page button.gt-chip-on{color:var(--dsw-alias-state-business-primary);border-color:color-mix(in srgb,var(--dsw-alias-state-business-primary) 35%,transparent);background:color-mix(in srgb,var(--dsw-alias-state-business-primary) 8%,transparent)}\n.gt-result{margin-bottom:10px;padding:15px 18px}\n.gt-result-open{border-color:var(--dsw-alias-border-l4)}\n.gt-priority{margin-left:auto;font-size:11px;color:var(--dsw-alias-label-dimmed)}\n.gt-page button.gt-result-title{display:flex;width:100%;justify-content:space-between;text-align:left;gap:12px;font-size:14px;line-height:22px;font-weight:600;background:transparent;border:0;padding:9px 0 2px}\n.gt-result-title>span{color:var(--dsw-alias-label-dimmed);font-size:18px;flex:none}\n.gt-result .gt-summary{-webkit-line-clamp:1;margin:6px 0 10px}\n.gt-result-foot{font-size:11px}\n.gt-result-foot>span{margin-right:auto}\n.gt-page .gt-link{padding:0;border:0;background:transparent;font-size:11px;color:var(--dsw-alias-label-secondary)}\n.gt-page a{color:var(--dsw-alias-state-business-primary);text-decoration:none}\n.gt-page a:hover{text-decoration:underline}\n.gt-detail{margin-top:14px;padding-top:2px;border-top:1px solid var(--dsw-alias-border-l2)}\n.gt-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}\n.gt-detail p,.gt-detail li{font-size:12px;line-height:1.8}\n.gt-detail ul{margin:6px 0 12px;padding-left:20px}\n.gt-correction{background:var(--dsw-alias-bg-layer-2);padding:1px 14px 8px;border-radius:8px;margin-top:14px}\n.gt-correction h4 .gt-muted{font-weight:400;margin-left:6px;font-size:11px}\n.gt-correction .gt-row{align-items:flex-end}\n.gt-grow{flex:1;min-width:160px}\n.gt-report-note{color:var(--dsw-alias-label-dimmed);font-size:11px;margin:10px 0}\n.gt-page summary{cursor:pointer}\n.gt-empty{text-align:center;border:1px dashed var(--dsw-alias-border-l3);background:var(--dsw-alias-bg-layer-1);border-radius:12px;padding:42px 20px;color:var(--dsw-alias-label-secondary);margin-bottom:28px}\n.gt-empty>svg{display:inline-block;color:var(--dsw-alias-label-dimmed);margin-bottom:12px}\n.gt-empty h3{color:var(--dsw-alias-label-primary)}\n.gt-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;max-width:760px;margin:24px auto 0;text-align:left}\n.gt-steps>div,.gt-page .gt-steps>button{padding:14px 16px;display:flex;align-items:flex-start;flex-direction:column;background:var(--dsw-alias-bg-layer-2);border:0;border-radius:8px;text-align:left}\n.gt-steps b{color:var(--dsw-alias-state-business-primary);font-size:18px;line-height:24px;margin-bottom:8px;font-variant-numeric:tabular-nums}\n.gt-steps span{color:var(--dsw-alias-label-dimmed);font-size:11px;margin-top:3px}\n.gt-model{margin-bottom:16px;border-color:color-mix(in srgb,var(--dsw-alias-state-warn-primary) 30%,transparent)}\n.gt-error{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid color-mix(in srgb,var(--dsw-alias-state-error-primary) 25%,transparent);color:var(--dsw-alias-state-error-primary);background:color-mix(in srgb,var(--dsw-alias-state-error-primary) 6%,var(--dsw-alias-bg-layer-1));border-radius:9px;padding:12px 16px;margin-bottom:16px}\n.gt-rule-text{white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow:auto;user-select:text;background:var(--dsw-alias-bg-layer-2);border:1px solid var(--dsw-alias-border-l2);border-radius:8px;padding:14px;font:12px/1.8 var(--ds-font-family-code,monospace)}\n.gt-rule-import{margin-top:16px;border-top:1px solid var(--dsw-alias-border-l2);padding-top:14px}\n.gt-rule-editor{min-height:200px;margin-bottom:10px;font-family:var(--ds-font-family-code,monospace)}\n.gt-dialog{width:min(720px,82vw);max-height:76vh;overflow-y:auto;padding:4px 8px;overflow-wrap:anywhere}\n.gt-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}\n.gt-form-section{grid-column:1/-1;border-bottom:1px solid var(--dsw-alias-border-l2);padding-bottom:6px;color:var(--dsw-alias-label-secondary)}\n.gt-form>label{display:block;margin-top:18px}\n.gt-form>p{font-size:12px;color:var(--dsw-alias-label-secondary)}\n.gt-textarea{min-height:100px;resize:vertical}\n.gt-field-error{display:block;font-size:12px;color:var(--dsw-alias-state-error-primary);margin-top:5px}\n.gt-input.gt-limit{width:90px}\n.gt-footnote{font-size:11px;color:var(--dsw-alias-label-dimmed);text-align:center;padding-top:14px}\n.gt-more{text-align:center;padding:10px 0 20px}\n.gt-compact{width:min(1100px,86vw);height:78vh}\n.gt-compact .gt-page{border-radius:12px}\n.gt-skeleton{pointer-events:none}\n.gt-skeleton :is(i,b){display:block;border-radius:5px;background:var(--dsw-alias-bg-layer-2);animation:gt-pulse 1.5s ease-in-out infinite;min-height:12px;width:80%}\n.gt-skeleton b{height:30px;width:55%;margin:8px 0}\n.gt-skeleton i:nth-child(3){width:65%}\n.gt-sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}\n@keyframes gt-pulse{50%{opacity:.35}}\n@media(prefers-reduced-motion:reduce){.gt-page *{animation:none;transition:none}}\n@container gt-page (max-width:1200px){.gt-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.gt-repos{grid-template-columns:repeat(2,minmax(0,1fr))}.gt-content{padding:24px 20px}}\n@container gt-page (max-width:700px){.gt-repos{grid-template-columns:minmax(0,1fr)}.gt-content{padding:20px 14px}.gt-page-head{gap:12px}.gt-head-actions{margin-left:0;justify-content:flex-start}.gt-detail-grid{grid-template-columns:1fr;gap:4px}.gt-steps{grid-template-columns:1fr}.gt-kpis{gap:7px}.gt-stat{padding:12px;min-height:104px}.gt-stat>b{font-size:24px}.gt-run-stat>b{font-size:20px}}\n@container gt-page (max-width:440px){.gt-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.gt-toolbar{align-items:stretch}.gt-search{flex-basis:100%}.gt-segment{width:100%}.gt-result{padding:12px}.gt-form-grid{grid-template-columns:1fr}}\n@media(max-width:600px){.gt-form-grid{grid-template-columns:1fr}.gt-dialog{width:86vw}}\n";
+
+// src/client.tsx
+var import_jsx_runtime2 = require("react/jsx-runtime");
+var inject = ["slots"];
+var PANEL_ID = "dsh-github-triage";
+var NS = "github-triage";
+var labels = { adopt: "\u5EFA\u8BAE\u91C7\u7EB3", "manual-review": "\u9700\u4EBA\u5DE5\u770B", "not-recommended": "\u4E0D\u63A8\u8350" };
+var statusLabels = { queued: "\u6392\u961F\u4E2D", running: "\u8FDB\u884C\u4E2D", completed: "\u5B8C\u6210", failed: "\u5931\u8D25" };
+var message2 = (e) => e instanceof Error ? e.message : "\u64CD\u4F5C\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5\u3002";
+var date6 = (at) => at ? new Date(at).toLocaleString("zh-CN", { hour12: false }) : "\u5C1A\u672A\u8FD0\u884C";
+var activeJob = (job) => job?.status === "running" || job?.status === "queued";
+function Badge({ tone = "", children }) {
+  return /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "gt-badge gt-" + tone, children });
+}
 function safeLink(raw) {
   try {
     const u = new URL(raw);
@@ -14960,10 +15051,10 @@ function safeLink(raw) {
   }
 }
 function Details({ result: r, repo, call, onChanged }) {
-  const j = r.judgment, [value, setValue] = (0, import_react.useState)(j?.recommendation ?? "manual-review"), [reason, setReason] = (0, import_react.useState)(""), [busy, setBusy] = (0, import_react.useState)(false), [notice, setNotice] = (0, import_react.useState)("");
-  (0, import_react.useEffect)(() => setValue(j?.recommendation ?? "manual-review"), [j?.recommendation]);
+  const j = r.judgment, [value, setValue] = (0, import_react2.useState)(j?.recommendation ?? "manual-review"), [reason, setReason] = (0, import_react2.useState)(""), [busy, setBusy] = (0, import_react2.useState)(false), [notice, setNotice] = (0, import_react2.useState)("");
   async function fix(e) {
     e.preventDefault();
+    if (busy) return;
     setNotice("");
     if (!reason.trim()) {
       setNotice("\u8BF7\u586B\u5199\u7EA0\u6B63\u7406\u7531");
@@ -14972,150 +15063,315 @@ function Details({ result: r, repo, call, onChanged }) {
     setBusy(true);
     try {
       await call({ action: "fix", repo, number: r.number, recommendation: value, reason });
-      setNotice("\u5DF2\u4FDD\u5B58\u7EA0\u6B63\u5E76\u6C89\u6DC0\u89C4\u5219");
       setReason("");
+      setNotice("\u5DF2\u4FDD\u5B58\u7EA0\u6B63\u5E76\u6C89\u6DC0\u89C4\u5219");
       await onChanged();
     } catch (e2) {
-      setNotice(message(e2));
+      setNotice(message2(e2));
     } finally {
       setBusy(false);
     }
   }
-  const url2 = safeLink(r.url);
-  return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", { style: box, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("strong", { children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "gt-detail", children: [
+    !j ? /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("p", { className: "gt-muted", children: [
+      "\u4EC5\u89C4\u5219\u9884\u7B5B\uFF0C\u672A\u7ECF AI \u7814\u5224\u3002",
+      r.modelNote
+    ] }) : /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_jsx_runtime2.Fragment, { children: /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "gt-detail-grid", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("section", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("h4", { children: "\u4E1A\u52A1\u5224\u65AD" }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { children: j.businessReason }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { children: j.reason }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { children: j.kind === "issue" ? "\u771F\u5B9E\u5B58\u5728\uFF1A" + j.exists + " \xB7 " + j.worthFixing : j.verdict + " \xB7 \u7B26\u5408\u4E1A\u52A1\u65B9\u5411\uFF1A" + j.fitsDirection + " \xB7 \u98CE\u9669\uFF1A" + j.risk }),
+        j.kind === "pr" && /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("p", { children: [
+          "\u6D4B\u8BD5\uFF1A",
+          j.testing
+        ] })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("section", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("h4", { children: "\u672C\u5730\u4EE3\u7801\u5BF9\u7167" }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("p", { children: [
+          j.localApplicability,
+          " \xB7 ",
+          j.localReason
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { children: r.localStatus ?? "\u672A\u914D\u7F6E\u672C\u5730\u4ED3\u5E93\u5BF9\u7167" })
+      ] })
+    ] }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("h4", { children: "\u8BC1\u636E\u4E0E\u89C4\u5219\u547D\u4E2D" }),
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { children: r.observation }),
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("ul", { children: [.../* @__PURE__ */ new Set([...r.evidence, ...j?.evidence ?? []])].map((e, i) => /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("li", { children: e }, i)) }),
+    j && /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("form", { "aria-label": "\u7EA0\u6B63 #" + r.number, onSubmit: (e) => void fix(e), className: "gt-correction", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("h4", { children: [
+        "\u7EA0\u6B63\u7ED3\u8BBA ",
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "gt-muted", children: "\u4FDD\u5B58\u540E\u5F62\u6210\u8BE5\u4ED3\u5E93\u7684\u53C2\u8003\u89C4\u5219" })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "gt-row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("label", { children: [
+          "\u7EA0\u6B63\u7ED3\u8BBA",
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("select", { className: "gt-input", "aria-label": "\u7EA0\u6B63\u7ED3\u8BBA #" + r.number, value, onChange: (e) => setValue(e.target.value), children: Object.entries(labels).map(([key, label]) => /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("option", { value: key, children: label }, key)) })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("label", { className: "gt-grow", children: [
+          "\u7EA0\u6B63\u7406\u7531",
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("textarea", { className: "gt-input", maxLength: 1200, "aria-label": "\u7EA0\u6B63\u7406\u7531 #" + r.number, value: reason, onChange: (e) => setReason(e.target.value), placeholder: "\u8BF4\u660E\u9002\u7528\u4E1A\u52A1\u80CC\u666F\u548C\u5224\u65AD\u4F9D\u636E", required: true })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { type: "submit", disabled: busy, children: busy ? "\u63D0\u4EA4\u4E2D\u2026" : "\u63D0\u4EA4\u7EA0\u6B63" })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { role: "status", children: notice })
+    ] })
+  ] });
+}
+function DeferredDetails({ r, repo, call, onChanged }) {
+  const [detail, setDetail] = (0, import_react2.useState)(), [error51, setError] = (0, import_react2.useState)(""), [retry, setRetry] = (0, import_react2.useState)(0);
+  (0, import_react2.useEffect)(() => {
+    let alive = true;
+    setDetail(void 0);
+    setError("");
+    void call({ action: "detail", repo, number: r.number }).then((value) => {
+      if (alive) setDetail(value);
+    }).catch((e) => {
+      if (alive) setError(message2(e));
+    });
+    return () => {
+      alive = false;
+    };
+  }, [call, repo, r, retry]);
+  if (error51) return /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "gt-error", role: "alert", children: [
+    error51,
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { onClick: () => setRetry((v) => v + 1), children: "\u91CD\u8BD5\u8BE6\u60C5" })
+  ] });
+  return detail ? /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(Details, { result: detail, repo, call, onChanged }) : /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "gt-detail gt-skeleton", role: "status", "aria-label": "\u52A0\u8F7D\u8BE6\u60C5", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("b", {}),
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("i", {}),
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("i", {})
+  ] });
+}
+function ResultCard({ r, repo, call, onChanged }) {
+  const [open, setOpen] = (0, import_react2.useState)(false), url2 = safeLink(r.url);
+  return /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("article", { className: "gt-card gt-result " + (open ? "gt-result-open" : ""), children: [
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "gt-row", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(Badge, { tone: r.judgment?.recommendation ?? "neutral", children: r.judgment ? labels[r.judgment.recommendation] : "\u4EC5\u89C4\u5219\u9884\u7B5B" }),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "gt-muted", children: r.kind === "issue" ? "issue" : "PR" }),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "gt-muted", children: repo }),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("span", { className: "gt-priority", children: [
+        r.judgment?.priority ?? "\u2014",
+        "\u4F18\u5148\u7EA7"
+      ] })
+    ] }),
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("button", { className: "gt-result-title", "aria-expanded": open, onClick: () => setOpen((v) => !v), children: [
       "#",
       r.number,
       " ",
-      r.title
+      r.title,
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { "aria-hidden": "true", children: open ? "\u2212" : "+" })
     ] }),
-    " ",
-    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: [
-      r.kind === "issue" ? "issue" : "PR",
-      " \xB7 ",
-      r.source === "correction" ? "\u7528\u6237\u7EA0\u6B63" : r.source === "model" ? "AI \u7814\u5224" : "\u89C4\u5219\u9884\u7B5B"
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "gt-summary", children: r.judgment?.businessReason ?? r.modelNote ?? "\u4EC5\u89C4\u5219\u9884\u7B5B\uFF0C\u672A\u7ECF AI \u7814\u5224" }),
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "gt-row gt-result-foot", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "gt-muted", children: r.source === "correction" ? "\u7528\u6237\u7EA0\u6B63" : r.source === "model" ? "AI \u7814\u5224" : "\u89C4\u5219\u9884\u7B5B" }),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { className: "gt-link", onClick: () => setOpen((v) => !v), children: open ? "\u6536\u8D77\u8BE6\u60C5" : "\u67E5\u770B\u8BE6\u60C5\u4E0E\u7EA0\u6B63" }),
+      url2 && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("a", { href: url2, target: "_blank", rel: "noopener noreferrer", children: "\u6253\u5F00 GitHub \u539F\u94FE\u63A5 \u2197" })
     ] }),
-    !j ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { role: "note", children: [
-      "\u4EC5\u89C4\u5219\u9884\u7B5B\uFF0C\u672A\u7ECF AI \u7814\u5224\u3002",
-      r.modelNote
-    ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
-        labels[j.recommendation],
-        " \xB7 \u4F18\u5148\u7EA7\uFF1A",
-        j.priority,
-        " \xB7 ",
-        j.kind === "issue" ? "\u771F\u5B9E\u5B58\u5728\uFF1A" + j.exists + " \xB7 " + j.worthFixing : j.verdict + " \xB7 \u7B26\u5408\u4E1A\u52A1\u65B9\u5411\uFF1A" + j.fitsDirection + " \xB7 \u98CE\u9669\uFF1A" + j.risk
-      ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
-        "\u7ED3\u5408\u4E1A\u52A1\uFF1A",
-        j.businessReason
-      ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
-        "\u672C\u5730\u9002\u7528\u6027\uFF1A",
-        j.localApplicability,
-        " \xB7 ",
-        j.localReason
-      ] }),
-      j.kind === "pr" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
-        "\u6D4B\u8BD5\uFF1A",
-        j.testing
-      ] })
-    ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("details", { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("summary", { children: "\u67E5\u770B\u8BE6\u60C5\u4E0E\u7EA0\u6B63" }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: j?.reason }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: r.localStatus ?? "\u672A\u914D\u7F6E\u672C\u5730\u4ED3\u5E93\u5BF9\u7167" }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "\u8BC1\u636E\uFF08\u542B\u672C\u5730\u5BF9\u7167\uFF09" }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ul", { children: [.../* @__PURE__ */ new Set([...r.evidence, ...j?.evidence ?? []])].map((e, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("li", { children: e }, i)) }),
-      url2 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", { href: url2, target: "_blank", rel: "noopener noreferrer", children: "\u6253\u5F00 GitHub \u539F\u94FE\u63A5" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u539F\u94FE\u63A5\u683C\u5F0F\u4E0D\u5B89\u5168\uFF0C\u672A\u63D0\u4F9B\u53EF\u70B9\u51FB\u5165\u53E3" }),
-      j && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("form", { onSubmit: (e) => void fix(e), children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { children: [
-          "\u7EA0\u6B63\u7ED3\u8BBA",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", { "aria-label": "\u7EA0\u6B63\u7ED3\u8BBA #" + r.number, value, onChange: (e) => setValue(e.target.value), children: Object.entries(labels).map(([key, label]) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: key, children: label }, key)) })
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { children: [
-          "\u7EA0\u6B63\u7406\u7531",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("textarea", { style: control, maxLength: 1200, "aria-label": "\u7EA0\u6B63\u7406\u7531 #" + r.number, value: reason, onChange: (e) => setReason(e.target.value) })
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "submit", disabled: busy, children: busy ? "\u63D0\u4EA4\u4E2D\u2026" : "\u63D0\u4EA4\u7EA0\u6B63" }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { role: "status", children: notice })
-      ] })
-    ] })
+    open && ("deferred" in r ? /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(DeferredDetails, { r, repo, call, onChanged }) : /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(Details, { result: r, repo, call, onChanged }))
   ] });
 }
-function Results({ reports, selected, call, onChanged }) {
-  const [kind, setKind] = (0, import_react.useState)("both");
-  const report = reports.find((r) => r.repo === selected);
-  return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { "aria-label": "\u7814\u5224\u7ED3\u679C", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h3", { children: [
-      "\u7814\u5224\u7ED3\u679C \xB7 ",
-      selected || "\u8BF7\u5148\u9009\u62E9\u4ED3\u5E93"
+function Results({ reports, selected, call, onChanged, onSelect }) {
+  const [kind, setKind] = (0, import_react2.useState)("both"), [tier, setTier] = (0, import_react2.useState)("all"), [search, setSearch] = (0, import_react2.useState)(""), [sort, setSort] = (0, import_react2.useState)("priority"), [count, setCount] = (0, import_react2.useState)(30);
+  const sentinel = (0, import_react2.useRef)(null);
+  const rows = (0, import_react2.useMemo)(() => reports.filter((r) => !selected || r.repo === selected).flatMap((report) => report.results.map((r) => ({ r, repo: report.repo, at: report.at }))), [reports, selected]);
+  const filtered = (0, import_react2.useMemo)(() => rows.filter(({ r, repo }) => (kind === "both" || r.kind === kind) && (tier === "all" || (r.judgment?.recommendation ?? "unassessed") === tier) && (!search || [r.title, r.number, repo, r.judgment?.businessReason].join(" ").toLocaleLowerCase().includes(search.toLocaleLowerCase()))).sort((a, b) => sort === "recent" ? b.at - a.at || b.r.number - a.r.number : sort === "number" ? b.r.number - a.r.number : ["\u9AD8", "\u4E2D", "\u4F4E"].indexOf(a.r.judgment?.priority ?? "\u4F4E") - ["\u9AD8", "\u4E2D", "\u4F4E"].indexOf(b.r.judgment?.priority ?? "\u4F4E") || b.at - a.at), [rows, kind, tier, search, sort]);
+  (0, import_react2.useEffect)(() => setCount(30), [kind, tier, search, sort, selected]);
+  (0, import_react2.useEffect)(() => {
+    const node = sentinel.current;
+    if (!node || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) setCount((c) => Math.min(c + 30, filtered.length));
+    }, { rootMargin: "200px" });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [count, filtered.length]);
+  return /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("section", { "aria-label": "\u7814\u5224\u7ED3\u679C", className: "gt-results", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "gt-section-head", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("h2", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(Branch, { size: 18 }),
+        "\u7814\u5224\u7ED3\u679C ",
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(Badge, { children: filtered.length })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "gt-muted", children: "\u56F4\u7ED5\u4E1A\u52A1\u4EF7\u503C\u51B3\u5B9A\u4E0B\u4E00\u6B65" })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { children: [
-      "\u7ED3\u679C\u7C7B\u578B",
-      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", { "aria-label": "\u7ED3\u679C\u7C7B\u578B", value: kind, onChange: (e) => setKind(e.target.value), children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: "both", children: "\u5168\u90E8" }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: "issue", children: "issue" }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: "pr", children: "PR" })
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "gt-toolbar", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "gt-segment", role: "group", "aria-label": "\u7ED3\u8BBA\u7B5B\u9009", children: [["all", "\u5168\u90E8"], ...Object.entries(labels), ["unassessed", "\u4EC5\u89C4\u5219\u9884\u7B5B"]].map(([key, label]) => /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("button", { "aria-pressed": tier === key, className: tier === key ? "gt-on" : "", onClick: () => setTier(key), children: [
+        label,
+        "\uFF08",
+        rows.filter(({ r }) => key === "all" || (r.judgment?.recommendation ?? "unassessed") === key).length,
+        "\uFF09"
+      ] }, key)) }),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("label", { className: "gt-search", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(Search, { size: 16 }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("input", { "aria-label": "\u641C\u7D22\u7ED3\u679C", placeholder: "\u641C\u7D22\u6807\u9898\u3001\u7F16\u53F7\u3001\u4E1A\u52A1\u7406\u7531\u2026", value: search, onChange: (e) => setSearch(e.target.value) }),
+        search && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { "aria-label": "\u6E05\u7A7A\u641C\u7D22", onClick: () => setSearch(""), children: "\xD7" })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("select", { className: "gt-input", "aria-label": "\u7ED3\u679C\u7C7B\u578B", value: kind, onChange: (e) => setKind(e.target.value), children: [
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("option", { value: "both", children: "\u5168\u90E8\u7C7B\u578B" }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("option", { value: "issue", children: "issue" }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("option", { value: "pr", children: "PR" })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("select", { className: "gt-input", "aria-label": "\u7ED3\u679C\u6392\u5E8F", value: sort, onChange: (e) => setSort(e.target.value), children: [
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("option", { value: "priority", children: "\u4F18\u5148\u7EA7\u4F18\u5148" }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("option", { value: "recent", children: "\u6700\u8FD1\u5206\u6790" }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("option", { value: "number", children: "\u7F16\u53F7\u5012\u5E8F" })
       ] })
     ] }),
-    !report ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u6682\u65E0\u62A5\u544A\uFF0C\u70B9\u51FB\u4ED3\u5E93\u7684\u201C\u7ACB\u5373\u5206\u6790\u201D\u3002" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
-        new Date(report.at).toLocaleString(),
+    onSelect && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "gt-chips", role: "group", "aria-label": "\u4ED3\u5E93\u7B5B\u9009", children: ["", ...new Set(reports.map((r) => r.repo))].map((repo) => /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { className: selected === repo ? "gt-chip gt-chip-on" : "gt-chip", "aria-pressed": selected === repo, onClick: () => onSelect(repo), children: repo || "\u5168\u90E8\u4ED3\u5E93" }, repo)) }),
+    reports.filter((r) => !selected || r.repo === selected).map((r) => /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("details", { className: "gt-report-note", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("summary", { children: [
+        r.repo,
+        " \xB7 ",
+        date6(r.at),
         " \xB7 \u672C\u8F6E ",
-        report.analyzed,
+        r.analyzed,
         " / \u590D\u7528 ",
-        report.reused
+        r.reused
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
-        report.businessStatus,
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("p", { children: [
+        r.businessStatus,
         " \xB7 ",
-        report.localStatus
+        r.localStatus,
+        " \xB7 ",
+        r.modelStatus
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { role: "status", children: report.modelStatus }),
-      report.warnings.map((w, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: w }, i)),
-      [...Object.entries(labels), ["unassessed", "\u4EC5\u89C4\u5219\u9884\u7B5B\uFF0C\u672A\u7ECF AI \u7814\u5224"]].map(([key, label]) => {
-        const results = report.results.filter((r) => (r.judgment?.recommendation ?? "unassessed") === key && (kind === "both" || kind === r.kind)).sort((a, b) => ["\u9AD8", "\u4E2D", "\u4F4E"].indexOf(a.judgment?.priority ?? "\u4F4E") - ["\u9AD8", "\u4E2D", "\u4F4E"].indexOf(b.judgment?.priority ?? "\u4F4E") || a.number - b.number);
-        return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { "aria-label": label, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h4", { children: [
-            label,
-            "\uFF08",
-            results.length,
-            "\uFF09"
-          ] }),
-          results.map((r) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Details, { result: r, repo: selected, call, onChanged }, selected + "#" + r.number))
-        ] }, key);
-      })
-    ] })
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { children: r.rulesStatus }),
+      r.warnings.map((w, i) => /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "gt-warn", children: w }, i))
+    ] }, r.repo)),
+    !filtered.length ? /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "gt-empty", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(Search, { size: 28 }),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("h3", { children: rows.length ? "\u6CA1\u6709\u5339\u914D\u7ED3\u679C" : "\u8FD8\u6CA1\u6709\u7814\u5224\u7ED3\u679C" }),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { children: rows.length ? "\u8C03\u6574\u7ED3\u8BBA\u3001\u7C7B\u578B\u6216\u641C\u7D22\u8BCD\u540E\u91CD\u8BD5\u3002" : "\u6DFB\u52A0\u4ED3\u5E93\u5E76\u70B9\u51FB\u201C\u7ACB\u5373\u5206\u6790\u201D\uFF0C\u5224\u65AD\u4F9D\u636E\u4F1A\u663E\u793A\u5728\u8FD9\u91CC\u3002" })
+    ] }) : filtered.slice(0, count).map(({ r, repo }) => /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(ResultCard, { r, repo, call, onChanged }, repo + "#" + r.number)),
+    count < filtered.length && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { ref: sentinel, className: "gt-more", children: /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("button", { onClick: () => setCount((c) => c + 30), children: [
+      "\u52A0\u8F7D\u66F4\u591A\u7ED3\u679C\uFF08",
+      count,
+      " / ",
+      filtered.length,
+      "\uFF09"
+    ] }) })
   ] });
 }
-function Dashboard({ call }) {
-  const [snapshot, setSnapshot] = (0, import_react.useState)(), [error51, setError] = (0, import_react.useState)(""), [edit, setEdit] = (0, import_react.useState)(), [selected, setSelected] = (0, import_react.useState)(""), [models, setModels] = (0, import_react.useState)("");
-  const [ruleRepo, setRuleRepo] = (0, import_react.useState)(""), [rules, setRules] = (0, import_react.useState)(""), [path, setPath] = (0, import_react.useState)(""), [ruleNotice, setRuleNotice] = (0, import_react.useState)(""), [deleting, setDeleting] = (0, import_react.useState)(""), [deleteBusy, setDeleteBusy] = (0, import_react.useState)(false);
-  const alive = (0, import_react.useRef)(true), refreshSeq = (0, import_react.useRef)(0);
-  async function refresh() {
-    const seq = ++refreshSeq.current;
+function Skeleton() {
+  return /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { "aria-label": "\u52A0\u8F7D\u4ED3\u5E93\u548C\u6A21\u578B\u72B6\u6001", role: "status", "aria-busy": "true", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "gt-kpis", children: Array.from({ length: 6 }, (_, i) => /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "gt-stat gt-skeleton", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("i", {}),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("b", {}),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("i", {})
+    ] }, i)) }),
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "gt-repos", children: [0, 1, 2].map((i) => /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "gt-card gt-repo gt-skeleton", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("b", {}),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("i", {}),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("i", {}),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("i", {})
+    ] }, i)) }),
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "gt-card gt-skeleton", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("b", {}),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("i", {}),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("i", {})
+    ] }),
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "gt-sr", children: "\u52A0\u8F7D\u4ED3\u5E93\u548C\u6A21\u578B\u72B6\u6001\u2026" })
+  ] });
+}
+function Rules({ repo, call, onClose }) {
+  const [text, setText] = (0, import_react2.useState)(), [draft, setDraft] = (0, import_react2.useState)(""), [path, setPath] = (0, import_react2.useState)(""), [notice, setNotice] = (0, import_react2.useState)(""), [busy, setBusy] = (0, import_react2.useState)(false), [retry, setRetry] = (0, import_react2.useState)(0);
+  (0, import_react2.useEffect)(() => {
+    let alive = true;
+    setNotice("");
+    void call({ action: "rules", repo }).then((v) => {
+      if (alive) {
+        setText(v);
+        setDraft(v);
+      }
+    }).catch((e) => {
+      if (alive) setNotice(message2(e));
+    });
+    return () => {
+      alive = false;
+    };
+  }, [call, repo, retry]);
+  async function action(kind) {
+    if (busy || text === void 0) return;
+    setBusy(true);
+    setNotice("");
     try {
-      const next = await call({ action: "snapshot" });
-      if (alive.current && seq === refreshSeq.current) {
+      if (kind === "copy") {
+        await navigator.clipboard.writeText(text);
+        setNotice("\u89C4\u5219\u5DF2\u590D\u5236");
+      } else if (kind === "export") setNotice(await call({ action: "export", repo, path }));
+      else {
+        setNotice(await call({ action: "import", repo, text: draft }));
+        setText(await call({ action: "rules", repo }));
+      }
+    } catch (e) {
+      setNotice(message2(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+  return /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("section", { className: "gt-card", "aria-label": "\u4ED3\u5E93\u89C4\u5219", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "gt-section-head", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("h2", { children: [
+        "\u89C4\u5219 \xB7 ",
+        repo
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { onClick: onClose, children: "\u6536\u8D77\u89C4\u5219" })
+    ] }),
+    text === void 0 ? notice ? /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { onClick: () => setRetry((v) => v + 1), children: "\u91CD\u8BD5\u89C4\u5219" }) : /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { role: "status", children: "\u6B63\u5728\u8BFB\u53D6\u89C4\u5219\u2026" }) : /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)(import_jsx_runtime2.Fragment, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("pre", { className: "gt-rule-text", children: text }),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "gt-row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { disabled: busy, onClick: () => void action("copy"), children: "\u590D\u5236\u89C4\u5219" }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("label", { className: "gt-grow", children: [
+          "\u5BFC\u51FA\u4E3A\u65B0\u6587\u4EF6",
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("input", { className: "gt-input", "aria-label": "\u5BFC\u51FA\u8DEF\u5F84", value: path, onChange: (e) => setPath(e.target.value), placeholder: "\u672C\u673A\u7EDD\u5BF9\u8DEF\u5F84\uFF0C\u4E0D\u8986\u76D6\u5DF2\u6709\u6587\u4EF6" })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { disabled: busy || !path.trim(), onClick: () => void action("export"), children: "\u5BFC\u51FA\u89C4\u5219" })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("details", { className: "gt-rule-import", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("summary", { children: "\u5BFC\u5165\u89C4\u5219" }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("p", { className: "gt-muted", children: [
+          "\u7C98\u8D34\u540C\u4E00\u4ED3\u5E93\u7684\u89C4\u5219\u6587\u6863\uFF08\u6700\u591A 16KB\uFF09\uFF0C\u9996\u884C\u5FC5\u987B\u4E3A # GitHub triage rules: ",
+          repo,
+          "\u3002\u5BFC\u5165\u66FF\u6362\u624B\u5DE5\u6587\u6863\uFF0C\u5386\u53F2\u7EA0\u6B63\u4FDD\u7559\u3002"
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("textarea", { className: "gt-input gt-rule-editor", "aria-label": "\u5BFC\u5165\u89C4\u5219\u6587\u6863", value: draft, onChange: (e) => setDraft(e.target.value) }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { disabled: busy || !draft.trim(), onClick: () => void action("import"), children: "\u786E\u8BA4\u5BFC\u5165\u89C4\u5219" })
+      ] })
+    ] }),
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { role: "status", children: notice })
+  ] });
+}
+function Dashboard({ call, openSettings }) {
+  const [snapshot, setSnapshot] = (0, import_react2.useState)(), [error51, setError] = (0, import_react2.useState)(""), [edit, setEdit] = (0, import_react2.useState)(), [selected, setSelected] = (0, import_react2.useState)(""), [models, setModels] = (0, import_react2.useState)(""), [guide, setGuide] = (0, import_react2.useState)(false);
+  const [ruleRepo, setRuleRepo] = (0, import_react2.useState)(""), [deleting, setDeleting] = (0, import_react2.useState)(""), [busy, setBusy] = (0, import_react2.useState)(false), [scan, setScan] = (0, import_react2.useState)();
+  const alive = (0, import_react2.useRef)(true), seq = (0, import_react2.useRef)(0);
+  async function refresh() {
+    const n = ++seq.current;
+    try {
+      const next = await call({ action: "snapshot", compact: true });
+      if (alive.current && seq.current === n) {
         setSnapshot(next);
-        setSelected((s) => s || next.repositories[0]?.repo || "");
         setError("");
       }
     } catch (e) {
-      if (alive.current) setError(message(e));
+      if (alive.current && seq.current === n) setError(message2(e));
     }
   }
-  (0, import_react.useEffect)(() => {
+  (0, import_react2.useEffect)(() => {
     alive.current = true;
+    setSnapshot(void 0);
+    setError("");
     void refresh();
     return () => {
       alive.current = false;
-      refreshSeq.current++;
+      seq.current++;
     };
   }, [call]);
-  const active = snapshot?.jobs.some((j) => j.status === "queued" || j.status === "running");
-  (0, import_react.useEffect)(() => {
+  const active = snapshot?.jobs.some(activeJob);
+  (0, import_react2.useEffect)(() => {
     if (!active) return;
     let disposed = false, timer;
     const poll = async () => {
@@ -15123,11 +15379,11 @@ function Dashboard({ call }) {
         const jobs = await call({ action: "jobs" });
         if (disposed) return;
         setSnapshot((s) => s ? { ...s, jobs } : s);
-        if (jobs.some((j) => j.status === "queued" || j.status === "running")) timer = setTimeout(() => void poll(), 1500);
+        if (jobs.some(activeJob)) timer = setTimeout(() => void poll(), 1500);
         else await refresh();
       } catch (e) {
         if (!disposed) {
-          setError(message(e));
+          setError(message2(e));
           timer = setTimeout(() => void poll(), 5e3);
         }
       }
@@ -15138,28 +15394,54 @@ function Dashboard({ call }) {
       clearTimeout(timer);
     };
   }, [active, call]);
-  async function showRules(repo) {
+  async function all() {
+    if (!snapshot || busy) return;
+    setBusy(true);
     try {
-      setRuleRepo(repo);
-      setRules(await call({ action: "rules", repo }));
-      setRuleNotice("");
+      for (const repo of snapshot.repositories) await call({ action: "start", repo: repo.repo, scan: {} });
+      await refresh();
     } catch (e) {
-      setRuleNotice(message(e));
+      await refresh();
+      setError(message2(e));
+    } finally {
+      setBusy(false);
     }
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { width: "min(980px,82vw)", maxHeight: "75vh", overflowY: "auto", padding: 2, overflowWrap: "anywhere" }, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: row, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { "data-modal-autofocus": true, onClick: () => void refresh(), children: "\u5237\u65B0" }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => setEdit(null), children: "\u6DFB\u52A0\u4ED3\u5E93" })
-    ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { role: "alert", children: error51 }),
-    !snapshot ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { role: "status", children: "\u52A0\u8F7D\u4ED3\u5E93\u548C\u6A21\u578B\u72B6\u6001\u2026" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { style: box, "aria-label": "\u6A21\u578B\u72B6\u6001", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("strong", { children: [
-          "\u6A21\u578B\uFF1A",
-          snapshot.model.available ? "\u5DF2\u914D\u7F6E" : "\u5C1A\u4E0D\u53EF\u7814\u5224"
+  function settings() {
+    if (!openSettings?.()) setGuide(true);
+  }
+  const reports = snapshot?.reports ?? [], results = reports.flatMap((r) => r.results), latest = reports.reduce((n, r) => Math.max(n, r.at), 0), lastJob = snapshot?.jobs.reduce((a, b) => (b.at ?? 0) >= (a?.at ?? 0) ? b : a, void 0);
+  return /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "gt-page", children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "gt-scroll", children: /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "gt-content", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("header", { className: "gt-page-head", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "gt-eyebrow", children: "GITHUB TRIAGE" }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("h1", { children: "GitHub \u54E8\u5175" }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "gt-muted", children: "\u4ECE\u4ED3\u5E93\u5F85\u529E\u5230\u4E0B\u4E00\u6B65\uFF0C\u628A\u5224\u65AD\u4F9D\u636E\u653E\u5728\u4E00\u8D77\u3002" })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "gt-head-actions", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("button", { className: "gt-pill", onClick: settings, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(Settings, { size: 14 }),
+          "\u63D2\u4EF6\u8BBE\u7F6E"
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
+        snapshot && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { className: "gt-pill " + (snapshot.model.available ? "" : "gt-warn"), onClick: () => setGuide((v) => !v), children: snapshot.model.available ? snapshot.model.provider + " / " + snapshot.model.model : "\u6A21\u578B\u672A\u914D\u7F6E \xB7 \u67E5\u770B\u6307\u5F15" }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { className: "gt-primary", disabled: !snapshot?.repositories.length || busy || active, onClick: () => void all(), children: busy ? "\u63D0\u4EA4\u4E2D\u2026" : "\u5168\u90E8\u5206\u6790" })
+      ] })
+    ] }),
+    error51 && /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "gt-error", role: "alert", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { children: error51 }),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { onClick: () => void refresh(), children: "\u91CD\u8BD5" })
+    ] }),
+    !snapshot ? !error51 && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(Skeleton, {}) : /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)(import_jsx_runtime2.Fragment, { children: [
+      (guide || !snapshot.model.available) && /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("section", { className: "gt-card gt-model", "aria-label": "\u6A21\u578B\u72B6\u6001", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "gt-section-head", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("h2", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(Settings, { size: 18 }),
+            "\u6A21\u578B\uFF1A",
+            snapshot.model.available ? "\u5DF2\u914D\u7F6E" : "\u5C1A\u4E0D\u53EF\u7814\u5224"
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { onClick: () => void call({ action: "models" }).then(setModels).catch((e) => setError(message2(e))), children: "\u67E5\u770B\u53EF\u590D\u5236\u7684\u6A21\u578B ID" })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("p", { children: [
           "\u542F\u7528\uFF1A",
           snapshot.model.enabled ? "\u662F" : "\u5426",
           " \xB7 provider\uFF1A",
@@ -15167,115 +15449,200 @@ function Dashboard({ call }) {
           " \xB7 model\uFF1A",
           snapshot.model.model || "\u672A\u586B\u5199"
         ] }),
-        !snapshot.model.available && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { role: "alert", style: { color: "var(--dsw-alias-error, #c33)" }, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("p", { className: "gt-muted", children: [
           snapshot.model.warning,
-          " \u8BF7\u5230 DSH \u63D2\u4EF6\u8BBE\u7F6E \u2192 GitHub \u54E8\u5175\uFF0C\u5206\u522B\u586B\u5199 provider / model\uFF0C\u5E76\u542F\u7528 modelEnabled\u3002"
+          " \u5728 DSH \u63D2\u4EF6\u8BBE\u7F6E \u2192 GitHub \u54E8\u5175\uFF0C\u5206\u522B\u586B\u5199 provider / model\uFF0C\u5E76\u542F\u7528 modelEnabled\u3002\u4F7F\u7528 DSH \u5DF2\u6CE8\u518C\u7684\u6A21\u578B\u8DEF\u7531 ID\u3002"
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => void call({ action: "models" }).then(setModels).catch((e) => setError(message(e))), children: "\u67E5\u770B\u53EF\u590D\u5236\u7684\u6A21\u578B ID" }),
-        models && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("pre", { style: { whiteSpace: "pre-wrap", userSelect: "text" }, children: models })
+        models && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("pre", { className: "gt-rule-text", children: models })
       ] }),
-      edit !== void 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(RepoForm, { initial: edit ?? void 0, call, onCancel: () => setEdit(void 0), onSaved: async () => {
-        setEdit(void 0);
-        await refresh();
-      } }, edit?.repo ?? "new"),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { "aria-label": "\u4ED3\u5E93\u5217\u8868", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h3", { children: [
-          "\u4ED3\u5E93\u5217\u8868\uFF08",
-          snapshot.repositories.length,
-          "\uFF09"
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("section", { className: "gt-kpis", "aria-label": "\u5206\u6790\u6982\u89C8", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "gt-stat", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { children: "\u8DDF\u8E2A\u4ED3\u5E93" }),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("b", { children: snapshot.repositories.length }),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("small", { children: "issues / PR" })
         ] }),
-        !snapshot.repositories.length && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u5C1A\u672A\u914D\u7F6E\u4ED3\u5E93\u3002\u70B9\u51FB\u201C\u6DFB\u52A0\u4ED3\u5E93\u201D\uFF0C\u586B\u5199 owner/repo \u548C\u4E1A\u52A1\u8BF4\u660E\u3002" }),
-        snapshot.repositories.map((r) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { style: box, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: { ...row, justifyContent: "space-between" }, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: r.repo }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
-              r.mode,
-              " \xB7 ",
-              r.schedule?.kind === "daily" ? "\u6BCF\u5929 " + r.schedule.time : r.schedule?.kind === "every" ? "\u6BCF " + r.schedule.hours + " \u5C0F\u65F6" : "\u4E0D\u5B9A\u65F6"
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "gt-stat", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { children: "\u5F85\u5904\u7406\u6761\u76EE" }),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("b", { children: results.length }),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("small", { children: "\u6700\u65B0\u62A5\u544A\u4E2D\u7684\u6761\u76EE" })
+        ] }),
+        Object.entries(labels).map(([key, label]) => /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "gt-stat gt-" + key, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { children: label }),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("b", { children: results.filter((r) => r.judgment?.recommendation === key).length }),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("small", { children: key === "adopt" ? "\u4F18\u5148\u5B89\u6392\u590D\u73B0\u6216\u5BA1\u67E5" : key === "manual-review" ? "\u9700\u8981\u8865\u5145\u5224\u65AD" : "\u6682\u4E0D\u5EFA\u8BAE\u6295\u5165" })
+        ] }, key)),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "gt-stat gt-run-stat", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("span", { children: [
+            "\u6700\u8FD1\u8FD0\u884C \xB7 ",
+            lastJob ? statusLabels[lastJob.status] : latest ? "\u5B8C\u6210" : "\u672A\u5F00\u59CB"
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("b", { children: active ? "\u5206\u6790\u4E2D" : latest ? "\u5DF2\u66F4\u65B0" : "\u2014" }),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("small", { title: date6(lastJob?.at ?? latest), children: date6(lastJob?.at ?? latest) })
+        ] })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("section", { "aria-label": "\u4ED3\u5E93\u5217\u8868", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "gt-section-head", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("h2", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(Branch, { size: 18 }),
+            "\u4ED3\u5E93\u5217\u8868\uFF08",
+            snapshot.repositories.length,
+            "\uFF09"
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "gt-row", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { onClick: () => void refresh(), children: "\u5237\u65B0" }),
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("button", { className: "gt-primary", onClick: () => setEdit(null), children: [
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(Plus, { size: 14 }),
+              "\u6DFB\u52A0\u4ED3\u5E93"
             ] })
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
-            "\u672C\u5730\uFF1A",
-            r.localRepoPath || "\u672A\u914D\u7F6E",
-            " ",
-            r.localRef || "",
-            " \xB7 \u4E1A\u52A1\uFF1A",
-            r.business || r.businessFile || "\u672A\u914D\u7F6E"
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { style: row, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => setEdit(r), children: "\u7F16\u8F91" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => setDeleting(r.repo), children: "\u5220\u9664" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => setSelected(r.repo), children: "\u67E5\u770B\u7ED3\u679C" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => void showRules(r.repo), children: "\u67E5\u770B/\u5BFC\u51FA\u89C4\u5219" })
-          ] }),
-          deleting === r.repo && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { role: "alert", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
-              "\u505C\u6B62\u8DDF\u8E2A ",
-              r.repo,
-              "\uFF1F\u4FDD\u7559\u5386\u53F2\u62A5\u544A\u4E0E\u7EA0\u6B63\u3002"
+          ] })
+        ] }),
+        !snapshot.repositories.length ? /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "gt-empty gt-onboarding", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(Branch, { size: 32 }),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("h3", { children: "\u8BA9\u4ED3\u5E93\u5F85\u529E\u6709\u4E2A\u5148\u540E" }),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { children: "\u4E09\u6B65\u5F97\u5230\u7B2C\u4E00\u4EFD\u5224\u65AD\u62A5\u544A" }),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "gt-steps", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("button", { onClick: settings, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("b", { children: "01" }),
+              "\u914D\u7F6E\u6A21\u578B",
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { children: "\u9009\u62E9 provider \u4E0E model" })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { disabled: deleteBusy, onClick: () => void (async () => {
-              setDeleteBusy(true);
-              try {
-                await call({ action: "remove", repo: r.repo });
-                setDeleting("");
-                await refresh();
-              } catch (e) {
-                setError(message(e));
-              } finally {
-                setDeleteBusy(false);
-              }
-            })(), children: "\u786E\u8BA4\u5220\u9664" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => setDeleting(""), children: "\u53D6\u6D88\u5220\u9664" })
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("hr", {}),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ScanControl, { repo: r, job: snapshot.jobs.find((j) => j.repo === r.repo), defaults: snapshot.defaults, call, onStarted: async () => {
-            setSelected(r.repo);
-            await refresh();
-          } })
-        ] }, r.repo))
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("button", { onClick: () => setEdit(null), children: [
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("b", { children: "02" }),
+              "\u6DFB\u52A0\u4ED3\u5E93",
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { children: "\u586B\u5199 owner/repo \u4E0E\u4E1A\u52A1" })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("b", { children: "03" }),
+              "\u7ACB\u5373\u5206\u6790",
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { children: "\u67E5\u770B\u7ED3\u8BBA\u3001\u8BC1\u636E\u4E0E\u672C\u5730\u5BF9\u7167" })
+            ] })
+          ] })
+        ] }) : /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "gt-repos", children: snapshot.repositories.map((r) => {
+          const job = snapshot.jobs.find((j) => j.repo === r.repo), report = reports.find((v) => v.repo === r.repo), running = activeJob(job);
+          return /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("section", { className: "gt-card gt-repo", "aria-label": "\u4ED3\u5E93 " + r.repo, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "gt-row", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(Branch, { size: 18 }),
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("h3", { children: r.repo }),
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(Badge, { children: r.mode })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("p", { className: "gt-schedule", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(Clock, { size: 13 }),
+              r.schedule?.kind === "daily" ? "\u6BCF\u5929 " + r.schedule.time : r.schedule?.kind === "every" ? "\u6BCF " + r.schedule.hours + " \u5C0F\u65F6" : "\u4E0D\u5B9A\u65F6"
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "gt-summary", title: r.business || r.businessFile, children: r.business || r.businessFile || "\u5C1A\u672A\u586B\u5199\u4E1A\u52A1\u8BF4\u660E\uFF0C\u6309\u901A\u7528\u6807\u51C6\u7814\u5224" }),
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "gt-local", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { children: "\u672C\u5730\u4EE3\u7801" }),
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("code", { title: r.localRepoPath, children: r.localRepoPath || "\u672A\u914D\u7F6E\u672C\u5730\u5BF9\u7167" }),
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("small", { children: r.localRepoPath ? "ref: " + (r.localRef || "HEAD") : "\u6DFB\u52A0\u8DEF\u5F84\u540E\u53EF\u5BF9\u7167\u5DF2\u63D0\u4EA4\u4EE3\u7801" }),
+              report?.localStatus && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("small", { children: report.localStatus })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "gt-run", role: "status", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(Badge, { tone: running ? "manual-review" : job?.status === "failed" ? "error" : "neutral", children: job ? statusLabels[job.status] : report ? "\u5B8C\u6210" : "\u5C1A\u672A\u8FD0\u884C" }),
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: "gt-muted", children: job?.message || date6(report?.at) }),
+              running && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("progress", { "aria-label": "\u5206\u6790\u8FDB\u5EA6 " + r.repo })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "gt-repo-actions", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { className: "gt-primary", disabled: running || busy, onClick: () => void (async () => {
+                try {
+                  await call({ action: "start", repo: r.repo, scan: {} });
+                  await refresh();
+                } catch (e) {
+                  setError(message2(e));
+                }
+              })(), children: running ? "\u5206\u6790\u8FDB\u884C\u4E2D\u2026" : "\u7ACB\u5373\u5206\u6790" }),
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { disabled: running, onClick: () => setScan({ repo: r, full: true }), children: "\u5168\u91CF\u626B\u63CF" }),
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { onClick: () => setScan({ repo: r, full: false }), children: "\u5206\u6790\u9009\u9879" })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("footer", { className: "gt-repo-footer", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { onClick: () => setEdit(r), children: "\u7F16\u8F91" }),
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { onClick: () => setRuleRepo(r.repo), children: "\u67E5\u770B/\u5BFC\u51FA\u89C4\u5219" }),
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { onClick: () => setSelected(r.repo), children: "\u67E5\u770B\u7ED3\u679C" }),
+              /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { className: "gt-danger", onClick: () => setDeleting(r.repo), children: "\u5220\u9664" })
+            ] })
+          ] }, r.repo);
+        }) })
       ] }),
-      !!snapshot.reports.length && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { children: [
-        "\u67E5\u770B\u62A5\u544A",
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", { "aria-label": "\u67E5\u770B\u62A5\u544A", value: selected, onChange: (e) => setSelected(e.target.value), children: [.../* @__PURE__ */ new Set([...snapshot.repositories.map((r) => r.repo), ...snapshot.reports.map((r) => r.repo)])].map((r) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { children: r }, r)) })
-      ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Results, { reports: snapshot.reports, selected, call, onChanged: refresh }),
-      ruleRepo && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { style: box, "aria-label": "\u4ED3\u5E93\u89C4\u5219", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h3", { children: [
-          "\u89C4\u5219 \xB7 ",
-          ruleRepo
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("pre", { style: { whiteSpace: "pre-wrap", maxHeight: 240, overflowY: "auto", userSelect: "text" }, children: rules }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { children: [
-          "\u5BFC\u51FA\u8DEF\u5F84\uFF08\u7EDD\u5BF9\u8DEF\u5F84\uFF0C\u4E0D\u8986\u76D6\u5DF2\u6709\u6587\u4EF6\uFF09",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { style: control, "aria-label": "\u5BFC\u51FA\u8DEF\u5F84", value: path, onChange: (e) => setPath(e.target.value) })
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => void call({ action: "export", repo: ruleRepo, path }).then(setRuleNotice).catch((e) => setRuleNotice(message(e))), children: "\u5BFC\u51FA\u89C4\u5219" }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => setRuleRepo(""), children: "\u6536\u8D77\u89C4\u5219" }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { role: "status", children: ruleNotice })
-      ] })
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(Results, { reports, selected, onSelect: setSelected, call, onChanged: refresh }),
+      ruleRepo && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(Rules, { repo: ruleRepo, call, onClose: () => setRuleRepo("") }, ruleRepo),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: "gt-footnote", children: "\u53EA\u8BFB\u53D6 GitHub \u548C\u672C\u5730\u5DF2\u63D0\u4EA4\u4EE3\u7801 \xB7 AI \u5224\u65AD\u4ECD\u9700\u590D\u73B0\u4E0E\u5BA1\u67E5 \xB7 \u5B9A\u65F6\u5206\u6790\u9700\u8981 DSH \u6301\u7EED\u8FD0\u884C" })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u53EA\u8BFB\u53D6 GitHub \u548C\u672C\u5730\u4EE3\u7801\u3002\u89C4\u5219\u4EC5\u5BFC\u51FA\u5230\u4F60\u6307\u5B9A\u7684\u65B0\u6587\u4EF6\u3002AI \u5224\u65AD\u4ECD\u9700\u590D\u73B0\u4E0E\u5BA1\u67E5\u3002" })
-  ] });
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives.Modal, { open: edit !== void 0, onClose: () => setEdit(void 0), title: edit ? "\u7F16\u8F91\u4ED3\u5E93" : "\u6DFB\u52A0\u4ED3\u5E93", closeLabel: "\u5173\u95ED\u4ED3\u5E93\u8868\u5355", children: edit !== void 0 && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "gt-dialog", children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(RepoForm, { initial: edit ?? void 0, call, onCancel: () => setEdit(void 0), onSaved: async () => {
+      setEdit(void 0);
+      await refresh();
+    } }, edit?.repo ?? "new") }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives.Modal, { open: !!scan, onClose: () => setScan(void 0), title: "\u5206\u6790\u9009\u9879", closeLabel: "\u5173\u95ED\u5206\u6790\u9009\u9879", children: scan && snapshot && /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "gt-dialog", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("h3", { children: scan.repo.repo }),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(ScanControl, { repo: scan.repo, initialFull: scan.full, job: snapshot.jobs.find((j) => j.repo === scan.repo.repo), defaults: snapshot.defaults, call, onStarted: async () => {
+        setScan(void 0);
+        await refresh();
+      } })
+    ] }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives.Modal, { open: !!deleting, onClose: () => !busy && setDeleting(""), title: "\u505C\u6B62\u8DDF\u8E2A\u4ED3\u5E93", closeLabel: "\u53D6\u6D88\u5220\u9664", children: !!deleting && /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "gt-dialog", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("p", { children: [
+        "\u505C\u6B62\u8DDF\u8E2A ",
+        deleting,
+        "\uFF1F\u4FDD\u7559\u5386\u53F2\u62A5\u544A\u4E0E\u7EA0\u6B63\u3002"
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "gt-row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { className: "gt-danger", disabled: busy, onClick: () => void (async () => {
+          setBusy(true);
+          try {
+            await call({ action: "remove", repo: deleting });
+            setDeleting("");
+            await refresh();
+          } catch (e) {
+            setError(message2(e));
+          } finally {
+            setBusy(false);
+          }
+        })(), children: "\u786E\u8BA4\u5220\u9664" }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { disabled: busy, onClick: () => setDeleting(""), children: "\u53D6\u6D88\u5220\u9664" })
+      ] })
+    ] }) })
+  ] }) }) });
 }
-function TriageButton({ call, sessionId }) {
-  const [open, setOpen] = (0, import_react.useState)(false);
-  (0, import_react.useEffect)(() => setOpen(false), [sessionId]);
-  return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { title: "\u6253\u5F00 GitHub \u54E8\u5175\uFF0C\u914D\u7F6E\u4ED3\u5E93\u3001\u4E1A\u52A1\u4E0E\u672C\u5730\u4EE3\u7801", onClick: () => setOpen(true), children: "GitHub \u54E8\u5175" }),
-    /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_dsh_client_ui_primitives.Modal, { open, onClose: () => setOpen(false), title: "GitHub \u54E8\u5175", closeLabel: "\u5173\u95ED GitHub \u54E8\u5175\u9762\u677F", children: open && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Dashboard, { call }) })
+function TriageButton({ call, sessionId, openPage }) {
+  const [open, setOpen] = (0, import_react2.useState)(false);
+  (0, import_react2.useEffect)(() => setOpen(false), [sessionId]);
+  return /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)(import_jsx_runtime2.Fragment, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("button", { className: "gt-entry", title: "\u6253\u5F00 GitHub \u54E8\u5175\uFF0C\u914D\u7F6E\u4ED3\u5E93\u3001\u4E1A\u52A1\u4E0E\u672C\u5730\u4EE3\u7801", onClick: () => {
+      if (!openPage?.()) setOpen(true);
+    }, children: "GitHub \u54E8\u5175" }),
+    /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives.Modal, { open, onClose: () => setOpen(false), title: "GitHub \u54E8\u5175", closeLabel: "\u5173\u95ED GitHub \u54E8\u5175\u9762\u677F", children: open && /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "gt-compact", children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(Dashboard, { call }) }) })
   ] });
 }
 function apply(ctx) {
-  const Button = (props) => {
-    const call = (0, import_react.useRef)();
-    const session = (0, import_react.useRef)(props.sessionId);
-    if (!call.current || session.current !== props.sessionId) {
-      session.current = props.sessionId;
-      call.current = commandCall((...args) => ctx.remote.commands.execute(...args), props.sessionId);
-    }
-    return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TriageButton, { sessionId: props.sessionId, call: call.current }, props.sessionId);
+  ctx.effect(() => {
+    const style = document.createElement("style");
+    style.dataset.githubTriage = "";
+    style.textContent = client_default;
+    document.head.append(style);
+    return () => style.remove();
+  }, "github-triage: styles");
+  const locale = ctx.get("locale");
+  if (locale) ctx.effect(() => locale.register(NS, { zh: { title: "GitHub \u54E8\u5175" }, en: { title: "GitHub \u54E8\u5175" } }), "github-triage: locale");
+  const t = locale?.bind(NS) ?? (() => "GitHub \u54E8\u5175");
+  const call = postCall();
+  const openSettings = () => {
+    const navigation = ctx.get("pluginNavigation");
+    if (!navigation?.openBundle) return false;
+    navigation.openBundle(PANEL_ID);
+    return true;
   };
-  ctx.slots.inject("conversation.session.header.actions", () => ctx.slots.register({ name: "conversation.session.header.actions", id: "dsh-github-triage", order: 160 }, Button));
+  const openPage = () => {
+    const layout = ctx.get("layout");
+    if (!layout?.selectPanel) return false;
+    layout.selectPanel(PANEL_ID);
+    return true;
+  };
+  const Page = () => /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(Dashboard, { call, openSettings });
+  ctx.slots.inject("main", () => ctx.slots.register({ name: "main", key: PANEL_ID, locale: NS }, Page));
+  ctx.slots.inject("sidebar.panellist", () => ctx.slots.register({ name: "sidebar.panellist", id: PANEL_ID, order: 25, label: () => t("title"), locale: NS }, (props) => /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(Branch, { size: props.size })));
+  const Button = (props) => {
+    const ref = (0, import_react2.useRef)();
+    if (!ref.current || ref.current.session !== props.sessionId) ref.current = { session: props.sessionId, call: postCall(void 0, commandCall((...args) => ctx.remote.commands.execute(...args), props.sessionId)) };
+    return /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(TriageButton, { sessionId: props.sessionId, call: ref.current.call, openPage });
+  };
+  ctx.slots.inject("conversation.session.header.actions", () => ctx.slots.register({ name: "conversation.session.header.actions", id: PANEL_ID, order: 160 }, Button));
 }
 return module.exports;}});

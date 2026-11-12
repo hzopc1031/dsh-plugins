@@ -38,6 +38,24 @@ test('UI unconfigured and disabled model states remain explicit',async()=>{
     const s=await harness(cfg).call({action:'snapshot'});assert.equal(s.model.available,false);assert.equal(s.model.enabled,cfg.modelEnabled??true)
   }
 })
+test('compact snapshot omits evidence; per-item detail reads current authoritative result',async()=>{
+  const h=harness({repositories:[{repo:'o/r'}]})
+  await h.call({action:'start',repo:'o/r',scan:{}});await h.drain()
+  const full=await h.call({action:'snapshot'}),compact=await h.call({action:'snapshot',compact:true})
+  assert.equal(compact.reports[0].results.length,full.reports[0].results.length)
+  for(const item of compact.reports[0].results){assert.equal(item.deferred,true);assert.equal(item.evidence,undefined);assert.equal(item.judgment?.reason,undefined)}
+  const item=full.reports[0].results[0]
+  assert.deepEqual(await h.call({action:'detail',repo:'o/r',number:item.number}),item)
+  assert.equal((await h.service({action:'detail',repo:'o/r',number:9999})).ok,false)
+})
+test('UI import validates repository header and byte size; exportable document retains edits',async()=>{
+  const h=harness({repositories:[{repo:'o/r'}]}),text='# GitHub triage rules: o/r\n\n## 手工规则\n认证优先'
+  assert.match(await h.call({action:'import',repo:'o/r',text}),/已导入/)
+  assert.match(await h.call({action:'rules',repo:'o/r'}),/认证优先/)
+  const before=h.saves()
+  for(const value of ['# GitHub triage rules: wrong/repo\n拒绝','# GitHub triage rules: o/r\n'+'中'.repeat(6000)])assert.equal((await h.service({action:'import',repo:'o/r',text:value})).ok,false)
+  assert.equal(h.saves(),before)
+})
 test('UI add and strict field patch retain latest business, local, rules and schedule',async()=>{
   const h=harness()
   await h.call({action:'add',value:{repo:'O/R',mode:'prs',business:'核心业务',localRepoPath:'C:\\repo',localRef:'main',rulesFile:'C:\\rules.md',schedule:{kind:'daily',time:'09:30'},limit:9,fullMax:220}})

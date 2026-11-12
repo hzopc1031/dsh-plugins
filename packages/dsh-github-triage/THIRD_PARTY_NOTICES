@@ -1,8 +1,12 @@
-dsh-github-triage 0.3.2
+dsh-github-triage 0.4.0
 
 This package is an original implementation, licensed under MIT (see LICENSE).
 
 Implementation ideas were studied from:
+- bowenliang123/dsh-context 0.83.1 (commit 4d8fb8a) — Apache-2.0
+  https://github.com/bowenliang123/dsh-context
+  Studied sidebar/main slot pairing, connection Fetch routes, design tokens,
+  overview cards, loading skeletons and on-demand detail lifetimes.
 - ItQianChen/dsh-github-flow — MIT
   https://github.com/ItQianChen/dsh-github-flow
   Studied gh credential reuse and repository review rule separation.
@@ -10,7 +14,7 @@ Implementation ideas were studied from:
   https://github.com/PerryLink/dsh-github-bot
   Studied bounded read-only fetching, polling and PR-level evidence organization.
 
-No source code snippets from either project were transplanted, copied or
+No source code snippets from these projects were transplanted, copied or
 modified into this package. No upstream NOTICE content is incorporated.
 Their licenses continue to apply to their respective original projects.
 

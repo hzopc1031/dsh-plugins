@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { repositories, repoCommand } from './config.js';
 import { correct } from './pipeline.js';
-import { exportDocument, rulesDocument } from './rule-files.js';
+import { exportDocument, importDocument, rulesDocument } from './rule-files.js';
 import { requestSchema, mergeRepo, fieldErrors } from './ui-contract.js';
 import { GithubError } from './github.js';
 class LocalValidationError extends Error {
@@ -33,7 +33,13 @@ export function uiService(d) {
             d.signal.throwIfAborted();
             const r = requestSchema.parse(input);
             if (r.action === 'snapshot')
-                return { ok: true, data: { repositories: all(), reports: Object.values(d.state().reports), jobs: jobList(), model: d.model(), defaults: { limit: d.config.limit, fullMax: d.config.fullMax } } };
+                return { ok: true, data: { repositories: all(), reports: Object.values(d.state().reports).map(report => !r.compact ? report : { ...report, businessContext: undefined, results: report.results.map(({ evidence, judgment, localStatus, observation, ...item }) => ({ ...item, deferred: true, judgment: judgment ? { kind: judgment.kind, recommendation: judgment.recommendation, priority: judgment.priority, businessReason: judgment.businessReason } : undefined })) }), jobs: jobList(), model: d.model(), defaults: { limit: d.config.limit, fullMax: d.config.fullMax } } };
+            if (r.action === 'detail') {
+                const item = d.state().reports[r.repo]?.results.find(item => item.number === r.number);
+                if (!item)
+                    throw new Error('条目不存在');
+                return { ok: true, data: item };
+            }
             if (r.action === 'jobs')
                 return { ok: true, data: jobList() };
             if (r.action === 'models')
@@ -45,7 +51,7 @@ export function uiService(d) {
                 const active = jobs.get(r.repo);
                 if (active && ['queued', 'running'].includes(active.status))
                     return { ok: true, data: { ...active } };
-                const job = { repo: r.repo, status: 'queued' };
+                const job = { repo: r.repo, status: 'queued', at: Date.now() };
                 jobs.set(r.repo, job);
                 // Closing the dialog never cancels accepted work.
                 void d.serialize(async () => {
@@ -53,8 +59,9 @@ export function uiService(d) {
                     const repo = find(r.repo), limit = r.scan.full ? (r.scan.max ?? repo.fullMax ?? d.config.fullMax) : (r.scan.limit ?? repo.limit ?? d.config.limit);
                     const report = await d.perform(repo, limit, false, d.signal, r.scan);
                     job.status = 'completed';
+                    job.at = Date.now();
                     job.message = report.modelStatus ?? '分析完成';
-                }).catch(error => { job.status = 'failed'; job.message = error instanceof GithubError ? error.message : '分析失败：请检查仓库、模型、网络或插件是否已停止。'; });
+                }).catch(error => { job.status = 'failed'; job.at = Date.now(); job.message = error instanceof GithubError ? error.message : '分析失败：请检查仓库、模型、网络或插件是否已停止。'; });
                 return { ok: true, data: { ...job } };
             }
             return await d.serialize(async () => {
@@ -82,6 +89,11 @@ export function uiService(d) {
                 if (r.action === 'export') {
                     await exportDocument(r.path, d.safe.text(rulesDocument(r.repo, next, all().find(v => v.repo === r.repo)?.business)));
                     return { ok: true, data: '已导出规则（未覆盖已有文件）' };
+                }
+                if (r.action === 'import') {
+                    importDocument(r.repo, r.text, next, d.safe);
+                    await d.save(next);
+                    return { ok: true, data: '已导入规则：' + r.repo };
                 }
                 throw new Error('未知操作');
             });

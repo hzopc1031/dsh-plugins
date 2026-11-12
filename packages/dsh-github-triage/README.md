@@ -1,21 +1,22 @@
 # GitHub 哨兵
 
-打开会话顶部的「GitHub 哨兵」，配置仓库、业务说明和本地代码位置，让 AI 判断哪些问题值得修、哪些 PR 适合合入或回迁。
+打开侧边栏「GitHub 哨兵」，把多个仓库的待办、业务判断和本地代码对照放在一起，决定先修哪些问题、先审哪些 PR。
 
-- **在一个界面里管理仓库：** 添加、编辑、删除仓库，设置本地路径、分支和定时；只修改你编辑的字段，其他设置继续保留。
+- **不必为管理仓库新开会话：** 侧边栏进入完整页面，概览仓库数、待办和三档结论；用卡片管理本地路径、分支和定时，只保存你编辑的字段。
 - **按自己的业务看问题：** 相比逐条翻 GitHub，集中查看“在我这里是否存在、值不值得修、是否符合业务方向”，附本地对照和证据。
-- **先看值得处理的内容：** issue 和 PR 分成「建议采纳 / 需人工看 / 不推荐」，可筛选类型、展开详情、打开原链接。
-- **把纠正留给下次参考：** 在详情中改结论并填写理由，形成仓库规则；可查看和导出，再用命令导入编辑后的规则。
+- **先看值得处理的内容：** 按「建议采纳 / 需人工看 / 不推荐」、issue/PR 和仓库筛选，搜索标题与业务理由，展开详情后查看证据或打开原链接。
+- **把纠正留给下次参考：** 在详情中改结论并填写理由，形成仓库规则；在同一页面复制、导出新文件或导入编辑后的规则。
 
 ## 打开界面后的示例
 
-入口在**已打开会话的顶部操作区**，按钮名称为 **GitHub 哨兵**，显示文字，没有独立图标。点击打开面板，点击「添加仓库」，填写业务和本地路径后「保存仓库」，再点「立即分析」。
+主入口是与「插件」「自动化任务」同级的侧边栏 **GitHub 哨兵** 页面。点击「添加仓库」，填写业务和本地路径后「保存仓库」，再点「立即分析」。会话顶部保留同名快捷按钮，直接打开这个页面。
 
 以下是虚构内容的**示意输出**，不是桌面截图或真实 AI 研判：
 
 ```text
 GitHub 哨兵
 模型：已配置 · provider：my-route · model：my-model
+跟踪仓库 1    待处理条目 2    建议采纳 1    需人工看 1    不推荐 0
 
 example-team/plugin-kit · 两者 · 每天 09:30
 业务：插件框架，优先保障文件变化后正确重载
@@ -47,7 +48,7 @@ example-team/plugin-kit · 两者 · 每天 09:30
    & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-github-triage"
    ```
 
-3. **重开 DSH，配置后得到第一份结果。** 在插件设置找到 **GitHub 哨兵（dsh-github-triage）** 并启用。先在 DSH 模型设置配置服务商，再打开或新建一个会话，点击顶部 **GitHub 哨兵** → **查看可复制的模型 ID**，将 `provider`、`model` 分别填入插件设置同名字段，并启用 `modelEnabled`。这里填准确 ID，不填 API key；目录为空时去 DSH 模型设置查 ID。面板会显示启用情况、当前路由和未配置提示。
+3. **重开 DSH，配置后得到第一份结果。** 在插件设置找到 **GitHub 哨兵（dsh-github-triage）** 并启用。先在 DSH 模型设置配置服务商，再点击侧边栏 **GitHub 哨兵** → 模型状态胶囊 → **查看可复制的模型 ID**，用页面的 **插件设置** 按钮打开设置，将 `provider`、`model` 分别填入同名字段，并启用 `modelEnabled`。这里填准确 ID，不填 API key；目录为空时去 DSH 模型设置查 ID。页面会显示当前路由和配置指引，无需活动会话或 agent。
 
    在面板点 **添加仓库**，填 `owner/repo`、分析类型和业务说明；按需填写本地 Git 仓库绝对路径和 ref（空为 HEAD）、业务文件、定时和单次上限。点 **保存仓库**，先用小上限（例如 6）点 **立即分析**；按钮会显示排队/进行中，完成后在三档结果中展开 **查看详情与纠正**。
 
@@ -57,14 +58,14 @@ example-team/plugin-kit · 两者 · 每天 09:30
 
 - **改仓库配置：** 点对应仓库「编辑」。仓库名固定，需要换仓库时添加新条目。编辑仅提交变化字段；清空可选字段表示清除，留空的单次上限继承全局值。服务端还会检查本地路径是 Git 根目录、ref 可解析，失败不保存。
 - **自动检查：** 定时可选不定时、每天 HH:MM、每 N 小时。每天按本机时间执行，DSH 和插件需持续运行；定时仍只检查开放条目的新增和变化。
-- **手动分析：** 普通模式可改本次上限；勾「全量」可填最后更新时间的开始/结束日期及全量上限。全量含关闭条目，达到上限会截断并提示。它会增加请求和模型费用。与命令、定时共用串行队列，同仓库的界面任务未结束时不会重复入队；关面板后任务继续，重开可查状态。
-- **看业务结论：** 在仓库点「查看结果」，或用「查看报告」切换历史报告。按 issue/PR 筛选；展开详情看理由、规则和模型证据、本地对照证据，再安全打开 GitHub 原链接。未经 AI 研判的条目单独标注，不混入三档。
-- **纠正并留规则：** 在已有 AI 结论的详情中选三档、填理由并提交；等同 `/triage-fix`。点「查看/导出规则」，填写新的绝对路径导出，不覆盖已有文件。编辑后导入仍用下方命令。
+- **手动分析：** 仓库卡点「立即分析」，或在页头点「全部分析」。点「分析选项」可改本次上限；点「全量扫描」可填最后更新时间的开始/结束日期及全量上限。全量含关闭条目，达到上限会截断并提示，会增加请求和模型费用。与命令、定时共用串行队列，同仓库的界面任务未结束时不会重复入队；离开页面后任务继续，重开可查状态。
+- **看业务结论：** 结果区用结论分段、issue/PR 类型、仓库 chip 和搜索一起缩小范围，可按优先级、最近分析或编号排序。点击标题或「查看详情与纠正」按需读取业务理由、证据、本地对照；原链接在每张卡上。未经 AI 研判的条目单独标注，不混入三档。「待处理条目」统计最新报告中的全部条目，不代表 GitHub 当前开放总数。
+- **纠正并留规则：** 在已有 AI 结论的详情中选三档、填理由并提交；等同 `/triage-fix`。点「查看/导出规则」可复制文档，或填新绝对路径导出（不覆盖）。展开「导入规则」，粘贴编辑后的同仓库文档并点「确认导入规则」；也可继续用下方命令导入文件。
 - **停止跟踪：** 点「删除」再「确认删除」。不再调度该仓库，保留历史报告和纠正。
 
 ## 命令补充
 
-原有六个命令全部保留。界面配置和命令共用插件自身存储；以下用于批量操作或在会话中补充管理。
+原有命令全部保留：`/triage`、`/triage-repo`、`/triage-fix`、`/triage-report`、`/triage-models`、`/triage-rules` 及结构化 `/triage-ui`。界面配置和命令共用插件自身存储；以下用于批量操作或在会话中补充管理。
 
 ### 先全量扫，再定时看变化
 
@@ -156,7 +157,7 @@ repositories:
 
 ### 版本与兼容
 
-当前版本 **0.3.2**，尚未发布 npm，开发基线为 **DeepSeek Harness 0.2.1-rc.5**，版本准入现覆盖 **0.2.2-rc.1**，要求 Node.js 22 或以上；本地对照需要 PATH 中可用的 Git。开发验证环境为 Windows / Node.js 24，其他平台与 Node.js 22 实机尚未验证。未发布改动合入 main 前，上面的 main 安装地址仍指向现有 main 内容。
+当前版本 **0.4.0**，尚未发布 npm。开发基线为 **DeepSeek Harness 0.2.1-rc.5**，并对照 **0.2.2-rc.1** 的页面与连接接口源码，要求 Node.js 22 或以上；本地对照需要 PATH 中可用的 Git。开发验证环境为 Windows / Node.js 24，其他平台与 Node.js 22 实机尚未验证。未发布改动合入 main 前，上面的 main 安装地址仍指向现有 main 内容。
 
 ### 只读边界与证据局限
 
@@ -170,7 +171,9 @@ repositories:
 
 ### 调度、缓存和真实宿主接口
 
-界面沿用本仓库 draft-rescue / snip-attach 的浏览器入口与 lazy-CJS 打包方式，通过真实 `conversation.session.header.actions` 插槽和共享 `Modal` 显示；`ctx.remote.commands.execute` 调用插件的结构化 `/triage-ui` 接口。它与其他命令一样经过宿主会话命令生命周期，结果会记入当前会话日志；不想在该会话保留业务/路径信息时应选择专用会话。未新增自定义 HTTP 服务或凭据项。
+界面参考 dsh-context 的侧边栏与中央页面组合、设计令牌、卡片层级及按需读取方式，保留本仓库 lazy-CJS 打包。`sidebar.panellist` 与 `main` 使用相同 ID；会话顶部快捷按钮调用宿主布局服务打开同一页面。表单使用宿主共享 Modal。
+
+主页面通过宿主 `connection.fetch.register` 注册的 POST 路由获取数据，不依赖活动 agent，不把页面操作写入会话命令日志；沿用宿主认证，没有新增监听端口或凭据项。首次只取结果摘要，展开单项再读完整证据，规则按需读取，列表按批挂载；离开页面释放轮询与详情。仅宿主缺少布局服务时，顶部入口才回退为同组件的紧凑 Modal；仅 POST 返回 404/405 时，该会话入口的旧命令适配器才回退 `/triage-ui`，这时结果仍会记入会话日志。认证失败、网络超时、返回数据错误均不会自动重提操作。
 
 沿用 rc.5 的 `llm.stream`、`llm.listProviders()` / `llm.listModels(provider)`、`commands.register` 文本卡片及 `storageDomain` 自身存储域。接口依据固定 [DSH dsh-v0.2.1-rc.5](https://github.com/deepseek-ai/deepseek-harness/tree/dsh-v0.2.1-rc.5/packages/preset/agent-preset/skills/cordis-plugin-development)。全量扫描采用 [GitHub 只读搜索 API](https://docs.github.com/en/rest/search/search#search-issues-and-pull-requests)，受搜索索引、结果完整性和限流约束。
 
@@ -184,14 +187,14 @@ repositories:
 
 原测试继续覆盖真实临时 Git 仓库、只读白名单、三档、全量分页、规则文件、模型失败与缓存迁移；独立临时 rc.5 profile 验证命令、持久化、重载及 client 入口扫描。`verify-pack` 核对预构建 lib 与发布文件白名单。全部自动测试与构建结果见 [STATUS.md](STATUS.md)。
 
-沙箱外可在本包目录执行 `node scripts/ui-smoke.mjs`（已有 Node ≥22、桌面自带 rc.5 CLI 与系统 Edge），也可运行 `--help` 查看路径参数和退出码。它通过桌面 CLI 将本包本地路径离线装入系统 TEMP 下的临时 web profile，使用独立无头 Edge，检查按钮/共享弹窗/仓库文字并保存截图，退出清理临时 DSH_HOME。只测试新建的临时 profile；截图与脱敏诊断路径会打印在终端。本次在沙箱中被桌面 CLI 的访问权限阻止，未进入浏览器，不声称在真实桌面 DSH 中看到界面。Electron 实际渲染、真实模型请求与长期调度仍未验证。
+沙箱外可在本包目录执行 `node scripts/ui-smoke.mjs`（已有 Node ≥22、桌面自带 rc.5 CLI 与系统 Edge），也可运行 `--help` 查看路径参数和退出码。它通过桌面 CLI 将本包本地路径离线装入系统 TEMP 下的临时 web profile，使用独立无头 Edge，检查侧边栏、无活动 agent 的中央页面、KPI、仓库/结果区和会话快捷按钮，并保存截图与脱敏诊断，退出清理临时 DSH_HOME。实际执行结果与未验证项见 [STATUS.md](STATUS.md)。Electron、真实模型请求与长期调度仍需实机验证。
 
 ### 来源与许可
 
-原创实现，使用 [MIT 许可](LICENSE)。参考了 [dsh-github-flow](https://github.com/ItQianChen/dsh-github-flow)（MIT）的凭据复用与证据组织思路，以及 [dsh-github-bot](https://github.com/PerryLink/dsh-github-bot)（Apache-2.0）的有界拉取、轮询与 PR/CI 证据思路，未直接移植代码。详见 [THIRD_PARTY_NOTICES](THIRD_PARTY_NOTICES)。
+原创实现，使用 [MIT 许可](LICENSE)。界面与数据交互方式参考 [dsh-context](https://github.com/bowenliang123/dsh-context)（Apache-2.0）；另参考 [dsh-github-flow](https://github.com/ItQianChen/dsh-github-flow)（MIT）的凭据复用与证据组织思路，以及 [dsh-github-bot](https://github.com/PerryLink/dsh-github-bot)（Apache-2.0）的有界拉取、轮询与 PR/CI 证据思路，未直接移植代码。详见 [THIRD_PARTY_NOTICES](THIRD_PARTY_NOTICES)。
 
 
-### 0.3.2 兼容性声明
+### 兼容性范围
 
 本版声明 DSH `>=0.2.1-rc.5 <0.3.0-0`。官方版本检查使用 `semver.satisfies` 并开启 `includePrerelease`：接纳 0.2.1-rc.5、0.2.2-rc.1 及后续 0.2.x 预发布/正式版，排除 0.3.0（含预发布）。DSH peer 显式覆盖两个已知 RC，Cordis / Schemastery peer 覆盖两个官方 tag 的版本；开发依赖不变。此次没有安装到用户 DSH；准入通过不等于逐版本功能或界面验证通过。
 

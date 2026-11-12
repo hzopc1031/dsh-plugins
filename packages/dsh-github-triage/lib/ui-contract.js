@@ -1,6 +1,6 @@
 /** Browser-safe schemas shared by forms and the command-backed UI service. */
 import { z } from 'zod';
-import { repoSchema, repoName, limitSchema, fullLimitSchema, scheduleSchema } from './types.js';
+import { repoSchema, repoName, limitSchema, fullLimitSchema, scheduleSchema, reportSchema, resultSchema } from './types.js';
 export const editableRepoSchema = repoSchema.strict().superRefine((r, c) => {
     if (r.localRef && !r.localRepoPath)
         c.addIssue({ code: 'custom', path: ['localRef'], message: '填写 ref 前请先配置本地代码路径' });
@@ -22,7 +22,8 @@ export const scanSchema = z.object({ full: z.boolean().optional(), since: date.o
         c.addIssue({ code: 'custom', path: ['until'], message: '结束日期不能早于开始日期' });
 });
 export const requestSchema = z.discriminatedUnion('action', [
-    z.object({ action: z.literal('snapshot') }).strict(),
+    z.object({ action: z.literal('snapshot'), compact: z.boolean().optional() }).strict(),
+    z.object({ action: z.literal('detail'), repo: repoName, number: z.number().int().positive() }).strict(),
     z.object({ action: z.literal('jobs') }).strict(),
     z.object({ action: z.literal('models') }).strict(),
     z.object({ action: z.literal('add'), value: editableRepoSchema }).strict(),
@@ -32,7 +33,31 @@ export const requestSchema = z.discriminatedUnion('action', [
     z.object({ action: z.literal('fix'), repo: repoName, number: z.number().int().positive(), recommendation: z.enum(['adopt', 'manual-review', 'not-recommended']), reason: z.string().trim().min(1).max(1200) }).strict(),
     z.object({ action: z.literal('rules'), repo: repoName }).strict(),
     z.object({ action: z.literal('export'), repo: repoName, path: z.string().min(1).max(4096) }).strict(),
+    z.object({ action: z.literal('import'), repo: repoName, text: z.string().min(1).max(16384) }).strict(),
 ]);
+const summaryJudgment = z.object({ kind: z.enum(['issue', 'pr']), recommendation: z.enum(['adopt', 'manual-review', 'not-recommended']), priority: z.enum(['高', '中', '低']), businessReason: z.string() });
+export const summaryResult = resultSchema.omit({ evidence: true, judgment: true }).extend({ deferred: z.literal(true), judgment: summaryJudgment.optional() });
+export const jobSchema = z.object({ repo: repoName, status: z.enum(['queued', 'running', 'completed', 'failed']), message: z.string().optional(), at: z.number().optional() });
+export const snapshotSchema = z.object({ repositories: z.array(repoSchema), reports: z.array(reportSchema.extend({ results: z.array(z.union([summaryResult, resultSchema])) })), jobs: z.array(jobSchema), model: z.object({ enabled: z.boolean(), provider: z.string(), model: z.string(), available: z.boolean(), warning: z.string().optional() }), defaults: z.object({ limit: limitSchema, fullMax: fullLimitSchema }) });
+/** Decode every transport response before exposing it to React. */
+export function decodeValue(request, value) {
+    if (request.action === 'snapshot')
+        return snapshotSchema.parse(value);
+    if (request.action === 'jobs')
+        return z.array(jobSchema).parse(value);
+    if (request.action === 'start')
+        return jobSchema.parse(value);
+    if (request.action === 'detail')
+        return resultSchema.parse(value);
+    if (request.action === 'add' || request.action === 'patch')
+        return repoSchema.parse(value);
+    return z.string().parse(value);
+}
+export const routeActions = { snapshot: ['snapshot'], detail: ['detail'], repos: ['add', 'patch', 'remove'], run: ['start'], correct: ['fix'], rules: ['rules', 'export', 'import'], models: ['models'], jobs: ['jobs'] };
+export const routePath = (name) => '/api/dsh-github-triage/' + name;
+export function routeFor(action) {
+    return Object.keys(routeActions).find(name => routeActions[name].includes(action));
+}
 /** Null clears an optional value. Omitted keys retain the latest server value. */
 export function mergeRepo(existing, patch) {
     const next = { ...existing };

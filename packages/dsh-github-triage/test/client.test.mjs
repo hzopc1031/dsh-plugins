@@ -19,7 +19,7 @@ async function setup(t){
   }
   let factory,id
   window.__ModuleLoader__={load:row=>{id=row.id;factory=row.factory}}
-  vm.runInNewContext(readFileSync(new URL('../lib/client.js',import.meta.url),'utf8'),{window,document,navigator,URL,AbortController,setTimeout,clearTimeout})
+  vm.runInNewContext(readFileSync(new URL('../lib/client.js',import.meta.url),'utf8'),{window,document,navigator,URL,AbortController,AbortSignal,Error,fetch:(...args)=>globalThis.fetch(...args),setTimeout,clearTimeout})
   assert.equal(id,'dsh-github-triage')
   const client=factory(name=>{
     if(name==='@deepseek-ai/dsh-client-ui-primitives')return {Modal:({open,children,title,onClose})=>open?React.createElement('div',{role:'dialog','aria-label':title},children,React.createElement('button',{onClick:onClose},'关闭面板')):null}
@@ -34,6 +34,9 @@ async function setup(t){
     if(r.action==='jobs')return data.jobs
     if(r.action==='models')return 'provider: "actual-route"  model: "actual-model"'
     if(r.action==='start'){const job={repo:r.repo,status:'running'};data={...data,jobs:[job]};return job}
+    if(r.action==='add'){data={...data,repositories:[...data.repositories,r.value]};return r.value}
+    if(r.action==='patch'){data={...data,repositories:data.repositories.map(repo=>repo.repo===r.repo?{...repo,...r.patch}:repo)};return data.repositories.find(repo=>repo.repo===r.repo)}
+    if(r.action==='remove'){data={...data,repositories:data.repositories.filter(repo=>repo.repo!==r.repo)};return '已移除仓库'}
     if(r.action==='rules')return '# GitHub triage rules: o/r\n用户纠正规则'
     return '已保存'
   }
@@ -58,8 +61,11 @@ async function setup(t){
   }
 }
 test('lazy client registers exact session-header action and opens Chinese dialog',async t=>{
-  const f=await setup(t);let Component,options
-  f.client.apply({slots:{inject:(slot,callback)=>{assert.equal(slot,'conversation.session.header.actions');callback()},register:(o,c)=>{options=o;Component=c}},remote:{commands:{execute:async()=>({ok:true,value:{result:{kind:'success',text:JSON.stringify({ok:true,data:snapshot()})}}})}}})
+  const f=await setup(t);let Component,options;const effects=[],registrations=[]
+  f.client.apply({get:()=>undefined,effect:fn=>{effects.push(fn())},slots:{inject:(slot,callback)=>callback(),register:(o,c)=>{registrations.push(o);if(o.name==='conversation.session.header.actions'){options=o;Component=c}}}})
+  t.after(()=>effects.reverse().forEach(dispose=>dispose?.()))
+  assert.ok(registrations.some(o=>o.name==='main'&&o.key==='dsh-github-triage'))
+  assert.ok(registrations.some(o=>o.name==='sidebar.panellist'&&o.id==='dsh-github-triage'&&o.label()==='GitHub 哨兵'))
   assert.equal(options.id,'dsh-github-triage')
   await f.render('TriageButton',{sessionId:'s'})
   assert.equal(document.querySelector('[role=dialog]'),null)
@@ -68,6 +74,7 @@ test('lazy client registers exact session-header action and opens Chinese dialog
 })
 test('dashboard renders repositories, schedule, business, local path and model state',async t=>{
   const f=await setup(t);await f.render('Dashboard')
+  await f.click('p / m')
   for(const text of ['o/r','原业务','C:\\repo','每天 09:30','provider：p','model：m'])assert.ok(document.body.textContent.includes(text),text)
 })
 test('unconfigured model shows actionable settings warning and real copyable directory',async t=>{
@@ -110,14 +117,17 @@ test('trigger button becomes disabled while analysis remains nonblocking',async 
 })
 test('analysis form rejects invalid full dates/limit and sends full scan options',async t=>{
   const f=await setup(t);await f.render('Dashboard')
+  await f.click('分析选项')
   const checkbox=document.querySelector('input[type=checkbox]')
   await act(async()=>{checkbox.checked=true;Simulate.change(checkbox,{target:{checked:true}})})
-  await f.input('本次上限 o/r','501');await f.click('立即分析');assert.ok(!f.calls.some(r=>r.action==='start'))
-  await f.input('本次上限 o/r','12');await f.input('开始日期 o/r','2026-01-01');await f.input('结束日期 o/r','2026-11-11');await f.click('立即分析')
+  await f.input('本次上限 o/r','501');await f.click('立即分析',1);assert.ok(!f.calls.some(r=>r.action==='start'))
+  await f.input('本次上限 o/r','12');await f.input('开始日期 o/r','2026-01-01');await f.input('结束日期 o/r','2026-11-11');await f.click('立即分析',1)
   assert.deepEqual(f.calls.find(r=>r.action==='start').scan,{full:true,since:'2026-01-01',until:'2026-11-11',max:12})
 })
 test('result groups, issue and PR business details, local evidence, safe original links',async t=>{
   const f=await setup(t);await f.render('Results',{reports:[report],selected:'o/r',onChanged:async()=>{}})
+  assert.equal(document.querySelector('.gt-detail'),null,'details must mount on demand')
+  for(let i=0;i<4;i++)await f.click('查看详情与纠正')
   const text=document.body.textContent;assert.ok(text.indexOf('建议采纳（1）')<text.indexOf('需人工看（1）'));assert.ok(text.indexOf('需人工看（1）')<text.indexOf('不推荐（1）'))
   for(const s of ['真实存在：likely','值得修','符合业务方向：yes','需补认证测试','影响核心业务','本地 render 函数存在','本地提交线索 abc','仅规则预筛，未经 AI 研判'])assert.ok(text.includes(s),s)
   assert.match(text,/研判理由/);assert.match(text,/规则证据/)
@@ -127,6 +137,7 @@ test('result groups, issue and PR business details, local evidence, safe origina
 })
 test('correction requires reason and submits selected tier and reason',async t=>{
   const f=await setup(t);await f.render('Results',{reports:[report],selected:'o/r',onChanged:async()=>{}})
+  await f.click('查看详情与纠正')
   const form=document.querySelector('article form');await act(async()=>Simulate.submit(form));assert.equal(f.calls.length,0);assert.match(document.body.textContent,/请填写纠正理由/)
   await f.input('纠正结论 #1','not-recommended');await f.input('纠正理由 #1','业务没有这个模块')
   await act(async()=>{Simulate.submit(form);await Promise.resolve()})
@@ -166,4 +177,78 @@ test('daily schedule validation is shown beside the form and ref requires local 
   await f.submit('添加仓库');assert.match(document.body.textContent,/每日时间请填 HH:MM/);assert.equal(f.calls.length,0)
   await f.input('定时','none');await f.input('本地 ref（可空，默认 HEAD）','main');await f.submit('添加仓库')
   assert.match(document.body.textContent,/填写 ref 前请先配置本地代码路径/);assert.equal(f.calls.length,0)
+})
+
+test('KPI counts, tier chips, type, search, clear and sort cooperate',async t=>{
+  const f=await setup(t);await f.render('Dashboard')
+  assert.deepEqual([...document.querySelectorAll('.gt-stat>b')].map(e=>e.textContent),['1','4','1','1','1','已更新'])
+  await f.click('建议采纳（1）');assert.equal(document.querySelectorAll('article').length,1)
+  await f.click('需人工看（1）');assert.match(document.querySelector('article').textContent,/条目 2/)
+  await f.input('结果类型','issue');assert.equal(document.querySelectorAll('article').length,0)
+  await f.input('结果类型','both');await f.click('全部（4）')
+  await f.input('搜索结果','条目 3');assert.equal(document.querySelectorAll('article').length,1)
+  await act(async()=>document.querySelector('[aria-label="清空搜索"]').click());assert.equal(document.querySelectorAll('article').length,4)
+  await f.input('结果排序','number');assert.match(document.querySelector('article').textContent,/#4/)
+})
+test('empty state has three steps, skeleton retains layout, failed fetch can retry',async t=>{
+  const f=await setup(t);let resolve;f.custom(()=>new Promise(r=>{resolve=r}))
+  await f.render('Dashboard');assert.ok(document.querySelector('[aria-busy=true]'));assert.equal(document.querySelectorAll('.gt-kpis .gt-skeleton').length,6)
+  const s=snapshot();s.repositories=[];s.reports=[]
+  await act(async()=>resolve(s));assert.equal(document.querySelectorAll('.gt-steps> *').length,3)
+  assert.match(document.body.textContent,/配置模型.*添加仓库.*立即分析/)
+  f.custom(async()=>{throw Error('离线错误')});await f.click('刷新');assert.match(document.querySelector('.gt-error').textContent,/离线错误/)
+  f.custom(undefined);await f.click('重试');assert.equal(document.querySelector('.gt-error'),null)
+})
+test('rule import and clipboard use explicit user actions',async t=>{
+  const f=await setup(t),copied=[];Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async s=>copied.push(s)}})
+  await f.render('Dashboard');assert.ok(!f.calls.some(r=>r.action==='rules'))
+  await f.click('查看/导出规则');await f.click('复制规则');assert.match(copied[0],/用户纠正规则/)
+  await f.input('导入规则文档','# GitHub triage rules: o/r\n编辑规则');await f.click('确认导入规则')
+  assert.deepEqual(f.calls.find(r=>r.action==='import'),{action:'import',repo:'o/r',text:'# GitHub triage rules: o/r\n编辑规则'})
+})
+test('all analysis enqueues repositories and keeps card progress visible',async t=>{
+  const f=await setup(t);await f.render('Dashboard');await f.click('全部分析')
+  assert.equal(f.calls.filter(r=>r.action==='start').length,1);assert.ok(document.querySelector('progress'))
+  assert.ok([...document.querySelectorAll('button')].find(b=>b.textContent==='全部分析').disabled)
+})
+test('deferred evidence loads per item on expand and is released on collapse',async t=>{
+  const f=await setup(t),s=snapshot(),r=s.reports[0].results[0]
+  s.reports[0].results=[{...r,evidence:undefined,deferred:true,judgment:{kind:'issue',recommendation:'adopt',priority:'高',businessReason:'影响核心业务'}}]
+  f.data(s);f.custom(async req=>req.action==='snapshot'?s:req.action==='detail'?r:undefined)
+  await f.render('Dashboard');assert.ok(!f.calls.some(r=>r.action==='detail'))
+  await f.click('查看详情与纠正');assert.equal(f.calls.filter(r=>r.action==='detail').length,1);assert.match(document.querySelector('.gt-detail').textContent,/本地提交线索/)
+  await f.click('收起详情');assert.equal(document.querySelector('.gt-detail'),null)
+})
+test('header shortcut navigates directly when host layout is present',async t=>{
+  const f=await setup(t);let opened=0
+  await f.render('TriageButton',{sessionId:'s',openPage:()=>{opened++;return true}});await f.click('GitHub 哨兵')
+  assert.equal(opened,1);assert.equal(document.querySelector('[role=dialog]'),null);assert.equal(f.calls.length,0)
+})
+test('repository cards add, edit a delta and remove after confirmation',async t=>{
+  const f=await setup(t);await f.render('Dashboard');await f.click('添加仓库')
+  await f.input('GitHub 仓库（owner/repo）','x/new');await f.input('业务说明','新项目');await f.submit('添加仓库')
+  assert.equal(document.querySelectorAll('.gt-repo').length,2)
+  await f.click('编辑',1);await f.input('业务说明','编辑后的项目');await f.submit('编辑仓库')
+  assert.deepEqual(f.calls.find(r=>r.action==='patch'),{action:'patch',repo:'x/new',patch:{business:'编辑后的项目'}})
+  assert.match(document.querySelector('[aria-label="仓库 x/new"]').textContent,/编辑后的项目/)
+  await f.click('删除',1);assert.equal(document.querySelectorAll('.gt-repo').length,2);await f.click('确认删除')
+  assert.equal(document.querySelectorAll('.gt-repo').length,1)
+})
+test('repository chips scope result cards and page mounts only the first batch',async t=>{
+  const f=await setup(t),s=snapshot()
+  s.reports.push({...structuredClone(report),repo:'x/other',results:[{...result(9),title:'另一个仓库'}]});f.data(s)
+  await f.render('Dashboard');await f.click('x/other')
+  assert.equal(document.querySelectorAll('article').length,1);assert.match(document.querySelector('article').textContent,/另一个仓库/)
+  await f.click('全部仓库');assert.equal(document.querySelectorAll('article').length,5)
+  await f.render('Results',{reports:[{...report,results:Array.from({length:65},(_,i)=>result(i+1))}],selected:'o/r',onChanged:async()=>{}})
+  assert.equal(document.querySelectorAll('article').length,30);await f.click('加载更多结果（30 / 65）');assert.equal(document.querySelectorAll('article').length,60)
+})
+test('POST transport decodes envelopes and falls back only for missing routes',async t=>{
+  const f=await setup(t),requests=[],fallback=[]
+  const call=f.client.postCall(async(url,options)=>{requests.push({url,options});return {ok:true,status:200,json:async()=>({ok:true,value:[]})}})
+  assert.equal((await call({action:'jobs'})).length,0);assert.equal(requests[0].url,'/api/dsh-github-triage/jobs');assert.equal(requests[0].options.method,'POST')
+  for(const status of [404,405])await f.client.postCall(async()=>({ok:false,status}),async r=>{fallback.push(r);return []})({action:'jobs'})
+  assert.equal(fallback.length,2)
+  for(const response of [{ok:false,status:403},{ok:true,status:200,json:async()=>({ok:true,value:{broken:true}})},{ok:true,status:200,json:async()=>({ok:false,error:{code:'validation',message:'无效字段',fields:{limit:'错误'}}})}])await assert.rejects(f.client.postCall(async()=>response,async()=>{throw Error('must not fallback')})({action:'jobs'}))
+  await assert.rejects(f.client.postCall(async()=>{throw Error('network')},async()=>{throw Error('must not fallback')})({action:'jobs'}),/操作可能已提交/)
 })

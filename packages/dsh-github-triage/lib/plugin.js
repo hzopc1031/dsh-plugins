@@ -12,6 +12,7 @@ import { openLocal } from './local.js';
 import { rulesCommand } from './rule-files.js';
 import { SafeText } from './safety.js';
 import { uiService } from './ui-service.js';
+import { mountRoutes } from './ui-routes.js';
 export const name = 'github-triage';
 export const inject = ['commands', 'storageDomain'];
 export const Config = z.object({
@@ -211,6 +212,7 @@ export async function apply(ctx, input = {}) {
         model: () => ({ enabled: config.modelEnabled, provider: config.provider, model: config.model, available: !modelWarning(ctx, config), warning: modelWarning(ctx, config) }),
         models: () => listModels(ctx),
     });
+    mountRoutes(ctx, ui);
     command('triage-ui', 'GitHub 哨兵界面数据接口（JSON）', async (i) => {
         if (i.rawInput.length > 150000)
             return JSON.stringify({ ok: false, error: '请求过大' });

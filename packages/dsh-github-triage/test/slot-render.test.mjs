@@ -8,7 +8,7 @@ import { JSDOM } from 'jsdom'
 import React,{act} from 'react'
 import { Context } from '@deepseek-ai/cordis'
 const require=createRequire(import.meta.url)
-test('rc.5 actual renderer loads the header contribution and dialog adapter displays dashboard',async t=>{
+test('rc.5 actual renderer materializes sidebar, root page and header navigation without an agent',async t=>{
   const dom=new JSDOM('<main id="app"></main>',{url:'https://dsh.invalid'}),saved=new Map()
   const globals={window:dom.window,document:dom.window.document,navigator:dom.window.navigator,
     HTMLElement:dom.window.HTMLElement,Node:dom.window.Node,MutationObserver:dom.window.MutationObserver,
@@ -21,7 +21,8 @@ test('rc.5 actual renderer loads the header contribution and dialog adapter disp
     await act(async()=>unmount?.());await ctx?.fiber.dispose();dom.window.close()
     for(const [key,value] of saved){if(value)Object.defineProperty(globalThis,key,value);else delete globalThis[key]}
   })
-  const context={require,window,document,navigator,...globals,console,setTimeout,clearTimeout,queueMicrotask,URL,AbortController}
+  const context={require,window,document,navigator,...globals,console,setTimeout,clearTimeout,queueMicrotask,URL,AbortController,AbortSignal,
+    fetch:async()=>Response.json({ok:true,value:{repositories:[],reports:[],jobs:[],model:{enabled:true,provider:'',model:'',available:false,warning:'未配置模型'},defaults:{limit:20,fullMax:100}}})}
   let factory
   window.__ModuleLoader__={load:row=>{factory=row.factory}}
   vm.runInNewContext(readFileSync(require.resolve('@deepseek-ai/dsh-client-ui-renderer/client'),'utf8'),context)
@@ -34,20 +35,29 @@ test('rc.5 actual renderer loads the header contribution and dialog adapter disp
   const client=factory(name=>name==='@deepseek-ai/dsh-client-ui-primitives'?{Modal}:require(name))
   ctx=new Context()
   renderer.apply(ctx)
+  ctx.slots.installLocale({getSnapshot:()=>({revision:0}),subscribe:()=>()=>{},bind:()=>key=>key})
   const binding={key:'smoke-session',ctx,hooks:{},keyedHooks:{},props:{sessionId:'smoke-session'}}
   const observable={getSnapshot:()=>binding,subscribe:()=>()=>{}}
   ctx.slots.installScope('session',{current:observable,bindingSource:()=>observable,renderArea:(_binding,{children})=>React.createElement(React.Fragment,null,children)})
-  ctx.provide('remote',{commands:{execute:async()=>({ok:true,value:{result:{kind:'success',text:JSON.stringify({ok:true,data:{repositories:[],reports:[],jobs:[],model:{enabled:true,provider:'',model:'',available:false,warning:'未配置模型'},defaults:{limit:20,fullMax:100}}})}}})}})
+  const navigation=[]
+  ctx.provide('layout',{selectPanel:id=>navigation.push(id)})
+  ctx.provide('remote',{commands:{execute:async()=>{throw Error('main page must never need an agent')}}})
   client.apply(ctx)
-  // Declare the same list/session shape as ui-conversation/apply.ts at rc.5.
-  ctx.slots.register({name:'root',children:{'conversation.session.header.actions':{kind:'list',scope:'session'}}},props=>React.createElement('div',null,props.renderSlot('conversation.session.header.actions',{})))
+  // Real official registry; the fixture supplies the three owning shell seats.
+  ctx.slots.register({name:'root',children:{'main':{kind:'keyed',scope:'root'},'sidebar.panellist':{kind:'list',scope:'root'},'conversation.session.header.actions':{kind:'list',scope:'session'}}},props=>React.createElement('div',null,
+    props.renderSlot('sidebar.panellist',{size:18,active:true}),
+    props.renderSlot('conversation.session.header.actions',{}),
+    props.renderSlot('main',{}, {entryKey:'dsh-github-triage'})))
 
   await act(async()=>{unmount=ctx.uiRenderer.mount(document.getElementById('app'))})
   const button=[...document.querySelectorAll('button')].find(b=>b.textContent==='GitHub 哨兵')
   assert.ok(button,'real rc.5 renderer must materialize the contributed action')
+  assert.ok(ctx.slots.entriesOfSlot('sidebar.panellist').some(e=>e.options.id==='dsh-github-triage'))
+  assert.ok(document.querySelector('.gt-page'));assert.equal(document.querySelectorAll('.gt-stat').length,6)
+  assert.equal(document.querySelectorAll('style[data-github-triage]').length,1)
   await act(async()=>{button.click();await Promise.resolve()})
-  assert.ok(document.querySelector('[role="dialog"][aria-label="GitHub 哨兵"]'))
+  assert.deepEqual(navigation,['dsh-github-triage']);assert.equal(document.querySelector('[role="dialog"]'),null)
   assert.match(document.body.textContent,/未配置模型/);assert.match(document.body.textContent,/仓库列表（0）/)
-  const close=document.querySelector('[aria-label="关闭 GitHub 哨兵面板"]');assert.ok(close)
-  await act(async()=>close.click());assert.equal(document.querySelector('[role="dialog"]'),null)
+  await act(async()=>{unmount();unmount=undefined});await ctx.fiber.dispose()
+  assert.equal(document.querySelector('style[data-github-triage]'),null)
 })

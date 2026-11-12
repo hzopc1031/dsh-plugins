@@ -3,25 +3,30 @@ import { readFile, readdir } from 'node:fs/promises'
 import { execFileSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 const cwd=fileURLToPath(new URL('../',import.meta.url))
-const [pack]=JSON.parse(execFileSync('npm',['pack','--dry-run','--json','--ignore-scripts'],{cwd,encoding:'utf8',shell:process.platform==='win32'}))
+const packEnv={...process.env}
+for(const key of Object.keys(packEnv))if(key.toLowerCase()==='npm_config_cache')delete packEnv[key]
+packEnv.npm_config_cache=fileURLToPath(new URL('../.tmp/npm-cache',import.meta.url))
+const [pack]=JSON.parse(execFileSync('npm',['pack','--dry-run','--json','--ignore-scripts'],{cwd,env:packEnv,encoding:'utf8',shell:process.platform==='win32'}))
 const read=async p=>(await readFile(new URL('../'+p,import.meta.url),'utf8')).replace(/^\uFEFF/,'')
-const modules=['client','ui-contract','ui-service','local','rule-files','business','config','github','model','pipeline','plugin','rules','safety','schedule','state','types']
+const modules=['client','client-forms','client-route','client-icons','ui-routes','ui-contract','ui-service','local','rule-files','business','config','github','model','pipeline','plugin','rules','safety','schedule','state','types']
 const expected=['package.json','index.js','cordis.patch.yml','locale/en.json','locale/zh.json','icon.svg','README.md','LICENSE','CHANGELOG.md','THIRD_PARTY_NOTICES',...modules.flatMap(n=>['lib/'+n+'.js','lib/'+n+'.d.ts'])]
 assert.deepEqual(pack.files.map(f=>f.path).sort(),expected.sort())
 const pkg=JSON.parse(await read('package.json'))
-assert.equal(pkg.name,'dsh-github-triage');assert.equal(pkg.version,'0.3.2');assert.equal(pkg.engines.dsh,'>=0.2.1-rc.5 <0.3.0-0')
+assert.equal(pkg.name,'dsh-github-triage');assert.equal(pkg.version,'0.4.0');assert.equal(pkg.engines.dsh,'>=0.2.1-rc.5 <0.3.0-0')
 assert.equal(pkg.repository.directory,'packages/dsh-github-triage');assert.equal(pkg.homepage,'https://github.com/hzopc1031/dsh-plugins/tree/main/packages/dsh-github-triage#readme')
 const lock=JSON.parse(await read('package-lock.json'));assert.equal(lock.version,pkg.version);assert.equal(lock.packages[''].version,pkg.version);assert.equal(lock.name,pkg.name);assert.equal(lock.packages[''].name,pkg.name)
 assert.equal(pkg.main,'index.js');assert.equal(pkg.exports['.'].default,'./index.js');assert.equal(pkg.exports['.'].types,'./lib/plugin.d.ts')
 for(const name of ['prepare','preinstall','install','postinstall'])assert.equal(pkg.scripts[name],undefined)
 assert.notEqual(pkg.private,true)
 assert.equal(pkg.dsh.client.platform,'web')
-assert.deepEqual(pkg.dsh.client.inject,['@deepseek-ai/dsh-client-ui-conversation','@deepseek-ai/dsh-client-ui-session','@deepseek-ai/dsh-api-remotes'])
+assert.deepEqual(pkg.dsh.client.inject,["@deepseek-ai/dsh-client-ui-conversation","@deepseek-ai/dsh-client-ui-session","@deepseek-ai/dsh-api-remotes","@deepseek-ai/dsh-client-ui-sidebar","@deepseek-ai/dsh-client-ui-layout","@deepseek-ai/dsh-client-locale","@deepseek-ai/dsh-client-ui-plugin-manager"])
 assert.equal(pkg.exports['./client'].default,'./lib/client.js')
 const client=await read('lib/client.js')
 assert.match(client,/window\.__ModuleLoader__\.load/)
 assert.match(client,/factory:\(require\)=>/)
 assert.match(client,/conversation.session.header.actions/)
+for(const marker of ['sidebar.panellist','gt-page','gt-kpis','gt-skeleton','gt-result','data-ds-dark-theme','/api/dsh-github-triage/'])assert.ok(client.includes(marker),marker)
+assert.match(await read('lib/ui-routes.js'),/ctx.inject\(\['connection'\]/)
 assert.match(client,/require\(["']@deepseek-ai\/dsh-client-ui-primitives["']\)/)
 assert.ok(!/node:|require\(["'](?:fs|child_process)["']\)/.test(client))
 for(const dependency of ['react','react-dom','jsdom','esbuild','@deepseek-ai/dsh-client-ui-primitives']){

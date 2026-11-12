@@ -1,6 +1,6 @@
 {
   "name": "dsh-github-triage",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "description": "在界面配置仓库、业务与本地代码，结合 AI 判断 issue 是否值得修、PR 是否值得合入",
   "type": "module",
   "main": "index.js",
@@ -43,7 +43,11 @@
       "inject": [
         "@deepseek-ai/dsh-client-ui-conversation",
         "@deepseek-ai/dsh-client-ui-session",
-        "@deepseek-ai/dsh-api-remotes"
+        "@deepseek-ai/dsh-api-remotes",
+        "@deepseek-ai/dsh-client-ui-sidebar",
+        "@deepseek-ai/dsh-client-ui-layout",
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-plugin-manager"
       ]
     }
   },

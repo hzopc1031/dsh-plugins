@@ -153,11 +153,15 @@ repositories:
 
 `mode` 为 `issues`、`prs`、`both`。定时配置的 `daily` 与 `everyHours` 二选一，都不设置则仅手动运行。本地路径、ref、规则文件均可选；`localRef` 默认 HEAD。命令添加时可用 `--full-max 200` 设置仓库的全量默认上限。
 
+## 公司内网访问
+
+在公司电脑遇到 `fetch failed` 时，可查看错误代码与代理/公司证书排查提示。插件设置增加 `httpsProxy`、`noProxy`、`caBundlePath`、`insecureSkipTlsVerify`（默认关闭，开启不安全）。默认沿用 DSH 的用户级代理配置，不读取 Windows 系统代理或 PAC。具体 Windows `.dsh/.env` 写法、证书与重载步骤见[公司内网配置](../../docs/intranet-network.md)。
+
 ## 补充说明
 
 ### 版本与兼容
 
-当前版本 **0.4.0**，尚未发布 npm。开发基线为 **DeepSeek Harness 0.2.1-rc.5**，并对照 **0.2.2-rc.1** 的页面与连接接口源码，要求 Node.js 22 或以上；本地对照需要 PATH 中可用的 Git。开发验证环境为 Windows / Node.js 24，其他平台与 Node.js 22 实机尚未验证。未发布改动合入 main 前，上面的 main 安装地址仍指向现有 main 内容。
+当前版本 **0.4.1**，尚未发布 npm。开发基线为 **DeepSeek Harness 0.2.1-rc.5**，并对照 **0.2.2-rc.1** 的页面与连接接口源码，要求 Node.js 22 或以上；本地对照需要 PATH 中可用的 Git。主线界面开发验证环境为 Windows / Node.js 24，分支内网修复的加载与本地代理测试环境为 Linux / Node.js 24；此次合并在 Linux 运行自动测试，Windows / Electron 与 Node.js 22 未重新实机验证。未发布改动合入 main 前，上面的 main 安装地址仍指向现有 main 内容。
 
 ### 只读边界与证据局限
 
@@ -199,3 +203,5 @@ repositories:
 本版声明 DSH `>=0.2.1-rc.5 <0.3.0-0`。官方版本检查使用 `semver.satisfies` 并开启 `includePrerelease`：接纳 0.2.1-rc.5、0.2.2-rc.1 及后续 0.2.x 预发布/正式版，排除 0.3.0（含预发布）。DSH peer 显式覆盖两个已知 RC，Cordis / Schemastery peer 覆盖两个官方 tag 的版本；开发依赖不变。此次没有安装到用户 DSH；准入通过不等于逐版本功能或界面验证通过。
 
 校验逻辑、源码对照与本次检查结果见[兼容性报告](../../docs/engines-compatibility.md)。
+
+当前兼容声明与 Linux 0.2.2-rc.1 加载结果见[兼容矩阵](../../docs/compat-matrix.md)；范围声明不表示逐版本实测，Windows / Electron 未在本机验证。

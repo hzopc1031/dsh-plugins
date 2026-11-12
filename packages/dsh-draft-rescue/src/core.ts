@@ -109,10 +109,17 @@ export function listDrafts(storage: StorageReader): Draft[] {
 export function copyText(draft: Draft): string { return draft.text }
 
 /** Append in detect coordinates (a reference chip counts as ONE character). */
-export function prepareAppend(draft: Draft, input: Pick<InputState, 'draft' | 'draftRev' | 'occurrences' | 'phase'>): { text: string; span: TokenSpan } {
+export function prepareAppend(draft: Draft, input: Pick<InputState, 'draft' | 'draftRev' | 'occurrences' | 'phase'>, currentSnapshot?: unknown): { text: string; span: TokenSpan } {
   requireInput(input)
   if (input.phase !== 'plain') throw new Error('当前输入框忙碌或处于命令模式，请回到普通输入后追加。')
-  const end = input.draft.length - input.occurrences.reduce((sum, ref) => sum + ref.length - 1, 0)
+  let quoteWidth = 0
+  if (currentSnapshot !== undefined) {
+    if (!object(currentSnapshot) || draftText(currentSnapshot) !== input.draft) throw new Error('当前草稿快照与输入框不一致，请复制原文后粘贴。')
+    const references = currentSnapshot.references as { offset: number; length: number }[]
+    if (references.length !== input.occurrences.length || references.some((ref, i) => ref.offset !== input.occurrences[i]!.offset || ref.length !== input.occurrences[i]!.length)) throw new Error('当前草稿快照与输入框不一致，请复制原文后粘贴。')
+    quoteWidth = ((currentSnapshot.quotes ?? []) as { length: number }[]).reduce((sum, quote) => sum + quote.length - 1, 0)
+  }
+  const end = input.draft.length - quoteWidth - input.occurrences.reduce((sum, ref) => sum + ref.length - 1, 0)
   if (end < 0) throw new Error('输入框状态无效，请重试。')
   return {
     text: (input.draft ? '\n' : '') + copyText(draft),

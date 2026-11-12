@@ -1,6 +1,6 @@
 {
   "name": "dsh-draft-rescue",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "DSH 未发送文字草稿找回、预览、复制与追加",
   "type": "module",
   "main": "index.js",

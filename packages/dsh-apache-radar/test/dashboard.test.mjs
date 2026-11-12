@@ -160,3 +160,11 @@ test('view shaping retains security, type/status groups, original links, retired
     assert.doesNotMatch(errorCard, />0</)
   } finally { await rm(directory, { recursive: true, force: true }) }
 })
+
+
+test('failed count cards show a short status, leaving the shared diagnostics banner to explain the cause', () => {
+  const html = staticView(client.CountCard, { row: { id: 'chooser', label: 'Chooser', status: 'error', sources: [],
+    error: 'https://projects.apache.org/json/foundation/chooser.json: Fetch failed: ECONNREFUSED; HTTPS_PROXY' } })
+  assert.match(html, /见网络诊断/)
+  assert.doesNotMatch(html, /HTTPS_PROXY|https:\/\/|Fetch failed/)
+})

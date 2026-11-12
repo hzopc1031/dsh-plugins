@@ -5,10 +5,10 @@ export function dashboardHandler(run, directories) {
         try {
             const body = await request.json();
             if (!body || Array.isArray(body) || typeof body !== 'object'
-                || Object.keys(body).some(key => !['directory', 'action', 'project', 'version', 'cve'].includes(key)))
+                || Object.keys(body).some(key => !['directory', 'action', 'project', 'version', 'cve', 'snapshot'].includes(key)))
                 throw new Error('无效的面板请求。');
             const { directory, action = 'read', project } = body;
-            if (typeof action !== 'string' || !['read', 'refresh', 'brief', 'add', 'remove', 'file', 'pin', 'osv'].includes(action))
+            if (typeof action !== 'string' || !['read', 'refresh', 'brief', 'add', 'remove', 'file', 'pin', 'osv', 'diagnose', 'export', 'import'].includes(action))
                 throw new Error('未知操作。');
             if (directory !== undefined && !validDirectory(directory))
                 throw new Error('请选择本地绝对目录，不能包含 ..。');
@@ -18,6 +18,16 @@ export function dashboardHandler(run, directories) {
                 if (action !== 'read')
                     throw new Error('请先选择项目目录。');
                 return json({ directories: available });
+            }
+            if (action === 'diagnose')
+                return json(JSON.parse(await run(target, 'diagnose')));
+            if (action === 'export')
+                return new Response(await run(target, 'export'), { headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
+            if (action === 'import') {
+                if (typeof body.snapshot !== 'string')
+                    throw new Error('请选择 JSON 快照');
+                const data = JSON.parse(await run(target, 'import', { snapshot: body.snapshot }));
+                return json({ ...data, directories: available, directory: target });
             }
             if (action === 'file') {
                 const saved = JSON.parse(await run(target, 'open', { includeMarkdown: true }));

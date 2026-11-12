@@ -18,7 +18,7 @@ export declare function requireCapabilities(input: unknown, actions: unknown): v
 export declare function listDrafts(storage: StorageReader): Draft[];
 export declare function copyText(draft: Draft): string;
 /** Append in detect coordinates (a reference chip counts as ONE character). */
-export declare function prepareAppend(draft: Draft, input: Pick<InputState, 'draft' | 'draftRev' | 'occurrences' | 'phase'>): {
+export declare function prepareAppend(draft: Draft, input: Pick<InputState, 'draft' | 'draftRev' | 'occurrences' | 'phase'>, currentSnapshot?: unknown): {
     text: string;
     span: TokenSpan;
 };

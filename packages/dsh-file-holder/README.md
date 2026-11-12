@@ -1,6 +1,6 @@
 # dsh-file-holder
 
-**0.1.1**：指定文件占用程序查询。面向 Windows 本机 DSH 桌面版，开发基线为 **0.2.1-rc.5**，只提供人类命令：
+**0.1.2**：指定文件占用程序查询。面向 Windows 本机 DSH 桌面版，开发基线为 **0.2.1-rc.5**，只提供人类命令：
 
 ```text
 /file-holder src/index.ts
@@ -39,7 +39,7 @@ powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File <插件�
 
 ## 接口依据
 
-严格针对官方标签 `dsh-v0.2.1-rc.5`，commit `b830ec950faba0a46dda564be3e2d854afed94f1` 核对源码，并锁定同版发布类型：
+原有开发类型保留 rc.5；本次另对照官方 `dsh-v0.2.2-rc.1` 源码核对下列 API，并在 Linux 实际加载 rc.1：
 
 - [人类命令注册](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/packages/interaction/commands/src/index.ts)：注册名 `file-holder` 不带斜杠，使用 invocation.signal 和 agent.session。
 - [当前执行目录](https://github.com/deepseek-ai/deepseek-harness/blob/b830ec950faba0a46dda564be3e2d854afed94f1/packages/session/working-directory/src/index.ts)：`workingDirectory.get(session)`。
@@ -58,8 +58,10 @@ npm run verify-pack
 每包独立 lockfile，预构建产物随源码提交。自动检查与真机结论详见 [STATUS](STATUS.md)：90 项测试通过；本机独占句柄实验中助手脚本已查到占用进程 PID。未在真实桌面 DSH 中测试，也未安装到 DSH。MIT 许可。
 
 
-### 0.1.1 兼容性声明
+### 0.1.2 兼容性声明
 
 本版声明 DSH `>=0.2.1-rc.5 <0.3.0-0`。官方版本检查使用 `semver.satisfies` 并开启 `includePrerelease`：接纳 0.2.1-rc.5、0.2.2-rc.1 及后续 0.2.x 预发布/正式版，排除 0.3.0（含预发布）。DSH peer 显式覆盖两个已知 RC，Cordis / Schemastery peer 覆盖两个官方 tag 的版本；开发依赖不变。此次没有安装到用户 DSH；准入通过不等于逐版本功能或界面验证通过。
 
 校验逻辑、源码对照与本次检查结果见[兼容性报告](../../docs/engines-compatibility.md)。
+
+本次 0.2.2-rc.1 兼容结论与 API 依据见[兼容矩阵](../../docs/compat-matrix.md)。本次在 Linux 实际加载；Windows / Electron 功能未实机验证，历史 rc.5 测试记录不代表本次加载过该版本。

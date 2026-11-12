@@ -1,10 +1,22 @@
 # Changelog
 
+## 0.1.2 - 2026-11-12
+
+- 合并内网代理 / CA 诊断改动与 main 的 DSH 0.2.2-rc.1 兼容修复（merge intranet proxy/CA diagnostics with main's 0.2.2-rc.1 compatibility）；保留本包两侧已有功能与验证边界。
+- 保留代理与 CA 配置、面板网络诊断、最后成功缓存、快照导入导出、离线模式及 rc.1 Markdown HTML 限制。
+
 ## 0.1.1 - 2026-11-11
 
 - 保留 DSH 0.2.2-rc.1 下界，仅将上界收紧为 `>=0.2.2-rc.1 <0.3.0-0`，排除 0.3.0 及其预发布版本；原范围在官方 includePrerelease 校验下已能通过 rc.1。
 - 所有 DSH peer 同步为 `>=0.2.2-rc.1 <0.3.0-0`，保留对 rc.1 新增 `MarkdownText.omitHtml` 的依赖及原有 Markdown 渲染；开发依赖保持原版本。
 - 同步锁文件自身版本、打包断言及当前版本标识；兼容性声明不等于逐版本功能验证。
+
+## 0.1.1 (2026-11-11)
+
+- 修复 DSH 0.2.2-rc.1 加载兼容声明；Linux 加载验证，Windows / Electron 功能未实测。
+- 增加插件级 HTTP 代理、公司 CA、具名网络原因与中文排查提示；默认沿用宿主 fetch。
+- 合并重复网络错误，支持网络诊断、缓存快照导入导出及离线模式。
+
 
 ## 0.1.0 — unreleased
 

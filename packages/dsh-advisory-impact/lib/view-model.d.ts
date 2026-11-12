@@ -36,6 +36,11 @@ export declare function osvView(source: SourceResult<OsvLookup>): {
 };
 /** JSON-only evidence for commands and the required native panel; no HTML or OSV record bodies. */
 export declare function createViewModel(evaluation: Evaluation): {
+    diagnostics: {
+        code: string;
+        hintZh: string;
+        count: number;
+    }[];
     settings: import("./config.js").Settings;
     counts: {
         affected: number;

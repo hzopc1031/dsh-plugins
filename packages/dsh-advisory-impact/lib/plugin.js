@@ -1,3 +1,4 @@
+import { createIntranetHttp } from './intranet-http.js';
 import { CommandDefinitionId } from '@deepseek-ai/dsh-commands';
 import path from 'node:path';
 import os from 'node:os';
@@ -23,10 +24,13 @@ export function projectDirectory(ctx, agent) {
     return service ? service.get(agent.session) : agent.session.header.cwd;
 }
 export function apply(ctx, config = {}) {
+    const { httpsProxy, noProxy, caBundlePath, insecureSkipTlsVerify, offlineOnly, ...settings } = config;
+    const network = createIntranetHttp({ httpsProxy, noProxy, caBundlePath, insecureSkipTlsVerify });
+    ctx.effect(() => () => network.close());
     const cacheRoot = path.join(os.homedir(), '.cache', 'dsh-advisory-impact');
-    const service = new AdvisoryService({ config,
-        cache: new SourceCache(path.join(cacheRoot, 'official'), createHttpClient()),
-        osv: new OsvClient(new SourceCache(path.join(cacheRoot, 'osv'), createOsvHttpClient())) });
+    const service = new AdvisoryService({ config: settings,
+        cache: new SourceCache(path.join(cacheRoot, 'official'), createHttpClient({ fetch: network.fetch }), undefined, offlineOnly),
+        osv: new OsvClient(new SourceCache(path.join(cacheRoot, 'osv'), createOsvHttpClient({ fetch: network.fetch }), undefined, offlineOnly)) });
     ctx.effect(() => ctx.commands.register({
         definitionId: CommandDefinitionId('dsh-advisory-impact'),
         name,
@@ -35,6 +39,20 @@ export function apply(ctx, config = {}) {
         recordInput: false,
         handler: async ({ agent, rawInput, signal }) => {
             try {
+                if (['diagnose', 'snapshot-export', 'snapshot-import'].includes(rawInput.trim())) {
+                    const action = rawInput.trim(), directory = projectDirectory(ctx, agent);
+                    if (action === 'diagnose')
+                        return { kind: 'success', text: '网络诊断\n' + JSON.stringify(await network.diagnose(), null, 2) };
+                    if (!directory)
+                        throw new Error('请先选择本地项目');
+                    const { readLocal, writeLocal } = await import('./local.js');
+                    const snapshotFile = '.advisory-impact-snapshot.json';
+                    if (action === 'snapshot-export')
+                        await writeLocal(directory, snapshotFile, await service.exportSnapshot());
+                    else
+                        await service.importSnapshot(await readLocal(directory, snapshotFile, 32 * 1024 * 1024));
+                    return { kind: 'success', text: action === 'snapshot-export' ? '已导出项目内 .advisory-impact-snapshot.json' : '已导入本地快照，非实时官方抓取' };
+                }
                 const { action, args } = parseInput(rawInput);
                 const result = await service.execute(action === 'help' ? undefined : projectDirectory(ctx, agent), action, args, signal);
                 return { kind: 'success', text: result.text };

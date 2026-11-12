@@ -1,4 +1,4 @@
-﻿import { build } from 'esbuild'
+import { build } from 'esbuild'
 import { readFile } from 'node:fs/promises'
 const { name } = JSON.parse(await readFile('package.json', 'utf8'))
 await build({

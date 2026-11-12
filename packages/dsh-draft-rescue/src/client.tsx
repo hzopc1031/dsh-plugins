@@ -88,7 +88,16 @@ function DraftRescueReady({ sessionId, useInput, inputActions, useSessions, useP
   function append(draft: Draft) {
     try {
       requireCapabilities(live.current, inputActions)
-      const prepared = prepareAppend(draft, live.current)
+      let currentSnapshot: unknown
+      if (typeof inputActions.persistDraft === 'function') {
+        inputActions.persistDraft()
+        const raw = window.localStorage.getItem('dsh.conversation.' + sessionId)
+        const snapshot = raw ? JSON.parse(raw).draft : undefined
+        if (live.current.draft && snapshot === undefined) throw new Error('无法核对当前引用块位置，请复制原文后粘贴。')
+        if (snapshot && typeof snapshot === 'object') currentSnapshot = snapshot
+        else if (snapshot !== undefined && snapshot !== live.current.draft) throw new Error('当前草稿快照与输入框不一致，请复制原文后粘贴。')
+      }
+      const prepared = prepareAppend(draft, live.current, currentSnapshot)
       if (!inputActions.insertText(prepared.text, prepared.span)) throw new Error('输入框已变化、含无法定位的引用块或暂不可编辑；请复制原文后手动粘贴。')
       setNotice('已追加到当前输入框，尚未发送。')
     } catch (error) { setNotice(error instanceof Error ? error.message : '追加失败。') }

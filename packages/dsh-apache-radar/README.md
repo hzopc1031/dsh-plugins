@@ -26,7 +26,7 @@
 ## 三步快速上手
 
 1. **完全退出桌面 DSH。** 关闭所有窗口，并从系统托盘退出 DSH，确认已完全关闭后再安装或更新。需要 Node.js 22 及以上和 DSH 0.2.2-rc.1 及以上（排除 0.3.0 及其预发布版本）。
-2. **从 Git 安装。** `0.1.1` 尚未发布到 npm；包内已有界面和后台编译文件，无需允许安装脚本。
+2. **从 Git 安装。** `0.1.2` 尚未发布到 npm；包内已有界面和后台编译文件，无需允许安装脚本。
 
    ```powershell
    dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-apache-radar"
@@ -72,11 +72,17 @@ Every displayed count includes its source URL and fetch time in Asia/Singapore (
 
 The one-hour cache preserves the last good response on failure. JIRA is a capped first page per watched project, not a complete shipped-feature list; fixVersion and accepted proposals do not prove release. Hadoop has no verified general HIP feed. The native panel supports light/dark themes and needs no chat session or model key. No pin means unknown. Official pages are authoritative; OSV lookups are secondary and may return HTTP 404. Kafka suppressions stay separate. Flink’s ASF advisory page is experimental, covers advisories since 2023 and may lag. There is no production-upgrade verdict, foundation-wide daily sweep or automatic schedule.
 
+## 公司内网访问
+
+在公司电脑遇到 `fetch failed` 时，可查看错误代码与代理/公司证书排查提示。插件设置增加 `httpsProxy`、`noProxy`、`caBundlePath`、`insecureSkipTlsVerify`（默认关闭，开启不安全）。默认沿用 DSH 的用户级代理配置，不读取 Windows 系统代理或 PAC。具体 Windows `.dsh/.env` 写法、证书与重载步骤见[公司内网配置](../../docs/intranet-network.md)。
+
+选择项目目录后点击「网络诊断」，查看 DNS / TCP / TLS 及代理来源；同原因错误合并显示失败来源数量。「导出快照」「导入快照」可在断网机器复用官方响应，数据标为「本地快照」，保留原抓取时间。`offlineOnly: true` 使刷新也仅使用本地缓存。
+
 ## 补充说明
 
 ### 版本与验证范围
 
-版本 `0.1.1`（未发布），Node.js `>=22`，需要 DSH 0.2.2-rc.1 及以上（`>=0.2.2-rc.1 <0.3.0-0`，排除 0.3.0 及其预发布版本）。周报使用 rc.1 新增的 `MarkdownText.omitHtml` 禁用原始 HTML，因此保留 rc.1 下界。前次接口对照只读源码 `fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159`，历史实际加载验证版本为 **DSH 0.2.2-rc.1**。本次只验证版本准入，尚未重新进行真实界面验收，不代表逐版本功能或 Electron 桌面安装均已验证。
+版本 `0.1.2`（未发布），Node.js `>=22`，需要 DSH 0.2.2-rc.1 及以上（`>=0.2.2-rc.1 <0.3.0-0`，排除 0.3.0 及其预发布版本）。周报使用 rc.1 新增的 `MarkdownText.omitHtml` 禁用原始 HTML，因此保留 rc.1 下界。前次接口对照只读源码 `fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159`，内网分支另对照官方 tag 源码 `66491b05e3f05ad35bcdd4f6cd7ed26041d9e3db`；历史实际加载验证版本为 **DSH 0.2.2-rc.1**。本次只验证版本准入，尚未重新进行真实界面验收，不代表逐版本功能或 Electron 桌面安装均已验证。
 
 Linux 烟测在隔离 profile 中加载真实 DSH Web，使用录制数据验证侧栏入口、无模型且无会话时的直接使用、明暗主题、项目切换、关注编辑、版本保存、公告判定、JIRA 跳转、OSV 404、周报复制、窄屏和失败回退。未验证 Electron 桌面安装；前次任务的公开计数与匿名 JIRA 请求记录仍作为历史证据。本次界面验证不请求实时 ASF 来源。测试夹具保留原 URL、抓取时间、完整性摘要和裁剪说明，历史快照不表示当前官方数量。
 
@@ -105,10 +111,12 @@ Linux 烟测在隔离 profile 中加载真实 DSH Web，使用录制数据验证
 在包目录运行 `npm ci --ignore-scripts`，然后 `npm test && npm run verify-pack`。测试只使用记录夹具和注入故障，阻断实时 HTTP 与 socket；周报无需模型。`lib/` 已提交，打包检查排除夹具、测试及 `node_modules`，无安装生命周期脚本。
 
 
-### 0.1.1 兼容性声明
+### 0.1.2 兼容性声明
 
 本版声明 DSH `>=0.2.2-rc.1 <0.3.0-0`。官方版本检查使用 `semver.satisfies` 并开启 `includePrerelease`：接纳 0.2.2-rc.1 及后续 0.2.x 预发布/正式版，拒绝 0.2.1-rc.5，排除 0.3.0（含预发布）。原范围 `>=0.2.2-rc.1 <0.3.0` 已能通过 rc.1，此次仅收紧上界。所有 DSH peer 同步为 `>=0.2.2-rc.1 <0.3.0-0`；Cordis / Schemastery peer 和开发依赖保持当前设置。此次没有安装到用户 DSH；准入通过不等于逐版本功能或界面验证通过。
 
 周报保留原有带 `omitHtml` 的 Markdown 渲染，依赖 rc.1 及以上提供该安全属性。
 
 校验逻辑、源码对照与本次检查结果见[兼容性报告](../../docs/engines-compatibility.md)。
+
+当前兼容声明与 Linux 0.2.2-rc.1 加载结果见[兼容矩阵](../../docs/compat-matrix.md)；范围声明不表示逐版本实测，Windows / Electron 未在本机验证。

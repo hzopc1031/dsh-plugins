@@ -1,5 +1,5 @@
 {
-  "name": "dsh-dll-doctor", "version": "0.1.1", "description": "只读 Windows DLL 依赖与架构诊断（DSH rc.5）",
+  "name": "dsh-dll-doctor", "version": "0.1.2", "description": "只读 Windows DLL 依赖与架构诊断（DSH rc.5）",
   "type": "module", "main": "index.js", "types": "index.d.ts",
   "exports": { ".": { "types": "./index.d.ts", "default": "./index.js" }, "./core": { "types": "./lib/core.d.ts", "default": "./lib/core.js" }, "./locale/*.json": "./locale/*.json", "./icon": "./icon.svg", "./package.json": "./package.json" },
   "files": ["index.js", "index.d.ts", "lib/*.js", "lib/*.d.ts", "cordis.patch.yml", "locale/*.json", "icon.svg", "README.md", "CHANGELOG.md", "STATUS.md", "LICENSE", "THIRD_PARTY_NOTICES.md", "scripts/smoke-real.mjs", "scripts/fixture.mjs"],

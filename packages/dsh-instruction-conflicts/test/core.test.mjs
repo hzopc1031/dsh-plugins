@@ -1,4 +1,4 @@
-﻿import test from 'node:test'
+import test from 'node:test'
 import assert from 'node:assert/strict'
 import { buildReport, extractVersions, categoryOf, directives, detectConflicts, renderReport, instructionKey } from '../lib/core.js'
 import { workspace, runtime, skill, observed } from './fixtures.mjs'

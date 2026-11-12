@@ -9,7 +9,7 @@ const expected = [
   ...['pe', 'core', 'process', 'plugin'].flatMap(n => [`lib/${n}.js`, `lib/${n}.d.ts`]),
 ]
 assert.deepEqual(pack.files.map(f => f.path).sort(), expected.sort(), 'pack whitelist must match exactly')
-assert.equal(pkg.name, 'dsh-dll-doctor'); assert.equal(pkg.version, '0.1.1'); assert.equal(pkg.license, 'MIT')
+assert.equal(pkg.name, 'dsh-dll-doctor'); assert.equal(pkg.version, '0.1.2'); assert.equal(pkg.license, 'MIT')
 assert.equal(pkg.engines.dsh, '>=0.2.1-rc.5 <0.3.0-0'); assert.equal(pkg.engines.node, '>=22')
 assert.equal(pkg.dsh.bundle.patch, './cordis.patch.yml')
 assert.equal(pkg.repository.directory, 'packages/' + pkg.name)

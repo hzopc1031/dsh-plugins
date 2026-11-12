@@ -17,8 +17,9 @@ export declare function itemSummary(item: FeedItem): {
     fixVersions: string[] | undefined;
     notesUrl: string | undefined;
 };
-export type RadarAction = 'refresh' | 'counts' | 'watch' | 'brief' | 'open' | 'lookup' | 'dashboard' | 'security' | 'pin' | 'osv';
+export type RadarAction = 'refresh' | 'counts' | 'watch' | 'brief' | 'open' | 'lookup' | 'dashboard' | 'security' | 'pin' | 'osv' | 'diagnose' | 'export' | 'import';
 export interface RadarArgs {
+    snapshot?: string;
     version?: string;
     cve?: string;
     operation?: 'get' | 'add' | 'remove';
@@ -33,4 +34,6 @@ export declare function runRadar(directory: string, action: RadarAction, args?: 
     now?: () => Date;
     watchList?: string[];
     ttlMs?: number;
+    offlineOnly?: boolean;
+    diagnose?: () => Promise<unknown>;
 }): Promise<string>;

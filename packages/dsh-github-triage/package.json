@@ -1,6 +1,6 @@
 {
   "name": "dsh-github-triage",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "在界面配置仓库、业务与本地代码，结合 AI 判断 issue 是否值得修、PR 是否值得合入",
   "type": "module",
   "main": "index.js",
@@ -67,13 +67,13 @@
   "scripts": {
     "build": "tsc && node scripts/build-client.mjs",
     "typecheck": "tsc --noEmit",
-    "test": "npm run build && node --test --test-isolation=none test/*.test.mjs",
+    "test": "npm run build && node --test --test-concurrency=2 test/*.test.mjs",
     "verify-pack": "node scripts/verify-pack.mjs",
     "smoke-real": "node scripts/smoke-real.mjs",
     "ui-smoke": "node scripts/ui-smoke.mjs"
   },
   "dependencies": {
-    "undici": "^6.23.0",
+    "undici": "6.29.1",
     "zod": "4.4.3"
   },
   "peerDependencies": {

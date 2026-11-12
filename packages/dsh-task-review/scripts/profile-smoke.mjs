@@ -1,4 +1,4 @@
-﻿/** Official profile composer + Loader boot smoke test, no credentials/model/network. */
+/** Official profile composer + Loader boot smoke test, no credentials/model/network. */
 import assert from 'node:assert/strict'
 import { mkdtemp, mkdir, writeFile, readFile, readdir, rm, symlink } from 'node:fs/promises'
 import path from 'node:path'

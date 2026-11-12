@@ -1,5 +1,5 @@
 // Read-only verification against the semver bytes and compatibility evaluator shipped by DSH.
-// Usage: node scripts/verify-engines.cjs [path/to/resources/app.asar]
+// Usage: node scripts/verify-engines.cjs [path/to/resources/app.asar | directory/containing/node_modules]
 // The rc.5 and rc.1 official plugin-compatibility.ts blobs are identical:
 // 2e4ca5736a775aceadb0a2a10140af61f94ed2ac (see docs/engines-compatibility.md).
 const assert = require('node:assert/strict');
@@ -7,17 +7,23 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const { createRequire } = require('node:module');
-const archive = path.resolve(process.argv[2] || path.join(process.env.LOCALAPPDATA,
-  'Programs/DeepSeek Harness/resources/app.asar'));
-const fd = fs.openSync(archive, 'r');
+const archive = path.resolve(process.argv[2] || (process.env.LOCALAPPDATA
+  ? path.join(process.env.LOCALAPPDATA, 'Programs/DeepSeek Harness/resources/app.asar')
+  : path.join(__dirname, '../packages/dsh-github-triage')));
+const packed = fs.statSync(archive).isFile();
+const fd = packed ? fs.openSync(archive, 'r') : undefined;
 try {
-  const prefix = Buffer.alloc(16);
-  fs.readSync(fd, prefix, 0, 16, 0);
-  const bytes = Buffer.alloc(prefix.readUInt32LE(12));
-  fs.readSync(fd, bytes, 0, bytes.length, 16);
-  const tree = JSON.parse(bytes);
-  const base = 8 + prefix.readUInt32LE(4);
+  let tree, base;
+  if (packed) {
+    const prefix = Buffer.alloc(16);
+    fs.readSync(fd, prefix, 0, 16, 0);
+    const bytes = Buffer.alloc(prefix.readUInt32LE(12));
+    fs.readSync(fd, bytes, 0, bytes.length, 16);
+    tree = JSON.parse(bytes);
+    base = 8 + prefix.readUInt32LE(4);
+  }
   function read(filename) {
+    if (!packed) return fs.readFileSync(path.join(archive, filename.replace(/^dsh\//, '')), 'utf8');
     let entry = tree;
     for (const segment of filename.split('/')) entry = entry.files[segment];
     if (entry.unpacked) return fs.readFileSync(archive + '.unpacked/' + filename, 'utf8');
@@ -45,7 +51,8 @@ try {
   const semver = runtimeRequire('dsh/node_modules/semver/index.js');
   const appBoot = JSON.parse(read('dsh/node_modules/@deepseek-ai/dsh-app-boot/package.json'));
   const semverVersion = JSON.parse(read('dsh/node_modules/semver/package.json')).version;
-  assert.equal(semverVersion, '7.8.5', 're-audit if the official semver version changes');
+  if (packed) assert.equal(semverVersion, '7.8.5', 're-audit if the official semver version changes');
+  else assert.equal(semver.satisfies(semverVersion, appBoot.dependencies.semver), true, 'use app-boot’s declared semver dependency');
   const built = read('dsh/node_modules/@deepseek-ai/dsh-app-boot/lib/index.js');
   const start = built.indexOf('function objectOf$1(value, field)');
   const end = built.indexOf('function pluginCompatibilityWarning(', start);
@@ -99,5 +106,5 @@ try {
   assert.equal(semver.satisfies('0.2.2-rc.1', apacheLegacy, { includePrerelease: true }), true);
   console.log('PASS: original-range regression, future 0.2.x prereleases, 0.3 boundary, lock metadata and standard npm peers');
 } finally {
-  fs.closeSync(fd);
+  if (fd !== undefined) fs.closeSync(fd);
 }

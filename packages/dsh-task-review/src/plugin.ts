@@ -1,4 +1,4 @@
-﻿import type { Context } from '@deepseek-ai/cordis'
+import type { Context } from '@deepseek-ai/cordis'
 import path from 'node:path'
 import z from '@deepseek-ai/schemastery'
 import { appendPluginRecord, type Session } from '@deepseek-ai/dsh-session'

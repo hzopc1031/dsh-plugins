@@ -1,4 +1,4 @@
-﻿- insert:
+- insert:
     - id: instruction-conflicts
       name: dsh-instruction-conflicts
       config: {}

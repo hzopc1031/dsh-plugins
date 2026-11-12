@@ -1,4 +1,4 @@
-﻿export function observed(body,source,seq=0,current=true,role='user') { return {seq,time:1000+seq,role,body,source,current} }
+export function observed(body,source,seq=0,current=true,role='user') { return {seq,time:1000+seq,role,body,source,current} }
 export function workspace(items,seq=0,current=true) {
   const changes=items.map(i=>({action:i.action??'set',scope:i.scope??'.\0AGENTS.md',path:i.path??'AGENTS.md',digest:i.digest??'file-digest'}))
   const body='<system-reminder>\n'+items.map((i,index)=>{

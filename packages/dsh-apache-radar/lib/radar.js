@@ -1,7 +1,8 @@
+import { collapseNetworkErrors } from './intranet-http.js';
 import { collectSecurity, validatePin, validatePins, securitySummary } from './security.js';
 import { fetchCountsReport } from './counts.js';
 import { collectWatchFeeds, isSecurityItem } from './feeds.js';
-import { loadFeedCache, saveFeedCache } from './feed-cache.js';
+import { loadFeedCache, saveFeedCache, exportFeedSnapshot, importFeedSnapshot } from './feed-cache.js';
 import { writeWeeklyBrief } from './brief.js';
 import { createHttpClient } from './http.js';
 import { localPath, readLocal, writeLocal } from './local-files.js';
@@ -36,7 +37,19 @@ export function itemSummary(item) {
         status: item.status, statusText: item.statusText, issueType: item.issueType, fixVersions: item.fixVersions, notesUrl: item.notesUrl };
 }
 export async function runRadar(directory, action, args = {}, options = {}) {
+    if (action === 'diagnose')
+        return JSON.stringify(await options.diagnose?.() ?? { error: '网络诊断不可用' });
+    if (action === 'export')
+        return exportFeedSnapshot(directory);
     const state = await loadState(directory);
+    if (action === 'import') {
+        if (typeof args.snapshot !== 'string')
+            throw new Error('请选择 JSON 快照');
+        await importFeedSnapshot(directory, args.snapshot);
+        const imported = await loadFeedCache(directory);
+        state.collectedAt = [...imported.values()].map(e => e.fetchedAt).sort((a, b) => Date.parse(b) - Date.parse(a))[0];
+        await writeLocal(directory, stateFile, JSON.stringify(state));
+    }
     const watchList = resolveWatchList(state.watchList ?? options.watchList);
     if (action === 'watch') {
         const operation = args.operation ?? 'get';
@@ -76,6 +89,11 @@ export async function runRadar(directory, action, args = {}, options = {}) {
     }
     const cache = await loadFeedCache(directory);
     const now = options.now?.() ?? new Date();
+    if (options.offlineOnly && !cache.size && action !== 'dashboard')
+        throw new Error('离线模式没有可用缓存，请先导入本地快照。');
+    if (options.offlineOnly) {
+        options = { ...options, http: async () => { throw new Error('离线模式：仅使用本地缓存或快照'); }, ttlMs: Number.MAX_SAFE_INTEGER };
+    }
     if (action === 'lookup') {
         if (!state.collectedAt)
             throw new Error(message('errors.noCollection'));
@@ -116,14 +134,14 @@ export async function runRadar(directory, action, args = {}, options = {}) {
         }
         return JSON.stringify(securitySummary(security, args.project, args.query));
     }
-    const dashboard = action === 'dashboard';
-    const offline = dashboard && !args.refresh && !args.saveBrief;
+    const dashboard = action === 'dashboard' || action === 'import';
+    const offline = options.offlineOnly || dashboard && !args.refresh && !args.saveBrief;
     const brief = dashboard ? await readLocal(directory, '.apache-radar-brief.md') : undefined;
     if (offline && !cache.size)
         return JSON.stringify({ watchList, pins: state.pins ?? {}, empty: true, markdown: brief });
     const http = offline ? async () => { throw new Error('缓存已过期；点击刷新重试。'); }
         : options.http ?? createHttpClient({ now: options.now });
-    const ttlMs = dashboard && args.refresh ? 0 : options.ttlMs;
+    const ttlMs = options.offlineOnly || action === 'import' ? Number.MAX_SAFE_INTEGER : dashboard && args.refresh ? 0 : options.ttlMs;
     const counts = await fetchCountsReport(http, { cache, now, ttlMs });
     if (action === 'counts') {
         await saveFeedCache(directory, cache);
@@ -137,7 +155,8 @@ export async function runRadar(directory, action, args = {}, options = {}) {
             await writeLocal(directory, stateFile, JSON.stringify({ ...state, advisoryFirstSeen: firstSeen, collectedAt: now.toISOString() }));
         }
         const path = args.saveBrief ? await writeWeeklyBrief(directory, counts, feeds, now.toISOString(), security) : undefined;
-        return JSON.stringify({ watchList, security, pins: state.pins ?? {}, counts, sources: feeds.sources, window: feeds.window,
+        const diagnostics = collapseNetworkErrors({ counts, sources: feeds.sources, security });
+        return JSON.stringify({ diagnostics, localSnapshot: [...cache.values()].some(e => e.cacheError?.startsWith('本地快照')), watchList, security, pins: state.pins ?? {}, counts, sources: feeds.sources, window: feeds.window,
             collectedAt: offline ? state.collectedAt : now.toISOString(), items: feeds.items.map(itemSummary),
             undatedItems: feeds.undatedItems.map(itemSummary), path,
             markdown: args.saveBrief ? await readLocal(directory, '.apache-radar-brief.md') : brief });

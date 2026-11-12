@@ -1,5 +1,10 @@
 # 更新记录
 
+## 0.4.1 - 2026-11-12
+
+- 合并内网代理 / CA 诊断改动与 main 的 DSH 0.2.2-rc.1 兼容修复（merge intranet proxy/CA diagnostics with main's 0.2.2-rc.1 compatibility）；保留本包两侧已有功能与验证边界。
+- 保留 0.4.0 侧栏页面、KPI / 卡片、宿主 POST 路由及全部命令；请求层整合代理、额外 CA、错误代码与中文提示。
+
 ## 0.4.0 - 2026-11-12
 
 - 参照 dsh-context 0.83.1 重做一级侧边栏「GitHub 哨兵」页面；会话顶部按钮导航到同一页面。页头设置与模型胶囊、六项 KPI、仓库卡片网格、结果卡片与规则区形成完整工作台。
@@ -27,6 +32,12 @@
 - 详情中纠正三档结论并填写理由，规则可查看和导出，默认不覆盖。没有新增 GitHub 写操作或本地代码修改。
 - 预构建 lib 与浏览器 bundle 纳入 42 文件发布白名单；临时 rc.5 profile 验证 client 入口。UI smoke 改用系统 TEMP、桌面自带 CLI 本地路径离线安装、独立无头 Edge/CDP、截图与失败清理；真实 UI 在沙箱中因 CLI 访问被拒未验证。
 - 新增结构化 /triage-ui 数据命令，借助宿主真实 commands.execute remote 承接界面调用；结果沿用宿主会话命令日志。新增服务端和 jsdom 测试、client 入口与 UI smoke 验证脚本。
+
+## 0.2.1 (2026-11-11)
+
+- 修复 DSH 0.2.2-rc.1 加载兼容声明；Linux 加载验证，Windows / Electron 功能未实测。
+- 增加插件级 HTTP 代理、公司 CA、具名网络原因与中文排查提示；默认沿用宿主 fetch。
+
 
 ## 0.2.0 · 2026-11-11
 

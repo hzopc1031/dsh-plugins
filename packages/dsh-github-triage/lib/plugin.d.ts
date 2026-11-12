@@ -1,3 +1,4 @@
+import { type IntranetSettings } from './intranet-http.js';
 import type { Context } from '@deepseek-ai/cordis';
 import z from '@deepseek-ai/schemastery';
 import { type Settings } from './types.js';
@@ -34,6 +35,10 @@ export declare const Config: z<Schemastery.ObjectS<NoInfer<{
     modelEnabled: z<boolean, boolean, "defined">;
     provider: z<string, string, "defined">;
     model: z<string, string, "defined">;
+    httpsProxy: z<string>;
+    noProxy: z<string>;
+    caBundlePath: z<string>;
+    insecureSkipTlsVerify: z<boolean>;
 }>>, Schemastery.ObjectT<NoInfer<{
     repositories: z<({
         repo?: string | null | undefined;
@@ -65,8 +70,12 @@ export declare const Config: z<Schemastery.ObjectS<NoInfer<{
     modelEnabled: z<boolean, boolean, "defined">;
     provider: z<string, string, "defined">;
     model: z<string, string, "defined">;
+    httpsProxy: z<string>;
+    noProxy: z<string>;
+    caBundlePath: z<string>;
+    insecureSkipTlsVerify: z<boolean>;
 }>>, "plain">;
-export interface Input {
+export interface Input extends IntranetSettings {
     repositories?: {
         repo: string;
         mode?: 'issues' | 'prs' | 'both';

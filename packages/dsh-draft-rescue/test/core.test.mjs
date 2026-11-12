@@ -103,3 +103,28 @@ test('rc.1 quote snapshots validate normalized projection and all atomic span ov
   assert.equal(draftText({text,quotes:[quote],references:[{source:'file',ref:'x',label:'first',clipboardText:'first',offset:9,length:5}]}), undefined)
   assert.equal(draftText({text:'/go > x',command:{token:'/go '},references:[],quotes:[{offset:4,length:3,text:'x'}]}), '/go > x')
 })
+
+test('0.2.2-rc.1 accepts the same draft schema', () => {
+  const runtime = { release: { version: '0.2.2-rc.1' } }
+  assert.deepEqual(listDrafts(storage([['dsh.conversation.a', record({ text: 'rc.1', references: [] })]]), runtime), [{ sessionId: 'a', text: 'rc.1' }])
+})
+
+test('rc.1 quote spans are validated and count as one position when appending', () => {
+  const snapshot = { text: '> quoted\n尾', references: [], quotes: [{ text: 'quoted', offset: 0, length: 8 }] }
+  assert.equal(draftText(snapshot), snapshot.text)
+  const result = prepareAppend({ text: 'new' }, { draft: snapshot.text, occurrences: [], phase: 'plain', draftRev: 4 }, snapshot)
+  assert.equal(result.span.start, 3)
+  assert.equal(result.text, '\nnew')
+  assert.equal(draftText({ ...snapshot, quotes: [{ ...snapshot.quotes[0], length: 9 }] }), undefined)
+  assert.equal(draftText({ ...snapshot, quotes: [snapshot.quotes[0], snapshot.quotes[0]] }), undefined)
+  assert.throws(() => prepareAppend({ text: 'new' }, { draft: 'changed', occurrences: [], phase: 'plain', draftRev: 4 }, snapshot), /不一致/)
+  assert.throws(() => prepareAppend({ text: 'new' }, { draft: snapshot.text, occurrences: [], phase: 'plain', draftRev: 4 }, { ...snapshot, references: [{ source:'file', ref:'x', label:'尾', clipboardText:'尾', offset:9, length:1 }] }), /不一致/)
+})
+
+test('persisted quotes and references share atomic coordinates regardless of JSON property order', () => {
+  const ref = { offset: 4, length: 4, source: 'file', ref: '/file', label: 'file', clipboardText: 'file' }
+  const snapshot = { text: '> q file', references: [ref], quotes: [{ offset: 0, length: 3, text: 'q' }] }
+  const occurrences = [{ occurrenceId: 1, clipboardText: 'file', label: 'file', ref: '/file', source: 'file', length: 4, offset: 4 }]
+  const prepared = prepareAppend({ text: 'new' }, { draft: snapshot.text, occurrences, phase: 'plain', draftRev: 9 }, snapshot)
+  assert.deepEqual(prepared, { text: '\nnew', span: { start: 3, end: 3, draftRev: 9 } })
+})

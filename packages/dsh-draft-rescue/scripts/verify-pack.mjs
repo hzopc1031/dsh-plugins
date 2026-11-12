@@ -12,7 +12,7 @@ const expected = [
   ...['plugin', 'client', 'core'].flatMap(name => [`lib/${name}.js`, `lib/${name}.d.ts`]),
 ]
 assert.deepEqual(pack.files.map(file => file.path).sort(), expected.sort(), '发布文件必须精确匹配白名单')
-assert.equal(pkg.version, '0.2.2')
+assert.equal(pkg.version, '0.2.3')
 assert.equal(pkg.license, 'MIT')
 assert.equal(pkg.engines.dsh, '>=0.2.1-rc.5 <0.3.0-0')
 assert.equal(pkg.dsh.bundle.patch, './cordis.patch.yml')

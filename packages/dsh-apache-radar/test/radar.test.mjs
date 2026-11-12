@@ -124,3 +124,23 @@ test('state trust boundary fails explicitly on malformed documents and rejects a
   await assert.rejects(runRadar(directory, 'watch', { operation: 'add', project: 'kafka' }, options), /symlink/)
   assert.equal(await readFile(outside, 'utf8'), '{"watchList":[]}')
 }))
+
+test('imported snapshot powers the offline dashboard and explicit refresh never calls live HTTP', async () => inDirectory(async source => inDirectory(async target => {
+  await runRadar(source, 'refresh', {}, options)
+  const snapshot = await runRadar(source, 'export')
+  let calls = 0
+  const offline = { ...options, offlineOnly: true, http: async () => { calls++; assert.fail('offline transport reached') } }
+  const imported = JSON.parse(await runRadar(target, 'import', { snapshot }, offline))
+  assert.equal(imported.localSnapshot, true)
+  assert.equal(imported.counts.counts[0].status, 'ok')
+  assert.ok(imported.items.length + imported.undatedItems.length > 0)
+  const refreshed = JSON.parse(await runRadar(target, 'dashboard', { refresh: true }, offline))
+  assert.equal(refreshed.localSnapshot, true)
+  assert.equal(refreshed.counts.counts[0].status, 'ok')
+  assert.equal(calls, 0)
+})))
+
+
+test('offline commands with no cache give a Chinese recovery message', async () => inDirectory(async directory => {
+  await assert.rejects(runRadar(directory, 'refresh', {}, { offlineOnly: true, http: async () => assert.fail('offline') }), /没有可用缓存.*导入.*快照/)
+}))

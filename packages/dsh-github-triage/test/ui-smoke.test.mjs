@@ -1,4 +1,4 @@
-﻿/** Isolated script contract tests; the fake CLI never boots or installs DSH. */
+/** Isolated script contract tests; the fake CLI never boots or installs DSH. */
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { execFile } from 'node:child_process'
@@ -37,7 +37,7 @@ console.error('https://127.0.0.1/?token=fixture-private#fixture-hash');process.e
     const r=await invoke(['--dsh',fake,'--browser',process.execPath]);assert.equal(r.code,1)
     const home=await readFile(path.join(fixture,'home.txt'),'utf8')
     await assert.rejects(access(path.dirname(home)))
-    artifact=r.stdout.match(/(\S:[^\r\n]*dsh-github-triage-ui-artifacts-[^\r\n]*)/)?.[1]
+    artifact=r.stdout.match(/截图\/诊断：([^\r\n]+)/)?.[1]
     assert.ok(artifact,r.stdout)
     const log=await readFile(path.join(artifact,'install-local.log'),'utf8')
     assert.ok(!log.includes('fixture-private')&&!log.includes('fixture-hash'))

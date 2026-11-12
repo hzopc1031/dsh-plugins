@@ -1,6 +1,6 @@
-﻿{
+{
     "name":  "dsh-instruction-conflicts",
-    "version":  "0.2.1",
+    "version":  "0.2.2",
     "description":  "指令冲突解释器：规则正文疑似冲突、注入版本及当前上下文证据",
     "type":  "module",
     "main":  "index.js",

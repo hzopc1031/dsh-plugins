@@ -1,4 +1,4 @@
-﻿import { deriveEventMessage, foldSurface, isSurfaceEvent, type SessionEvent } from '@deepseek-ai/dsh-session'
+import { deriveEventMessage, foldSurface, isSurfaceEvent, type SessionEvent } from '@deepseek-ai/dsh-session'
 import { currentSessionMessageProjections } from '@deepseek-ai/dsh-session-format-catalog/message-projections'
 import type { ObservedMessage } from './core.js'
 export interface AssemblyEvidence { prompt: string; sections: { name: string; text: string }[] }

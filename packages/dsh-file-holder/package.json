@@ -1,6 +1,6 @@
 {
   "name": "dsh-file-holder",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "查询 Windows 项目内指定文件的占用程序（仅人类命令）",
   "type": "module",
   "main": "index.js",

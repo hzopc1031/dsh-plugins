@@ -1,4 +1,4 @@
-﻿import path from 'node:path'
+import path from 'node:path'
 import type { FileSystem, FsInfo } from '@deepseek-ai/dsh-fs'
 import { resolveDshHome, resolveAgentsHome, dshHomeDisplay, agentsHomeDisplay } from '@deepseek-ai/dsh-home-paths'
 import { categoryOf, instructionKey, type FileFact, type ObservedMessage, type Presence } from './core.js'

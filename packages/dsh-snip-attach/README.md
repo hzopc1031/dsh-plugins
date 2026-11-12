@@ -67,7 +67,7 @@ Origin/CORS 不是本机进程的身份验证。本机程序能伪造 Origin；�
 | 隐藏 input 选择器未具体写出 | rc.5 的 `InputBar.tsx` 使用 `data-composer-card`、隐藏 multiple file input；`onPickFiles` 清空 value 后调用 `intakeFiles`。本包按此限定选择器，并等待附件 ID 变化作为线索，要求人工核对预览。 | [InputBar.tsx 的 onPickFiles、intakeFiles、工具栏 JSX](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/packages/client/ui-conversation/src/client/skeleton/InputBar.tsx) |
 | origin `dsh-app://app` | 与 rc.5 一致。只准该 Origin，且客户端校验 protocol/hostname；不使用标准 URL 对自定义协议可能返回的 `origin: null` 来放宽访问。 | [desktop/ipc.ts 的 SCHEME](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/apps/desktop/src/ipc.ts)、[desktop/main.ts 的 applicationUrl、scheme privileges 与 Origin 检查](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/apps/desktop/src/main.ts) |
 | 桌面壳禁用 getDisplayMedia | rc.5 **内嵌浏览器**明确用空 callback 拒绝 display media；主应用的媒体权限代码只允许 audio，没有安装屏幕来源选择 handler。源码不支持把“主页面显式覆写/禁用 getDisplayMedia”当成已验证结论。本包按无可用屏幕捕获桥处理，采用设计的 Windows URI；未实际调用 getDisplayMedia 检查运行时错误。 | [browser-guests.ts 的 configureSession](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/apps/desktop/src/browser-guests.ts)、[microphone-permissions.ts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/apps/desktop/src/microphone-permissions.ts)、[其官方测试](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/apps/desktop/tests/microphone-permissions.spec.ts)、[preload-app.ts 暴露的桥](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/apps/desktop/src/preload-app.ts) |
-| `__ModuleLoader__.load({id,factory})` | 保持该 factory 格式，React 由宿主提供；依照已有包预构建 CJS factory，并声明 rc.5 client 包依赖。0.1.0 曾增加精确版本/桌面检查，0.2.2 已用能力检测替代版本比较；只声明 `platform: web` 不足以判定桌面。 | [client-modules.md 的 WebBootGraph.release 与包扫描](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/docs/subsystems/client-modules.md)、本仓库 `dsh-draft-rescue/scripts/build-client.mjs` |
+| `__ModuleLoader__.load({id,factory})` | 保持该 factory 格式，React 由宿主提供；依照已有包预构建 CJS factory，并声明 rc.5 client 包依赖。0.1.0 曾增加精确版本/桌面检查，0.2.3 已用能力检测替代版本比较；只声明 `platform: web` 不足以判定桌面。 | [client-modules.md 的 WebBootGraph.release 与包扫描](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.5/docs/subsystems/client-modules.md)、本仓库 `dsh-draft-rescue/scripts/build-client.mjs` |
 | 并发、注入成功和失败处理 | 额外拒绝并发捕获、拒绝非桌面/接口不符、会话切换后停止注入、GET 原子消费 token、检查 PNG 文件头；204 明示未完成。PS1 通过剪贴板序号确认发生新写入，无法获得序号时退出；其他程序的写入仍需人工排除。 | 设计的单一全局剪贴板和一次性 token 约束；rc.5 InputBar 的 busy/图片限制与 session 作用域 |
 
 仓库基线 `64d6bb3` 没有根 `AGENTS.md` 或 `_template`；实际遵循根 README、`dsh-draft-rescue`、`dsh-file-ref-copy` 的独立 lockfile、TS、预构建产物、测试和精确 verify-pack 白名单惯例。未读取 `_private`、`_tools`，未改 `app.asar`、已安装资源或 DSH 全局配置。
@@ -126,12 +126,14 @@ DryRun 在任何剪贴板读取、截图启动或图片写入之前退出，仅�
 
 MIT，见 LICENSE。
 
-## 补充说明：0.2.2 兼容与验证
+## 补充说明：0.2.3 兼容与验证
 
 剪贴板新旧判断改用 Windows GetClipboardSequenceNumber，并在读取图片前后核对序号，替代九点像素采样；同像素的新截图也可识别。序号无法证明写入者一定是截图工具，请在等待期间避免其他程序改写剪贴板。intake 最多等待 2 秒，卸载/切换会话取消，实时检查 removed/subagent/phase。已核对的两版左侧槽位都没有公开的 File → accepted attachment ID 回执，新增 ID 也可能来自其他附件，所以只提示“已提交截图，请核对待发送图片”，不声称已确认加入；缺少变化或拒绝时提示 Ctrl+V。继续复用当前 composer 唯一的隐藏 input/change，未调用内部 createDrafts/addFiles。
 
-版本 **0.2.2**，MIT，尚未发布本版本到 npm。声明 DSH `>=0.2.1-rc.5 <0.3.0-0`；宿主以 `includePrerelease` 校验准入。已逐项核对官方 `dsh-v0.2.1-rc.5` 和 `dsh-v0.2.2-rc.1` 源码，客户端改为检测实际接口和数据形状，不再读取或精确比较启动版本。未知版本标签不会单独阻止操作，接口或结构不符则安全拒绝；这不表示未知版本已经验证。开发类型依赖保持 rc.5，未安装或改动依赖。
+版本 **0.2.3**，MIT，尚未发布本版本到 npm。声明 DSH `>=0.2.1-rc.5 <0.3.0-0`；宿主以 `includePrerelease` 校验准入。已逐项核对官方 `dsh-v0.2.1-rc.5` 和 `dsh-v0.2.2-rc.1` 源码，客户端改为检测实际接口和数据形状，不再读取或精确比较启动版本。未知版本标签不会单独阻止操作，接口或结构不符则安全拒绝；这不表示未知版本已经验证。开发类型依赖保持 rc.5；此次按锁文件安装构建依赖，未新增依赖。
 
 两包都已运行 build、typecheck、npm test 和 verify-pack；预构建 factory 回归覆盖 rc.5 / rc.1 / 未知标签及格式不符。源码和模拟测试不能替代真实 rc.1 Electron 安装、输入、剪贴板、上传或界面验收，本次未改动用户 DSH。
 
 逐项文件、行号证据与测试边界见[rc.1 功能适配报告](../../docs/rc1-draft-snip-compatibility.md)，版本准入规则见[兼容性报告](../../docs/engines-compatibility.md)。
+
+本次 0.2.2-rc.1 兼容结论与 API 依据见[兼容矩阵](../../docs/compat-matrix.md)。本次在 Linux 实际加载；Windows / Electron 功能未实机验证，历史 rc.5 测试记录不代表本次加载过该版本。

@@ -1,3 +1,4 @@
+import { createIntranetHttp, describeNetworkError } from './intranet-http.js';
 import { setTimeout as delay } from 'node:timers/promises';
 export const SOURCES = {
     kafka: 'https://kafka.apache.org/community/cve-list/',
@@ -7,7 +8,7 @@ export const SOURCES = {
     suppressions: 'https://raw.githubusercontent.com/apache/kafka/trunk/gradle/resources/dependencycheck-suppressions.xml',
     guidance: 'https://security.apache.org/report-dependency/',
 };
-export const USER_AGENT = 'dsh-advisory-impact/0.1.1 (https://github.com/hzopc1031/dsh-plugins)';
+export const USER_AGENT = 'dsh-advisory-impact/0.1.2 (https://github.com/hzopc1031/dsh-plugins)';
 const allowed = new Set(Object.values(SOURCES));
 export class SourceError extends Error {
     url;
@@ -73,7 +74,8 @@ export function createOsvHttpClient(options = {}) {
     return transport(true, options);
 }
 function transport(osv, options) {
-    const fetch = options.fetch ?? globalThis.fetch;
+    const network = createIntranetHttp(options);
+    const fetch = options.fetch ?? network.fetch;
     const now = options.now ?? (() => new Date());
     const sleep = options.sleep ?? delay;
     const timeoutMs = options.timeoutMs ?? 15_000;
@@ -125,13 +127,17 @@ function transport(osv, options) {
             throw new Error('HTTP 429; retry later');
         }
         catch (error) {
-            throw new SourceError(url, error instanceof Error ? error.message : 'Fetch failed', { cause: error });
+            const info = describeNetworkError(error);
+            const detail = error instanceof Error ? error.message : 'fetch failed';
+            const hint = !detail.includes(info.hintZh) && (info.code !== 'NETWORK_ERROR' || /fetch failed/i.test(detail)) ? `；${info.code}；${info.hintZh}` : '';
+            throw new SourceError(url, detail + hint, { cause: error });
         }
     };
     let pending = Promise.resolve();
-    return (url, query) => {
+    const client = (url, query) => {
         const result = pending.then(() => request(url, query));
         pending = result.catch(() => { });
         return result;
     };
+    return Object.assign(client, { close: network.close, diagnose: network.diagnose });
 }

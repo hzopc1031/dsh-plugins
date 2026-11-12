@@ -1,6 +1,6 @@
 {
   "name": "dsh-file-ref-copy",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "从 DSH 已完成回答的原始 Markdown 复制本地文件引用路径",
   "type": "module",
   "main": "index.js",

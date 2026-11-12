@@ -1,4 +1,4 @@
-﻿/** Deterministic demo only: exercises the model pipeline, makes no LLM request. */
+/** Deterministic demo only: exercises the model pipeline, makes no LLM request. */
 export default async function mockModel(prompt){
   const data=JSON.parse(prompt),business=data.business?.text
   const values=['adopt','manual-review','not-recommended'],recommendation=values[(data.item.number-1)%3]

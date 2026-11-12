@@ -1,4 +1,5 @@
-import { type Dispatcher } from 'undici';
+import type { Dispatcher } from 'undici';
+import { type IntranetSettings } from './intranet-http.js';
 import { type Scan, type Item } from './types.js';
 import { SafeText } from './safety.js';
 export type Fetcher = (url: string, init: {
@@ -20,7 +21,8 @@ export declare const ghToken: GhToken;
 export declare class GithubError extends Error {
     readonly status: number;
     readonly retryAt?: number | undefined;
-    constructor(status: number, retryAt?: number | undefined);
+    readonly code?: string;
+    constructor(status: number, retryAt?: number | undefined, cause?: unknown);
 }
 export declare class Github {
     #private;
@@ -34,6 +36,7 @@ export declare class Github {
         timeoutMs?: number;
         maxPages?: number;
         now?: () => number;
+        network?: IntranetSettings;
     });
     private auth;
     request<T>(path: string, method?: string, signal?: AbortSignal): Promise<T>;

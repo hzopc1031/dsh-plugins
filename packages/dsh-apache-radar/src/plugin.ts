@@ -4,6 +4,7 @@ import type { Agent } from '@deepseek-ai/dsh-agent'
 import { defineTool, type ParameterSchemaSpec } from '@deepseek-ai/dsh-tools'
 import z from '@deepseek-ai/schemastery'
 import { DEFAULT_WATCH_LIST, resolveWatchList } from './watch.js'
+import { intranetConfig, type IntranetSettings } from './intranet-http.js'
 import { createHttpClient } from './http.js'
 import { validDirectory } from './local-files.js'
 import { runRadar, type RadarAction, type RadarArgs } from './radar.js'
@@ -13,8 +14,10 @@ import { renderCommandResult } from './command.js'
 
 export const name = 'apache-radar'
 export const inject = ['commands', 'tools', 'agents']
-export interface Config { watchList?: string[] }
+export interface Config extends IntranetSettings { watchList?: string[]; offlineOnly?: boolean }
 export const Config: z<Config> = z.object({
+  ...intranetConfig,
+  offlineOnly: z.boolean().default(false).description('仅使用本地缓存或导入快照，不访问外网'),
   watchList: z.array(z.string()).default([...DEFAULT_WATCH_LIST]).description(message('config.watchList')),
 })
 export const HELP = message('command.help')
@@ -23,7 +26,8 @@ const actions: RadarAction[] = ['refresh', 'counts', 'watch', 'brief', 'open', '
 const toolNames = actions.map(action => `apache_radar_${action}`)
 export function apply(ctx: Context, config: Config = {}): void {
   const watchList = resolveWatchList(config.watchList)
-  const http = createHttpClient()
+  const http = createHttpClient(config)
+  ctx.effect(() => () => http.close())
   const directoryOf = (agent: Agent | undefined) => {
     if (!agent) return undefined
     const service = ctx.get?.('workingDirectory') as { get(session: Agent['session']): string } | undefined
@@ -33,7 +37,7 @@ export function apply(ctx: Context, config: Config = {}): void {
   let queue: Promise<unknown> = Promise.resolve()
   const run = (directory: string | undefined, action: RadarAction, args: RadarArgs = {}) => {
     if (!validDirectory(directory)) return Promise.reject(new Error(message('errors.directory')))
-    const result = queue.then(() => runRadar(directory, action, args, { watchList, http }))
+    const result = queue.then(() => runRadar(directory, action, args, { watchList, http, offlineOnly: config.offlineOnly, diagnose: http.diagnose }))
     queue = result.catch(() => {})
     return result
   }

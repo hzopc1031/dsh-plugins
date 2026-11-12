@@ -108,10 +108,17 @@ function listDrafts(storage) {
 function copyText(draft) {
   return draft.text;
 }
-function prepareAppend(draft, input) {
+function prepareAppend(draft, input, currentSnapshot) {
   requireInput(input);
   if (input.phase !== "plain") throw new Error("\u5F53\u524D\u8F93\u5165\u6846\u5FD9\u788C\u6216\u5904\u4E8E\u547D\u4EE4\u6A21\u5F0F\uFF0C\u8BF7\u56DE\u5230\u666E\u901A\u8F93\u5165\u540E\u8FFD\u52A0\u3002");
-  const end = input.draft.length - input.occurrences.reduce((sum, ref) => sum + ref.length - 1, 0);
+  let quoteWidth = 0;
+  if (currentSnapshot !== void 0) {
+    if (!object(currentSnapshot) || draftText(currentSnapshot) !== input.draft) throw new Error("\u5F53\u524D\u8349\u7A3F\u5FEB\u7167\u4E0E\u8F93\u5165\u6846\u4E0D\u4E00\u81F4\uFF0C\u8BF7\u590D\u5236\u539F\u6587\u540E\u7C98\u8D34\u3002");
+    const references = currentSnapshot.references;
+    if (references.length !== input.occurrences.length || references.some((ref, i) => ref.offset !== input.occurrences[i].offset || ref.length !== input.occurrences[i].length)) throw new Error("\u5F53\u524D\u8349\u7A3F\u5FEB\u7167\u4E0E\u8F93\u5165\u6846\u4E0D\u4E00\u81F4\uFF0C\u8BF7\u590D\u5236\u539F\u6587\u540E\u7C98\u8D34\u3002");
+    quoteWidth = (currentSnapshot.quotes ?? []).reduce((sum, quote) => sum + quote.length - 1, 0);
+  }
+  const end = input.draft.length - quoteWidth - input.occurrences.reduce((sum, ref) => sum + ref.length - 1, 0);
   if (end < 0) throw new Error("\u8F93\u5165\u6846\u72B6\u6001\u65E0\u6548\uFF0C\u8BF7\u91CD\u8BD5\u3002");
   return {
     text: (input.draft ? "\n" : "") + copyText(draft),
@@ -206,7 +213,16 @@ function DraftRescueReady({ sessionId, useInput, inputActions, useSessions, useP
   function append(draft) {
     try {
       requireCapabilities(live.current, inputActions);
-      const prepared = prepareAppend(draft, live.current);
+      let currentSnapshot;
+      if (typeof inputActions.persistDraft === "function") {
+        inputActions.persistDraft();
+        const raw = window.localStorage.getItem("dsh.conversation." + sessionId);
+        const snapshot = raw ? JSON.parse(raw).draft : void 0;
+        if (live.current.draft && snapshot === void 0) throw new Error("\u65E0\u6CD5\u6838\u5BF9\u5F53\u524D\u5F15\u7528\u5757\u4F4D\u7F6E\uFF0C\u8BF7\u590D\u5236\u539F\u6587\u540E\u7C98\u8D34\u3002");
+        if (snapshot && typeof snapshot === "object") currentSnapshot = snapshot;
+        else if (snapshot !== void 0 && snapshot !== live.current.draft) throw new Error("\u5F53\u524D\u8349\u7A3F\u5FEB\u7167\u4E0E\u8F93\u5165\u6846\u4E0D\u4E00\u81F4\uFF0C\u8BF7\u590D\u5236\u539F\u6587\u540E\u7C98\u8D34\u3002");
+      }
+      const prepared = prepareAppend(draft, live.current, currentSnapshot);
       if (!inputActions.insertText(prepared.text, prepared.span)) throw new Error("\u8F93\u5165\u6846\u5DF2\u53D8\u5316\u3001\u542B\u65E0\u6CD5\u5B9A\u4F4D\u7684\u5F15\u7528\u5757\u6216\u6682\u4E0D\u53EF\u7F16\u8F91\uFF1B\u8BF7\u590D\u5236\u539F\u6587\u540E\u624B\u52A8\u7C98\u8D34\u3002");
       setNotice("\u5DF2\u8FFD\u52A0\u5230\u5F53\u524D\u8F93\u5165\u6846\uFF0C\u5C1A\u672A\u53D1\u9001\u3002");
     } catch (error) {

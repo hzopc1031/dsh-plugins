@@ -25,6 +25,7 @@ test('actual Cordis loads rc.5 registration, uses workingDirectory, cancellation
   ctx.provide('subprocess'); ctx.set('subprocess', { spawn() { processCalls++; throw Error('registry unavailable in fixture') } })
   const fiber = ctx.plugin(plugin)
   const original = Object.getOwnPropertyDescriptor(process, 'platform')
+  const systemRoot = process.env.SystemRoot
   try {
     await fiber
     assert.equal(definitions.length, 1)
@@ -34,6 +35,7 @@ test('actual Cordis loads rc.5 registration, uses workingDirectory, cancellation
     Object.defineProperty(process, 'platform', { value: 'linux' })
     assert.match((await invoke('a.exe')).text, /暂不支持（仅 Windows）/); assert.equal(processCalls, 0); assert.equal(directoryCalls, 0)
     Object.defineProperty(process, 'platform', { value: 'win32' })
+    process.env.SystemRoot = dir // The simulated Windows search root must exist on the test OS.
     assert.equal((await invoke('')).kind, 'error')
     const result = await invoke('a.exe')
     assert.equal(result.kind, 'success'); assert.match(result.text, /dsh-missing-test.dll：缺失/)
@@ -43,6 +45,8 @@ test('actual Cordis loads rc.5 registration, uses workingDirectory, cancellation
     assert.match(cancelled.text, /取消/)
   } finally {
     Object.defineProperty(process, 'platform', original)
+    if (systemRoot === undefined) delete process.env.SystemRoot
+    else process.env.SystemRoot = systemRoot
     await fiber.dispose(); await rm(dir, { recursive: true, force: true })
   }
   assert.equal(removed, true)

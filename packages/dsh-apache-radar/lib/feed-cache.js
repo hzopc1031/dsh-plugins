@@ -6,7 +6,7 @@ function validate(value) {
         throw new Error('Invalid feed cache entry');
     const entry = value;
     if (typeof entry.url !== 'string' || publicSourceUrl(entry.url) !== entry.url
-        || typeof entry.payload !== 'string' || typeof entry.fetchedAt !== 'string' || !Number.isFinite(Date.parse(entry.fetchedAt))
+        || typeof entry.payload !== 'string' || Buffer.byteLength(entry.payload) > 8 * 1024 * 1024 || typeof entry.fetchedAt !== 'string' || !Number.isFinite(Date.parse(entry.fetchedAt))
         || (entry.cacheError !== undefined && typeof entry.cacheError !== 'string')
         || (entry.status !== undefined && ![200, 404].includes(entry.status))
         || (entry.status === 404 && !entry.url.startsWith('https://api.osv.dev/v1/vulns/'))
@@ -18,6 +18,11 @@ export async function loadFeedCache(directory) {
     const content = await readLocal(directory, filename);
     if (content === undefined)
         return new Map();
+    return parseFeedSnapshot(content);
+}
+export function parseFeedSnapshot(content) {
+    if (Buffer.byteLength(content) > 32 * 1024 * 1024)
+        throw new Error('快照超过 32 MiB');
     const raw = JSON.parse(content);
     if (!Array.isArray(raw))
         throw new Error('Invalid feed cache document');
@@ -63,7 +68,7 @@ export async function readCachedSource(http, url, parser, options = {}) {
         return { ...result, cacheStatus: 'ok' };
     }
     catch (cause) {
-        const cacheError = `${url}: ${cause instanceof Error ? cause.message : String(cause)}`;
+        const cacheError = `${previous?.cacheError?.startsWith('本地快照') ? '本地快照（导入），非实时抓取；' : ''}${url}: ${cause instanceof Error ? cause.message : String(cause)}`;
         if (previous) {
             try {
                 const result = await parse(previous);
@@ -76,4 +81,16 @@ export async function readCachedSource(http, url, parser, options = {}) {
         }
         throw new Error(cacheError, { cause });
     }
+}
+export async function exportFeedSnapshot(directory) {
+    return JSON.stringify([...(await loadFeedCache(directory)).values()]);
+}
+export async function importFeedSnapshot(directory, content) {
+    const incoming = parseFeedSnapshot(content);
+    if (!incoming.size)
+        throw new Error('快照为空');
+    const cache = await loadFeedCache(directory);
+    for (const [url, entry] of incoming)
+        cache.set(url, { ...entry, cacheError: '本地快照（导入），非实时官方抓取' });
+    await saveFeedCache(directory, cache);
 }

@@ -195,3 +195,20 @@ test('durable title and workspace come from session list or current projection; 
   assert.match(document.body.textContent, /hidden-old/)
   assert.ok(!document.body.textContent.includes('当前草稿正文'))
 })
+
+for (const version of ['0.2.2-rc.1', 'unknown']) test(version + ' target quotes use persisted snapshot coordinates without a version gate', async t => {
+  const f = await setup(t, version)
+  localStorageSet('source', 'recovered')
+  const state = { ...input, draft: '> quote ', occurrences: [] }, inserted = []
+  let snapshot = { text: state.draft, references: [], quotes: [{ text: 'quote ', offset: 0, length: 8 }] }
+  await f.render({ sessionId: 'target', useInput: select => select(state), inputActions: {
+    persistDraft: () => window.localStorage.setItem('dsh.conversation.target', JSON.stringify({ draft: snapshot, view: null, viewRequest: null })),
+    insertText: (...args) => { inserted.push(args); return true },
+  } })
+  await f.click('未发送草稿'); await f.click('追加到当前输入框')
+  assert.deepEqual(JSON.parse(JSON.stringify(inserted)), [['\nrecovered', { start: 1, end: 1, draftRev: 7 }]])
+  snapshot = { ...snapshot, text: 'stale' }
+  await f.click('追加到当前输入框')
+  assert.equal(inserted.length, 1)
+  assert.match(document.body.textContent, /快照与输入框不一致/)
+})

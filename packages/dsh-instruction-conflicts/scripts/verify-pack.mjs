@@ -1,4 +1,4 @@
-﻿import assert from 'node:assert/strict'
+import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
 import { readFileSync, existsSync } from 'node:fs'
 const read = file => readFileSync(file, 'utf8').replace(/^\uFEFF/, '')
@@ -9,7 +9,7 @@ const expected = ['CHANGELOG.md','LICENSE','README.md','STATUS.md','cordis.patch
   'lib/adapter.js','lib/adapter.d.ts','lib/core.js','lib/core.d.ts','lib/inventory.js','lib/inventory.d.ts','lib/plugin.js','lib/plugin.d.ts',
   'locale/en.json','locale/zh.json','package.json'].sort()
 assert.deepEqual(files,expected,'unexpected package contents')
-assert.equal(pkg.name,'dsh-instruction-conflicts');assert.equal(pkg.version,'0.2.1')
+assert.equal(pkg.name,'dsh-instruction-conflicts');assert.equal(pkg.version,'0.2.2')
 assert.equal(pkg.engines.dsh,'>=0.2.1-rc.5 <0.3.0-0')
 assert.equal(pkg.dsh.bundle.patch,'./cordis.patch.yml')
 assert.match(read('cordis.patch.yml'),/id: instruction-conflicts\s+name: dsh-instruction-conflicts/)

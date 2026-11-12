@@ -1,6 +1,7 @@
+import { createIntranetHttp, describeNetworkError } from './intranet-http.js';
 import { SOURCES as ADVISORY_SOURCES, osvUrl } from './advisory/http.js';
 import { setTimeout as delay } from 'node:timers/promises';
-export const USER_AGENT = 'dsh-apache-radar/0.1.1 (+https://github.com/hzopc1031/dsh-plugins)';
+export const USER_AGENT = 'dsh-apache-radar/0.1.2 (+https://github.com/hzopc1031/dsh-plugins)';
 const hosts = new Set(['projects.apache.org', 'whimsy.apache.org', 'attic.apache.org',
     'incubator.apache.org', 'kafka.apache.org', 'svn.apache.org', 'issues.apache.org', 'cwiki.apache.org',
     'release-catalog.apache.org', 'www.apache.org', 'apache.org']);
@@ -30,7 +31,8 @@ export class HttpError extends Error {
     }
 }
 export function createHttpClient(options = {}) {
-    const fetcher = options.fetch ?? globalThis.fetch;
+    const network = createIntranetHttp(options);
+    const fetcher = options.fetch ?? network.fetch;
     const now = options.now ?? (() => new Date());
     const sleep = options.sleep ?? delay;
     const timeoutMs = options.timeoutMs ?? 15_000;
@@ -38,7 +40,7 @@ export function createHttpClient(options = {}) {
         throw new Error('Invalid HTTP timeout');
     let queue = Promise.resolve();
     let blockedUntil = 0;
-    return input => {
+    const client = input => {
         const url = publicSourceUrl(input);
         const request = queue.then(async () => {
             const remaining = blockedUntil - now().getTime();
@@ -91,10 +93,14 @@ export function createHttpClient(options = {}) {
             catch (cause) {
                 if (cause instanceof HttpError)
                     throw cause;
-                throw new Error(`Fetch failed: ${url}: ${cause instanceof Error ? cause.message : String(cause)}`, { cause });
+                const info = describeNetworkError(cause);
+                const detail = cause instanceof Error ? cause.message : 'fetch failed';
+                const hint = !detail.includes(info.hintZh) && (info.code !== 'NETWORK_ERROR' || /fetch failed/i.test(detail)) ? `；${info.code}；${info.hintZh}` : '';
+                throw new Error(`Fetch failed: ${url}: ${detail}${hint}`, { cause });
             }
         });
         queue = request.catch(() => { });
         return request;
     };
+    return Object.assign(client, { close: network.close, diagnose: network.diagnose });
 }

@@ -12,6 +12,9 @@ export const HELP = `官方公告影响核对
 Flink 的 ASF 列表为实验性，覆盖 2023 年以来的公告，可能滞后官方 CVE 发布。
 全过程无需模型调用或模型 API key；这不是 lockfile 扫描器。
 
+/advisory-impact diagnose — 网络诊断（DNS / TCP / TLS / 代理来源）
+/advisory-impact snapshot-export — 导出官方缓存到项目内 .advisory-impact-snapshot.json
+/advisory-impact snapshot-import — 导入该固定文件中的本地快照
 /advisory-impact help — 查看帮助
 /advisory-impact pin — 查看当前运行版本
 /advisory-impact pin <project> <version> [component=<name>] [maven=<groupId:artifactId>] — 保存运行版本
@@ -60,6 +63,15 @@ export function parseInput(input: string): { action: Action; args: ActionArgs } 
 export class AdvisoryService {
   private chain: Promise<unknown> = Promise.resolve()
   constructor(private readonly options: Omit<EvaluateOptions, 'projectDirectory' | 'force'>) {}
+
+  exportSnapshot(): Promise<string> {
+    const run = this.chain.then(() => this.options.cache.exportSnapshot())
+    this.chain = run.catch(() => {}); return run
+  }
+  importSnapshot(text: string): Promise<void> {
+    const run = this.chain.then(() => this.options.cache.importSnapshot(text))
+    this.chain = run.catch(() => {}); return run
+  }
 
   execute(directory: string | undefined, action: Action, args: ActionArgs, signal: AbortSignal): Promise<SurfaceResult> {
     const run = this.chain.then(() => this.perform(directory, action, args, signal))

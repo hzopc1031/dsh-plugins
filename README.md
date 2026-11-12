@@ -33,11 +33,14 @@
 
 本批次增加 bash 进程失败识别与 PTC 关联、有效工作目录（命令会标明当前执行目录或回退目录）、截图预览确认后再注入、组合检查模板与失败项跳转、扫描复用与精简输出、资料引用原子接受基线、诊断内存缓存以及草稿按可靠标题/工作区筛选与追加目标说明。各包 README 说明具体行为。
 
-`main` 的 Git 安装地址继续用于已有版本。本批次版本需使用包含本次提交的 ref；推送后可将以下地址中的 `main` 换成 `optimize-batch` 或固定提交 SHA。分支推送不表示已合并到 main。
+安装地址统一使用 `main`；本次合并完成并由维护者发布到 main 后，下列地址才会包含合并后的版本。本工作区未提交、推送或发布 npm。
 
-本次对照官方 `dsh-v0.2.1-rc.5` 与 `dsh-v0.2.2-rc.1`，统一版本准入为 `>=0.2.1-rc.5 <0.3.0-0`；Apache Radar 因依赖 rc.1 新增的 `MarkdownText.omitHtml`，例外使用 `>=0.2.2-rc.1 <0.3.0-0`。草稿找回和截图附件 0.2.2 已将精确版本门禁改为能力与结构校验，已对照两版源码并通过模拟交互回归；真实 rc.1 桌面仍待验收。范围通过不代表功能与界面均已验证，详见[兼容性报告](docs/engines-compatibility.md)。所有包都已预编译，没有安装脚本。装完后**完全退出桌面 DSH（含托盘）再重新打开**。
+本次对照官方 `dsh-v0.2.1-rc.5` 与 `dsh-v0.2.2-rc.1`，统一版本准入为 `>=0.2.1-rc.5 <0.3.0-0`；Apache Radar 因依赖 rc.1 新增的 `MarkdownText.omitHtml`，例外使用 `>=0.2.2-rc.1 <0.3.0-0`。草稿找回和截图附件 0.2.3 已将精确版本门禁改为能力与结构校验，已对照两版源码并通过模拟交互回归；真实 rc.1 桌面仍待验收。范围通过不代表功能与界面均已验证，详见[兼容性报告](docs/engines-compatibility.md)。所有包都已预编译，没有安装脚本。装完后**完全退出桌面 DSH（含托盘）再重新打开**。
+
+内网改动同时保留：雷达、公告与 GitHub 哨兵支持代理、额外 CA 和具名错误提示；雷达与公告保留诊断及本地快照入口。分支此前在 Linux DSH 0.2.2-rc.1 加载全部 17 个插件的记录见[兼容矩阵](docs/compat-matrix.md)，配置步骤见[公司电脑代理、CA 与离线快照](docs/intranet-network.md)。此次合并只做自动化验证，不新增 Windows / Electron 实机结论。
 
 Compatibility metadata is checked against official DSH `0.2.1-rc.5` and `0.2.2-rc.1` sources. Per-package engine ranges do not imply other versions were tested. Packages are prebuilt and have no install scripts. Fully quit and reopen DSH Desktop after installing.
+
 
 ### 1. 桌面 DSH 界面 / Desktop UI
 
@@ -89,7 +92,7 @@ dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packag
 
 `dsh-advisory-impact` 尚未发布到 npm。其原生面板已在 DSH 0.2.2-rc.1 Web 实测，无需模型 key。/ Unreleased. The native panel was verified on DSH 0.2.2-rc.1 Web and does not require a model key.
 
-`dsh-apache-radar` 0.1.1 尚未发布到 npm。需要 DSH 0.2.2-rc.1 及以上（`>=0.2.2-rc.1 <0.3.0-0`，排除 0.3.0 及其预发布版本），本机加载验证使用 `0.2.2-rc.1`。无需模型 key，也不会自动发布。/ Unreleased. Requires DSH `>=0.2.2-rc.1 <0.3.0-0`. Live loading was checked with DSH `0.2.2-rc.1`. It requires no model key and does not auto-publish.
+`dsh-apache-radar` 0.1.2 尚未发布到 npm。需要 DSH 0.2.2-rc.1 及以上（`>=0.2.2-rc.1 <0.3.0-0`，排除 0.3.0 及其预发布版本），本机加载验证使用 `0.2.2-rc.1`。无需模型 key，也不会自动发布。/ Unreleased. Requires DSH `>=0.2.2-rc.1 <0.3.0-0`. Live loading was checked with DSH `0.2.2-rc.1`. It requires no model key and does not auto-publish.
 
 同样的 `github:...` 地址也可以填进界面的「添加插件」。把 `main` 换成某个提交哈希即可固定版本。
 
@@ -97,7 +100,7 @@ The same `github:...` address works in the Add plugin dialog. Replace `main` wit
 
 `dsh-html-deck-export` 的 0.1.1 尚未发布到 npm。兼容 DSH `>=0.2.1-rc.5 <0.3.0-0`，已在 Linux CLI `0.2.2-rc.1`（`fcc0ad46`）加载验证，需要本机 Chrome。/ Unreleased; requires local Chrome. Loaded on Linux DSH `0.2.2-rc.1`. Linux 可将 `desktop` 换成 `web` 或自己的 profile。/ On Linux, replace `desktop` with `web` or your chosen profile.
 
-草稿找回和截图附件 0.2.2 已按 rc.5 / rc.1 官方接口适配：草稿格式无法识别时拒绝整次扫描；截图仍需核对附件，rc.1 确认加入后图片会立即上传。目标输入框已有原子引用块时，草稿追加由宿主安全拒绝，可手动粘贴。开发依赖保持 rc.5，尚未进行 rc.1 真实界面验证；文件引用路径复制的原开发基线不变。详见[功能适配证据](docs/rc1-draft-snip-compatibility.md)。
+草稿找回和截图附件 0.2.3 已按 rc.5 / rc.1 官方接口适配：草稿格式无法识别时拒绝整次扫描；截图仍需核对附件，rc.1 确认加入后图片会立即上传。草稿追加按宿主能力核对当前快照与引用块坐标；无法核对时由宿主安全拒绝，可手动粘贴。开发依赖保持 rc.5，尚未进行 rc.1 真实界面验证；文件引用路径复制的原开发基线不变。详见[功能适配证据](docs/rc1-draft-snip-compatibility.md)。
 
 > **Windows 命令行提示**：如果 `dsh` 报 `profile "desktop" is managed exclusively by the Electron application`，说明 PATH 上的是独立安装的 dsh；请改用桌面版自带的 CLI（命令其余部分不变）：
 >

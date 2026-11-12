@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.2 - 2026-11-12
+
+- 合并内网代理 / CA 诊断分支与 main 的 DSH 0.2.2-rc.1 兼容修复（merge intranet proxy/CA diagnostics with main's 0.2.2-rc.1 compatibility）；本包沿用 main 版本及 engines / peer 范围。
+- 保留打包检查脚本的 BOM 清理，不改变既有心跳功能。
+
 ## 0.2.2 - 2026-11-11
 
 - 修正 DSH 版本声明为 `>=0.2.1-rc.5 <0.3.0-0`，采用官方包含预发布版本的校验规则，并排除 0.3.0 预发布版本。

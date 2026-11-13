@@ -1,0 +1,21 @@
+dsh-apache-radar 0.1.5
+
+Original implementation under MIT (see LICENSE).
+
+Visual and interaction patterns studied from bowenliang123/dsh-context 0.83.1
+(Apache-2.0): https://github.com/bowenliang123/dsh-context
+- overviewCard.tsx, overviewPanel.tsx: compact KPIs and composed dashboard cards.
+- donut.tsx, stackedBar.tsx: ring with adjacent facts, distribution bars and legends.
+- hoverTip.tsx: short provenance on hover and keyboard focus.
+- settingsCard.tsx, fileCard.tsx: grouped settings and dense item rows.
+- trendOverview.tsx, trendDnaBars.tsx, pulseTimeline.tsx, browserTreemap.tsx:
+  varied data presentation; only applicable density and interaction ideas used.
+- styles/overview.css, stats.css, base.css, settings.css, trendChart.css,
+  stackedBar.css: card rhythm and responsive sizing.
+
+No upstream source files, CSS, artwork or NOTICE content were copied.
+No dependency on dsh-context is introduced. Its license applies to its originals.
+
+DSH 0.2.2-rc.1 ui-primitives are host-shared external modules, not bundled here.
+Button, Input, Tag, SegmentedControl and Tooltip use the target runtime APIs.
+Existing network settings helpers remain byte-identical across the three plugins.

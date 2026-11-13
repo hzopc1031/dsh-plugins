@@ -13,7 +13,15 @@ import { fixture, radarFixtureHttp } from './helpers.mjs'
 let client
 const loader = { load: entry => { client = entry.factory(name => {
   if (name === 'react') return React
-  if (name === '@deepseek-ai/dsh-client-ui-primitives') return { Button: ({ variant, ...props }) => React.createElement('button', props), MarkdownText: ({ text }) => React.createElement('pre', null, text) }
+  if (name === '@deepseek-ai/dsh-client-ui-primitives') return {
+    Button: ({ variant, size, ...props }) => React.createElement('button', { type: 'button', ...props }),
+    Input: props => React.createElement('input', props),
+    Tag: ({ tone, ...props }) => React.createElement('span', { ...props, 'data-tone': tone }),
+    Tooltip: ({ children, label }) => React.cloneElement(children, { 'data-tooltip-label': label }),
+    SegmentedControl: ({ id, value, options, onChange, label }) => React.createElement('div', { role: 'tablist', 'aria-label': label }, options.map(option => React.createElement('button', { key: option.value, role: 'tab', id: `${id}-${option.value}`, 'aria-selected': value === option.value, onClick: () => onChange(option.value) }, option.label))),
+    SegmentedTabs: ({ items, value, onChange, label }) => React.createElement('div', { role: 'tablist', 'aria-label': label }, items.map(item => React.createElement('button', { key: item.value, role: 'tab', 'aria-selected': value === item.value, onClick: () => onChange(item.value) }, item.label))),
+    MarkdownText: ({ text }) => React.createElement('pre', null, text),
+  }
   throw new Error('Unshipped client import: ' + name)
 }) } }
 runInNewContext(await readFile(new URL('../lib/client.js', import.meta.url), 'utf8'), { window: { __ModuleLoader__: loader }, URL, Intl })
@@ -96,7 +104,7 @@ test('native slot registrations use a model-independent main panel, sidebar labe
   assert.match(settings, /不安全：仅跳过 OSV \/ GitHub API 证书校验/)
   assert.match(settings, /type="checkbox"/)
   assert.doesNotMatch(settings, /checked=/)
-  assert.match(staticView(client.Dashboard, {}), /无需模型/)
+  assert.doesNotMatch(staticView(client.Dashboard, {}), /无需模型|官方公开来源|口径与来源/)
   for (const dispose of disposers) dispose()
   assert.equal(entries.length, 0)
 })
@@ -204,4 +212,76 @@ test('weak CA UI is a single actionable sentence while the transport keeps its c
   assert.ok(hint.length < 80)
   assert.doesNotMatch(hint, /\n/)
   assert.match(WEAK_CA_HINT, /导入 CA 证书解决不了/)
+})
+
+
+test('JIRA merges statuses into friendly type groups, preserves unknown types and keeps security first', () => {
+  const items = [
+    { kind: 'jira', issueType: 'Bug', statusText: 'Open' },
+    { kind: 'jira', issueType: 'Bug', statusText: 'Resolved' },
+    { kind: 'jira', issueType: 'Improvement' },
+    { kind: 'jira', issueType: 'New Feature' },
+    { kind: 'jira', issueType: 'Task' },
+    { kind: 'jira', issueType: 'Future Type' },
+    { kind: 'jira' },
+    { kind: 'jira', security: true, issueType: 'Bug' },
+    { kind: 'release' },
+  ]
+  const groups = client.groupIssues(items)
+  assert.equal(groups[0].label, '安全')
+  assert.equal(groups.find(g => g.label === '缺陷').items.length, 2)
+  for (const label of ['改进', '新功能', '任务', 'Future Type', '其他']) assert.ok(groups.some(g => g.label === label))
+  assert.ok(groups.every(g => !g.label.includes(' · ')))
+  assert.equal(groups.flatMap(g => g.items).length, 8)
+})
+
+test('overview chart exposes counts with bounded member previews and no list disclosures or visible provenance', async () => {
+  const { parse } = await import('node-html-parser')
+  const directory = await mkdtemp(join(tmpdir(), 'radar-chart-'))
+  try {
+    const data = JSON.parse(await runRadar(directory, 'dashboard', { refresh: true }, { now, http: recordedHttp }))
+    const root = parse(staticView(client.Overview, { data }))
+    const chart = root.querySelector('[aria-label="领域分布横条图"]')
+    assert.ok(chart)
+    assert.equal(chart.querySelectorAll('details').length, 0)
+    assert.equal(chart.querySelectorAll('.ar-category-bar').length, data.counts.categories.rows.length)
+    for (const row of chart.querySelectorAll('.ar-category-bar')) {
+      assert.ok(row.querySelector('strong').textContent.trim())
+      assert.match(row.getAttribute('data-tooltip-label'), /多标签不合计/)
+      assert.match(row.getAttribute('data-tooltip-label'), /projects.apache.org/)
+      assert.ok(!row.textContent.includes('Apache '))
+    }
+    assert.doesNotMatch(root.textContent, /无需模型|官方公开来源|口径与来源|官方多标签/)
+    assert.equal(root.querySelector('.ar-methodology').hasAttribute('open'), false)
+    assert.equal(root.querySelector('.ar-metric details'), null)
+    assert.ok(root.querySelector('.ar-metric[tabindex="0"][data-tooltip-label]'))
+    const watch = parse(staticView(client.Watch, { data, mutate: () => {}, busy: false }))
+    assert.ok(watch.querySelector('[aria-label="JIRA 类型分布"] .ar-stacked'))
+    assert.ok(watch.querySelector('.ar-issue-group[open] summary').textContent.includes('安全'))
+    assert.doesNotMatch(watch.querySelector('.ar-issue-board').textContent, /Bug ·|Improvement ·|New Feature ·|Patch Available/)
+  } finally { await rm(directory, { recursive: true, force: true }) }
+})
+
+test('Radar keeps shared TLS help hidden and supplies an accessible host tooltip instead', async () => {
+  const { parse } = await import('node-html-parser')
+  const root = parse(staticView(client.Dashboard, {}))
+  assert.match(root.querySelector('style').textContent, /\.ar-network-body \.ns-settings>small\{display:none\}/)
+  const help = root.querySelector('[aria-label="证书校验说明"]')
+  assert.ok(help)
+  assert.match(help.getAttribute('data-tooltip-label'), /api.osv.dev \/ api.github.com/)
+  assert.ok(!root.querySelector('.ar-network').textContent.includes('示例代理'))
+})
+
+
+test('saved brief cards present friendly chips and short dates while keeping complete Markdown behind details', async () => {
+  const { parse } = await import('node-html-parser')
+  const markdown = '## 关注项目动态\n\n### kafka\n\n- **JIRA 工单** Fix example；[原文](https://issues.apache.org/jira/browse/KAFKA-1)；日期：2026-11-11T03:43:11.000+0000（updated）；状态：Open；类型：Bug；[采集来源](https://issues.apache.org/jira/)\n'
+  const root = parse(staticView(client.Brief, { data: { markdown }, busy: false, request: () => {} }))
+  const item = root.querySelector('.ar-item')
+  assert.match(item.textContent, /缺陷/)
+  assert.match(item.textContent, /待处理/)
+  assert.match(item.textContent, /2026-11-11/)
+  assert.doesNotMatch(item.textContent, /updated|03:43|采集来源/)
+  assert.match(root.querySelector('.ar-brief-more').textContent, /03:43/)
+  assert.equal(root.querySelector('.ar-brief-more').hasAttribute('open'), false)
 })

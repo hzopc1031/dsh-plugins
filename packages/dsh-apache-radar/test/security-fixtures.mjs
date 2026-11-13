@@ -38,7 +38,15 @@ export async function browserExports() {
   let client
   const loader = { load: entry => { client = entry.factory(name => {
     if (name === 'react') return React
-    if (name === '@deepseek-ai/dsh-client-ui-primitives') return { MarkdownText: ({ text }) => React.createElement('pre', null, text) }
+    if (name === '@deepseek-ai/dsh-client-ui-primitives') return {
+    Button: ({ variant, size, ...props }) => React.createElement('button', { type: 'button', ...props }),
+    Input: props => React.createElement('input', props),
+    Tag: ({ tone, ...props }) => React.createElement('span', { ...props, 'data-tone': tone }),
+    Tooltip: ({ children, label }) => React.cloneElement(children, { 'data-tooltip-label': label }),
+    SegmentedControl: ({ id, value, options, onChange, label }) => React.createElement('div', { role: 'tablist', 'aria-label': label }, options.map(option => React.createElement('button', { key: option.value, role: 'tab', id: `${id}-${option.value}`, 'aria-selected': value === option.value, onClick: () => onChange(option.value) }, option.label))),
+    SegmentedTabs: ({ items, value, onChange, label }) => React.createElement('div', { role: 'tablist', 'aria-label': label }, items.map(item => React.createElement('button', { key: item.value, role: 'tab', 'aria-selected': value === item.value, onClick: () => onChange(item.value) }, item.label))),
+    MarkdownText: ({ text }) => React.createElement('pre', null, text),
+  }
     throw new Error('Unshipped client import: ' + name)
   }) } }
   runInNewContext(await readFile(new URL('../lib/client.js', import.meta.url), 'utf8'), { window: { __ModuleLoader__: loader }, URL, Intl })

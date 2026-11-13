@@ -1,6 +1,6 @@
 import { NetworkSettings, networkHint, type NetworkSettingsProps } from './network-settings.js'
 import React, { useEffect, useRef, useState } from 'react'
-import { Button, MarkdownText } from '@deepseek-ai/dsh-client-ui-primitives'
+import { Button, Input, MarkdownText, SegmentedControl, SegmentedTabs, Tag, Tooltip } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { DashboardData } from './dashboard.js'
 import type { Citation, CountRow } from './counts.js'
 import type { ProjectSecurity, SecurityReport, SecuritySource } from './security.js'
@@ -30,13 +30,17 @@ export function jiraCves(title: string, security: boolean, project?: ProjectSecu
   })
 }
 
+const issueTypeName = (type?: string) => ({ bug: '缺陷', improvement: '改进', 'new feature': '新功能', task: '任务', 'sub-task': '子任务', subtask: '子任务', epic: '史诗', wish: '建议', test: '测试', documentation: '文档', 'technical debt': '技术债', security: '安全' })[type?.trim().toLowerCase() ?? ''] ?? (type?.trim() || '其他')
+const issueStatusName = (status?: string) => ({ Open: '待处理', 'In Progress': '进行中', Reopened: '重新打开', Resolved: '已解决', Closed: '已关闭', 'Patch Available': '补丁可用', 'In Review': '评审中', 'To Do': '待处理', Done: '已完成' })[status ?? ''] ?? status ?? '状态未知'
+const typeTone = (label: string) => label === '安全' ? 'danger' : label === '缺陷' ? 'warn' : label === '改进' || label === '新功能' ? 'accent' : 'neutral'
 export function groupIssues(items: Item[]): { label: string; items: Item[] }[] {
   const groups = new Map<string, Item[]>()
   for (const item of items.filter(i => i.kind === 'jira')) {
-    const label = item.security ? '安全' : `${item.issueType ?? '其他类型'} · ${item.statusText ?? item.status ?? '状态未知'}`
+    const label = item.security ? '安全' : issueTypeName(item.issueType)
     groups.set(label, [...(groups.get(label) ?? []), item])
   }
-  return [...groups].sort(([a], [b]) => a === '安全' ? -1 : b === '安全' ? 1 : a.localeCompare(b)).map(([label, items]) => ({ label, items }))
+  const order = ['安全', '缺陷', '改进', '新功能', '任务', '子任务']
+  return [...groups].sort(([a], [b]) => (order.includes(a) ? order.indexOf(a) : order.length) - (order.includes(b) ? order.indexOf(b) : order.length) || a.localeCompare(b)).map(([label, items]) => ({ label, items }))
 }
 export function briefSections(markdown: string): string[] {
   return markdown.split(/\n(?=## )/).filter(part => part.trim())
@@ -45,41 +49,55 @@ function Icon({ size = 22 }: { size?: number }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><path d="M12 3.5V12l6-6M3.5 12H7M12 17v3.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>
 }
 function Badge({ children, tone = '' }: { children: React.ReactNode; tone?: string }) {
-  return <span className={`ar-badge ${tone}`}>{children}</span>
+  return <Tag className="ar-badge" tone={tone === 'good' ? 'success' : tone === 'warn' ? 'warning' : tone === 'danger' ? 'danger' : tone === 'accent' ? 'info' : 'neutral'}>{children}</Tag>
 }
+const sourceLabel = (source: Citation) => `${new URL(source.url).hostname} · ${source.cacheStatus === 'stale' ? '旧缓存 · ' : ''}${source.fetchedAt ? time(source.fetchedAt) : '尚未成功抓取'}`
 function SourceChip({ source }: { source: Citation }) {
-  return <details className="ar-citation"><summary><a href={source.url} target="_blank" rel="noreferrer" title={source.url}>{new URL(source.url).hostname} ↗</a> · {source.fetchedAt ? time(source.fetchedAt).slice(5) : '尚未成功抓取'}{source.cacheStatus === 'stale' ? ' · 旧缓存' : ''}</summary>
-    <span>抓取 {time(source.fetchedAt)} · UTC+8{source.sourceTimestamp ? ` · 源时间 ${source.sourceTimestamp}` : ''}</span>
-    {source.cacheError && <span className="ar-error-text">{sourceError(source.cacheError)}</span>}</details>
+  return <Tooltip label={`${sourceLabel(source)}${source.cacheError ? ` · ${sourceError(source.cacheError)}` : ''}`} portal side="top">
+    <a className="ar-source-info" href={source.url} target="_blank" rel="noreferrer" aria-label={`来源 ${new URL(source.url).hostname}`}>ⓘ</a>
+  </Tooltip>
 }
+const metricNote = (row: CountRow) => ({ 'currently-listed': 'TLP 与当前孵化项目', 'chooser-tlps': 'Chooser 顶级项目', 'chooser-podlings': 'Chooser 当前孵化项目', pmcs: '标记为 PMC 的委员会', 'all-committees': '全部委员会，含非 PMC' })[row.id] ?? '独立统计，不合计'
 export function CountCard({ row, title, featured = false }: { row: CountRow; title?: string; featured?: boolean }) {
-  return <article className={`ar-card ar-metric ${featured ? 'ar-featured' : ''}`}>
-    <h3 className="ar-eyebrow">{title ?? row.label}</h3><strong className="ar-number">{row.status === 'ok' ? row.value : '—'}</strong>
-    {row.status === 'error' && <p className="ar-error-text">{sourceError(row.error)}</p>}
-    <details className="ar-metric-detail"><summary>口径与来源</summary><p className="ar-note">{row.note}</p>{row.sources.map((source, i) => <SourceChip key={i} source={source}/>)}</details></article>
+  return <Tooltip label={`${metricNote(row)} · ${row.sources.map(sourceLabel).join(' / ')}`} portal side="top" openOnClick>
+    <article tabIndex={0} className={`ar-card ar-metric ${featured ? 'ar-featured' : ''}`} aria-label={`${title ?? row.label} ${row.status === 'ok' ? row.value : '暂无数据'}`}>
+      <h3 className="ar-eyebrow">{title ?? row.label}</h3><strong className="ar-number">{row.status === 'ok' ? row.value : '—'}</strong>
+      {row.status === 'error' && <p className="ar-error-text">{sourceError(row.error)}</p>}
+    </article></Tooltip>
+}
+const categoryNames: Record<string, string> = { 'Big data & analytics': '大数据与分析', 'Databases & storage': '数据库与存储', 'Streaming & messaging': '流处理与消息', 'Machine learning & AI': '机器学习与 AI', 'Web, HTTP & APIs': 'Web 与 API', 'Cloud & infrastructure': '云与基础设施', 'Build, testing & dev tools': '构建与开发工具', 'Content, search & documents': '内容与搜索', 'IoT & edge': '物联网与边缘', 'Security & identity': '安全与身份', 'Geospatial & science': '地理与科学计算', 'Integration & workflow': '集成与工作流' }
+function CategoryChart({ rows }: { rows: (CountRow & { members?: { id: string; name: string }[] })[] }) {
+  const sorted = [...rows].sort((a, b) => (b.status === 'ok' ? b.value : 0) - (a.status === 'ok' ? a.value : 0))
+  const max = Math.max(1, ...sorted.map(row => row.status === 'ok' ? row.value : 0))
+  return <div className="ar-category-chart" role="group" aria-label="领域分布横条图">{sorted.map(row => {
+    const preview = row.members?.slice(0, 3).map(m => m.name).join('、')
+    const label = categoryNames[row.label] ?? row.label
+    return <Tooltip key={row.id} label={`${label} · ${row.status === 'ok' ? row.value : '—'}：${preview || '暂无成员'}${(row.members?.length ?? 0) > 3 ? ` 等 ${row.members!.length} 个` : ''} · 多标签不合计 · ${row.sources.map(s => new URL(s.url).hostname).join(' / ')}`} portal side="top" openOnClick>
+      <Button size="sm" variant="ghost" className="ar-category-bar" aria-label={`${label} ${row.status === 'ok' ? row.value : '暂无数据'}`}><span>{label}</span><strong>{row.status === 'ok' ? row.value : '—'}</strong><span className="ar-bar-track" aria-hidden="true"><i style={{ width: `${(row.status === 'ok' ? row.value : 0) / max * 100}%` }}/></span></Button>
+    </Tooltip>
+  })}</div>
 }
 export function Overview({ data, jump }: { data: DashboardData; jump?: (project: string) => void }) {
   const counts = data.counts!
   const titles = ['当前列示', '顶级项目 · TLP', '孵化项目 · Podlings', '项目委员会 · PMC', '全部委员会']
   const mismatches = counts.comparisons.filter(c => c.status !== 'match')
   return <>
-    <div className="ar-section-heading"><h2>社区概况</h2><span className="ar-muted">官方公开来源 · 统计口径独立</span></div>
-    <div className="ar-metrics">{counts.counts.slice(0, 5).map((row, i) => <CountCard key={row.id} row={row} title={titles[i]} featured={i === 0}/>)}{data.security && <SecurityCard report={data.security} jump={jump}/>}</div>
-    <div className="ar-two-col">
-      <section className="ar-card ar-section"><div className="ar-card-heading"><h3>退休与 Attic</h3><span className="ar-muted">口径不同，不合计</span></div>
-        <div className="ar-retired">{counts.retired.map(row => <div key={row.id} className="ar-retired-cell"><span>{({ 'retired-whimsy': 'Whimsy 委员会', 'retired-projects': 'Projects 委员会', 'attic-pmcs': 'Attic PMC', 'attic-subprojects': 'Attic 子项目' })[row.id] ?? row.label}</span>
-          <strong>{row.status === 'ok' ? row.value : '—'}</strong>{row.status === 'error' && <p className="ar-error-text">{sourceError(row.error)}</p>}{row.sources.map((s, i) => <SourceChip key={i} source={s}/>)}</div>)}</div>
-        {mismatches.map(c => <details className="ar-difference" key={c.id}><summary><span className="ar-dot warn"/>{c.label} · {c.status === 'error' ? '无法核对' : '存在差异'}</summary>
+    <div className="ar-section-heading"><h2>社区概况</h2></div>
+    <div className="ar-metrics">{counts.counts.slice(0, 5).map((row, i) => <CountCard key={row.id} row={row} title={titles[i]} featured={i === 0}/>)}</div>
+    <div className="ar-overview-grid">
+      <section className="ar-card ar-section ar-domain"><div className="ar-card-heading"><h3>领域分布</h3><span className="ar-heading-count">{counts.categories.status === 'ok' ? counts.categories.rows.length : '—'} 个领域</span></div>
+        {counts.categories.status === 'error' ? <p className="ar-error-text">{sourceError(counts.categories.error)}</p> : <CategoryChart rows={counts.categories.rows}/>}
+      </section>
+      <div className="ar-overview-side">{data.security && <SecurityCard report={data.security} jump={jump}/>}
+      <section className="ar-card ar-section"><div className="ar-card-heading"><h3>退休与 Attic</h3><Tooltip label="独立统计，不合计" portal openOnClick><Button size="sm" variant="ghost" aria-label="退休统计说明">ⓘ</Button></Tooltip></div>
+        <div className="ar-retired">{counts.retired.map(row => <Tooltip key={row.id} label={`独立统计，不合计 · ${row.sources.map(sourceLabel).join(' / ')}`} portal side="top" openOnClick><div tabIndex={0} className="ar-retired-cell"><span>{({ 'retired-whimsy': 'Whimsy 委员会', 'retired-projects': 'Projects 委员会', 'attic-pmcs': 'Attic PMC', 'attic-subprojects': 'Attic 子项目' })[row.id] ?? row.label}</span>
+          <strong>{row.status === 'ok' ? row.value : '—'}</strong>{row.status === 'error' && <p className="ar-error-text">{sourceError(row.error)}</p>}</div></Tooltip>)}</div>
+        <details className="ar-comparisons"><summary>交叉核对 <Badge tone={mismatches.length ? 'warn' : 'good'}>{mismatches.length ? `${mismatches.length} 项差异` : '一致'}</Badge></summary>{mismatches.map(c => <details className="ar-difference" key={c.id}><summary>{c.label} · {c.status === 'error' ? '无法核对' : '存在差异'}</summary>
           <p>{c.note}</p>{c.status === 'error' ? <p>{sourceError(c.error)}</p> : <><p>仅左侧：{c.onlyLeft.map(m => `${m.name} (${m.id})`).join('、') || '无'}</p><p>仅右侧：{c.onlyRight.map(m => `${m.name} (${m.id})`).join('、') || '无'}</p></>}
-          {c.sources.map((s, i) => <SourceChip key={i} source={s}/>)}</details>)}
-      </section>
-      <section className="ar-card ar-section"><div className="ar-card-heading"><h3>领域分布 <span className="ar-heading-count">{counts.categories.status === 'ok' ? counts.categories.rows.length : '—'}</span></h3><span className="ar-muted">官方多标签</span></div>
-        {counts.categories.status === 'error' ? <p className="ar-error-text">{sourceError(counts.categories.error)}</p> : <div className="ar-categories">{counts.categories.rows.map(row => <details key={row.id} className="ar-category"><summary>{row.label}<b>{row.status === 'ok' ? row.value : '—'}</b></summary>
-          <p>{row.members?.map(m => m.name).join('、')}</p>{row.sources.map((s, i) => <SourceChip key={i} source={s}/>)}</details>)}</div>}
-        {counts.categories.sources.map((s, i) => <SourceChip key={i} source={s}/>)}<p className="ar-footnote">多标签归类，数量不合计。</p>
-      </section>
+          {c.sources.map((s, i) => <SourceChip key={i} source={s}/>)}</details>)}</details>
+      </section></div>
     </div>
-    <details className="ar-card ar-section"><summary>孵化项目交叉核对与统计说明</summary><p>{counts.explanation}</p>
+    <details className="ar-card ar-section ar-methodology"><summary>孵化项目交叉核对与统计说明</summary><p>{counts.explanation}</p>
       <div className="ar-two-col">{counts.counts.slice(5).map(row => <CountCard key={row.id} row={row}/>)}</div>
       {counts.comparisons.filter(c => c.status === 'match').map(c => <p key={c.id}>{c.label}：名单一致。{c.sources.map((s, i) => <SourceChip key={i} source={s}/>)}</p>)}
     </details>
@@ -88,20 +106,20 @@ export function Overview({ data, jump }: { data: DashboardData; jump?: (project:
 function ItemRow({ item, security }: { item: Item; security?: ProjectSecurity }) {
   const kind = ({ release: '发布', jira: 'JIRA', proposal: '提案' })[item.kind]
   return <article className={`ar-item ${item.security ? 'ar-security' : ''}`}>
-    <div className="ar-item-meta"><Badge tone={item.security ? 'danger' : ''}>{item.security ? `安全 · ${kind}` : kind}</Badge>
-      {item.status && <Badge tone={['accepted', 'implemented', 'released'].includes(item.status) ? 'good' : ''}>{item.statusText ?? item.status}</Badge>}
+    <div className="ar-item-meta"><Badge tone={item.security ? 'danger' : ''}>{item.security ? `安全 · ${kind}` : item.kind === 'jira' ? issueTypeName(item.issueType) : kind}</Badge>
+      {item.status && <Badge tone={['accepted', 'implemented', 'released'].includes(item.status) ? 'good' : ''}>{item.kind === 'jira' ? issueStatusName(item.statusText ?? item.status) : item.statusText ?? item.status}</Badge>}
       <span>{item.kind === 'jira' ? item.id : item.version}</span><time>{item.date ? time(item.date).slice(0, 10) : '日期未知 · 参考条目'}</time></div>
     <a className="ar-item-title" href={item.url} target="_blank" rel="noreferrer">{item.title}<span aria-label="打开原文"> ↗</span></a>
     {!!item.security && jiraCves(item.title, true, security).map(cve => <div className="ar-cve-chip" key={cve.id} title={`按已抓取官方列表核对 · ${time(cve.fetchedAt)}${cve.stale ? ' · 旧缓存' : ''}`}>
-      {cve.status === 'published' ? <button onClick={() => revealAdvisory(`${item.project}-${cve.id}`)}>{cve.id} · {cve.label} ↗</button> : <Badge>{cve.id} · {cve.label}</Badge>}
+      {cve.status === 'published' ? <Button size="sm" variant="outline" onClick={() => revealAdvisory(`${item.project}-${cve.id}`)}>{cve.id} · {cve.label} ↗</Button> : <Badge>{cve.id} · {cve.label}</Badge>}
     </div>)}
-    <div className="ar-item-links">{!!item.fixVersions?.length && <span>目标 {item.fixVersions.join('、')} · 不代表已发布</span>}<a href={item.sourceUrl} target="_blank" rel="noreferrer">采集来源 ↗</a>{item.notesUrl && <a href={item.notesUrl} target="_blank" rel="noreferrer">版本说明 ↗</a>}</div>
+    <div className="ar-item-links">{!!item.fixVersions?.length && <Tooltip label="目标版本，不代表已发布" portal openOnClick><span tabIndex={0}>目标 {item.fixVersions.join('、')}</span></Tooltip>}<a href={item.sourceUrl} target="_blank" rel="noreferrer">采集来源 ↗</a>{item.notesUrl && <a href={item.notesUrl} target="_blank" rel="noreferrer">版本说明 ↗</a>}</div>
   </article>
 }
 function ItemList({ items, empty, security }: { items: Item[]; empty: string; security?: ProjectSecurity }) {
   const [expanded, setExpanded] = useState(false)
   return <>{items.length ? (expanded ? items : items.slice(0, 4)).map(item => <ItemRow key={item.url} item={item} security={security}/>) : <p className="ar-empty-inline">{empty}</p>}
-    {items.length > 4 && <button className="ar-more" onClick={() => setExpanded(!expanded)} aria-expanded={expanded}>{expanded ? '收起' : '展开其余条目'}</button>}</>
+    {items.length > 4 && <Button size="sm" variant="outline" className="ar-more" onClick={() => setExpanded(!expanded)} aria-expanded={expanded}>{expanded ? '收起' : '展开其余条目'}</Button>}</>
 }
 function Sources({ sources }: { sources: FeedSource[] }) {
   return <div className="ar-source-list">{sources.map((s, i) => <div key={i} className="ar-source-row"><Badge tone={s.status === 'failed' ? 'danger' : s.status === 'stale' ? 'warn' : ''}>{statusName(s.status)}</Badge>
@@ -119,21 +137,40 @@ export function Watch({ data, mutate, busy, focusProject }: { data: DashboardDat
   const undated = data.undatedItems?.filter(i => i.project === project) ?? []
   const sources = data.sources?.filter(s => !s.project || s.project === project) ?? []
   return <>
-    <div className="ar-section-heading"><h2>项目动态 <span className="ar-heading-count">{data.watchList?.length ?? 0}</span></h2><span className="ar-muted">最近 7 天 · 滚动窗口 · UTC+8</span></div>
-    <div className="ar-watch-toolbar"><div className="ar-segment" role="group" aria-label="关注项目">{data.watchList?.map(id => <button aria-pressed={project === id} key={id} onClick={() => setSelected(id)}>{projectName(id)}</button>)}</div>
-      <details className="ar-manage" open={!project || undefined}><summary>管理关注</summary><form onSubmit={e => { e.preventDefault(); mutate('add', newId); setNewId('') }}><input aria-label="添加项目 id" placeholder="项目 id，如 spark" pattern="[a-zA-Z][a-zA-Z0-9-]*" required value={newId} onChange={e => setNewId(e.target.value)}/><button disabled={busy}>＋ 关注</button></form>
-      {project && <button disabled={busy} onClick={() => mutate('remove', project)} aria-label={`取消关注 ${projectName(project)}`}>取消关注</button>}</details></div>
-    {project ? <><SecurityStrip key={project + (security?.pin ?? "")} project={project} security={security} report={data.security} mutate={mutate} busy={busy} expanded={focusProject === project}/><div className="ar-two-col"><section className="ar-card ar-section"><div className="ar-card-heading"><h3>正式发布 <span className="ar-heading-count">{items.filter(i => i.kind === 'release').length}</span></h3></div>
+    <div className="ar-section-heading"><h2>项目动态 <span className="ar-heading-count">{data.watchList?.length ?? 0}</span></h2><span className="ar-muted">最近 7 天</span></div>
+    <div className="ar-watch-toolbar"><SegmentedControl id="ar-project" label="关注项目" value={project} options={(data.watchList ?? []).map(id => ({ value: id, label: projectName(id) }))} onChange={setSelected}/>
+
+      <details className="ar-manage" open={!project || undefined}><summary>管理关注</summary><form onSubmit={e => { e.preventDefault(); mutate('add', newId); setNewId('') }}><Input aria-label="添加项目 id" placeholder="项目 id，如 spark" pattern="[a-zA-Z][a-zA-Z0-9-]*" required value={newId} onChange={e => setNewId(e.target.value)}/><Button type="submit" size="sm" variant="outline" disabled={busy}>＋ 关注</Button></form>
+      {project && <Button size="sm" variant="outline" disabled={busy} onClick={() => mutate('remove', project)} aria-label={`取消关注 ${projectName(project)}`}>取消关注</Button>}</details></div>
+    {project ? <div role="tabpanel" id={`ar-project-${project}-panel`} aria-labelledby={`ar-project-${project}`}><SecurityStrip key={project + (security?.pin ?? "")} project={project} security={security} report={data.security} mutate={mutate} busy={busy} expanded={focusProject === project}/><div className="ar-two-col"><section className="ar-card ar-section"><div className="ar-card-heading"><h3>正式发布 <span className="ar-heading-count">{items.filter(i => i.kind === 'release').length}</span></h3></div>
       <ItemList key={project + 'release'} items={items.filter(i => i.kind === 'release')} empty="近 7 天暂无已收录发布。"/>
     </section><section className="ar-card ar-section"><div className="ar-card-heading"><h3>{project === 'kafka' ? 'KIP' : project === 'flink' ? 'FLIP' : '提案'} <span className="ar-heading-count">{items.filter(i => i.kind === 'proposal').length}</span></h3></div>
       <ItemList key={project + 'proposal'} items={items.filter(i => i.kind === 'proposal')} empty={project === 'hadoop' ? 'Hadoop 没有已验证的通用 HIP 索引。' : '近 7 天暂无已收录提案。'}/>
     </section></div>
-    <section className="ar-card ar-section"><div className="ar-card-heading"><h3>JIRA <span className="ar-heading-count">{items.filter(i => i.kind === 'jira').length}</span></h3><span className="ar-muted">首个响应页 · 工单不代表已发布</span></div>
-      {groupIssues(items).length ? groupIssues(items).map(group => <details className="ar-issue-group" key={project + group.label} open={group.label === '安全'}><summary>{group.label} <span className="ar-heading-count">{group.items.length}</span></summary><ItemList items={group.items} empty="" security={security}/></details>) : <p className="ar-empty-inline">近 7 天暂无已收录 JIRA；请核对来源状态。</p>}
+    <section className="ar-card ar-section"><div className="ar-card-heading"><h3>JIRA <span className="ar-heading-count">{items.filter(i => i.kind === 'jira').length}</span></h3><Tooltip label="首个响应页；工单不代表已发布" portal openOnClick><Button size="sm" variant="ghost" aria-label="JIRA 采集说明">ⓘ</Button></Tooltip></div>
+      <IssueDistribution items={items}/>
+      <div className="ar-issue-board">{groupIssues(items).length ? groupIssues(items).map(group => <details data-issue-type={group.label} className={`ar-issue-group ar-tone-${typeTone(group.label)}`} key={project + group.label} open={group.label === '安全'}><summary><i className="ar-type-dot"/>{group.label} <span className="ar-heading-count">{group.items.length}</span></summary><ItemList items={group.items} empty="" security={security}/></details>) : <p className="ar-empty-inline">近 7 天暂无已收录 JIRA；请核对来源状态。</p>}</div>
     </section>
     <details className="ar-card ar-section"><summary>参考提案 · 日期未知，不计入本周</summary><ItemList key={project + 'undated'} items={undated} empty="暂无日期未知的参考条目。"/></details>
-    <details className="ar-card ar-section"><summary>采集窗口与来源状态</summary><p className="ar-muted">{data.window?.label}</p><Sources sources={sources}/></details></> : <div className="ar-card ar-empty"><h3>关注列表是空的</h3><p>添加一个项目 id，开始整理它的动态。</p></div>}
+    <details className="ar-card ar-section"><summary>采集窗口与来源状态</summary><p className="ar-muted">{data.window?.label}</p><Sources sources={sources}/></details></div> : <div className="ar-card ar-empty"><h3>关注列表是空的</h3><p>添加一个项目 id，开始整理它的动态。</p></div>}
   </>
+}
+
+function IssueDistribution({ items }: { items: Item[] }) {
+  const groups = groupIssues(items)
+  const total = groups.reduce((n, group) => n + group.items.length, 0)
+  return <div className="ar-type-distribution" aria-label="JIRA 类型分布">
+    <div className="ar-stacked" aria-hidden="true">{groups.map(group => <span key={group.label} className={`ar-tone-${typeTone(group.label)}`} style={{ flex: group.items.length }}/>)}</div>
+    <div className="ar-type-legend">{groups.map(group => <Tooltip key={group.label} label={`${group.label} ${group.items.length} · ${Math.round(group.items.length / total * 100)}%`} portal><Button size="sm" variant="outline" className={`ar-type-pill ar-tone-${typeTone(group.label)}`} onClick={e => {
+      const rows = e.currentTarget.closest('section')?.querySelectorAll<HTMLDetailsElement>('.ar-issue-group')
+      const target = Array.from(rows ?? []).find(row => row.dataset.issueType === group.label)
+      if (target) {
+        target.open = true
+        target.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+        target.querySelector('summary')?.focus()
+      }
+    }}><i className="ar-type-dot"/>{group.label}<strong>{group.items.length}</strong></Button></Tooltip>)}</div>
+  </div>
 }
 
 const verdictName = { affected: '受影响', not_affected: '不受影响', unknown: '无法判断' }
@@ -150,11 +187,11 @@ function SecurityCitation({ source }: { source?: SecuritySource<unknown> }) {
 }
 export function SecurityCard({ report, jump }: { report: SecurityReport; jump?: (project: string) => void }) {
   const summary = securityOverview(report)
-  return <article className="ar-card ar-metric ar-security-card"><h3 className="ar-eyebrow">版本与安全</h3>
-    <strong className="ar-number">{summary.incomplete ? summary.affected.length ? `≥${summary.affected.length}` : '—' : summary.affected.length}<small> / {summary.watched} 受影响</small></strong>
+  const withPin = report.projects.filter(p => p.pin).length
+  return <article className="ar-card ar-section ar-security-card"><div className="ar-card-heading"><h3>版本与安全</h3><Badge tone={summary.affected.length ? 'danger' : ''}>{summary.incomplete ? `${summary.affected.length ? `≥${summary.affected.length} 受影响` : '—'} · 来源待核对` : `${summary.affected.length} 个项目受影响`}</Badge></div>
+    <div className="ar-security-overview"><Tooltip label={`已填版本 ${withPin} / ${summary.watched}；未填版本或来源不完整时无法判断`} portal openOnClick><div tabIndex={0} className="ar-donut" role="img" aria-label={`运行版本覆盖 ${withPin} / ${summary.watched}`} style={{ '--ar-ring': `${summary.watched ? withPin / summary.watched * 100 : 0}%` } as React.CSSProperties}><span><strong>{withPin}<small> / {summary.watched}</small></strong><small>已填版本</small></span></div></Tooltip>
+    <div className="ar-security-projects">{report.projects.map(p => <Button key={p.project} size="sm" variant="ghost" className="ar-project-jump" onClick={() => jump?.(p.project)}><span>{projectName(p.project)}</span><Badge tone={summary.affected.includes(p.project) ? 'danger' : ''}>{summary.affected.includes(p.project) ? '受影响' : !p.pin ? '未填版本' : !p.source?.data ? '待核对' : '已核对'}</Badge><span>↗</span></Button>)}</div></div>
     <p className="ar-note">{summary.unpinned} 个未填运行版本{summary.incomplete ? ` · ${summary.incomplete} 个来源待核对` : ''}</p>
-    <div className="ar-security-projects">{report.projects.map(p => <div className="ar-security-scope" key={p.project}><button className="ar-project-jump" onClick={() => jump?.(p.project)}>{projectName(p.project)}{summary.affected.includes(p.project) ? ' · 受影响' : ''} ↗</button></div>)}</div>
-    <details className="ar-metric-detail"><summary>官方来源</summary>{report.projects.map(p => <div key={p.project}><SecurityCitation source={p.source}/>{p.error && <p className="ar-error-text">{sourceError(p.error)}</p>}</div>)}</details>
   </article>
 }
 export function SecurityStrip({ project, security, report, mutate, busy, expanded = false }: {
@@ -166,7 +203,7 @@ export function SecurityStrip({ project, security, report, mutate, busy, expande
   const supported = ['kafka', 'hadoop', 'flink'].includes(project)
   return <section className="ar-card ar-section ar-security-strip">
     <div className="ar-card-heading"><h3>版本与安全</h3><span className="ar-muted">{security?.pin ? security.source?.data ? <><Badge tone={affected ? 'danger' : ''}>{affected} 项受影响</Badge> · {unknown} 项无法判断</> : '官方列表不可用，无法判断' : '未填版本 · 无法判断'}{security?.source?.status === 'stale' ? ' · 上次成功缓存' : ''}</span></div>
-    {supported && <form className="ar-pin-form" onSubmit={e => { e.preventDefault(); mutate('pin', project, { version }) }}><label htmlFor={`ar-pin-${project}`}>运行版本</label><input id={`ar-pin-${project}`} aria-label={`${projectName(project)} 运行版本`} placeholder="输入实际版本，如 3.9.0" value={version} maxLength={200} onChange={e => setVersion(e.target.value)}/><button disabled={busy} className="ar-primary">保存并核对</button>{security?.pin && <button type="button" disabled={busy} onClick={() => mutate('pin', project, { version: '' })}>清除</button>}</form>}
+    {supported && <form className="ar-pin-form" onSubmit={e => { e.preventDefault(); mutate('pin', project, { version }) }}><label htmlFor={`ar-pin-${project}`}>运行版本</label><Input id={`ar-pin-${project}`} aria-label={`${projectName(project)} 运行版本`} placeholder="输入实际版本，如 3.9.0" value={version} maxLength={200} onChange={e => setVersion(e.target.value)}/><Button type="submit" size="sm" variant="primary" disabled={busy} className="ar-primary">保存并核对</Button>{security?.pin && <Button size="sm" variant="outline" type="button" disabled={busy} onClick={() => mutate('pin', project, { version: '' })}>清除</Button>}</form>}
     <SecurityCitation source={security?.source}/>
     {security?.error && <p className="ar-error-text">{sourceError(security.error)}</p>}
     {!!security?.notices.length && <details className="ar-limits"><summary>来源覆盖说明</summary>{security.notices.map(n => <p className="ar-footnote" key={n}>{n}</p>)}</details>}
@@ -178,7 +215,7 @@ export function SecurityStrip({ project, security, report, mutate, busy, expande
         <div className="ar-advisory-body"><p>{a.reason}</p><dl><dt>官方受影响范围</dt><dd>{a.affectedText}</dd><dt>官方修复版本</dt><dd>{a.fixedText ?? '官方未明确列出'}</dd></dl>
         <SecurityCitation source={{ url: a.url, fetchedAt: a.fetchedAt, sourceTimestamp: a.sourceTimestamp, status: security.source!.status, data: null }}/>
         <details className="ar-limits"><summary>官方说明与适用条件</summary><p>按组件、配置逐项核对；判定不构成生产安全或升级结论。</p>{a.notes.map((note, i) => <p key={i}>{note}</p>)}</details>
-        <div className="ar-osv"><h4>OSV · 第二来源</h4><p>{a.osv.data?.label ?? (a.osv.status === 'unqueried' ? '展开后按需查询，不用于官方判定。' : '查询失败，不影响官方判定。')}</p>{a.osvDifference && <p className="ar-error-text">OSV 与官方范围表述不同；官方判定保持不变，请分别核对组件和范围。</p>}<SecurityCitation source={a.osv}/>{a.osv.status === 'failed' && <button disabled={busy} onClick={() => mutate('osv', project, { cve: a.id })}>重试 OSV</button>}{a.osv.data?.record && <details><summary>OSV 范围原文</summary><pre>{JSON.stringify(a.osv.data.record.affected, null, 2)}</pre></details>}</div>
+        <div className="ar-osv"><h4>OSV · 第二来源</h4><p>{a.osv.data?.label ?? (a.osv.status === 'unqueried' ? '展开后按需查询，不用于官方判定。' : '查询失败，不影响官方判定。')}</p>{a.osvDifference && <p className="ar-error-text">OSV 与官方范围表述不同；官方判定保持不变，请分别核对组件和范围。</p>}<SecurityCitation source={a.osv}/>{a.osv.status === 'failed' && <Button size="sm" variant="outline" disabled={busy} onClick={() => mutate('osv', project, { cve: a.id })}>重试 OSV</Button>}{a.osv.data?.record && <details><summary>OSV 范围原文</summary><pre>{JSON.stringify(a.osv.data.record.affected, null, 2)}</pre></details>}</div>
         </div></details>)}
       {!security?.advisories.length && <p className="ar-empty-inline">{sourceError(security?.error) ?? '尚未采集官方列表，请刷新；不能据此认定没有公告。'}</p>}
       {project === 'kafka' && <details className="ar-suppressions"><summary>官方不适用说明 · suppressions</summary><p className="ar-footnote">官方 suppressions 不计为影响 Kafka 的公告。</p><SecurityCitation source={report?.suppressions}/>{report?.suppressions?.data?.suppressions.map(a => <article key={a.id}><b>{a.id}</b><p>{a.notes}</p><SecurityCitation source={{ ...report.suppressions!, url: a.url, fetchedAt: a.fetchedAt }}/></article>)}
@@ -190,12 +227,24 @@ export function SecurityStrip({ project, security, report, mutate, busy, expande
 function BriefSection({ part }: { part: string }) {
   if (part.startsWith('# ')) return <details className="ar-card ar-section"><summary>周报信息与统计口径</summary><MarkdownText text={part} labels={labels} omitHtml/></details>
   if (part.startsWith('## 关注项目动态')) return <><h2 className="ar-brief-title">关注项目动态</h2>{part.split('\n').slice(1).join('\n').trim().split(/\n(?=### )/).map((project, i) => <BriefSection part={project} key={i}/>)}</>
-  if (part.startsWith('## 本周新公告')) return <article className="ar-card ar-section"><MarkdownText text={part.split('\n').slice(0, 8).join('\n')} labels={labels} omitHtml/>{part.split('\n').length > 8 && <details className="ar-brief-more"><summary>全部新公告与判定</summary><MarkdownText text={part.split('\n').slice(8).join('\n')} labels={labels} omitHtml/></details>}</article>
+  if (part.startsWith('## 本周新公告')) return <details className="ar-card ar-section"><summary>本周新公告 <Badge>{part.split('\n').filter(line => /^- (kafka|hadoop|flink) \/ CVE-/.test(line)).length}</Badge></summary><MarkdownText text={part} labels={labels} omitHtml/></details>
   if (part.startsWith('## ')) return <details className="ar-card ar-section"><summary>{part.split('\n')[0]!.replace(/^## /, '')}</summary><MarkdownText text={part} labels={labels} omitHtml/></details>
-  const lines = part.replace(/^### (kafka|hadoop|flink)\b/, (_, id: string) => `### ${projectName(id)}`).split('\n')
-  const preview = part.startsWith('### ') && lines.length > 4
-  return <article className="ar-card ar-section"><MarkdownText text={preview ? lines.slice(0, 4).join('\n') : part} labels={labels} omitHtml/>
-    {preview && <details className="ar-brief-more"><summary>展开其余周报条目</summary><MarkdownText text={lines.slice(4).join('\n')} labels={labels} omitHtml/></details>}</article>
+  const lines = part.split('\n')
+  // shortcut: generated brief bullets only; use a Markdown AST if the saved format changes.
+  const entries = lines.filter(line => line.startsWith('- **'))
+  if (!part.startsWith('### ') || !entries.length) return <article className="ar-card ar-section"><MarkdownText text={part} labels={labels} omitHtml/></article>
+  return <article className="ar-card ar-section"><div className="ar-card-heading"><h3>{projectName(lines[0]!.replace(/^### /, ''))}</h3><Badge>{entries.length}</Badge></div>
+    {entries.slice(0, 2).map((line, i) => {
+      const split = line.indexOf('；[原文](')
+      const title = (split < 0 ? line : line.slice(0, split)).replace(/^- \*\*[^*]+\*\* /, '')
+      const link = line.match(/\[原文\]\([^)]+\)/)?.[0] ?? ''
+      const type = line.match(/类型：([^；]+)/)?.[1]
+      const status = line.match(/状态：([^；]+)/)?.[1]
+      const security = line.startsWith('- **安全')
+      return <div className="ar-item" key={i}><div className="ar-item-meta"><Badge tone={security ? 'danger' : 'accent'}>{security ? '安全' : type ? issueTypeName(type) : line.match(/^- \*\*([^*]+)\*\*/)?.[1]}</Badge>{status && <Badge>{issueStatusName(status)}</Badge>}<time>{line.match(/日期：(\d{4}-\d{2}-\d{2})/)?.[1]}</time></div><MarkdownText text={`${title} ${link}`} labels={labels} omitHtml/></div>
+    })}
+    <details className="ar-brief-more"><summary>展开其余周报条目</summary><MarkdownText text={lines.slice(1).join('\n')} labels={labels} omitHtml/></details>
+  </article>
 }
 export function Brief({ data, request, busy }: { data: DashboardData; request: (action: string) => void; busy: boolean }) {
   const [notice, setNotice] = useState('')
@@ -216,8 +265,8 @@ export function Brief({ data, request, busy }: { data: DashboardData; request: (
     } catch (error) { tab.close(); setNotice(String(error)) }
   }
   return <><div className="ar-section-heading"><div><h2>每周简报</h2><p>最近 7 天 · 已保存的 Markdown</p></div>
-    <div className="ar-actions"><button disabled={busy} onClick={() => request('brief')}>{data.markdown ? '重新生成' : '生成本周周报'}</button>
-      {data.markdown && <><button className="ar-primary" onClick={copy}>复制 Markdown</button><button onClick={openFile}>打开已保存文件 ↗</button></>}</div></div>
+    <div className="ar-actions"><Button size="sm" variant="outline" disabled={busy} onClick={() => request('brief')}>{data.markdown ? '重新生成' : '生成本周周报'}</Button>
+      {data.markdown && <><Button size="sm" variant="outline" className="ar-primary" onClick={copy}>复制 Markdown</Button><Button size="sm" variant="outline" onClick={openFile}>打开已保存文件 ↗</Button></>}</div></div>
     {notice && <p role="status" className="ar-muted">{notice}</p>}
     {data.markdown ? <div className="ar-brief">{briefSections(data.markdown).map((part, i) => <BriefSection part={part} key={i}/>)}</div> : <div className="ar-card ar-empty"><Icon size={40}/><h3>第一份周报，从这里开始</h3><p>点击「生成本周周报」，采集关注项目并保存到所选目录。</p></div>}</>
 }
@@ -273,32 +322,36 @@ export function Dashboard() {
   const ready = !!data.counts
   return <div className="ar-root" aria-busy={busy}>
     <style>{css}</style><div className="ar-shell">
-    <header className="ar-header"><div className="ar-brand"><span className="ar-brand-icon"><Icon size={27}/></span><div><div className="ar-overline">APACHE / COMMUNITY RADAR</div><h1>Apache 社区雷达</h1></div></div><span className="ar-local"><span className="ar-dot"/>本地工作台 · 无需模型</span></header>
-    <div className="ar-projectbar" aria-label="日常操作">{data.directory ? <div className="ar-directory"><span className="ar-dot"/><span title={data.directory}>{data.directory.split(/[\\/]/).filter(Boolean).at(-1)}</span><span className="ar-last">更新 {time(data.collectedAt)}</span></div> : <form onSubmit={e => { e.preventDefault(); void request('read') }}><label htmlFor="ar-directory">项目目录</label><input id="ar-directory" list="ar-directories" value={directory} placeholder="本地项目的绝对路径" onChange={e => setDirectory(e.target.value)} required disabled={busy}/><datalist id="ar-directories">{data.directories.map(d => <option value={d} key={d}/>)}</datalist><button disabled={busy}>打开</button></form>}
+    <header className="ar-header"><div className="ar-brand"><span className="ar-brand-icon"><Icon size={27}/></span><div><div className="ar-overline">APACHE / COMMUNITY RADAR</div><h1>Apache 社区雷达</h1></div></div><Tag tone="quiet">v0.1.5</Tag></header>
+    <div className="ar-projectbar" aria-label="日常操作">{data.directory ? <div className="ar-directory"><span className="ar-dot"/><span title={data.directory}>{data.directory.split(/[\\/]/).filter(Boolean).at(-1)}</span><span className="ar-last">更新 {time(data.collectedAt)}</span></div> : <form onSubmit={e => { e.preventDefault(); void request('read') }}><label htmlFor="ar-directory">项目目录</label><Input id="ar-directory" list="ar-directories" value={directory} placeholder="本地项目的绝对路径" onChange={e => setDirectory(e.target.value)} required disabled={busy}/><datalist id="ar-directories">{data.directories.map(d => <option value={d} key={d}/>)}</datalist><Button type="submit" size="sm" variant="outline" disabled={busy}>打开</Button></form>}
       <Button variant="primary" className="ar-primary" disabled={busy || !data.directory} onClick={() => void request('refresh', undefined, data.directory)}><span className={busy ? 'ar-spin' : ''}>↻</span> {busy ? '正在读取…' : '刷新数据'}</Button></div>
     <details className="ar-network" onToggle={e => setNetworkOpen(e.currentTarget.open)}><summary>网络 / 设置</summary><div className="ar-card ar-section ar-network-body">
-      <div><h3>连接设置</h3>{networkOpen && <NetworkSettings key={networkRevision} endpoint="/api/apache-radar/network-settings"/>}</div>
-      <div><h3>代理与诊断</h3><div className="ar-actions"><button disabled={busy} onClick={() => void request(proxyDetection ? 'redetect-proxy' : 'detect-proxy')}>{proxyDetection ? '重新检测' : '从系统检测代理'}</button><button disabled={busy || !data.directory} onClick={() => void request('diagnose')}>网络诊断</button></div>
-        {data.proxyNote && <p className="ar-muted">{data.proxyNote}</p>}
-        {proxyDetection && <div className="ar-proxy-result" role="status"><p>{proxyDetection.source ?? '插件设置'} · 超时 {proxyDetection.timeoutSeconds ?? 30} 秒</p>{proxyDetection.pacUrl && <p>PAC：{proxyDetection.pacUrl}</p>}<p>示例代理：{proxyDetection.proxy ?? 'DIRECT / 沿用原访问路径'}</p><p>检测 {proxyDetection.detectedAt ?? '—'} · 缓存 {(proxyDetection.ttlSeconds ?? 1800) / 60} 分钟</p>{proxyDetection.warning && <p>{proxyDetection.warning}</p>}{proxyDetection.note && <p>{proxyDetection.note}</p>}<div className="ar-actions"><button disabled={busy || !proxyDetection.proxy} onClick={() => void request('apply-proxy')}>应用到插件设置</button><button disabled={busy} onClick={() => void request('clear-proxy')}>清空插件代理</button></div></div>}
+      <div><div className="ar-card-heading"><h3>连接设置</h3><Tooltip label="跳过校验会降低连接安全性；限定开关仅用于 api.osv.dev / api.github.com" portal openOnClick><Button size="sm" variant="ghost" aria-label="证书校验说明">ⓘ</Button></Tooltip></div>{networkOpen && <NetworkSettings key={networkRevision} endpoint="/api/apache-radar/network-settings"/>}</div>
+      <div><h3>代理与诊断</h3><div className="ar-actions"><Button size="sm" variant="outline" disabled={busy} onClick={() => void request(proxyDetection ? 'redetect-proxy' : 'detect-proxy')}>{proxyDetection ? '重新检测' : '从系统检测代理'}</Button><Button size="sm" variant="outline" disabled={busy || !data.directory} onClick={() => void request('diagnose')}>网络诊断</Button></div>
+        {data.proxyNote && !proxyDetection && <Tooltip label={data.proxyNote} portal openOnClick><Button size="sm" variant="ghost" aria-label="代理状态说明">自动代理 ⓘ</Button></Tooltip>}
+        {proxyDetection && <div className="ar-proxy-result" role="status"><Tooltip label={data.proxyNote ?? '当前系统代理检测结果'} portal openOnClick><p tabIndex={0}>{proxyDetection.source ?? '插件设置'} · {proxyDetection.proxy ? '检测到代理' : '直连'} · {proxyDetection.timeoutSeconds ?? 30}s ⓘ</p></Tooltip><details><summary>详情</summary>{proxyDetection.pacUrl && <p>PAC：{proxyDetection.pacUrl}</p>}<p>代理：{proxyDetection.proxy ?? 'DIRECT'}</p><p>检测 {proxyDetection.detectedAt ?? '—'} · 缓存 {(proxyDetection.ttlSeconds ?? 1800) / 60} 分钟</p>{proxyDetection.warning && <p>{proxyDetection.warning}</p>}{proxyDetection.note && <p>{proxyDetection.note}</p>}</details><div className="ar-actions"><Button size="sm" variant="outline" disabled={busy || !proxyDetection.proxy} onClick={() => void request('apply-proxy')}>应用到插件设置</Button><Button size="sm" variant="outline" disabled={busy} onClick={() => void request('clear-proxy')}>清空插件代理</Button></div></div>}
         {(diagnosis !== undefined || !!data.diagnostics?.length) && <details className="ar-diagnostics"><summary>诊断详情</summary>{data.diagnostics?.map(d => <p key={d.code}>{d.code} · {d.count} 个来源 · {d.hintZh}</p>)}{diagnosis !== undefined && <pre>{JSON.stringify(diagnosis, null, 2)}</pre>}</details>}
-        <h3>本地数据</h3><div className="ar-actions"><button disabled={busy || !data.directory} onClick={() => void exportSnapshot()}>导出快照</button><label className="ar-import">导入快照 <input aria-label="导入快照" type="file" accept="application/json,.json" disabled={busy || !data.directory} onChange={async e => {
+        <h3>本地数据</h3><div className="ar-actions"><Button size="sm" variant="outline" disabled={busy || !data.directory} onClick={() => void exportSnapshot()}>导出快照</Button><label className="ar-import">导入快照 <input aria-label="导入快照" type="file" accept="application/json,.json" disabled={busy || !data.directory} onChange={async e => {
           const file = e.target.files?.[0]; e.target.value = ''
           if (!file) return
           if (file.size > 32 * 1024 * 1024) { setError('快照超过 32 MiB'); return }
           try { await request('import', undefined, data.directory, { snapshot: await file.text() }) }
           catch { setError('无法读取快照文件') }
         }}/></label></div>
-        {data.directory && <><button className="ar-quiet" disabled={busy} onClick={() => setChoosing(!choosing)} aria-expanded={choosing}>切换目录</button>{choosing && <form className="ar-directory-form" onSubmit={e => { e.preventDefault(); void request('read') }}><label htmlFor="ar-change-directory">项目绝对路径</label><input id="ar-change-directory" value={directory} onChange={e => setDirectory(e.target.value)} required disabled={busy}/><button disabled={busy}>打开目录</button></form>}</>}
+        {data.directory && <><Button size="sm" variant="outline" className="ar-quiet" disabled={busy} onClick={() => setChoosing(!choosing)} aria-expanded={choosing}>切换目录</Button>{choosing && <form className="ar-directory-form" onSubmit={e => { e.preventDefault(); void request('read') }}><label htmlFor="ar-change-directory">项目绝对路径</label><Input id="ar-change-directory" value={directory} onChange={e => setDirectory(e.target.value)} required disabled={busy}/><Button type="submit" size="sm" variant="outline" disabled={busy}>打开目录</Button></form>}</>}
       </div></div></details>
-    <nav className="ar-tabs" aria-label="雷达页面">{[['overview', '总览'], ['watch', '关注动态'], ['brief', '每周简报']].map(([id, title]) => <button key={id} aria-current={view === id ? 'page' : undefined} onClick={() => { setView(id!); setFocusProject(undefined) }}>{title}</button>)}</nav>
-    {error && <div className="ar-notice danger" role="alert"><span>{sourceError(error)}{ready ? ' · 保留上次数据' : ''}</span><button disabled={busy} onClick={() => void request('read')}>重试</button></div>}
+    <nav className="ar-tabs" aria-label="雷达页面"><SegmentedTabs size="sm" label="雷达页面" value={view} onChange={id => { setView(id); setFocusProject(undefined) }} items={[
+      { value: 'overview', label: '总览', id: 'ar-overview-tab', panelId: 'ar-overview-panel' },
+      { value: 'watch', label: '关注动态', id: 'ar-watch-tab', panelId: 'ar-watch-panel' },
+      { value: 'brief', label: '每周简报', id: 'ar-brief-tab', panelId: 'ar-brief-panel' },
+    ]}/></nav>
+    {error && <div className="ar-notice danger" role="alert"><span>{sourceError(error)}{ready ? ' · 保留上次数据' : ''}</span><Button size="sm" variant="outline" disabled={busy} onClick={() => void request('read')}>重试</Button></div>}
     {data.localSnapshot && <p className="ar-notice warn" role="status">本地快照 · 非实时数据，请核对来源时间。</p>}
     {!!data.diagnostics?.length ? <p className="ar-notice warn" role="status">{networkHint(data.diagnostics.find(d => d.code === 'TLS_KEY_TOO_SMALL')?.code ?? data.diagnostics[0]!.code)}{stale ? ' · 保留上次数据' : ''}</p> : (stale || failed) && <p className="ar-notice warn" role="status">{stale ? '正在显示上次成功缓存，请刷新后核对。' : '部分来源获取失败，请刷新或查看来源状态。'}</p>}
-    {busy && <div role="status" className="ar-loading"><span className="ar-spin">◌</span> 正在读取…</div>}
-    {ready ? view === 'overview' ? <Overview data={data} jump={project => { setFocusProject(project); setView("watch") }}/> : view === 'watch' ? <Watch data={data} focusProject={focusProject} mutate={(action, project, extra) => void request(action, project, data.directory, extra)} busy={busy}/> : <Brief data={data} request={action => void request(action, undefined, data.directory)} busy={busy}/>
+    {busy && !ready && <div role="status" aria-label="正在读取" className="ar-loading"><span className="ar-spin">◌</span></div>}
+    <div role="tabpanel" id={`ar-${view}-panel`} aria-labelledby={`ar-${view}-tab`}>{ready ? view === 'overview' ? <Overview data={data} jump={project => { setFocusProject(project); setView("watch") }}/> : view === 'watch' ? <Watch data={data} focusProject={focusProject} mutate={(action, project, extra) => void request(action, project, data.directory, extra)} busy={busy}/> : <Brief data={data} request={action => void request(action, undefined, data.directory)} busy={busy}/>
       : view === 'brief' && data.directory ? <Brief data={data} request={action => void request(action, undefined, data.directory)} busy={busy}/> : !busy && <div className="ar-card ar-empty"><Icon size={44}/><h2>{data.directory ? '开始关注社区变化' : '打开你的项目'}</h2><p>{data.directory ? '点击「刷新数据」获取社区概况与项目动态。' : '填写本地项目目录，开始使用社区雷达。'}</p></div>}
-    <footer className="ar-footer"><span>Apache Radar <span className="ar-divider">/</span> 本地 Apache 社区雷达</span><span>公开来源 · UTC+8</span></footer>
+    </div><footer className="ar-footer"><span>Apache Radar · 0.1.5</span></footer>
     </div></div>
 }
 
@@ -316,825 +369,133 @@ export function apply(ctx: ClientContext) {
 }
 
 const css = `
-.ar-security-projects{display:flex;flex-wrap:wrap;gap:3px 12px}
-.ar-security-scope{min-width:0}
-.ar-security-card .ar-number small{font-size:14px;letter-spacing:0;color:var(--ar-faint)}
-.ar-root .ar-project-jump{border:0;padding:0;background:transparent;font-size:11px;justify-content:flex-start;white-space:normal;color:var(--ar-accent)}
-.ar-security-strip{border-top:2px solid color-mix(in srgb,var(--ar-accent) 45%,var(--ar-line))}
-.ar-pin-form{display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin:16px 0;font-size:12px}
-.ar-pin-form input{width:190px;max-width:100%}
-.ar-advisories{margin-top:16px;border-top:1px solid var(--ar-line);padding-top:12px}
-.ar-advisory{padding:13px 0;border-top:1px solid var(--ar-line);scroll-margin-top:20px}
-.ar-advisory:first-of-type{margin-top:12px}
-.ar-advisory>summary{position:relative;padding-right:22px;display:flex;align-items:flex-start;gap:10px;list-style:none;flex-wrap:wrap}
-.ar-advisory>summary:after{content:'＋';position:absolute;right:0;top:0;color:var(--ar-faint)}
-.ar-advisory[open]>summary:after{content:'−'}
-.ar-advisory>summary b{font-size:12px;color:var(--ar-text)}
-.ar-advisory>summary>span:nth-of-type(2){flex:1;min-width:140px}
-.ar-advisory-link{font-size:11px;color:var(--ar-faint);margin-left:auto}
-.ar-advisory>summary>span:nth-of-type(2){line-height:1.6}
-.ar-limits{margin-top:8px}
-.ar-osv{border-top:1px solid var(--ar-line);margin-top:16px;padding-top:4px}
-.ar-advisory-body{padding:12px 0 4px;font-size:12px;overflow-wrap:anywhere}
-.ar-advisory-body dl{display:grid;grid-template-columns:105px minmax(0,1fr);gap:8px;padding:14px;background:var(--ar-bg);border-radius:8px}
-.ar-advisory-body dt{color:var(--ar-faint)}
-.ar-advisory-body dd{margin:0;white-space:pre-line}
-.ar-advisory-body pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:11px;max-height:200px;overflow:auto}
-.ar-advisory-body .ar-citation{margin:10px 0}
-.ar-limits p,.ar-suppressions p{margin:10px 0}
-.ar-suppressions{border-top:1px solid var(--ar-line);margin-top:15px;padding-top:15px}
-.ar-suppressions article{padding:14px 0;border-bottom:1px solid var(--ar-line);font-size:12px;overflow-wrap:anywhere}
-.ar-cve-chip{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:8px 0}
-.ar-root .ar-cve-chip button{padding:2px 6px;font-size:11px;color:var(--ar-accent)}
-
-.ar-root {
-  --ar-bg:var(--dsw-alias-bg-module-platform);
-  --ar-card:var(--dsw-alias-bg-layer-1);
-  --ar-text:var(--dsw-alias-label-primary);
-  --ar-muted:var(--dsw-alias-label-secondary);
-  --ar-faint:var(--dsw-alias-label-tertiary);
-  --ar-line:var(--dsw-alias-border-l2);
-  --ar-accent:var(--dsw-alias-state-business-primary);
-  --ar-warn:var(--dsw-alias-state-warn-label);
-  --ar-error:var(--dsw-alias-state-error-primary);
-  --ar-success:var(--dsw-alias-state-success-primary);
-  height:100%;
-  overflow:auto;
-  background:var(--ar-bg);
-  color:var(--ar-text);
-  font-family:inherit;
-  font-size:14px;
-  line-height:1.6;
-  container-type:inline-size
-}
-.ar-root * {
-  box-sizing:border-box
-}
-.ar-shell {
-  max-width:1360px;
-  margin:auto;
-  padding:36px 40px 24px;
-  padding-top:max(40px,var(--dsh-frame-leading-clearance,0px))
-}
-.ar-root h1,.ar-root h2,.ar-root h3,.ar-root h4,.ar-root p {
-  margin:0
-}
-.ar-root h1 {
-  font-size:26px;
-  letter-spacing:-.7px;
-  font-weight:650
-}
-.ar-root h2 {
-  font-size:19px;
-  font-weight:600;
-  letter-spacing:-.4px
-}
-.ar-root h3 {
-  font-size:15px;
-  font-weight:600
-}
-.ar-root h4 {
-  font-size:12px;
-  color:var(--ar-faint);
-  font-weight:500;
-  margin:15px 0 4px
-}
-.ar-root a {
-  color:inherit;
-  text-decoration:none
-}
-.ar-root a:hover {
-  color:var(--ar-accent);
-  text-decoration:underline
-}
-.ar-root button {
-  font:inherit;
-  cursor:pointer;
-  background:var(--ar-card);
-  color:var(--ar-text);
-  border:1px solid var(--ar-line);
-  border-radius:8px;
-  padding:7px 13px;
-  white-space:nowrap;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:6px
-}
-.ar-root button:hover {
-  background:var(--dsw-alias-interactive-bg-hover)
-}
-.ar-root button:disabled {
-  opacity:.5;
-  cursor:wait
-}
-.ar-root :is(button,a,input,summary):focus-visible {
-  outline:2px solid var(--ar-accent);
-  outline-offset:3px
-}
-.ar-root .ar-primary {
-  background:var(--ar-accent);
-  color:var(--dsw-alias-label-primary-foreground);
-  border-color:transparent
-}
-.ar-root .ar-primary:hover {
-  filter:brightness(1.1);
-  background:var(--ar-accent)
-}
-.ar-root input {
-  font:inherit;
-  color:inherit;
-  background:transparent;
-  border:1px solid var(--ar-line);
-  border-radius:8px;
-  padding:7px 10px;
-  min-width:0
-}
-.ar-header,.ar-brand,.ar-intro,.ar-projectbar,.ar-actions,.ar-card-heading,.ar-section-heading,.ar-watch-toolbar,.ar-footer {
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:14px
-}
-.ar-brand {
-  justify-content:flex-start;
-  gap:14px
-}
-.ar-brand-icon {
-  display:grid;
-  place-items:center;
-  width:50px;
-  height:50px;
-  background:color-mix(in srgb,var(--ar-accent) 9%,transparent);
-  color:var(--ar-accent);
-  border:1px solid color-mix(in srgb,var(--ar-accent) 18%,transparent);
-  border-radius:14px
-}
-.ar-overline {
-  font-size:10px;
-  font-weight:600;
-  letter-spacing:1.8px;
-  color:var(--ar-faint);
-  margin-bottom:3px
-}
-.ar-local {
-  font-size:12px;
-  color:var(--ar-muted);
-  display:flex;
-  align-items:center;
-  gap:7px
-}
-.ar-dot {
-  display:inline-block;
-  width:6px;
-  height:6px;
-  border-radius:50%;
-  background:var(--ar-success);
-  flex-shrink:0
-}
-.ar-dot.warn {
-  background:var(--ar-warn)
-}
-.ar-intro {
-  margin:19px 0 24px;
-  color:var(--ar-muted)
-}
-.ar-intro>span {
-  font-size:12px;
-  color:var(--ar-faint)
-}
-.ar-projectbar {
-  border:1px solid var(--ar-line);
-  border-radius:12px;
-  padding:12px 16px;
-  margin-top:24px;
-  background:var(--ar-card);
-  flex-wrap:wrap
-}
-.ar-directory {
-  display:flex;
-  align-items:center;
-  gap:10px;
-  font-size:12px;
-  color:var(--ar-muted)
-}
-.ar-directory>span {
-  overflow-wrap:anywhere
-}
-.ar-projectbar form,.ar-watch-toolbar form {
-  display:flex;
-  align-items:center;
-  gap:9px;
-  flex:1;
-  min-width:200px
-}
-.ar-projectbar label {
-  font-size:12px;
-  color:var(--ar-muted);
-  white-space:nowrap
-}
-.ar-projectbar input {
-  width:100%;
-  max-width:450px;
-  font-size:12px;
-  font-family:inherit
-}
-.ar-last {
-  font-size:11px;
-  color:var(--ar-faint)
-}
-.ar-tabs {
-  display:flex;
-  gap:26px;
-  border-bottom:1px solid var(--ar-line);
-  margin:8px 0 28px
-}
-.ar-tabs button {
-  background:transparent;
-  border:0;
-  border-radius:0;
-  padding:12px 2px 15px;
-  color:var(--ar-faint);
-  gap:9px;
-  font-weight:500;
-  position:relative
-}
-.ar-tabs button span {
-  font-size:10px;
-  font-variant-numeric:tabular-nums;
-  opacity:.65
-}
-.ar-tabs button[aria-current] {
-  color:var(--ar-text)
-}
-.ar-tabs button[aria-current]:after {
-  content:'';
-  height:2px;
-  background:var(--ar-accent);
-  position:absolute;
-  bottom:-1px;
-  left:0;
-  right:0
-}
-.ar-section-heading {
-  margin-bottom:20px;
-  align-items:baseline;
-  flex-wrap:wrap
-}
-.ar-section-heading p {
-  font-size:12px;
-  color:var(--ar-faint);
-  margin-top:5px
-}
-.ar-card {
-  border:1px solid var(--ar-line);
-  border-radius:13px;
-  background:var(--ar-card);
-  box-shadow:0 2px 5px #00000003;
-  min-width:0
-}
-.ar-metrics {
-  display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:12px;
-  margin-bottom:22px
-}
-.ar-metric {
-  padding:19px 18px 16px;
-  display:flex;
-  flex-direction:column;
-  gap:9px;
-  min-height:175px
-}
-.ar-featured {
-  border-color:color-mix(in srgb,var(--ar-accent) 32%,var(--ar-line));
-  background:linear-gradient(125deg,color-mix(in srgb,var(--ar-accent) 6%,var(--ar-card)),var(--ar-card))
-}
-.ar-root h3.ar-eyebrow {
-  font-size:12px;
-  font-weight:500;
-  color:var(--ar-muted)
-}
-.ar-number {
-  font-size:36px;
-  line-height:1.2;
-  font-weight:600;
-  letter-spacing:-1.7px;
-  font-variant-numeric:tabular-nums
-}
-.ar-featured .ar-number {
-  color:var(--ar-accent)
-}
-.ar-note {
-  font-size:11px;
-  line-height:1.65;
-  color:var(--ar-faint);
-  flex:1
-}
-.ar-citation {
-  font-size:11px;
-  line-height:1.7;
-  color:var(--ar-faint);
-  overflow-wrap:anywhere;
-  font-variant-numeric:tabular-nums
-}
-.ar-source-error {
-  width:100%;
-  margin-top:3px
-}
-.ar-source-error summary {
-  font-size:10px;
-  color:var(--ar-error)
-}
-.ar-citation a {
-  color:var(--ar-muted)
-}
-.ar-citation>span {
-  display:block
-}
-.ar-citation>summary{font-size:11px;overflow-wrap:anywhere}
-.ar-citation[open]>span{margin-top:5px}
-.ar-two-col {
-  display:grid;
-  grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);
-  gap:20px;
-  margin-bottom:20px;
-  align-items:start
-}
-.ar-section {
-  padding:23px;
-  margin-bottom:20px
-}
-.ar-two-col>.ar-section {
-  margin:0
-}
-.ar-card-heading {
-  margin-bottom:9px;
-  align-items:baseline;
-  flex-wrap:wrap
-}
-.ar-muted {
-  color:var(--ar-faint);
-  font-size:12px
-}
-.ar-badge {
-  display:inline-flex;
-  align-items:center;
-  width:fit-content;
-  border:1px solid var(--ar-line);
-  border-radius:5px;
-  padding:2px 7px;
-  font-size:10px;
-  line-height:1.6;
-  color:var(--ar-muted);
-  font-weight:500;
-  white-space:nowrap
-}
-.ar-badge.warn {
-  color:var(--ar-warn);
-  border-color:color-mix(in srgb,var(--ar-warn) 25%,transparent);
-  background:color-mix(in srgb,var(--ar-warn) 7%,transparent)
-}
-.ar-badge.danger {
-  color:var(--ar-error);
-  background:color-mix(in srgb,var(--ar-error) 8%,transparent);
-  border-color:color-mix(in srgb,var(--ar-error) 25%,transparent)
-}
-.ar-badge.good {
-  color:var(--ar-success);
-  border-color:color-mix(in srgb,var(--ar-success) 25%,transparent)
-}
-.ar-retired {
-  display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:10px;
-  margin:20px 0
-}
-.ar-retired-cell {
-  padding-right:8px;
-  border-right:1px solid var(--ar-line);
-  min-width:0;
-  font-size:11px;
-  color:var(--ar-muted)
-}
-.ar-retired-cell:last-child {
-  border:0
-}
-.ar-retired-cell strong {
-  display:block;
-  color:var(--ar-text);
-  font-size:27px;
-  font-weight:550;
-  margin:5px 0 10px;
-  font-variant-numeric:tabular-nums
-}
-.ar-difference {
-  border-top:1px solid var(--ar-line);
-  padding:12px 0;
-  font-size:11px;
-  color:var(--ar-muted)
-}
-.ar-root summary {
-  cursor:pointer;
-  font-size:12px;
-  color:var(--ar-muted);
-  line-height:1.7
-}
-.ar-difference summary .ar-dot {
-  margin-right:6px
-}
-.ar-difference p {
-  margin-top:7px;
-  overflow-wrap:anywhere
-}
-.ar-difference .ar-citation {
-  margin-top:7px
-}
-.ar-categories {
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px;
-  margin:20px 0
-}
-.ar-category {
-  background:var(--ar-bg);
-  border:1px solid var(--ar-line);
-  border-radius:7px;
-  min-width:0
-}
-.ar-category summary {
-  list-style:none;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:8px 10px;
-  gap:8px;
-  font-size:11px
-}
-.ar-category b {
-  font-variant-numeric:tabular-nums;
-  font-weight:500;
-  color:var(--ar-text)
-}
-.ar-category p,.ar-category .ar-citation {
-  padding:0 10px 10px;
-  font-size:11px;
-  color:var(--ar-faint)
-}
-.ar-footnote {
-  font-size:11px;
-  color:var(--ar-faint);
-  line-height:1.7
-}
-.ar-notice {
-  display:flex;
-  align-items:center;
-  gap:12px;
-  border:1px solid var(--ar-line);
-  border-radius:9px;
-  padding:12px 16px;
-  margin-bottom:16px;
-  font-size:12px;
-  flex-wrap:wrap
-}
-.ar-notice.warn {
-  color:var(--ar-warn);
-  background:color-mix(in srgb,var(--ar-warn) 5%,var(--ar-card));
-  border-color:color-mix(in srgb,var(--ar-warn) 25%,transparent)
-}
-.ar-notice.danger {
-  color:var(--ar-error);
-  background:color-mix(in srgb,var(--ar-error) 5%,var(--ar-card))
-}
-.ar-notice span {
-  flex:1;
-  min-width:180px
-}
-.ar-notice strong {
-  font-weight:550
-}
-.ar-error-text {
-  color:var(--ar-error);
-  font-size:11px;
-  overflow-wrap:anywhere
-}
-.ar-loading {
-  display:flex;
-  align-items:center;
-  gap:8px;
-  color:var(--ar-faint);
-  font-size:12px;
-  padding:0 0 16px
-}
-.ar-spin {
-  display:inline-block;
-  animation:ar-spin 1.4s linear infinite
-}
-@keyframes ar-spin {
-  to {
-    transform:rotate(360deg)
-  }
-}
-.ar-empty {
-  padding:70px 25px;
-  text-align:center;
-  color:var(--ar-faint)
-}
-.ar-empty svg {
-  margin:0 auto 18px;
-  color:var(--ar-accent)
-}
-.ar-empty h2,.ar-empty h3 {
-  color:var(--ar-text);
-  margin-bottom:10px
-}
-.ar-empty p {
-  max-width:500px;
-  margin:auto;
-  font-size:13px
-}
-.ar-watch-toolbar {
-  margin-bottom:20px;
-  flex-wrap:wrap;
-  justify-content:flex-start
-}
-.ar-watch-toolbar form {
-  flex:0 1 auto;
-  margin:12px 0
-}
-.ar-watch-toolbar input {
-  width:175px;
-  font-size:12px
-}
-.ar-watch-toolbar button {
-  font-size:12px
-}
-.ar-segment {
-  display:flex;
-  gap:3px;
-  padding:4px;
-  background:color-mix(in srgb,var(--ar-text) 4%,transparent);
-  border:1px solid var(--ar-line);
-  border-radius:10px;
-  flex-wrap:wrap
-}
-.ar-segment button {
-  border:0;
-  background:transparent;
-  color:var(--ar-faint);
-  padding:7px 18px;
-  min-width:70px
-}
-.ar-segment button[aria-pressed=true] {
-  background:var(--ar-card);
-  color:var(--ar-text);
-  box-shadow:0 1px 4px #0000000b
-}
-.ar-item {
-  padding:17px 0;
-  border-bottom:1px solid var(--ar-line)
-}
-.ar-item:last-child {
-  border-bottom:0
-}
-.ar-item-meta {
-  display:flex;
-  align-items:center;
-  flex-wrap:wrap;
-  gap:7px;
-  margin-bottom:8px;
-  font-size:10px;
-  color:var(--ar-faint)
-}
-.ar-item-meta .ar-badge {
-  white-space:normal;
-  overflow-wrap:anywhere;
-  max-width:100%
-}
-.ar-item-meta time {
-  margin-left:auto;
-  font-variant-numeric:tabular-nums
-}
-.ar-item-title {
-  display:block;
-  font-weight:500;
-  line-height:1.7;
-  font-size:13px;
-  overflow-wrap:anywhere
-}
-.ar-item-title>span {
-  color:var(--ar-faint);
-  font-size:12px
-}
-.ar-item-links {
-  display:flex;
-  gap:12px;
-  font-size:11px;
-  color:var(--ar-faint);
-  flex-wrap:wrap;
-  margin-top:7px
-}
-.ar-security {
-  border-left:2px solid var(--ar-error);
-  padding-left:14px;
-  background:color-mix(in srgb,var(--ar-error) 2%,transparent);
-  margin-top:9px
-}
-.ar-item .ar-footnote {
-  margin-top:6px
-}
-.ar-empty-inline {
-  color:var(--ar-faint);
-  font-size:12px;
-  padding:25px 0 15px;
-  line-height:1.9
-}
-.ar-issue-group {
-  padding:12px 0 0
-}
-.ar-issue-group summary {
-  font-size:12px;
-  font-weight:500
-}
-.ar-issue-group+.ar-issue-group {
-  border-top:1px solid var(--ar-line);
-  margin-top:14px
-}
-.ar-root .ar-more {
-  width:100%;
-  font-size:11px;
-  color:var(--ar-faint);
-  background:transparent;
-  border-color:transparent;
-  margin-top:12px
-}
-.ar-source-list {
-  margin-top:15px
-}
-.ar-source-row {
-  display:flex;
-  gap:10px;
-  padding:12px 0;
-  border-bottom:1px solid var(--ar-line);
-  align-items:flex-start;
-  font-size:12px
-}
-.ar-source-row>div {
-  min-width:0;
-  overflow-wrap:anywhere
-}
-.ar-brief {
-  max-width:980px;
-  margin:20px auto
-}
-.ar-brief .ar-section {
-  padding:24px 28px
-}
-.ar-brief-title {
-  margin:28px 0 18px!important
-}
-.ar-brief-more {
-  margin-top:16px;
-  padding-top:12px;
-  border-top:1px solid var(--ar-line)
-}
-.ar-brief h1 {
-  font-size:23px
-}
-.ar-brief h2 {
-  font-size:18px
-}
-.ar-brief h3 {
-  margin-top:24px
-}
-.ar-footer {
-  margin-top:35px;
-  padding-top:20px;
-  border-top:1px solid var(--ar-line);
-  font-size:10px;
-  color:var(--ar-faint);
-  flex-wrap:wrap
-}
-.ar-divider {
-  padding:0 8px;
-  opacity:.5
-}
-.ar-heading-count{font-size:12px;font-weight:500;color:var(--ar-faint);margin-left:8px;letter-spacing:0;font-variant-numeric:tabular-nums}
-.ar-metric-detail{margin-top:auto;font-size:11px}
-.ar-metric-detail>summary{font-size:11px}
-.ar-metric-detail[open] .ar-note{margin:8px 0}
-.ar-metric-detail .ar-citation{margin-top:6px}
-.ar-network{margin-top:8px}
-.ar-network>summary{width:fit-content;margin-left:auto;padding:4px 0;font-size:12px}
-.ar-network-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:30px;margin:12px 0 20px}
-.ar-network-body>div{min-width:0}
-.ar-network-body h3{margin-bottom:12px}
-.ar-network-body h3:not(:first-child){margin-top:24px}
-.ar-network-body .ar-actions{justify-content:flex-start;flex-wrap:wrap;margin:12px 0;font-size:12px}
-.ar-proxy-result,.ar-diagnostics{font-size:12px;overflow-wrap:anywhere;margin:14px 0}
-.ar-proxy-result p,.ar-diagnostics p{margin:6px 0}
-.ar-diagnostics pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow:auto;font-size:11px}
-.ar-import{display:flex;flex-direction:column;gap:6px;max-width:100%;color:var(--ar-muted)}
-.ar-import input{max-width:100%;width:245px;font-size:11px}
-.ar-directory-form{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px;font-size:12px}
-.ar-directory-form input{width:100%}
-.ar-root .ar-quiet{background:transparent;border-color:transparent;padding-left:0;font-size:12px;color:var(--ar-muted)}
-.ar-manage{margin-left:auto;font-size:12px}
-.ar-manage[open]{padding:12px;border:1px solid var(--ar-line);border-radius:10px;background:var(--ar-card)}
-.ar-brief{line-height:1.85}
-.ar-brief li{margin:8px 0}
-@container (max-width:1000px) {
-  .ar-shell {
-    padding:28px 24px 20px
-  }
-  .ar-metrics {
-    grid-template-columns:repeat(3,1fr)
-  }
-  .ar-two-col {
-    grid-template-columns:1fr
-  }
-  .ar-last,.ar-intro>span {
-    display:none
-  }
-  .ar-retired {
-    gap:15px
-  }
-  .ar-retired-cell {
-    font-size:12px
-  }
-  .ar-brief .ar-section {
-    padding:24px
-  }
-  .ar-local {
-    font-size:11px
-  }
-}
-@container (max-width:600px) {
-  .ar-network-body{grid-template-columns:minmax(0,1fr);gap:24px}
-  .ar-advisory>summary{gap:7px}
-  .ar-advisory>summary>span:nth-of-type(2){flex-basis:100%}
-  .ar-advisory-body dl{grid-template-columns:1fr;gap:5px}
-  .ar-advisory-body dd+dt{margin-top:8px}
-  .ar-categories{grid-template-columns:1fr}
-  .ar-directory{flex-wrap:wrap;min-width:0}
-  .ar-manage{max-width:100%}
-  .ar-watch-toolbar form{flex-wrap:wrap;min-width:0}
-  .ar-tabs button{font-size:13px}
-  .ar-brand{gap:10px}
-  .ar-shell {
-    padding:24px 16px
-  }
-  .ar-header h1 {
-    font-size:21px
-  }
-  .ar-local {
-    display:none
-  }
-  .ar-metrics {
-    grid-template-columns:1fr 1fr
-  }
-  .ar-metrics .ar-featured {
-    grid-column:1/-1
-  }
-  .ar-metric {
-    padding:16px
-  }
-  .ar-retired {
-    grid-template-columns:1fr 1fr;
-    gap:18px
-  }
-  .ar-watch-toolbar form {
-    margin-left:0
-  }
-  .ar-tabs {
-    gap:20px
-  }
-  .ar-section {
-    padding:18px
-  }
-  .ar-projectbar form {
-    width:100%;
-    flex-basis:100%
-  }
-  .ar-actions {
-    flex-wrap:wrap
-  }
-  .ar-root h2 {
-    font-size:17px
-  }
-  .ar-intro {
-    font-size:12px
-  }
-  .ar-brief .ar-section {
-    padding:20px
-  }
-  .ar-number {
-    font-size:34px
-  }
-}
-@media(prefers-reduced-motion:reduce) {
-  .ar-spin {
-    animation:none
-  }
-}
+.ar-root{--ar-bg:var(--dsw-alias-bg-module-platform);--ar-card:var(--dsw-alias-bg-layer-1);--ar-text:var(--dsw-alias-label-primary);--ar-muted:var(--dsw-alias-label-secondary);--ar-faint:var(--dsw-alias-label-secondary);--ar-line:var(--dsw-alias-border-l2);--ar-accent:var(--dsw-alias-state-business-primary);--ar-warn:var(--dsw-alias-state-warn-primary);--ar-error:var(--dsw-alias-state-error-primary);--ar-success:var(--dsw-alias-state-success-primary);height:100%;overflow:auto;background:var(--ar-bg);color:var(--ar-text);font-family:inherit;font-size:13px;line-height:1.6;container-type:inline-size}
+.ar-root *{box-sizing:border-box}
+.ar-shell{max-width:1400px;margin:auto;padding:24px 28px;padding-top:max(24px,var(--dsh-frame-leading-clearance,0px))}
+.ar-root :is(h1,h2,h3,h4,p){margin:0}
+.ar-root h1{font-size:23px;letter-spacing:-.6px;font-weight:500}
+.ar-root h2{font-size:17px;font-weight:500}
+.ar-root h3{font-size:14px;font-weight:500}
+.ar-root h4{font-size:12px;font-weight:500;margin:12px 0 4px;color:var(--ar-muted)}
+.ar-root strong,.ar-root b{font-weight:500;font-variant-numeric:tabular-nums}
+.ar-root a{color:inherit;text-decoration:none;overflow-wrap:anywhere}
+.ar-root a:focus-visible{text-decoration:underline}
+.ar-root :is(button,a,input,summary,[tabindex]):focus-visible{outline:2px solid var(--ar-accent);outline-offset:3px}
+.ar-root button{font-family:inherit;flex-shrink:0}
+.ar-root input{min-width:0}
+.ar-root form>span:has(input){min-width:0;max-width:100%}
+.ar-root :is(.ar-error-text,.ar-diagnostics,.ar-difference,.ar-notice){overflow-wrap:anywhere}
+.ar-header,.ar-brand,.ar-projectbar,.ar-actions,.ar-card-heading,.ar-section-heading,.ar-watch-toolbar,.ar-footer{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.ar-brand{justify-content:flex-start;gap:12px}
+.ar-brand-icon{width:40px;height:40px;display:grid;place-items:center;border:1px solid color-mix(in srgb,var(--ar-accent) 24%,var(--ar-line));border-radius:var(--dsw-radius-md,12px);color:var(--ar-accent);background:color-mix(in srgb,var(--ar-accent) 8%,var(--ar-card))}
+.ar-overline{font-size:10px;letter-spacing:1.5px;color:var(--ar-muted)}
+.ar-projectbar{flex-wrap:wrap;margin-top:16px;padding:10px 12px;border:1px solid var(--ar-line);border-radius:var(--dsw-radius-md,12px);background:var(--ar-card);font-size:12px}
+.ar-directory{display:flex;align-items:center;flex-wrap:wrap;gap:8px;min-width:0;color:var(--ar-muted)}
+.ar-directory>span{overflow-wrap:anywhere}
+.ar-last{font-size:11px;color:var(--ar-muted)}
+.ar-dot{width:5px;height:5px;border-radius:50%;display:inline-block;flex:none;background:var(--ar-success)}
+.ar-projectbar form,.ar-directory-form,.ar-watch-toolbar form{display:flex;align-items:center;flex-wrap:wrap;gap:8px;min-width:0}
+.ar-projectbar form{flex:1}.ar-projectbar form>span:has(input){flex:1;max-width:450px}
+.ar-tabs{display:flex;margin:8px 0 18px;border-bottom:1px solid var(--ar-line);padding-bottom:10px}.ar-tabs>[role=tablist]{width:300px;max-width:100%}
+.ar-section-heading{margin:0 0 12px;flex-wrap:wrap}
+.ar-section-heading p{font-size:12px;color:var(--ar-muted)}
+.ar-card{min-width:0;border:1px solid var(--ar-line);border-radius:var(--dsw-radius-md,12px);background:var(--ar-card);box-shadow:0 2px 6px color-mix(in srgb,var(--ar-text) 3%,transparent)}
+.ar-section{padding:16px;margin-bottom:12px}
+.ar-card-heading{margin-bottom:12px;flex-wrap:wrap;min-height:24px}
+.ar-card-heading>h3{display:flex;align-items:center}
+.ar-metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.ar-metric{padding:13px 16px;display:flex;flex-direction:column;gap:5px;position:relative}
+.ar-metric:after{content:'';position:absolute;left:16px;right:16px;bottom:0;height:2px;background:color-mix(in srgb,var(--ar-accent) 18%,transparent)}
+.ar-featured{border-color:color-mix(in srgb,var(--ar-accent) 40%,var(--ar-line));background:linear-gradient(120deg,color-mix(in srgb,var(--ar-accent) 9%,var(--ar-card)),var(--ar-card))}
+.ar-featured .ar-number{color:var(--ar-accent)}
+.ar-root h3.ar-eyebrow{font-size:12px;color:var(--ar-muted);font-weight:400}
+.ar-number{font-size:32px;line-height:1.25;letter-spacing:-1px}
+.ar-overview-grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:12px;align-items:stretch;margin-bottom:12px}
+.ar-overview-grid>.ar-section,.ar-overview-side>.ar-section{margin:0}
+.ar-overview-side{display:grid;gap:12px;align-content:start;min-width:0}
+.ar-domain{display:flex;flex-direction:column}
+.ar-category-chart{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 18px;align-content:space-between;flex:1}
+.ar-root .ar-category-bar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 12px;height:auto;padding:8px 0;border-radius:0;text-align:left;background:transparent;width:100%;font-size:12px;white-space:normal;line-height:1.5}
+.ar-category-bar>span:first-child{color:var(--ar-muted)}
+.ar-category-bar strong{color:var(--ar-text)}
+.ar-bar-track{grid-column:1/-1;display:block;height:7px;border-radius:3px;overflow:hidden;background:color-mix(in srgb,var(--ar-accent) 9%,var(--ar-card))}
+.ar-bar-track i{display:block;height:100%;border-radius:3px;background:var(--ar-accent)}
+.ar-category-bar:nth-child(even) .ar-bar-track i{opacity:.65}
+.ar-security-overview{display:flex;align-items:center;gap:20px;margin:12px 0}
+.ar-donut{corner-shape:round;width:112px;height:112px;flex:none;border-radius:50%;background:conic-gradient(var(--ar-accent) var(--ar-ring),color-mix(in srgb,var(--ar-accent) 12%,var(--ar-card)) 0);display:grid;place-items:center}
+.ar-donut>span{corner-shape:round;display:flex;align-items:center;justify-content:center;flex-direction:column;width:90px;height:90px;border-radius:50%;background:var(--ar-card)}
+.ar-donut strong{font-size:28px;line-height:1.2}.ar-donut small{font-size:11px;color:var(--ar-muted);margin-top:3px}
+.ar-security-projects{display:grid;gap:4px;flex:1;min-width:0}
+.ar-root .ar-project-jump{width:100%;justify-content:space-between;padding:3px 0;height:auto;min-height:28px;gap:6px;white-space:normal;font-size:12px}
+.ar-note,.ar-footnote{font-size:11px;color:var(--ar-muted)}
+.ar-retired{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:10px 0 12px}
+.ar-retired-cell{font-size:11px;color:var(--ar-muted);min-width:0;overflow-wrap:anywhere}
+.ar-retired-cell strong{font-size:25px;display:block;line-height:1.4;color:var(--ar-text)}
+.ar-comparisons{border-top:1px solid var(--ar-line);padding-top:9px}
+.ar-root summary{cursor:pointer;font-size:12px;color:var(--ar-muted);line-height:1.7}
+.ar-root summary::marker{font-size:10px}
+.ar-comparisons summary .ar-badge{margin-left:8px}
+.ar-difference{border-top:1px solid var(--ar-line);padding:10px 0;font-size:12px}
+.ar-difference p,.ar-methodology[open]>p{margin:10px 0}
+.ar-heading-count{font-size:12px;font-weight:400;color:var(--ar-muted);margin-left:8px;font-variant-numeric:tabular-nums}
+.ar-muted{font-size:12px;color:var(--ar-muted)}
+.ar-error-text{font-size:12px;color:var(--ar-error)}
+.ar-notice{font-size:12px;padding:9px 12px;border:1px solid var(--ar-line);border-radius:8px;margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ar-notice.warn{color:var(--ar-warn);background:color-mix(in srgb,var(--ar-warn) 5%,var(--ar-card));border-color:color-mix(in srgb,var(--ar-warn) 25%,var(--ar-line))}
+.ar-notice.danger{color:var(--ar-error)}
+.ar-loading{min-height:180px;display:grid;place-items:center;font-size:28px;color:var(--ar-muted)}
+.ar-spin{display:inline-block;animation:ar-spin 1.4s linear infinite}@keyframes ar-spin{to{transform:rotate(360deg)}}
+.ar-empty{padding:48px 20px;text-align:center;color:var(--ar-muted)}
+.ar-empty svg{color:var(--ar-accent);margin-bottom:12px}.ar-empty h2,.ar-empty h3{color:var(--ar-text);margin-bottom:8px}.ar-empty p{font-size:13px}
+.ar-empty-inline{font-size:12px;color:var(--ar-muted);padding:10px 0}
+.ar-watch-toolbar{margin-bottom:12px;flex-wrap:wrap;justify-content:flex-start}
+.ar-manage{margin-left:auto;max-width:100%}.ar-manage[open]{padding:10px;border:1px solid var(--ar-line);border-radius:8px;background:var(--ar-card)}
+.ar-manage form{margin:8px 0}
+.ar-security-strip{border-top:2px solid color-mix(in srgb,var(--ar-accent) 50%,var(--ar-line))}
+.ar-pin-form{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:8px 0;font-size:12px}.ar-pin-form>span:has(input){width:190px}
+.ar-security-strip>.ar-source-info{float:right}.ar-root .ar-source-info{display:inline-flex;align-items:center;justify-content:center;width:24px;min-width:24px;height:24px;padding:0;color:var(--ar-muted)}
+.ar-limits{margin:6px 0}.ar-limits p{margin:8px 0}
+.ar-advisories{margin-top:10px;padding-top:10px;border-top:1px solid var(--ar-line)}
+.ar-advisory{padding:10px 0;border-top:1px solid var(--ar-line);scroll-margin-top:20px}.ar-advisory:first-of-type{margin-top:10px}
+.ar-advisory>summary{position:relative;display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap;list-style:none;padding-right:20px}
+.ar-advisory>summary:after{content:'＋';position:absolute;right:0;top:0}.ar-advisory[open]>summary:after{content:'−'}
+.ar-advisory>summary>span:nth-of-type(2){flex:1;min-width:140px;line-height:1.6}.ar-advisory-link{font-size:11px;margin-left:auto}
+.ar-advisory-body{font-size:13px;padding:12px 0 4px;overflow-wrap:anywhere}
+.ar-advisory-body dl{display:grid;grid-template-columns:105px minmax(0,1fr);gap:8px;padding:12px;background:var(--ar-bg);border-radius:8px}.ar-advisory-body dd{margin:0;white-space:pre-line}.ar-advisory-body dt{color:var(--ar-muted)}
+.ar-advisory-body pre,.ar-diagnostics pre{font-size:11px;white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow:auto}
+.ar-osv,.ar-suppressions{border-top:1px solid var(--ar-line);padding-top:10px;margin-top:12px}.ar-suppressions article{padding:12px 0;border-bottom:1px solid var(--ar-line);font-size:12px;overflow-wrap:anywhere}
+.ar-cve-chip{margin:6px 0;display:flex;flex-wrap:wrap;gap:8px}.ar-root .ar-cve-chip button{color:var(--ar-accent);font-size:11px}
+.ar-two-col{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:12px;align-items:start}.ar-two-col>.ar-section{margin:0}
+.ar-item{padding:10px 0;border-bottom:1px solid var(--ar-line);min-width:0}.ar-item:last-child{border-bottom:0}
+.ar-item-meta{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:11px;color:var(--ar-muted);margin-bottom:5px}.ar-item-meta time{margin-left:auto;font-variant-numeric:tabular-nums}
+.ar-item-title{display:block;font-size:13px;font-weight:500;line-height:1.6;overflow-wrap:anywhere}.ar-item-title>span{color:var(--ar-muted);font-size:11px}
+.ar-item-links{display:flex;flex-wrap:wrap;gap:10px;margin-top:5px;font-size:11px;color:var(--ar-muted)}
+.ar-tone-danger{--ar-type:var(--ar-error)}.ar-tone-warn{--ar-type:var(--ar-warn)}.ar-tone-accent{--ar-type:var(--ar-accent)}.ar-tone-neutral{--ar-type:var(--dsw-alias-label-secondary)}
+.ar-stacked{display:flex;gap:2px;height:9px;border-radius:4px;overflow:hidden;background:var(--ar-bg);margin:4px 0 10px}.ar-stacked>span{background:var(--ar-type)}
+.ar-type-legend{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.ar-root .ar-type-pill{font-size:12px;gap:6px;height:28px;padding:3px 8px;background:color-mix(in srgb,var(--ar-type) 5%,var(--ar-card));color:var(--ar-text)}
+.ar-type-dot{width:6px;height:6px;display:inline-block;flex:none;border-radius:2px;background:var(--ar-type)}
+.ar-issue-board{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-items:start}
+.ar-issue-group{border:1px solid var(--ar-line);border-radius:8px;min-width:0;padding:9px 12px;background:var(--ar-card)}
+.ar-issue-group>summary{list-style:none;display:flex;align-items:center;gap:7px;color:var(--ar-text);min-height:24px}.ar-issue-group>summary:after{content:'＋';margin-left:auto;color:var(--ar-muted)}.ar-issue-group[open]>summary:after{content:'−'}
+.ar-issue-group.ar-tone-danger{grid-column:1/-1;border-color:color-mix(in srgb,var(--ar-error) 24%,var(--ar-line));background:color-mix(in srgb,var(--ar-error) 2%,var(--ar-card))}
+.ar-issue-group[open]{grid-column:1/-1}.ar-issue-group[open]>.ar-item{display:inline-block;vertical-align:top;width:calc(50% - 8px);margin-right:16px}.ar-issue-group[open]>.ar-item:nth-of-type(even){margin-right:0}
+.ar-root .ar-more{width:100%;font-size:12px;color:var(--ar-muted);margin-top:8px;background:transparent;border:0}
+.ar-source-list{margin-top:12px}.ar-source-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0;font-size:12px;border-bottom:1px solid var(--ar-line)}.ar-source-row>div{min-width:0;overflow-wrap:anywhere}
+.ar-brief{line-height:1.8;max-width:1100px;margin:16px auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.ar-brief>.ar-card{margin:0}.ar-brief>details,.ar-brief-title{grid-column:1/-1}.ar-brief-title{margin:6px 0!important}.ar-brief p,.ar-brief li{font-size:13px}.ar-brief li{margin:6px 0}.ar-brief ul{padding-left:18px}.ar-brief h3{margin-bottom:10px}.ar-brief-more{margin-top:10px;padding-top:8px;border-top:1px solid var(--ar-line)}
+.ar-network{margin-top:4px}.ar-network>summary{width:fit-content;margin-left:auto;font-size:12px;padding:3px 0}
+.ar-network-body{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin:8px 0 12px}.ar-network-body>div{min-width:0}.ar-network-body h3:not(:first-child){margin-top:16px}.ar-network-body .ar-card-heading h3{margin-top:0}
+.ar-network-body .ar-actions{justify-content:flex-start;flex-wrap:wrap;margin:10px 0;font-size:12px}
+/* The shared form keeps its text; Radar exposes its safety explanation through the heading tooltip. */
+.ar-network-body .ns-settings>small{display:none}
+.ar-proxy-result,.ar-diagnostics{font-size:12px;margin:10px 0}.ar-proxy-result p{margin:6px 0}.ar-proxy-result details{margin-top:6px}
+.ar-import{display:flex;align-items:center;flex-wrap:wrap;gap:6px;max-width:100%;font-size:12px;color:var(--ar-muted)}.ar-import input{max-width:100%;width:220px;font-size:11px}
+.ar-directory-form{margin-top:8px;font-size:12px}.ar-root .ar-quiet{padding-left:0;color:var(--ar-muted)}
+.ar-footer{font-size:10px;color:var(--ar-muted);padding-top:12px;margin-top:18px;border-top:1px solid var(--ar-line)}
+@media(hover:hover){.ar-root a:hover{color:var(--ar-accent);text-decoration:underline}.ar-category-bar:hover .ar-bar-track i{opacity:1}.ar-metric:hover{border-color:var(--ar-accent)}}
+@container(max-width:1000px){.ar-shell{padding:20px}.ar-overview-grid{grid-template-columns:1fr}.ar-overview-side{grid-template-columns:1fr 1fr}.ar-category-chart{gap:4px 20px}.ar-metrics{gap:6px}.ar-metric{padding:12px}.ar-retired{grid-template-columns:1fr 1fr}.ar-number{font-size:28px}}
+@container(max-width:600px){.ar-shell{padding:16px 12px}.ar-header h1{font-size:20px}.ar-overline{font-size:9px;letter-spacing:1px}.ar-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.ar-metrics .ar-featured{grid-column:1/-1;flex-direction:row;align-items:center;justify-content:space-between}.ar-overview-side,.ar-two-col,.ar-network-body,.ar-issue-board,.ar-brief{grid-template-columns:minmax(0,1fr)}.ar-category-chart{column-gap:12px}.ar-section{padding:13px}.ar-security-overview{gap:14px}.ar-retired{grid-template-columns:repeat(4,minmax(0,1fr))}.ar-issue-group[open]>.ar-item{display:block;width:100%;margin-right:0}.ar-advisory-body dl{grid-template-columns:1fr;gap:5px}.ar-advisory-body dd+dt{margin-top:6px}.ar-projectbar{gap:8px}.ar-projectbar form{flex-basis:100%}.ar-directory-form>span:has(input){width:100%}.ar-section-heading .ar-actions{flex-wrap:wrap}.ar-item-meta time{margin-left:0}.ar-watch-toolbar>[role=tablist]{max-width:100%}.ar-root .ar-watch-toolbar [role=tab]{min-width:0;padding-inline:10px}.ar-last{flex-basis:100%;margin-left:13px}}
+@container(max-width:400px){.ar-category-chart{grid-template-columns:1fr}.ar-retired{grid-template-columns:1fr 1fr}.ar-header>.ar-badge{display:none}}
+@media(pointer:coarse){.ar-root input,.ar-root .ns-settings input{font-size:16px}}
+@media(prefers-reduced-motion:reduce){.ar-spin{animation:none}}
 `

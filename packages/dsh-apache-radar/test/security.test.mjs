@@ -106,8 +106,8 @@ test('overview counts projects, no-pin separately, unsupported sources as incomp
   assert.equal(summary.incomplete, 1)
   const html = staticView(client.SecurityCard, { report })
   assert.match(html, /3 个未填运行版本/)
-  assert.match(html, /kafka.apache.org/)
-  assert.match(html, /2026-11-11/)
+  assert.match(html, /运行版本覆盖 1 \/ 4/)
+  assert.match(html, /≥1 受影响 · 来源待核对/)
   assert.doesNotMatch(html, /基金会.*CVE|safe to upgrade/)
 })
 

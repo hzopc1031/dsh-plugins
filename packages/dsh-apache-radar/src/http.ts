@@ -9,7 +9,7 @@ export interface SourceResponse {
   status?: number
 }
 export type HttpClient = (url: string) => Promise<SourceResponse>
-export const USER_AGENT = 'dsh-apache-radar/0.1.4 (+https://github.com/hzopc1031/dsh-plugins)'
+export const USER_AGENT = 'dsh-apache-radar/0.1.5 (+https://github.com/hzopc1031/dsh-plugins)'
 
 const hosts = new Set(['projects.apache.org', 'whimsy.apache.org', 'attic.apache.org',
   'incubator.apache.org', 'kafka.apache.org', 'svn.apache.org', 'issues.apache.org', 'cwiki.apache.org',

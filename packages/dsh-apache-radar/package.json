@@ -1,6 +1,6 @@
 {
   "name": "dsh-apache-radar",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Local Apache community radar with explicit official source scopes",
   "type": "module",
   "main": "index.js",
@@ -19,6 +19,7 @@
     "README.md",
     "LICENSE",
     "CHANGELOG.md",
+    "THIRD_PARTY_NOTICES",
     "docs/decisions.md",
     "docs/images/*.png",
     "lib/"

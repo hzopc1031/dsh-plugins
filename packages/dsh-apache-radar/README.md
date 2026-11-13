@@ -9,11 +9,11 @@
 
 ## 界面预览
 
-下图沿用此前版本的布局；当前版本已将网络工具和来源说明折叠，数据口径不变。
+总览用横条图比较领域规模，用环图查看运行版本填写情况；指标来源可悬浮或键盘聚焦查看，网络工具默认收起。
 
 以下均为 **DSH 0.2.2-rc.1 内的真实面板截图**，使用历史录制数据演示，**不是实时官方数量**。画面中的「录制回放（非实时）」标明演示项目；抓取时间为此次回放读取时间，示例运行版本仅用于回放，不代表你的集群。原始录制时间与 URL 保存在[官方公告来源记录](test/fixtures/advisory/provenance.json)、[OSV 录制说明](test/fixtures/advisory/osv-provenance.json)、[测试夹具来源记录](test/fixtures/provenance.json)及 [JIRA 来源记录](test/fixtures/jira-provenance.json)。实际使用时显示公开来源的真实抓取时间与可用的源文件时间。
 
-从侧栏「Apache 雷达」进入总览：不同统计口径各有来源与时间，退休名单差异可展开查看。
+从侧栏「Apache 雷达」进入总览：紧凑指标和领域图并列展示，悬浮或聚焦查看来源与时间，退休名单差异可展开查看。
 
 ![DSH 内的 Apache 雷达浅色总览，历史数据回放](docs/images/overview-light.png)
 
@@ -28,7 +28,7 @@
 ## 三步快速上手
 
 1. **完全退出桌面 DSH。** 关闭所有窗口，并从系统托盘退出 DSH，确认已完全关闭后再安装或更新。需要 Node.js 22 及以上和 DSH 0.2.2-rc.1 及以上（排除 0.3.0 及其预发布版本）。
-2. **从 Git 安装。** `0.1.4` 尚未发布到 npm；包内已有界面和后台编译文件，无需允许安装脚本。
+2. **从 Git 安装。** `0.1.5` 尚未发布到 npm；包内已有界面和后台编译文件，无需允许安装脚本。
 
    ```powershell
    dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-apache-radar"
@@ -40,7 +40,7 @@
    & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-apache-radar"
    ```
 
-3. **重开 DSH，从侧栏打开「Apache 雷达」。** 确认“Apache 社区雷达”已启用，选择或输入已有本地项目的绝对目录，点击「打开」，再点击「刷新数据」。总览出现带来源和时间的卡片后，可在「关注动态」选择组件、填写实际运行版本并保存判定，再切到「每周简报」生成、复制或打开周报。无需创建聊天或填写账号、令牌、模型配置；首次采集需要访问公开 ASF 网站。原有 `/apache-radar help` 等命令仍可在项目会话使用。
+3. **重开 DSH，从侧栏打开「Apache 雷达」。** 确认“Apache 社区雷达”已启用，选择或输入已有本地项目的绝对目录，点击「打开」，再点击「刷新数据」。总览出现指标和领域图后，可在「关注动态」选择组件、填写实际运行版本并保存判定，再切到「每周简报」生成、复制或打开周报。无需创建聊天或填写账号、令牌、模型配置；首次采集需要访问公开 ASF 网站。原有 `/apache-radar help` 等命令仍可在项目会话使用。
 
 ## 日常使用
 
@@ -96,7 +96,7 @@ Weak certificate keys (`CA certificate key too weak`, `CA_KEY_TOO_SMALL`, verify
 
 ### 版本与验证范围
 
-版本 `0.1.4`（未发布），Node.js `>=22`，需要 DSH 0.2.2-rc.1 及以上（`>=0.2.2-rc.1 <0.3.0-0`，排除 0.3.0 及其预发布版本）。周报使用 rc.1 新增的 `MarkdownText.omitHtml` 禁用原始 HTML，因此保留 rc.1 下界。前次接口对照只读源码 `fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159`，内网分支另对照官方 tag 源码 `66491b05e3f05ad35bcdd4f6cd7ed26041d9e3db`；历史实际加载验证版本为 **DSH 0.2.2-rc.1**。本次在 Linux 重新加载真实 rc.1 Web，并回放 PAC 检测及 302 来源；不代表 Windows / Electron 桌面安装均已验证。
+版本 `0.1.5`（未发布），Node.js `>=22`，需要 DSH 0.2.2-rc.1 及以上（`>=0.2.2-rc.1 <0.3.0-0`，排除 0.3.0 及其预发布版本）。周报使用 rc.1 新增的 `MarkdownText.omitHtml` 禁用原始 HTML，因此保留 rc.1 下界。前次接口对照只读源码 `fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159`，内网分支另对照官方 tag 源码 `66491b05e3f05ad35bcdd4f6cd7ed26041d9e3db`；历史实际加载验证版本为 **DSH 0.2.2-rc.1**。本次在 Linux 重新加载真实 rc.1 Web，并回放 PAC 检测及 302 来源；不代表 Windows / Electron 桌面安装均已验证。
 
 Linux 烟测在隔离 profile 中加载真实 DSH Web，使用录制数据验证侧栏入口、无模型且无会话时的直接使用、明暗主题、项目切换、关注编辑、版本保存、公告判定、JIRA 跳转、OSV 404、周报复制、窄屏和失败回退。未验证 Electron 桌面安装；前次任务的公开计数与匿名 JIRA 请求记录仍作为历史证据。本次界面验证不请求实时 ASF 来源。测试夹具保留原 URL、抓取时间、完整性摘要和裁剪说明，历史快照不表示当前官方数量。
 
@@ -134,3 +134,5 @@ Linux 烟测在隔离 profile 中加载真实 DSH Web，使用录制数据验证
 校验逻辑、源码对照与本次检查结果见[兼容性报告](../../docs/engines-compatibility.md)。
 
 当前兼容声明与 Linux 0.2.2-rc.1 加载结果见[兼容矩阵](../../docs/compat-matrix.md)；范围声明不表示逐版本实测，Windows / Electron 未在本机验证。
+
+界面布局与交互参考 dsh-context 0.83.1 的紧凑指标、环图与图例、分组设置及悬浮提示；具体文件与许可见 [THIRD_PARTY_NOTICES](THIRD_PARTY_NOTICES)。实现未复制其源码或 CSS。

@@ -62,6 +62,7 @@ export function CountCard({ row, title, featured = false }: { row: CountRow; tit
   return <Tooltip label={`${metricNote(row)} · ${row.sources.map(sourceLabel).join(' / ')}`} portal side="top" openOnClick>
     <article tabIndex={0} className={`ar-card ar-metric ${featured ? 'ar-featured' : ''}`} aria-label={`${title ?? row.label} ${row.status === 'ok' ? row.value : '暂无数据'}`}>
       <h3 className="ar-eyebrow">{title ?? row.label}</h3><strong className="ar-number">{row.status === 'ok' ? row.value : '—'}</strong>
+      <span className="ar-metric-note">{metricNote(row)}</span>
       {row.status === 'error' && <p className="ar-error-text">{sourceError(row.error)}</p>}
     </article></Tooltip>
 }
@@ -128,6 +129,16 @@ function Sources({ sources }: { sources: FeedSource[] }) {
       {s.error && <p className="ar-error-text">{sourceError(s.error)}</p>}{s.warnings.map((w, n) => <p className="ar-footnote" key={n}>{w}</p>)}</div></div>)}</div>
 }
 type Mutate = (action: string, project?: string, extra?: { version?: string; cve?: string }) => void
+export function feedDisplay(sources: FeedSource[], kind: 'release' | 'jira' | 'proposal', count: number) {
+  const source = sources.find(s => s.kind === kind)
+  if (!source || source.status === 'failed') return { count: '—', label: '来源不可用', empty: '来源不可用，请查看采集状态后重试。', tone: 'danger' }
+  if (source.status === 'unavailable') return { count: '—', label: '暂不支持', empty: source.warnings[0] ?? '该项目暂不支持此来源。', tone: '' }
+  if (source.status === 'stale') return { count: String(count), label: '上次成功缓存', empty: '上次成功缓存中没有条目，请刷新后核对。', tone: 'warn' }
+  return { count: String(count), label: '', empty: '近 7 天暂无已收录条目。', tone: '' }
+}
+function FeedHeading({ name, display }: { name: string; display: ReturnType<typeof feedDisplay> }) {
+  return <h3>{name} <span className="ar-heading-count">{display.count}</span>{display.label && <Badge tone={display.tone}>{display.label}</Badge>}</h3>
+}
 export function Watch({ data, mutate, busy, focusProject }: { data: DashboardData; mutate: Mutate; busy: boolean; focusProject?: string }) {
   const [selected, setSelected] = useState(focusProject ?? data.watchList?.[0] ?? '')
   const [newId, setNewId] = useState('')
@@ -136,20 +147,22 @@ export function Watch({ data, mutate, busy, focusProject }: { data: DashboardDat
   const items = data.items?.filter(i => i.project === project) ?? []
   const undated = data.undatedItems?.filter(i => i.project === project) ?? []
   const sources = data.sources?.filter(s => !s.project || s.project === project) ?? []
+  const releases = items.filter(i => i.kind === 'release'), proposals = items.filter(i => i.kind === 'proposal'), issues = items.filter(i => i.kind === 'jira')
+  const releaseStatus = feedDisplay(sources, 'release', releases.length), proposalStatus = feedDisplay(sources, 'proposal', proposals.length), issueStatus = feedDisplay(sources, 'jira', issues.length)
   return <>
     <div className="ar-section-heading"><h2>项目动态 <span className="ar-heading-count">{data.watchList?.length ?? 0}</span></h2><span className="ar-muted">最近 7 天</span></div>
     <div className="ar-watch-toolbar"><SegmentedControl id="ar-project" label="关注项目" value={project} options={(data.watchList ?? []).map(id => ({ value: id, label: projectName(id) }))} onChange={setSelected}/>
 
       <details className="ar-manage" open={!project || undefined}><summary>管理关注</summary><form onSubmit={e => { e.preventDefault(); mutate('add', newId); setNewId('') }}><Input aria-label="添加项目 id" placeholder="项目 id，如 spark" pattern="[a-zA-Z][a-zA-Z0-9-]*" required value={newId} onChange={e => setNewId(e.target.value)}/><Button type="submit" size="sm" variant="outline" disabled={busy}>＋ 关注</Button></form>
       {project && <Button size="sm" variant="outline" disabled={busy} onClick={() => mutate('remove', project)} aria-label={`取消关注 ${projectName(project)}`}>取消关注</Button>}</details></div>
-    {project ? <div role="tabpanel" id={`ar-project-${project}-panel`} aria-labelledby={`ar-project-${project}`}><SecurityStrip key={project + (security?.pin ?? "")} project={project} security={security} report={data.security} mutate={mutate} busy={busy} expanded={focusProject === project}/><div className="ar-two-col"><section className="ar-card ar-section"><div className="ar-card-heading"><h3>正式发布 <span className="ar-heading-count">{items.filter(i => i.kind === 'release').length}</span></h3></div>
-      <ItemList key={project + 'release'} items={items.filter(i => i.kind === 'release')} empty="近 7 天暂无已收录发布。"/>
-    </section><section className="ar-card ar-section"><div className="ar-card-heading"><h3>{project === 'kafka' ? 'KIP' : project === 'flink' ? 'FLIP' : '提案'} <span className="ar-heading-count">{items.filter(i => i.kind === 'proposal').length}</span></h3></div>
-      <ItemList key={project + 'proposal'} items={items.filter(i => i.kind === 'proposal')} empty={project === 'hadoop' ? 'Hadoop 没有已验证的通用 HIP 索引。' : '近 7 天暂无已收录提案。'}/>
+    {project ? <div role="tabpanel" id={`ar-project-${project}-panel`} aria-labelledby={`ar-project-${project}`}><SecurityStrip key={project + (security?.pin ?? "")} project={project} security={security} report={data.security} mutate={mutate} busy={busy} expanded={focusProject === project}/><div className="ar-two-col"><section className="ar-card ar-section"><div className="ar-card-heading"><FeedHeading name="正式发布" display={releaseStatus}/></div>
+      <ItemList key={project + 'release'} items={releases} empty={releaseStatus.empty}/>
+    </section><section className="ar-card ar-section"><div className="ar-card-heading"><FeedHeading name={project === 'kafka' ? 'KIP' : project === 'flink' ? 'FLIP' : '提案'} display={proposalStatus}/></div>
+      <ItemList key={project + 'proposal'} items={proposals} empty={proposalStatus.empty}/>
     </section></div>
-    <section className="ar-card ar-section"><div className="ar-card-heading"><h3>JIRA <span className="ar-heading-count">{items.filter(i => i.kind === 'jira').length}</span></h3><Tooltip label="首个响应页；工单不代表已发布" portal openOnClick><Button size="sm" variant="ghost" aria-label="JIRA 采集说明">ⓘ</Button></Tooltip></div>
+    <section className="ar-card ar-section"><div className="ar-card-heading"><FeedHeading name="JIRA" display={issueStatus}/><Tooltip label="首个响应页；工单不代表已发布" portal openOnClick><Button size="sm" variant="ghost" aria-label="JIRA 采集说明">ⓘ</Button></Tooltip></div>
       <IssueDistribution items={items}/>
-      <div className="ar-issue-board">{groupIssues(items).length ? groupIssues(items).map(group => <details data-issue-type={group.label} className={`ar-issue-group ar-tone-${typeTone(group.label)}`} key={project + group.label} open={group.label === '安全'}><summary><i className="ar-type-dot"/>{group.label} <span className="ar-heading-count">{group.items.length}</span></summary><ItemList items={group.items} empty="" security={security}/></details>) : <p className="ar-empty-inline">近 7 天暂无已收录 JIRA；请核对来源状态。</p>}</div>
+      <div className="ar-issue-board">{groupIssues(items).length ? groupIssues(items).map(group => <details data-issue-type={group.label} className={`ar-issue-group ar-tone-${typeTone(group.label)}`} key={project + group.label} open={group.label === '安全'}><summary><i className="ar-type-dot"/>{group.label} <span className="ar-heading-count">{group.items.length}</span></summary><ItemList items={group.items} empty="" security={security}/></details>) : <p className="ar-empty-inline">{issueStatus.empty}</p>}</div>
     </section>
     <details className="ar-card ar-section"><summary>参考提案 · 日期未知，不计入本周</summary><ItemList key={project + 'undated'} items={undated} empty="暂无日期未知的参考条目。"/></details>
     <details className="ar-card ar-section"><summary>采集窗口与来源状态</summary><p className="ar-muted">{data.window?.label}</p><Sources sources={sources}/></details></div> : <div className="ar-card ar-empty"><h3>关注列表是空的</h3><p>添加一个项目 id，开始整理它的动态。</p></div>}
@@ -387,7 +400,7 @@ const css = `
 .ar-root :is(.ar-error-text,.ar-diagnostics,.ar-difference,.ar-notice){overflow-wrap:anywhere}
 .ar-header,.ar-brand,.ar-projectbar,.ar-actions,.ar-card-heading,.ar-section-heading,.ar-watch-toolbar,.ar-footer{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .ar-brand{justify-content:flex-start;gap:12px}
-.ar-brand-icon{width:40px;height:40px;display:grid;place-items:center;border:1px solid color-mix(in srgb,var(--ar-accent) 24%,var(--ar-line));border-radius:var(--dsw-radius-md,12px);color:var(--ar-accent);background:color-mix(in srgb,var(--ar-accent) 8%,var(--ar-card))}
+.ar-brand-icon{width:42px;height:42px;display:grid;place-items:center;border:1px solid color-mix(in srgb,var(--ar-accent) 35%,var(--ar-line));border-radius:var(--dsw-radius-md,12px);color:var(--ar-accent);background:radial-gradient(circle at 25% 20%,color-mix(in srgb,var(--ar-accent) 18%,var(--ar-card)),var(--ar-card) 75%)}
 .ar-overline{font-size:10px;letter-spacing:1.5px;color:var(--ar-muted)}
 .ar-projectbar{flex-wrap:wrap;margin-top:16px;padding:10px 12px;border:1px solid var(--ar-line);border-radius:var(--dsw-radius-md,12px);background:var(--ar-card);font-size:12px}
 .ar-directory{display:flex;align-items:center;flex-wrap:wrap;gap:8px;min-width:0;color:var(--ar-muted)}
@@ -403,23 +416,23 @@ const css = `
 .ar-section{padding:16px;margin-bottom:12px}
 .ar-card-heading{margin-bottom:12px;flex-wrap:wrap;min-height:24px}
 .ar-card-heading>h3{display:flex;align-items:center}
-.ar-metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:12px}
-.ar-metric{padding:14px 16px;display:flex;flex-direction:column;gap:4px;position:relative}
+.ar-metrics{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.ar-metric{padding:16px;display:flex;flex-direction:column;gap:5px;position:relative;overflow:hidden;min-height:110px}.ar-metric>*{position:relative;z-index:1}
 
-.ar-featured{border-color:var(--ar-line)}
+.ar-featured{grid-column:span 2;border-color:color-mix(in srgb,var(--ar-accent) 34%,var(--ar-line));background:linear-gradient(115deg,color-mix(in srgb,var(--ar-accent) 12%,var(--ar-card)),var(--ar-card) 75%)}.ar-featured:after{content:"";position:absolute;right:-24px;top:-48px;width:150px;height:150px;border:1px solid color-mix(in srgb,var(--ar-accent) 18%,transparent);border-radius:50%;box-shadow:0 0 0 22px color-mix(in srgb,var(--ar-accent) 4%,transparent),0 0 0 44px color-mix(in srgb,var(--ar-accent) 3%,transparent);pointer-events:none}.ar-featured .ar-number{font-size:34px}
 .ar-featured .ar-number{color:var(--ar-accent)}
-.ar-root h3.ar-eyebrow{font-size:12px;color:var(--ar-muted);font-weight:400}
+.ar-root h3.ar-eyebrow{font-size:12px;color:var(--ar-muted);font-weight:400}.ar-metric-note{font-size:11px;color:var(--ar-muted);line-height:1.4}.ar-card-heading h3 .ar-badge{margin-left:8px}
 .ar-number{font-size:26px;line-height:1.3;letter-spacing:-.5px}
 .ar-overview-grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:12px;align-items:stretch;margin-bottom:12px}
 .ar-overview-grid>.ar-section,.ar-overview-side>.ar-section{margin:0}
 .ar-overview-side{display:grid;gap:12px;align-content:start;min-width:0}
-.ar-domain{display:flex;flex-direction:column}.ar-section-heading p{margin-top:3px}
+.ar-domain{display:flex;flex-direction:column}.ar-section-heading p{margin-top:3px}.ar-card-heading h3{gap:8px}.ar-domain .ar-card-heading h3:before,.ar-security-card .ar-card-heading h3:before{content:"";display:inline-block;width:4px;height:15px;border-radius:2px;background:var(--ar-accent)}
 .ar-category-chart{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 18px;align-content:space-between;flex:1}
 .ar-root .ar-category-bar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 12px;height:auto;padding:8px 0;border-radius:0;text-align:left;background:transparent;width:100%;font-size:12px;white-space:normal;line-height:1.5}
 .ar-category-bar>span:first-child{color:var(--ar-muted)}
 .ar-category-bar strong{color:var(--ar-text)}
-.ar-bar-track{grid-column:1/-1;display:block;height:5px;border-radius:3px;overflow:hidden;background:color-mix(in srgb,var(--ar-accent) 9%,var(--ar-card))}
-.ar-bar-track i{display:block;height:100%;border-radius:3px;background:var(--ar-accent)}
+.ar-bar-track{grid-column:1/-1;display:block;height:6px;border-radius:3px;overflow:hidden;background:color-mix(in srgb,var(--ar-accent) 11%,var(--ar-card))}
+.ar-bar-track i{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,var(--ar-accent),color-mix(in srgb,var(--ar-accent) 68%,var(--ar-card)))}
 .ar-category-bar:nth-child(even) .ar-bar-track i{opacity:.65}
 .ar-security-overview{display:flex;align-items:center;gap:20px;margin:12px 0}
 .ar-donut{corner-shape:round;width:112px;height:112px;flex:none;border-radius:50%;background:conic-gradient(var(--ar-accent) var(--ar-ring),color-mix(in srgb,var(--ar-accent) 12%,var(--ar-card)) 0);display:grid;place-items:center}
@@ -493,8 +506,8 @@ const css = `
 .ar-directory-form{margin-top:8px;font-size:12px}.ar-root .ar-quiet{padding-left:0;color:var(--ar-muted)}
 .ar-footer{font-size:10px;color:var(--ar-muted);padding-top:12px;margin-top:18px;border-top:1px solid var(--ar-line)}
 @media(hover:hover){.ar-root a:hover{color:var(--ar-accent);text-decoration:underline}.ar-category-bar:hover .ar-bar-track i{opacity:1}.ar-metric:hover{border-color:var(--ar-accent)}}
-@container(max-width:1000px){.ar-shell{padding:20px}.ar-overview-grid{grid-template-columns:1fr}.ar-overview-side{grid-template-columns:1fr 1fr}.ar-category-chart{gap:4px 20px}.ar-metrics{gap:6px}.ar-metric{padding:12px}.ar-retired{grid-template-columns:1fr 1fr}.ar-number{font-size:28px}}
-@container(max-width:600px){.ar-shell{padding:16px 12px}.ar-header h1{font-size:20px}.ar-overline{font-size:9px;letter-spacing:1px}.ar-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.ar-metrics .ar-featured{grid-column:1/-1;flex-direction:row;align-items:center;justify-content:space-between}.ar-overview-side,.ar-two-col,.ar-network-body,.ar-issue-board,.ar-brief{grid-template-columns:minmax(0,1fr)}.ar-category-chart{column-gap:12px}.ar-section{padding:13px}.ar-security-overview{gap:14px}.ar-retired{grid-template-columns:repeat(4,minmax(0,1fr))}.ar-issue-group[open]>.ar-item{display:block;width:100%;margin-right:0}.ar-advisory-body dl{grid-template-columns:1fr;gap:5px}.ar-advisory-body dd+dt{margin-top:6px}.ar-projectbar{gap:8px}.ar-projectbar form{flex-basis:100%}.ar-directory-form>span:has(input){width:100%}.ar-section-heading .ar-actions{flex-wrap:wrap}.ar-item-meta time{margin-left:0}.ar-watch-toolbar>[role=tablist]{max-width:100%}.ar-root .ar-watch-toolbar [role=tab]{min-width:0;padding-inline:10px}.ar-last{flex-basis:100%;margin-left:13px}}
+@container(max-width:1000px){.ar-shell{padding:20px}.ar-overview-grid{grid-template-columns:1fr}.ar-overview-side{grid-template-columns:1fr 1fr}.ar-category-chart{gap:4px 20px}.ar-metrics{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.ar-metric{padding:12px}.ar-retired{grid-template-columns:1fr 1fr}.ar-number{font-size:28px}}
+@container(max-width:600px){.ar-shell{padding:16px 12px}.ar-header h1{font-size:20px}.ar-overline{font-size:9px;letter-spacing:1px}.ar-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.ar-metric{min-height:96px}.ar-metrics .ar-featured{grid-column:1/-1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center}.ar-metrics .ar-featured .ar-number{grid-column:2;grid-row:1/3}.ar-metrics .ar-featured .ar-metric-note{grid-column:1}.ar-overview-side,.ar-two-col,.ar-network-body,.ar-issue-board,.ar-brief{grid-template-columns:minmax(0,1fr)}.ar-category-chart{column-gap:12px}.ar-section{padding:13px}.ar-security-overview{gap:14px}.ar-retired{grid-template-columns:repeat(4,minmax(0,1fr))}.ar-issue-group[open]>.ar-item{display:block;width:100%;margin-right:0}.ar-advisory-body dl{grid-template-columns:1fr;gap:5px}.ar-advisory-body dd+dt{margin-top:6px}.ar-projectbar{gap:8px}.ar-projectbar form{flex-basis:100%}.ar-directory-form>span:has(input){width:100%}.ar-section-heading .ar-actions{flex-wrap:wrap}.ar-item-meta time{margin-left:0}.ar-watch-toolbar>[role=tablist]{max-width:100%}.ar-root .ar-watch-toolbar [role=tab]{min-width:0;padding-inline:10px}.ar-last{flex-basis:100%;margin-left:13px}}
 @container(max-width:400px){.ar-category-chart{grid-template-columns:1fr}.ar-retired{grid-template-columns:1fr 1fr}.ar-header>.ar-badge{display:none}}
 @media(pointer:coarse){.ar-root input,.ar-root .ns-settings input{font-size:16px}}
 @media(prefers-reduced-motion:reduce){.ar-spin{animation:none}}

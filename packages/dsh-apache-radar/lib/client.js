@@ -114,6 +114,7 @@ exports.groupIssues = groupIssues;
 exports.briefSections = briefSections;
 exports.CountCard = CountCard;
 exports.Overview = Overview;
+exports.feedDisplay = feedDisplay;
 exports.Watch = Watch;
 exports.SecurityCard = SecurityCard;
 exports.SecurityStrip = SecurityStrip;
@@ -181,6 +182,7 @@ function CountCard({ row, title, featured = false }) {
         react_1.default.createElement("article", { tabIndex: 0, className: `ar-card ar-metric ${featured ? 'ar-featured' : ''}`, "aria-label": `${title ?? row.label} ${row.status === 'ok' ? row.value : '暂无数据'}` },
             react_1.default.createElement("h3", { className: "ar-eyebrow" }, title ?? row.label),
             react_1.default.createElement("strong", { className: "ar-number" }, row.status === 'ok' ? row.value : '—'),
+            react_1.default.createElement("span", { className: "ar-metric-note" }, metricNote(row)),
             row.status === 'error' && react_1.default.createElement("p", { className: "ar-error-text" }, sourceError(row.error))));
 }
 const categoryNames = { 'Big data & analytics': '大数据与分析', 'Databases & storage': '数据库与存储', 'Streaming & messaging': '流处理与消息', 'Machine learning & AI': '机器学习与 AI', 'Web, HTTP & APIs': 'Web 与 API', 'Cloud & infrastructure': '云与基础设施', 'Build, testing & dev tools': '构建与开发工具', 'Content, search & documents': '内容与搜索', 'IoT & edge': '物联网与边缘', 'Security & identity': '安全与身份', 'Geospatial & science': '地理与科学计算', 'Integration & workflow': '集成与工作流' };
@@ -306,6 +308,23 @@ function Sources({ sources }) {
             s.error && react_1.default.createElement("p", { className: "ar-error-text" }, sourceError(s.error)),
             s.warnings.map((w, n) => react_1.default.createElement("p", { className: "ar-footnote", key: n }, w))))));
 }
+function feedDisplay(sources, kind, count) {
+    const source = sources.find(s => s.kind === kind);
+    if (!source || source.status === 'failed')
+        return { count: '—', label: '来源不可用', empty: '来源不可用，请查看采集状态后重试。', tone: 'danger' };
+    if (source.status === 'unavailable')
+        return { count: '—', label: '暂不支持', empty: source.warnings[0] ?? '该项目暂不支持此来源。', tone: '' };
+    if (source.status === 'stale')
+        return { count: String(count), label: '上次成功缓存', empty: '上次成功缓存中没有条目，请刷新后核对。', tone: 'warn' };
+    return { count: String(count), label: '', empty: '近 7 天暂无已收录条目。', tone: '' };
+}
+function FeedHeading({ name, display }) {
+    return react_1.default.createElement("h3", null,
+        name,
+        " ",
+        react_1.default.createElement("span", { className: "ar-heading-count" }, display.count),
+        display.label && react_1.default.createElement(Badge, { tone: display.tone }, display.label));
+}
 function Watch({ data, mutate, busy, focusProject }) {
     const [selected, setSelected] = (0, react_1.useState)(focusProject ?? data.watchList?.[0] ?? '');
     const [newId, setNewId] = (0, react_1.useState)('');
@@ -314,6 +333,8 @@ function Watch({ data, mutate, busy, focusProject }) {
     const items = data.items?.filter(i => i.project === project) ?? [];
     const undated = data.undatedItems?.filter(i => i.project === project) ?? [];
     const sources = data.sources?.filter(s => !s.project || s.project === project) ?? [];
+    const releases = items.filter(i => i.kind === 'release'), proposals = items.filter(i => i.kind === 'proposal'), issues = items.filter(i => i.kind === 'jira');
+    const releaseStatus = feedDisplay(sources, 'release', releases.length), proposalStatus = feedDisplay(sources, 'proposal', proposals.length), issueStatus = feedDisplay(sources, 'jira', issues.length);
     return react_1.default.createElement(react_1.default.Fragment, null,
         react_1.default.createElement("div", { className: "ar-section-heading" },
             react_1.default.createElement("h2", null,
@@ -333,22 +354,15 @@ function Watch({ data, mutate, busy, focusProject }) {
             react_1.default.createElement("div", { className: "ar-two-col" },
                 react_1.default.createElement("section", { className: "ar-card ar-section" },
                     react_1.default.createElement("div", { className: "ar-card-heading" },
-                        react_1.default.createElement("h3", null,
-                            "\u6B63\u5F0F\u53D1\u5E03 ",
-                            react_1.default.createElement("span", { className: "ar-heading-count" }, items.filter(i => i.kind === 'release').length))),
-                    react_1.default.createElement(ItemList, { key: project + 'release', items: items.filter(i => i.kind === 'release'), empty: "\u8FD1 7 \u5929\u6682\u65E0\u5DF2\u6536\u5F55\u53D1\u5E03\u3002" })),
+                        react_1.default.createElement(FeedHeading, { name: "\u6B63\u5F0F\u53D1\u5E03", display: releaseStatus })),
+                    react_1.default.createElement(ItemList, { key: project + 'release', items: releases, empty: releaseStatus.empty })),
                 react_1.default.createElement("section", { className: "ar-card ar-section" },
                     react_1.default.createElement("div", { className: "ar-card-heading" },
-                        react_1.default.createElement("h3", null,
-                            project === 'kafka' ? 'KIP' : project === 'flink' ? 'FLIP' : '提案',
-                            " ",
-                            react_1.default.createElement("span", { className: "ar-heading-count" }, items.filter(i => i.kind === 'proposal').length))),
-                    react_1.default.createElement(ItemList, { key: project + 'proposal', items: items.filter(i => i.kind === 'proposal'), empty: project === 'hadoop' ? 'Hadoop 没有已验证的通用 HIP 索引。' : '近 7 天暂无已收录提案。' }))),
+                        react_1.default.createElement(FeedHeading, { name: project === 'kafka' ? 'KIP' : project === 'flink' ? 'FLIP' : '提案', display: proposalStatus })),
+                    react_1.default.createElement(ItemList, { key: project + 'proposal', items: proposals, empty: proposalStatus.empty }))),
             react_1.default.createElement("section", { className: "ar-card ar-section" },
                 react_1.default.createElement("div", { className: "ar-card-heading" },
-                    react_1.default.createElement("h3", null,
-                        "JIRA ",
-                        react_1.default.createElement("span", { className: "ar-heading-count" }, items.filter(i => i.kind === 'jira').length)),
+                    react_1.default.createElement(FeedHeading, { name: "JIRA", display: issueStatus }),
                     react_1.default.createElement(dsh_client_ui_primitives_1.Tooltip, { label: "\u9996\u4E2A\u54CD\u5E94\u9875\uFF1B\u5DE5\u5355\u4E0D\u4EE3\u8868\u5DF2\u53D1\u5E03", portal: true, openOnClick: true },
                         react_1.default.createElement(dsh_client_ui_primitives_1.Button, { size: "sm", variant: "ghost", "aria-label": "JIRA \u91C7\u96C6\u8BF4\u660E" }, "\u24D8"))),
                 react_1.default.createElement(IssueDistribution, { items: items }),
@@ -358,7 +372,7 @@ function Watch({ data, mutate, busy, focusProject }) {
                         group.label,
                         " ",
                         react_1.default.createElement("span", { className: "ar-heading-count" }, group.items.length)),
-                    react_1.default.createElement(ItemList, { items: group.items, empty: "", security: security }))) : react_1.default.createElement("p", { className: "ar-empty-inline" }, "\u8FD1 7 \u5929\u6682\u65E0\u5DF2\u6536\u5F55 JIRA\uFF1B\u8BF7\u6838\u5BF9\u6765\u6E90\u72B6\u6001\u3002"))),
+                    react_1.default.createElement(ItemList, { items: group.items, empty: "", security: security }))) : react_1.default.createElement("p", { className: "ar-empty-inline" }, issueStatus.empty))),
             react_1.default.createElement("details", { className: "ar-card ar-section" },
                 react_1.default.createElement("summary", null, "\u53C2\u8003\u63D0\u6848 \u00B7 \u65E5\u671F\u672A\u77E5\uFF0C\u4E0D\u8BA1\u5165\u672C\u5468"),
                 react_1.default.createElement(ItemList, { key: project + 'undated', items: undated, empty: "\u6682\u65E0\u65E5\u671F\u672A\u77E5\u7684\u53C2\u8003\u6761\u76EE\u3002" })),
@@ -842,7 +856,7 @@ const css = `
 .ar-root :is(.ar-error-text,.ar-diagnostics,.ar-difference,.ar-notice){overflow-wrap:anywhere}
 .ar-header,.ar-brand,.ar-projectbar,.ar-actions,.ar-card-heading,.ar-section-heading,.ar-watch-toolbar,.ar-footer{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .ar-brand{justify-content:flex-start;gap:12px}
-.ar-brand-icon{width:40px;height:40px;display:grid;place-items:center;border:1px solid color-mix(in srgb,var(--ar-accent) 24%,var(--ar-line));border-radius:var(--dsw-radius-md,12px);color:var(--ar-accent);background:color-mix(in srgb,var(--ar-accent) 8%,var(--ar-card))}
+.ar-brand-icon{width:42px;height:42px;display:grid;place-items:center;border:1px solid color-mix(in srgb,var(--ar-accent) 35%,var(--ar-line));border-radius:var(--dsw-radius-md,12px);color:var(--ar-accent);background:radial-gradient(circle at 25% 20%,color-mix(in srgb,var(--ar-accent) 18%,var(--ar-card)),var(--ar-card) 75%)}
 .ar-overline{font-size:10px;letter-spacing:1.5px;color:var(--ar-muted)}
 .ar-projectbar{flex-wrap:wrap;margin-top:16px;padding:10px 12px;border:1px solid var(--ar-line);border-radius:var(--dsw-radius-md,12px);background:var(--ar-card);font-size:12px}
 .ar-directory{display:flex;align-items:center;flex-wrap:wrap;gap:8px;min-width:0;color:var(--ar-muted)}
@@ -858,23 +872,23 @@ const css = `
 .ar-section{padding:16px;margin-bottom:12px}
 .ar-card-heading{margin-bottom:12px;flex-wrap:wrap;min-height:24px}
 .ar-card-heading>h3{display:flex;align-items:center}
-.ar-metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:12px}
-.ar-metric{padding:14px 16px;display:flex;flex-direction:column;gap:4px;position:relative}
+.ar-metrics{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.ar-metric{padding:16px;display:flex;flex-direction:column;gap:5px;position:relative;overflow:hidden;min-height:110px}.ar-metric>*{position:relative;z-index:1}
 
-.ar-featured{border-color:var(--ar-line)}
+.ar-featured{grid-column:span 2;border-color:color-mix(in srgb,var(--ar-accent) 34%,var(--ar-line));background:linear-gradient(115deg,color-mix(in srgb,var(--ar-accent) 12%,var(--ar-card)),var(--ar-card) 75%)}.ar-featured:after{content:"";position:absolute;right:-24px;top:-48px;width:150px;height:150px;border:1px solid color-mix(in srgb,var(--ar-accent) 18%,transparent);border-radius:50%;box-shadow:0 0 0 22px color-mix(in srgb,var(--ar-accent) 4%,transparent),0 0 0 44px color-mix(in srgb,var(--ar-accent) 3%,transparent);pointer-events:none}.ar-featured .ar-number{font-size:34px}
 .ar-featured .ar-number{color:var(--ar-accent)}
-.ar-root h3.ar-eyebrow{font-size:12px;color:var(--ar-muted);font-weight:400}
+.ar-root h3.ar-eyebrow{font-size:12px;color:var(--ar-muted);font-weight:400}.ar-metric-note{font-size:11px;color:var(--ar-muted);line-height:1.4}.ar-card-heading h3 .ar-badge{margin-left:8px}
 .ar-number{font-size:26px;line-height:1.3;letter-spacing:-.5px}
 .ar-overview-grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:12px;align-items:stretch;margin-bottom:12px}
 .ar-overview-grid>.ar-section,.ar-overview-side>.ar-section{margin:0}
 .ar-overview-side{display:grid;gap:12px;align-content:start;min-width:0}
-.ar-domain{display:flex;flex-direction:column}.ar-section-heading p{margin-top:3px}
+.ar-domain{display:flex;flex-direction:column}.ar-section-heading p{margin-top:3px}.ar-card-heading h3{gap:8px}.ar-domain .ar-card-heading h3:before,.ar-security-card .ar-card-heading h3:before{content:"";display:inline-block;width:4px;height:15px;border-radius:2px;background:var(--ar-accent)}
 .ar-category-chart{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 18px;align-content:space-between;flex:1}
 .ar-root .ar-category-bar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 12px;height:auto;padding:8px 0;border-radius:0;text-align:left;background:transparent;width:100%;font-size:12px;white-space:normal;line-height:1.5}
 .ar-category-bar>span:first-child{color:var(--ar-muted)}
 .ar-category-bar strong{color:var(--ar-text)}
-.ar-bar-track{grid-column:1/-1;display:block;height:5px;border-radius:3px;overflow:hidden;background:color-mix(in srgb,var(--ar-accent) 9%,var(--ar-card))}
-.ar-bar-track i{display:block;height:100%;border-radius:3px;background:var(--ar-accent)}
+.ar-bar-track{grid-column:1/-1;display:block;height:6px;border-radius:3px;overflow:hidden;background:color-mix(in srgb,var(--ar-accent) 11%,var(--ar-card))}
+.ar-bar-track i{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,var(--ar-accent),color-mix(in srgb,var(--ar-accent) 68%,var(--ar-card)))}
 .ar-category-bar:nth-child(even) .ar-bar-track i{opacity:.65}
 .ar-security-overview{display:flex;align-items:center;gap:20px;margin:12px 0}
 .ar-donut{corner-shape:round;width:112px;height:112px;flex:none;border-radius:50%;background:conic-gradient(var(--ar-accent) var(--ar-ring),color-mix(in srgb,var(--ar-accent) 12%,var(--ar-card)) 0);display:grid;place-items:center}
@@ -948,8 +962,8 @@ const css = `
 .ar-directory-form{margin-top:8px;font-size:12px}.ar-root .ar-quiet{padding-left:0;color:var(--ar-muted)}
 .ar-footer{font-size:10px;color:var(--ar-muted);padding-top:12px;margin-top:18px;border-top:1px solid var(--ar-line)}
 @media(hover:hover){.ar-root a:hover{color:var(--ar-accent);text-decoration:underline}.ar-category-bar:hover .ar-bar-track i{opacity:1}.ar-metric:hover{border-color:var(--ar-accent)}}
-@container(max-width:1000px){.ar-shell{padding:20px}.ar-overview-grid{grid-template-columns:1fr}.ar-overview-side{grid-template-columns:1fr 1fr}.ar-category-chart{gap:4px 20px}.ar-metrics{gap:6px}.ar-metric{padding:12px}.ar-retired{grid-template-columns:1fr 1fr}.ar-number{font-size:28px}}
-@container(max-width:600px){.ar-shell{padding:16px 12px}.ar-header h1{font-size:20px}.ar-overline{font-size:9px;letter-spacing:1px}.ar-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.ar-metrics .ar-featured{grid-column:1/-1;flex-direction:row;align-items:center;justify-content:space-between}.ar-overview-side,.ar-two-col,.ar-network-body,.ar-issue-board,.ar-brief{grid-template-columns:minmax(0,1fr)}.ar-category-chart{column-gap:12px}.ar-section{padding:13px}.ar-security-overview{gap:14px}.ar-retired{grid-template-columns:repeat(4,minmax(0,1fr))}.ar-issue-group[open]>.ar-item{display:block;width:100%;margin-right:0}.ar-advisory-body dl{grid-template-columns:1fr;gap:5px}.ar-advisory-body dd+dt{margin-top:6px}.ar-projectbar{gap:8px}.ar-projectbar form{flex-basis:100%}.ar-directory-form>span:has(input){width:100%}.ar-section-heading .ar-actions{flex-wrap:wrap}.ar-item-meta time{margin-left:0}.ar-watch-toolbar>[role=tablist]{max-width:100%}.ar-root .ar-watch-toolbar [role=tab]{min-width:0;padding-inline:10px}.ar-last{flex-basis:100%;margin-left:13px}}
+@container(max-width:1000px){.ar-shell{padding:20px}.ar-overview-grid{grid-template-columns:1fr}.ar-overview-side{grid-template-columns:1fr 1fr}.ar-category-chart{gap:4px 20px}.ar-metrics{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.ar-metric{padding:12px}.ar-retired{grid-template-columns:1fr 1fr}.ar-number{font-size:28px}}
+@container(max-width:600px){.ar-shell{padding:16px 12px}.ar-header h1{font-size:20px}.ar-overline{font-size:9px;letter-spacing:1px}.ar-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.ar-metric{min-height:96px}.ar-metrics .ar-featured{grid-column:1/-1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center}.ar-metrics .ar-featured .ar-number{grid-column:2;grid-row:1/3}.ar-metrics .ar-featured .ar-metric-note{grid-column:1}.ar-overview-side,.ar-two-col,.ar-network-body,.ar-issue-board,.ar-brief{grid-template-columns:minmax(0,1fr)}.ar-category-chart{column-gap:12px}.ar-section{padding:13px}.ar-security-overview{gap:14px}.ar-retired{grid-template-columns:repeat(4,minmax(0,1fr))}.ar-issue-group[open]>.ar-item{display:block;width:100%;margin-right:0}.ar-advisory-body dl{grid-template-columns:1fr;gap:5px}.ar-advisory-body dd+dt{margin-top:6px}.ar-projectbar{gap:8px}.ar-projectbar form{flex-basis:100%}.ar-directory-form>span:has(input){width:100%}.ar-section-heading .ar-actions{flex-wrap:wrap}.ar-item-meta time{margin-left:0}.ar-watch-toolbar>[role=tablist]{max-width:100%}.ar-root .ar-watch-toolbar [role=tab]{min-width:0;padding-inline:10px}.ar-last{flex-basis:100%;margin-left:13px}}
 @container(max-width:400px){.ar-category-chart{grid-template-columns:1fr}.ar-retired{grid-template-columns:1fr 1fr}.ar-header>.ar-badge{display:none}}
 @media(pointer:coarse){.ar-root input,.ar-root .ns-settings input{font-size:16px}}
 @media(prefers-reduced-motion:reduce){.ar-spin{animation:none}}

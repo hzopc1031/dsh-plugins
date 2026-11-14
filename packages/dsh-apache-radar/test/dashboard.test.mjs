@@ -175,6 +175,15 @@ test('view shaping retains security, type/status groups, original links, retired
 })
 
 
+test('feed cards distinguish missing, unavailable and stale sources from an empty successful feed', () => {
+  const source = (kind, status, warnings = []) => ({ kind, status, warnings })
+  assert.equal(client.feedDisplay([], 'release', 0).count, '—')
+  assert.equal(client.feedDisplay([source('release', 'failed')], 'release', 0).label, '来源不可用')
+  assert.equal(client.feedDisplay([source('proposal', 'unavailable', ['无适配来源'])], 'proposal', 0).empty, '无适配来源')
+  assert.equal(client.feedDisplay([source('jira', 'stale')], 'jira', 4).label, '上次成功缓存')
+  assert.equal(client.feedDisplay([source('jira', 'ok')], 'jira', 0).count, '0')
+})
+
 test('failed count cards show a short status, leaving the shared diagnostics banner to explain the cause', () => {
   const html = staticView(client.CountCard, { row: { id: 'chooser', label: 'Chooser', status: 'error', sources: [],
     error: 'https://projects.apache.org/json/foundation/chooser.json: Fetch failed: ECONNREFUSED; HTTPS_PROXY' } })

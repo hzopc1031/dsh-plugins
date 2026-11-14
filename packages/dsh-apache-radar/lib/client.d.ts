@@ -2,6 +2,7 @@ import React from 'react';
 import type { DashboardData } from './dashboard.js';
 import type { CountRow } from './counts.js';
 import type { ProjectSecurity, SecurityReport } from './security.js';
+import type { FeedSource } from './feeds.js';
 type Item = NonNullable<DashboardData['items']>[number];
 export declare function securityOverview(report: SecurityReport): {
     watched: number;
@@ -35,6 +36,12 @@ type Mutate = (action: string, project?: string, extra?: {
     version?: string;
     cve?: string;
 }) => void;
+export declare function feedDisplay(sources: FeedSource[], kind: 'release' | 'jira' | 'proposal', count: number): {
+    count: string;
+    label: string;
+    empty: string;
+    tone: string;
+};
 export declare function Watch({ data, mutate, busy, focusProject }: {
     data: DashboardData;
     mutate: Mutate;

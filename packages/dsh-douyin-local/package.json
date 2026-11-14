@@ -1,0 +1,14 @@
+{
+  "name": "dsh-douyin-local",
+  "version": "0.1.0",
+  "description": "查看本机抖音工具获取的热榜",
+  "type": "module",
+  "main": "index.js",
+  "exports": {".": "./index.js"},
+  "files": ["index.js", "runner.js", "cordis.patch.yml", "README.md"],
+  "engines": {"node": ">=22", "dsh": ">=0.2.1-rc.5 <0.3.0-0"},
+  "dsh": {"bundle": {"patch": "./cordis.patch.yml"}},
+  "keywords": ["dsh-plugin", "douyin"],
+  "dependencies": {"@deepseek-ai/schemastery": "3.18.5"},
+  "scripts": {"test": "node --test test/*.test.mjs"}
+}

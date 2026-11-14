@@ -1,0 +1,4 @@
+- insert:
+    - id: douyin-local
+      name: dsh-douyin-local
+      config: {}

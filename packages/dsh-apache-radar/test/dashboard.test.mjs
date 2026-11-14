@@ -282,6 +282,18 @@ test('Radar keeps shared TLS help hidden and supplies an accessible host tooltip
 })
 
 
+test('brief project counts exclude undated references and preserve empty window context', async () => {
+  const { parse } = await import('node-html-parser')
+  const line = '- **提案** Example；[原文](https://cwiki.apache.org/example)；日期：未知\n'
+  const markdown = '## 关注项目动态\n\n### kafka\n\n' + line + '\n#### 日期未知参考项（不计作本周新增）\n\n' + line + line + '\n\n### flink\n\n已采集数据未列出窗口内条目。\n\n#### 日期未知参考项（不计作本周新增）\n\n' + line
+  const root = parse(staticView(client.Brief, { data: { markdown }, busy: false, request: () => {} }))
+  const cards = root.querySelectorAll('.ar-brief-project')
+  assert.match(cards[0].querySelector('.ar-card-heading').textContent, /1 条窗口内/)
+  assert.match(cards[0].textContent, /另有 2 条日期未知的参考项/)
+  assert.match(cards[1].querySelector('.ar-card-heading').textContent, /0 条窗口内/)
+  assert.match(cards[1].textContent, /请结合来源状态查看/)
+})
+
 test('saved brief cards present friendly chips and short dates while keeping complete Markdown behind details', async () => {
   const { parse } = await import('node-html-parser')
   const markdown = '## 关注项目动态\n\n### kafka\n\n- **JIRA 工单** Fix example；[原文](https://issues.apache.org/jira/browse/KAFKA-1)；日期：2026-11-11T03:43:11.000+0000（updated）；状态：Open；类型：Bug；[采集来源](https://issues.apache.org/jira/)\n'
@@ -291,6 +303,7 @@ test('saved brief cards present friendly chips and short dates while keeping com
   assert.match(item.textContent, /待处理/)
   assert.match(item.textContent, /2026-11-11/)
   assert.doesNotMatch(item.textContent, /updated|03:43|采集来源/)
-  assert.match(root.querySelector('.ar-brief-more').textContent, /03:43/)
+  assert.doesNotMatch(root.querySelector('.ar-brief-more').textContent, /03:43/)
+  assert.match(root.querySelector('.ar-brief-more').textContent, /查看完整项目简报/)
   assert.equal(root.querySelector('.ar-brief-more').hasAttribute('open'), false)
 })

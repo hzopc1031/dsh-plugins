@@ -520,6 +520,12 @@ function SecurityStrip({ project, security, report, mutate, busy, expanded = fal
                     react_1.default.createElement("a", { href: "https://security.apache.org/report-dependency/", target: "_blank", rel: "noreferrer" }, "ASF\uFF1A\u5982\u4F55\u62A5\u544A\u4F9D\u8D56\u5E93\u5B89\u5168\u95EE\u9898 \u2197")),
                 react_1.default.createElement(SecurityCitation, { source: report?.guidance }))));
 }
+function BriefDetails({ text }) {
+    const [open, setOpen] = (0, react_1.useState)(false);
+    return react_1.default.createElement("details", { className: "ar-brief-more", onToggle: e => setOpen(e.currentTarget.open) },
+        react_1.default.createElement("summary", null, "\u67E5\u770B\u5B8C\u6574\u9879\u76EE\u7B80\u62A5"),
+        open && react_1.default.createElement(dsh_client_ui_primitives_1.MarkdownText, { text: text, labels: labels, omitHtml: true }));
+}
 function BriefSection({ part }) {
     if (part.startsWith('# '))
         return react_1.default.createElement("details", { className: "ar-card ar-section" },
@@ -527,7 +533,9 @@ function BriefSection({ part }) {
             react_1.default.createElement(dsh_client_ui_primitives_1.MarkdownText, { text: part, labels: labels, omitHtml: true }));
     if (part.startsWith('## 关注项目动态'))
         return react_1.default.createElement(react_1.default.Fragment, null,
-            react_1.default.createElement("h2", { className: "ar-brief-title" }, "\u5173\u6CE8\u9879\u76EE\u52A8\u6001"),
+            react_1.default.createElement("div", { className: "ar-brief-title" },
+                react_1.default.createElement("h2", null, "\u5173\u6CE8\u9879\u76EE\u52A8\u6001"),
+                react_1.default.createElement("p", null, "\u663E\u793A\u5DF2\u6536\u5F55\u6761\u76EE\uFF1B\u6765\u6E90\u5931\u8D25\u6216\u5206\u9875\u622A\u65AD\u65F6\u53EF\u80FD\u4E0D\u5B8C\u6574")),
             part.split('\n').slice(1).join('\n').trim().split(/\n(?=### )/).map((project, i) => react_1.default.createElement(BriefSection, { part: project, key: i })));
     if (part.startsWith('## 本周新公告'))
         return react_1.default.createElement("details", { className: "ar-card ar-section" },
@@ -541,8 +549,10 @@ function BriefSection({ part }) {
             react_1.default.createElement(dsh_client_ui_primitives_1.MarkdownText, { text: part, labels: labels, omitHtml: true }));
     const lines = part.split('\n');
     // shortcut: generated brief bullets only; use a Markdown AST if the saved format changes.
-    const entries = lines.filter(line => line.startsWith('- **'));
-    if (!part.startsWith('### ') || !entries.length)
+    const referenceStart = lines.findIndex(line => /^#### 日期未知参考项/.test(line));
+    const entries = (referenceStart < 0 ? lines : lines.slice(0, referenceStart)).filter(line => line.startsWith('- **'));
+    const references = referenceStart < 0 ? [] : lines.slice(referenceStart + 1).filter(line => line.startsWith('- **'));
+    if (!part.startsWith('### '))
         return react_1.default.createElement("article", { className: "ar-card ar-section" },
             react_1.default.createElement(dsh_client_ui_primitives_1.MarkdownText, { text: part, labels: labels, omitHtml: true }));
     return react_1.default.createElement("article", { className: "ar-card ar-section ar-brief-project" },
@@ -550,7 +560,12 @@ function BriefSection({ part }) {
             react_1.default.createElement("h3", null, projectName(lines[0].replace(/^### /, ''))),
             react_1.default.createElement(Badge, null,
                 entries.length,
-                " \u6761")),
+                " \u6761\u7A97\u53E3\u5185")),
+        references.length > 0 && react_1.default.createElement("p", { className: "ar-brief-reference" },
+            "\u53E6\u6709 ",
+            references.length,
+            " \u6761\u65E5\u671F\u672A\u77E5\u7684\u53C2\u8003\u9879"),
+        !entries.length && react_1.default.createElement("p", { className: "ar-empty-inline" }, "\u5DF2\u91C7\u96C6\u6570\u636E\u672A\u5217\u51FA\u7A97\u53E3\u5185\u6761\u76EE\uFF0C\u8BF7\u7ED3\u5408\u6765\u6E90\u72B6\u6001\u67E5\u770B\u3002"),
         entries.slice(0, 2).map((line, i) => {
             const split = line.indexOf('；[原文](');
             const title = (split < 0 ? line : line.slice(0, split)).replace(/^- \*\*[^*]+\*\* /, '');
@@ -565,9 +580,7 @@ function BriefSection({ part }) {
                     react_1.default.createElement("time", null, line.match(/日期：(\d{4}-\d{2}-\d{2})/)?.[1])),
                 react_1.default.createElement(dsh_client_ui_primitives_1.MarkdownText, { text: `${title} ${link}`, labels: labels, omitHtml: true }));
         }),
-        react_1.default.createElement("details", { className: "ar-brief-more" },
-            react_1.default.createElement("summary", null, "\u67E5\u770B\u5B8C\u6574\u9879\u76EE\u7B80\u62A5"),
-            react_1.default.createElement(dsh_client_ui_primitives_1.MarkdownText, { text: lines.slice(1).join('\n'), labels: labels, omitHtml: true })));
+        react_1.default.createElement(BriefDetails, { text: lines.slice(1).join('\n') }));
 }
 function Brief({ data, request, busy }) {
     const [notice, setNotice] = (0, react_1.useState)('');
@@ -955,7 +968,7 @@ const css = `
 .ar-issue-group[open]{grid-column:1/-1}.ar-issue-group[open]>.ar-item{display:inline-block;vertical-align:top;width:calc(50% - 8px);margin-right:16px}.ar-issue-group[open]>.ar-item:nth-of-type(even){margin-right:0}
 .ar-root .ar-more{width:100%;font-size:12px;color:var(--ar-muted);margin-top:8px;background:transparent;border:0}
 .ar-source-list{margin-top:12px}.ar-source-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0;font-size:12px;border-bottom:1px solid var(--ar-line)}.ar-source-row>div{min-width:0;overflow-wrap:anywhere}
-.ar-brief{line-height:1.8;margin:16px 0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:start}.ar-brief>.ar-card{margin:0}.ar-brief>details,.ar-brief-title{grid-column:1/-1}.ar-brief-title{margin:6px 0!important}.ar-brief p,.ar-brief li{font-size:13px}.ar-brief li{margin:6px 0}.ar-brief ul{padding-left:18px}.ar-brief h3{margin-bottom:0}.ar-brief-project{border-top:2px solid color-mix(in srgb,var(--ar-accent) 42%,var(--ar-line));background:linear-gradient(145deg,color-mix(in srgb,var(--ar-accent) 4%,var(--ar-card)),var(--ar-card) 45%)}.ar-brief-project .ar-card-heading{padding-bottom:10px;border-bottom:1px solid var(--ar-line)}.ar-brief-project .ar-item{padding:12px 0}.ar-brief-more{margin-top:10px;padding-top:8px;border-top:1px solid var(--ar-line)}
+.ar-brief{line-height:1.8;margin:16px 0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:start}.ar-brief>.ar-card{margin:0}.ar-brief>details,.ar-brief-title{grid-column:1/-1}.ar-brief-title{margin:6px 0!important}.ar-brief-title p{font-size:12px;color:var(--ar-muted);margin-top:3px}.ar-brief p,.ar-brief li{font-size:13px}.ar-brief li{margin:6px 0}.ar-brief ul{padding-left:18px}.ar-brief h3{margin-bottom:0}.ar-brief-project{border-top:2px solid color-mix(in srgb,var(--ar-accent) 42%,var(--ar-line));background:linear-gradient(145deg,color-mix(in srgb,var(--ar-accent) 4%,var(--ar-card)),var(--ar-card) 45%)}.ar-brief-project .ar-card-heading{padding-bottom:10px;border-bottom:1px solid var(--ar-line)}.ar-brief-project .ar-item{padding:12px 0}.ar-brief-reference{font-size:11px!important;color:var(--ar-muted);margin:8px 0 2px!important}.ar-brief-more{margin-top:10px;padding-top:8px;border-top:1px solid var(--ar-line)}
 .ar-network{margin-top:4px}.ar-network>summary{width:fit-content;margin-left:auto;font-size:12px;padding:3px 0}
 .ar-network-body{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin:8px 0 12px}.ar-network-body>div{min-width:0}.ar-network-body h3:not(:first-child){margin-top:16px}.ar-network-body .ar-card-heading h3{margin-top:0}
 .ar-network-body .ar-actions{justify-content:flex-start;flex-wrap:wrap;margin:10px 0;font-size:12px}

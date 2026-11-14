@@ -237,16 +237,24 @@ export function SecurityStrip({ project, security, report, mutate, busy, expande
   </section>
 }
 
+function BriefDetails({ text }: { text: string }) {
+  const [open, setOpen] = useState(false)
+  return <details className="ar-brief-more" onToggle={e => setOpen(e.currentTarget.open)}><summary>查看完整项目简报</summary>{open && <MarkdownText text={text} labels={labels} omitHtml/>}</details>
+}
 function BriefSection({ part }: { part: string }) {
   if (part.startsWith('# ')) return <details className="ar-card ar-section"><summary>周报信息与统计口径</summary><MarkdownText text={part} labels={labels} omitHtml/></details>
-  if (part.startsWith('## 关注项目动态')) return <><h2 className="ar-brief-title">关注项目动态</h2>{part.split('\n').slice(1).join('\n').trim().split(/\n(?=### )/).map((project, i) => <BriefSection part={project} key={i}/>)}</>
+  if (part.startsWith('## 关注项目动态')) return <><div className="ar-brief-title"><h2>关注项目动态</h2><p>显示已收录条目；来源失败或分页截断时可能不完整</p></div>{part.split('\n').slice(1).join('\n').trim().split(/\n(?=### )/).map((project, i) => <BriefSection part={project} key={i}/>)}</>
   if (part.startsWith('## 本周新公告')) return <details className="ar-card ar-section"><summary>本周新公告 <Badge>{part.split('\n').filter(line => /^- (kafka|hadoop|flink) \/ CVE-/.test(line)).length}</Badge></summary><MarkdownText text={part} labels={labels} omitHtml/></details>
   if (part.startsWith('## ')) return <details className="ar-card ar-section"><summary>{part.split('\n')[0]!.replace(/^## /, '')}</summary><MarkdownText text={part} labels={labels} omitHtml/></details>
   const lines = part.split('\n')
   // shortcut: generated brief bullets only; use a Markdown AST if the saved format changes.
-  const entries = lines.filter(line => line.startsWith('- **'))
-  if (!part.startsWith('### ') || !entries.length) return <article className="ar-card ar-section"><MarkdownText text={part} labels={labels} omitHtml/></article>
-  return <article className="ar-card ar-section ar-brief-project"><div className="ar-card-heading"><h3>{projectName(lines[0]!.replace(/^### /, ''))}</h3><Badge>{entries.length} 条</Badge></div>
+  const referenceStart = lines.findIndex(line => /^#### 日期未知参考项/.test(line))
+  const entries = (referenceStart < 0 ? lines : lines.slice(0, referenceStart)).filter(line => line.startsWith('- **'))
+  const references = referenceStart < 0 ? [] : lines.slice(referenceStart + 1).filter(line => line.startsWith('- **'))
+  if (!part.startsWith('### ')) return <article className="ar-card ar-section"><MarkdownText text={part} labels={labels} omitHtml/></article>
+  return <article className="ar-card ar-section ar-brief-project"><div className="ar-card-heading"><h3>{projectName(lines[0]!.replace(/^### /, ''))}</h3><Badge>{entries.length} 条窗口内</Badge></div>
+    {references.length > 0 && <p className="ar-brief-reference">另有 {references.length} 条日期未知的参考项</p>}
+    {!entries.length && <p className="ar-empty-inline">已采集数据未列出窗口内条目，请结合来源状态查看。</p>}
     {entries.slice(0, 2).map((line, i) => {
       const split = line.indexOf('；[原文](')
       const title = (split < 0 ? line : line.slice(0, split)).replace(/^- \*\*[^*]+\*\* /, '')
@@ -256,7 +264,7 @@ function BriefSection({ part }: { part: string }) {
       const security = line.startsWith('- **安全')
       return <div className="ar-item" key={i}><div className="ar-item-meta"><Badge tone={security ? 'danger' : 'accent'}>{security ? '安全' : type ? issueTypeName(type) : line.match(/^- \*\*([^*]+)\*\*/)?.[1]}</Badge>{status && <Badge>{issueStatusName(status)}</Badge>}<time>{line.match(/日期：(\d{4}-\d{2}-\d{2})/)?.[1]}</time></div><MarkdownText text={`${title} ${link}`} labels={labels} omitHtml/></div>
     })}
-    <details className="ar-brief-more"><summary>查看完整项目简报</summary><MarkdownText text={lines.slice(1).join('\n')} labels={labels} omitHtml/></details>
+    <BriefDetails text={lines.slice(1).join('\n')}/>
   </article>
 }
 export function Brief({ data, request, busy }: { data: DashboardData; request: (action: string) => void; busy: boolean }) {
@@ -495,7 +503,7 @@ const css = `
 .ar-issue-group[open]{grid-column:1/-1}.ar-issue-group[open]>.ar-item{display:inline-block;vertical-align:top;width:calc(50% - 8px);margin-right:16px}.ar-issue-group[open]>.ar-item:nth-of-type(even){margin-right:0}
 .ar-root .ar-more{width:100%;font-size:12px;color:var(--ar-muted);margin-top:8px;background:transparent;border:0}
 .ar-source-list{margin-top:12px}.ar-source-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0;font-size:12px;border-bottom:1px solid var(--ar-line)}.ar-source-row>div{min-width:0;overflow-wrap:anywhere}
-.ar-brief{line-height:1.8;margin:16px 0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:start}.ar-brief>.ar-card{margin:0}.ar-brief>details,.ar-brief-title{grid-column:1/-1}.ar-brief-title{margin:6px 0!important}.ar-brief p,.ar-brief li{font-size:13px}.ar-brief li{margin:6px 0}.ar-brief ul{padding-left:18px}.ar-brief h3{margin-bottom:0}.ar-brief-project{border-top:2px solid color-mix(in srgb,var(--ar-accent) 42%,var(--ar-line));background:linear-gradient(145deg,color-mix(in srgb,var(--ar-accent) 4%,var(--ar-card)),var(--ar-card) 45%)}.ar-brief-project .ar-card-heading{padding-bottom:10px;border-bottom:1px solid var(--ar-line)}.ar-brief-project .ar-item{padding:12px 0}.ar-brief-more{margin-top:10px;padding-top:8px;border-top:1px solid var(--ar-line)}
+.ar-brief{line-height:1.8;margin:16px 0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:start}.ar-brief>.ar-card{margin:0}.ar-brief>details,.ar-brief-title{grid-column:1/-1}.ar-brief-title{margin:6px 0!important}.ar-brief-title p{font-size:12px;color:var(--ar-muted);margin-top:3px}.ar-brief p,.ar-brief li{font-size:13px}.ar-brief li{margin:6px 0}.ar-brief ul{padding-left:18px}.ar-brief h3{margin-bottom:0}.ar-brief-project{border-top:2px solid color-mix(in srgb,var(--ar-accent) 42%,var(--ar-line));background:linear-gradient(145deg,color-mix(in srgb,var(--ar-accent) 4%,var(--ar-card)),var(--ar-card) 45%)}.ar-brief-project .ar-card-heading{padding-bottom:10px;border-bottom:1px solid var(--ar-line)}.ar-brief-project .ar-item{padding:12px 0}.ar-brief-reference{font-size:11px!important;color:var(--ar-muted);margin:8px 0 2px!important}.ar-brief-more{margin-top:10px;padding-top:8px;border-top:1px solid var(--ar-line)}
 .ar-network{margin-top:4px}.ar-network>summary{width:fit-content;margin-left:auto;font-size:12px;padding:3px 0}
 .ar-network-body{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin:8px 0 12px}.ar-network-body>div{min-width:0}.ar-network-body h3:not(:first-child){margin-top:16px}.ar-network-body .ar-card-heading h3{margin-top:0}
 .ar-network-body .ar-actions{justify-content:flex-start;flex-wrap:wrap;margin:10px 0;font-size:12px}

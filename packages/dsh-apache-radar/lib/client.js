@@ -180,6 +180,12 @@ const metricNote = (row) => ({ 'currently-listed': 'TLP 与当前孵化项目', 
 function CountCard({ row, title, featured = false }) {
     return react_1.default.createElement(dsh_client_ui_primitives_1.Tooltip, { label: `${metricNote(row)} · ${row.sources.map(sourceLabel).join(' / ')}`, portal: true, side: "top", openOnClick: true },
         react_1.default.createElement("article", { tabIndex: 0, className: `ar-card ar-metric ${featured ? 'ar-featured' : ''}`, "aria-label": `${title ?? row.label} ${row.status === 'ok' ? row.value : '暂无数据'}` },
+            featured && react_1.default.createElement("div", { className: "ar-radar-art", "aria-hidden": "true" },
+                react_1.default.createElement("span", { className: "ar-radar-sweep" }),
+                react_1.default.createElement("span", { className: "ar-radar-cross" }),
+                react_1.default.createElement("i", { className: "ar-radar-dot ar-radar-dot-one" }),
+                react_1.default.createElement("i", { className: "ar-radar-dot ar-radar-dot-two" }),
+                react_1.default.createElement("i", { className: "ar-radar-dot ar-radar-dot-three" })),
             react_1.default.createElement("h3", { className: "ar-eyebrow" }, title ?? row.label),
             react_1.default.createElement("strong", { className: "ar-number" }, row.status === 'ok' ? row.value : '—'),
             react_1.default.createElement("span", { className: "ar-metric-note" }, metricNote(row)),
@@ -205,10 +211,15 @@ function Overview({ data, jump }) {
     const titles = ['当前列示', '顶级项目 · TLP', '孵化项目 · Podlings', '项目委员会 · PMC', '全部委员会'];
     const mismatches = counts.comparisons.filter(c => c.status !== 'match');
     return react_1.default.createElement(react_1.default.Fragment, null,
-        react_1.default.createElement("div", { className: "ar-section-heading" },
+        react_1.default.createElement("div", { className: "ar-section-heading ar-overview-heading" },
             react_1.default.createElement("div", null,
-                react_1.default.createElement("h2", null, "\u793E\u533A\u6982\u51B5"),
-                react_1.default.createElement("p", null, "\u5B98\u65B9\u6765\u6E90\u7684\u9879\u76EE\u89C4\u6A21\u4E0E\u5173\u6CE8\u9879\u76EE\u72B6\u6001"))),
+                react_1.default.createElement("span", { className: "ar-kicker" }, "COMMUNITY INTELLIGENCE"),
+                react_1.default.createElement("h2", null, "Apache \u793E\u533A\u6982\u51B5"),
+                react_1.default.createElement("p", null, "\u67E5\u770B\u9879\u76EE\u7248\u56FE\u3001\u793E\u533A\u89C4\u6A21\u4E0E\u5173\u6CE8\u7EC4\u4EF6\u5B89\u5168")),
+            react_1.default.createElement("span", { className: "ar-overview-scope" },
+                "\u5B98\u65B9\u516C\u5F00\u6570\u636E ",
+                react_1.default.createElement("i", null),
+                " \u6EDA\u52A8\u89C2\u5BDF")),
         react_1.default.createElement("div", { className: "ar-metrics" }, counts.counts.slice(0, 5).map((row, i) => react_1.default.createElement(CountCard, { key: row.id, row: row, title: titles[i], featured: i === 0 }))),
         react_1.default.createElement("div", { className: "ar-overview-grid" },
             react_1.default.createElement("section", { className: "ar-card ar-section ar-domain" },
@@ -889,14 +900,15 @@ const css = `
 .ar-section{padding:16px;margin-bottom:12px}
 .ar-card-heading{margin-bottom:12px;flex-wrap:wrap;min-height:24px}
 .ar-card-heading>h3{display:flex;align-items:center}
-.ar-metrics{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:12px}
-.ar-metric{padding:16px;display:flex;flex-direction:column;gap:5px;position:relative;overflow:hidden;min-height:110px}.ar-metric>*{position:relative;z-index:1}
+.ar-overview-heading{align-items:end;margin:4px 0 16px}.ar-kicker{display:block;color:var(--ar-accent);font-size:10px;letter-spacing:1.7px;margin-bottom:4px}.ar-overview-heading h2{font-size:20px}.ar-overview-scope{font-size:11px;letter-spacing:.3px;color:var(--ar-muted);display:flex;align-items:center;gap:7px}.ar-overview-scope i{width:3px;height:3px;border-radius:50%;background:var(--ar-accent)}.ar-metrics{display:grid;grid-template-columns:minmax(250px,1.35fr) repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(100px,auto));gap:10px;margin-bottom:14px}
+.ar-metric{padding:16px 18px;display:flex;flex-direction:column;justify-content:center;gap:4px;position:relative;overflow:hidden;min-height:100px;background:linear-gradient(135deg,color-mix(in srgb,var(--ar-accent) 3%,var(--ar-card)),var(--ar-card) 70%)}.ar-metric>*:not(.ar-radar-art){position:relative;z-index:1}
 
-.ar-featured{grid-column:span 2;border-color:color-mix(in srgb,var(--ar-accent) 34%,var(--ar-line));background:linear-gradient(115deg,color-mix(in srgb,var(--ar-accent) 12%,var(--ar-card)),var(--ar-card) 75%)}.ar-featured:after{content:"";position:absolute;right:-24px;top:-48px;width:150px;height:150px;border:1px solid color-mix(in srgb,var(--ar-accent) 18%,transparent);border-radius:50%;box-shadow:0 0 0 22px color-mix(in srgb,var(--ar-accent) 4%,transparent),0 0 0 44px color-mix(in srgb,var(--ar-accent) 3%,transparent);pointer-events:none}.ar-featured .ar-number{font-size:34px}
+.ar-featured{grid-column:auto;grid-row:span 2;align-items:flex-start;justify-content:flex-end;min-height:210px;border-color:color-mix(in srgb,var(--ar-accent) 42%,var(--ar-line));background:radial-gradient(ellipse at 85% 10%,color-mix(in srgb,var(--ar-accent) 18%,var(--ar-card)),transparent 55%),linear-gradient(135deg,color-mix(in srgb,var(--ar-accent) 12%,var(--ar-card)),var(--ar-card) 85%)}
+.ar-featured .ar-number{font-size:52px;line-height:1.05;letter-spacing:-1.5px}.ar-featured .ar-eyebrow{color:var(--ar-text)!important}.ar-radar-art{position:absolute!important;right:-18px;top:-46px;width:220px;height:220px;border-radius:50%;corner-shape:round;border:1px solid color-mix(in srgb,var(--ar-accent) 26%,transparent);background:repeating-radial-gradient(circle,transparent 0 34px,color-mix(in srgb,var(--ar-accent) 17%,transparent) 35px 36px);overflow:hidden;pointer-events:none;opacity:.85}.ar-radar-cross{position:absolute;inset:0;background:linear-gradient(transparent 49.7%,color-mix(in srgb,var(--ar-accent) 18%,transparent) 50%,transparent 50.3%),linear-gradient(90deg,transparent 49.7%,color-mix(in srgb,var(--ar-accent) 18%,transparent) 50%,transparent 50.3%)}.ar-radar-sweep{position:absolute;inset:0;border-radius:50%;corner-shape:round;background:conic-gradient(from 0deg,transparent 0deg,transparent 286deg,color-mix(in srgb,var(--ar-accent) 16%,transparent) 350deg,color-mix(in srgb,var(--ar-accent) 40%,transparent) 359deg,transparent 360deg);animation:ar-sweep 16s linear infinite}.ar-radar-dot{position:absolute;width:5px;height:5px;border-radius:50%;background:var(--ar-accent);box-shadow:0 0 10px var(--ar-accent)}.ar-radar-dot-one{top:32%;left:64%}.ar-radar-dot-two{top:63%;left:27%}.ar-radar-dot-three{top:73%;left:72%}@keyframes ar-sweep{to{transform:rotate(360deg)}}
 .ar-featured .ar-number{color:var(--ar-accent)}
 .ar-root h3.ar-eyebrow{font-size:12px;color:var(--ar-muted);font-weight:400}.ar-metric-note{font-size:11px;color:var(--ar-muted);line-height:1.4}.ar-card-heading h3 .ar-badge{margin-left:8px}
 .ar-number{font-size:26px;line-height:1.3;letter-spacing:-.5px}
-.ar-overview-grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:12px;align-items:stretch;margin-bottom:12px}
+.ar-overview-grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:12px;align-items:stretch;margin-bottom:12px}.ar-domain,.ar-security-card{border-color:color-mix(in srgb,var(--ar-accent) 15%,var(--ar-line))}
 .ar-overview-grid>.ar-section,.ar-overview-side>.ar-section{margin:0}
 .ar-overview-side{display:grid;gap:12px;align-content:start;min-width:0}
 .ar-domain{display:flex;flex-direction:column}.ar-section-heading p{margin-top:3px}.ar-card-heading h3{gap:8px}.ar-domain .ar-card-heading h3:before,.ar-security-card .ar-card-heading h3:before{content:"";display:inline-block;width:4px;height:15px;border-radius:2px;background:var(--ar-accent)}
@@ -979,11 +991,11 @@ const css = `
 .ar-directory-form{margin-top:8px;font-size:12px}.ar-root .ar-quiet{padding-left:0;color:var(--ar-muted)}
 .ar-footer{font-size:10px;color:var(--ar-muted);padding-top:12px;margin-top:18px;border-top:1px solid var(--ar-line)}
 @media(hover:hover){.ar-root a:hover{color:var(--ar-accent);text-decoration:underline}.ar-category-bar:hover .ar-bar-track i{opacity:1}.ar-metric:hover{border-color:var(--ar-accent)}}
-@container(max-width:1000px){.ar-brief{grid-template-columns:repeat(2,minmax(0,1fr))}.ar-shell{padding:20px}.ar-overview-grid{grid-template-columns:1fr}.ar-overview-side{grid-template-columns:1fr 1fr}.ar-category-chart{gap:4px 20px}.ar-metrics{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.ar-metric{padding:12px}.ar-retired{grid-template-columns:1fr 1fr}.ar-number{font-size:28px}}
-@container(max-width:600px){.ar-shell{padding:16px 12px}.ar-header h1{font-size:20px}.ar-overline{font-size:9px;letter-spacing:1px}.ar-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.ar-metric{min-height:96px}.ar-metrics .ar-featured{grid-column:1/-1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center}.ar-metrics .ar-featured .ar-number{grid-column:2;grid-row:1/3}.ar-metrics .ar-featured .ar-metric-note{grid-column:1}.ar-overview-side,.ar-two-col,.ar-network-body,.ar-issue-board,.ar-brief{grid-template-columns:minmax(0,1fr)}.ar-category-chart{column-gap:12px}.ar-section{padding:13px}.ar-security-overview{gap:14px}.ar-retired{grid-template-columns:repeat(4,minmax(0,1fr))}.ar-issue-group[open]>.ar-item{display:block;width:100%;margin-right:0}.ar-advisory-body dl{grid-template-columns:1fr;gap:5px}.ar-advisory-body dd+dt{margin-top:6px}.ar-projectbar{gap:8px}.ar-projectbar form{flex-basis:100%}.ar-directory-form>span:has(input){width:100%}.ar-section-heading .ar-actions{flex-wrap:wrap}.ar-item-meta time{margin-left:0}.ar-watch-toolbar>[role=tablist]{max-width:100%}.ar-root .ar-watch-toolbar [role=tab]{min-width:0;padding-inline:10px}.ar-last{flex-basis:100%;margin-left:13px}}
+@container(max-width:1000px){.ar-brief{grid-template-columns:repeat(2,minmax(0,1fr))}.ar-shell{padding:20px}.ar-overview-grid{grid-template-columns:1fr}.ar-overview-side{grid-template-columns:1fr 1fr}.ar-category-chart{gap:4px 20px}.ar-metrics{grid-template-columns:minmax(200px,1.2fr) repeat(2,minmax(0,1fr));gap:8px}.ar-metric{padding:12px}.ar-retired{grid-template-columns:1fr 1fr}.ar-number{font-size:28px}}
+@container(max-width:600px){.ar-shell{padding:16px 12px}.ar-header h1{font-size:20px}.ar-overline{font-size:9px;letter-spacing:1px}.ar-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.ar-overview-scope{display:none}.ar-metric{min-height:96px}.ar-metrics .ar-featured{grid-column:1/-1;grid-row:auto;min-height:148px;display:flex;align-items:flex-start}.ar-metrics .ar-featured .ar-number{font-size:40px}.ar-radar-art{width:170px;height:170px;right:-5px;top:-40px}.ar-overview-side,.ar-two-col,.ar-network-body,.ar-issue-board,.ar-brief{grid-template-columns:minmax(0,1fr)}.ar-category-chart{column-gap:12px}.ar-section{padding:13px}.ar-security-overview{gap:14px}.ar-retired{grid-template-columns:repeat(4,minmax(0,1fr))}.ar-issue-group[open]>.ar-item{display:block;width:100%;margin-right:0}.ar-advisory-body dl{grid-template-columns:1fr;gap:5px}.ar-advisory-body dd+dt{margin-top:6px}.ar-projectbar{gap:8px}.ar-projectbar form{flex-basis:100%}.ar-directory-form>span:has(input){width:100%}.ar-section-heading .ar-actions{flex-wrap:wrap}.ar-item-meta time{margin-left:0}.ar-watch-toolbar>[role=tablist]{max-width:100%}.ar-root .ar-watch-toolbar [role=tab]{min-width:0;padding-inline:10px}.ar-last{flex-basis:100%;margin-left:13px}}
 @container(max-width:400px){.ar-category-chart{grid-template-columns:1fr}.ar-retired{grid-template-columns:1fr 1fr}.ar-header>.ar-badge{display:none}}
 @media(pointer:coarse){.ar-root input,.ar-root .ns-settings input{font-size:16px}}
-@media(prefers-reduced-motion:reduce){.ar-spin{animation:none}}
+@media(prefers-reduced-motion:reduce){.ar-spin,.ar-radar-sweep{animation:none}}
 `;
 
 return module.exports;

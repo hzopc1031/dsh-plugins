@@ -74,9 +74,10 @@ test('optional local cache reuses fresh static settings without persisting crede
 })
 
 async function capture(settings,injected,env,run){
-  const saved=globalThis.fetch,calls=[],client=createIntranetHttp(settings,env,injected)
-  globalThis.fetch=async(input,init)=>{calls.push({input,init});return new Response('ok')}
-  try{await run(client,calls)}finally{globalThis.fetch=saved;await client.close()}
+  const calls=[]
+  const transport=async(input,init)=>{calls.push({input,init});return new Response('ok')}
+  const client=createIntranetHttp(settings,env,injected,transport)
+  try{await run(client,calls)}finally{await client.close()}
 }
 
 test('explicit proxy unchanged and PAC never invoked, including mixed-case environment', async () => {
@@ -123,12 +124,12 @@ test('automatic proxy transport failure retries original path; explicit proxy er
   const saved=globalThis.fetch
   const init={method:'GET'}
   let calls=0
-  const c=createIntranetHttp({}, {}, {...deps,readSettings:async()=>({AutoConfigURL:'http://pac.example/a'}),fetchPac:async()=>pac('PROXY host:8080')})
+  const c=createIntranetHttp({}, {}, {...deps,readSettings:async()=>({AutoConfigURL:'http://pac.example/a'}),fetchPac:async()=>pac('PROXY host:8080')},(...args)=>globalThis.fetch(...args))
   try {
     globalThis.fetch=async(_u,i)=>{calls++;if(i?.dispatcher)throw Error('proxy unavailable');assert.equal(i,init);return new Response('direct success')}
     assert.equal(await (await c.fetch(url,init)).text(),'direct success');assert.equal(calls,2)
     calls=0
-    const explicit=createIntranetHttp({httpsProxy:'http://proxy:8080'},{},{readSettings:()=>assert.fail('explicit')})
+    const explicit=createIntranetHttp({httpsProxy:'http://proxy:8080'},{},{readSettings:()=>assert.fail('explicit')},(...args)=>globalThis.fetch(...args))
     try{await assert.rejects(explicit.fetch(url,init));assert.equal(calls,1)}finally{await explicit.close()}
   } finally {globalThis.fetch=saved;await c.close()}
 })

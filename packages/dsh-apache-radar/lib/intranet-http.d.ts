@@ -24,7 +24,7 @@ export declare function collapseNetworkErrors(value: unknown): {
 }[];
 export declare function effectiveTimeout(settings?: IntranetSettings): number;
 export declare function fetchOfficial(fetcher: typeof globalThis.fetch, input: string, init: RequestInit, hosts: ReadonlySet<string>): Promise<Response>;
-export declare function createIntranetHttp(settings?: IntranetSettings, env?: NodeJS.ProcessEnv, dependencies?: SystemProxyDependencies): {
+export declare function createIntranetHttp(settings?: IntranetSettings, env?: NodeJS.ProcessEnv, dependencies?: SystemProxyDependencies, transport?: typeof globalThis.fetch): {
     fetch: typeof globalThis.fetch;
     diagnose: (url?: string) => Promise<{
         tlsVerification: {

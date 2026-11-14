@@ -4,7 +4,7 @@ import { isAbsolute } from 'node:path'
 import { rootCertificates, connect as tlsConnect } from 'node:tls'
 import { lookup } from 'node:dns/promises'
 import { connect } from 'node:net'
-import type { Dispatcher } from 'undici'
+import type { Dispatcher, buildConnector } from 'undici'
 import z from '@deepseek-ai/schemastery'
 import { systemProxy, createSystemProxy, type SystemProxyDependencies, type ProxyDetection } from './system-proxy.js'
 import { isIP } from 'node:net'
@@ -92,7 +92,7 @@ export async function fetchOfficial(fetcher: typeof globalThis.fetch, input: str
   }
 }
 
-export function createIntranetHttp(settings: IntranetSettings = {}, env: NodeJS.ProcessEnv = process.env, dependencies?: SystemProxyDependencies) {
+export function createIntranetHttp(settings: IntranetSettings = {}, env: NodeJS.ProcessEnv = process.env, dependencies?: SystemProxyDependencies, transport?: typeof globalThis.fetch) {
   const envValue = (name: string) => env[name.toLowerCase()] ?? env[name] ?? Object.entries(env).find(([key]) => key.toUpperCase() === name)?.[1]
   const detector = dependencies ? createSystemProxy(dependencies) : systemProxy
   const explicit = () => !!(settings.httpsProxy || envValue('HTTPS_PROXY') || envValue('HTTP_PROXY') || envValue('ALL_PROXY'))
@@ -157,12 +157,19 @@ export function createIntranetHttp(settings: IntranetSettings = {}, env: NodeJS.
     const apiSkip = apiSkipEnabled()
     const key = `${proxy ?? 'direct'}|${apiSkip}`
     if (!agents.has(key)) agents.set(key, (async () => {
-      const { Agent, Pool, ProxyAgent } = await import('undici')
+      const { Agent, Client, Pool, ProxyAgent } = await import('undici')
       const proxyTls = { ca: await ca(), rejectUnauthorized: !settings.insecureSkipTlsVerify }
       // Choose TLS policy per origin, including redirects; the proxy's own TLS keeps its global policy.
       return new Agent({ factory(origin, options) {
         const tls = { ca: proxyTls.ca, rejectUnauthorized: !skipVerification(new URL(origin).hostname, apiSkip) }
-        return proxy ? new ProxyAgent({ uri: proxy, requestTls: tls, proxyTls }) : new Pool(origin, { ...options, connect: tls })
+        return proxy ? new ProxyAgent({ uri: proxy, requestTls: tls, proxyTls, clientFactory(proxyOrigin, proxyOptions) {
+          const connector = (proxyOptions as { connect: buildConnector.connector }).connect
+          return new Client(proxyOrigin, { ...proxyOptions, connect(options, callback) {
+            // IP literals must not be sent in TLS SNI; certificate verification still checks the IP.
+            const servername = options.servername?.replace(/^\[|\]$/g, '')
+            connector({ ...options, servername: servername && isIP(servername) ? undefined : options.servername }, callback)
+          } })
+        } }) : new Pool(origin, { ...options, connect: tls })
       } })
     })())
     return agents.get(key)!
@@ -183,17 +190,27 @@ export function createIntranetHttp(settings: IntranetSettings = {}, env: NodeJS.
     lastDetection = { ...result.info, automatic: automaticUsed, timeoutSeconds: effectiveTimeout(settings) / 1000 }
     return result.proxy ? { proxy: result.proxy, source: result.info.source } : original
   }
+  const requestWithDispatcher: typeof globalThis.fetch = async (input, init) => {
+    if (transport) return transport(input, init)
+    // Use fetch and Dispatcher from the same Undici release.
+    const { fetch: undiciFetch } = await import('undici')
+    return undiciFetch(input as Parameters<typeof undiciFetch>[0], init as Parameters<typeof undiciFetch>[1]) as unknown as Promise<Response>
+  }
   const fetch: typeof globalThis.fetch = async (input, init) => {
     const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
     try {
       if (closed) throw new Error('网络客户端已关闭')
       const routing = await resolveRoute(url)
       try {
-        return await globalThis.fetch(input, custom || apiSkipEnabled() || routing.proxy ? { ...init, dispatcher: await dispatcher(routing.proxy) } as RequestInit : init)
+        return custom || apiSkipEnabled() || routing.proxy
+          ? await requestWithDispatcher(input, { ...init, dispatcher: await dispatcher(routing.proxy) } as RequestInit)
+          : await (transport ?? globalThis.fetch)(input, init)
       } catch (error) {
         if (!routing.proxy || !['Windows PAC', '静态系统代理'].includes(routing.source)) throw error
         if (lastDetection) lastDetection.warning = '系统代理请求失败，已尝试原访问路径。'
-        return await globalThis.fetch(input, custom || apiSkipEnabled() ? { ...init, dispatcher: await dispatcher(route(url).proxy) } as RequestInit : init)
+        return custom || apiSkipEnabled()
+          ? await requestWithDispatcher(input, { ...init, dispatcher: await dispatcher(route(url).proxy) } as RequestInit)
+          : await (transport ?? globalThis.fetch)(input, init)
       }
     } catch (cause) {
       const info = describeNetworkError(cause, url)
@@ -222,7 +239,7 @@ export function createIntranetHttp(settings: IntranetSettings = {}, env: NodeJS.
     } else if (target.protocol === 'https:') {
       const certs = await ca()
       result.tls = await new Promise(resolve => {
-        const socket = tlsConnect({ host, port: Number(target.port || 443), servername: host, ca: certs, rejectUnauthorized: !skipVerification(target.hostname), timeout: 5000 })
+        const socket = tlsConnect({ host, port: Number(target.port || 443), servername: isIP(host) ? undefined : host, ca: certs, rejectUnauthorized: !skipVerification(target.hostname), timeout: 5000 })
         socket.once('secureConnect', () => { resolve({ authorized: socket.authorized, code: socket.authorizationError || undefined }); socket.destroy() })
         socket.once('timeout', () => { resolve({ authorized: false, code: 'ETIMEDOUT' }); socket.destroy() })
         socket.once('error', error => { resolve({ authorized: false, ...describeNetworkError(error) }); socket.destroy() })

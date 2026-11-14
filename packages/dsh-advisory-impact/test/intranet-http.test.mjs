@@ -238,8 +238,8 @@ test('the generated settings switch applies live and disabling it restores verif
 
 test('diagnostics retain the weak-key hint from nested fetch failures', async t => {
   const f = await fixture(t)
-  const c = client(t, { httpsProxy: f.proxy })
-  t.mock.method(globalThis, 'fetch', async () => { throw new TypeError('fetch failed', { cause: { code: 'ERR_SSL_CA_KEY_TOO_SMALL' } }) })
+  const c = createIntranetHttp({ httpsProxy: f.proxy }, {}, { readSettings: async () => ({}) }, async () => { throw new TypeError('fetch failed', { cause: { code: 'ERR_SSL_CA_KEY_TOO_SMALL' } }) })
+  t.after(() => c.close())
   const diagnosis = await c.diagnose(f.target('api.github.com'))
   assert.equal(diagnosis.tls.code, 'TLS_KEY_TOO_SMALL')
   assert.equal(diagnosis.tls.hintZh, WEAK_CA_HINT)

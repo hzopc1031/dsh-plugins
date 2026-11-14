@@ -141,7 +141,7 @@ function jiraCves(title, security, project) {
     return [...new Set(title.match(/CVE-\d{4}-\d{4,}/gi)?.map(id => id.toUpperCase()) ?? [])].map(id => {
         const advisory = project?.advisories.find(a => a.id === id);
         return { id, status: advisory ? 'published' : project?.source?.data ? 'not_published' : 'unknown',
-            label: advisory ? '官方已公布' : project?.source?.data ? '官方尚未公布' : '官方列表不可用，无法核对',
+            label: advisory ? '官方已公布' : project?.source?.data ? '已抓取列表中未找到' : '官方列表不可用，无法核对',
             url: advisory?.url, fetchedAt: project?.source?.fetchedAt, stale: project?.source?.status === 'stale' };
     });
 }
@@ -204,7 +204,9 @@ function Overview({ data, jump }) {
     const mismatches = counts.comparisons.filter(c => c.status !== 'match');
     return react_1.default.createElement(react_1.default.Fragment, null,
         react_1.default.createElement("div", { className: "ar-section-heading" },
-            react_1.default.createElement("h2", null, "\u793E\u533A\u6982\u51B5")),
+            react_1.default.createElement("div", null,
+                react_1.default.createElement("h2", null, "\u793E\u533A\u6982\u51B5"),
+                react_1.default.createElement("p", null, "\u5B98\u65B9\u6765\u6E90\u7684\u9879\u76EE\u89C4\u6A21\u4E0E\u5173\u6CE8\u9879\u76EE\u72B6\u6001"))),
         react_1.default.createElement("div", { className: "ar-metrics" }, counts.counts.slice(0, 5).map((row, i) => react_1.default.createElement(CountCard, { key: row.id, row: row, title: titles[i], featured: i === 0 }))),
         react_1.default.createElement("div", { className: "ar-overview-grid" },
             react_1.default.createElement("section", { className: "ar-card ar-section ar-domain" },
@@ -420,7 +422,7 @@ function SecurityCard({ report, jump }) {
                         react_1.default.createElement("small", null, "\u5DF2\u586B\u7248\u672C")))),
             react_1.default.createElement("div", { className: "ar-security-projects" }, report.projects.map(p => react_1.default.createElement(dsh_client_ui_primitives_1.Button, { key: p.project, size: "sm", variant: "ghost", className: "ar-project-jump", onClick: () => jump?.(p.project) },
                 react_1.default.createElement("span", null, projectName(p.project)),
-                react_1.default.createElement(Badge, { tone: summary.affected.includes(p.project) ? 'danger' : '' }, summary.affected.includes(p.project) ? '受影响' : !p.pin ? '未填版本' : !p.source?.data ? '待核对' : '已核对'),
+                react_1.default.createElement(Badge, { tone: summary.affected.includes(p.project) ? 'danger' : '' }, summary.affected.includes(p.project) ? '受影响' : !p.pin ? '未填版本' : !p.source?.data || p.source.status === 'stale' ? '来源待核对' : p.advisories.some(a => a.verdict === 'unknown') ? '部分无法判断' : '已核对'),
                 react_1.default.createElement("span", null, "\u2197"))))),
         react_1.default.createElement("p", { className: "ar-note" },
             summary.unpinned,
@@ -458,7 +460,7 @@ function SecurityStrip({ project, security, report, mutate, busy, expanded = fal
         react_1.default.createElement("details", { className: "ar-advisories", open: expanded || undefined },
             react_1.default.createElement("summary", null,
                 "\u5B98\u65B9\u5B89\u5168\u516C\u544A ",
-                react_1.default.createElement("span", { className: "ar-heading-count" }, security?.advisories.length ?? '—')),
+                react_1.default.createElement("span", { className: "ar-heading-count" }, security?.source?.data ? security.advisories.length : '—')),
             security?.advisories.map(a => react_1.default.createElement("details", { className: "ar-advisory", id: `${project}-${a.id}`, key: a.id, tabIndex: -1, onToggle: e => {
                     if (e.currentTarget.open && a.osv.status === 'unqueried')
                         mutate('osv', project, { cve: a.id });
@@ -546,7 +548,7 @@ function BriefSection({ part }) {
                 react_1.default.createElement(dsh_client_ui_primitives_1.MarkdownText, { text: `${title} ${link}`, labels: labels, omitHtml: true }));
         }),
         react_1.default.createElement("details", { className: "ar-brief-more" },
-            react_1.default.createElement("summary", null, "\u5C55\u5F00\u5176\u4F59\u5468\u62A5\u6761\u76EE"),
+            react_1.default.createElement("summary", null, "\u67E5\u770B\u5B8C\u6574\u9879\u76EE\u7B80\u62A5"),
             react_1.default.createElement(dsh_client_ui_primitives_1.MarkdownText, { text: lines.slice(1).join('\n'), labels: labels, omitHtml: true })));
 }
 function Brief({ data, request, busy }) {
@@ -852,26 +854,26 @@ const css = `
 .ar-tabs{display:flex;margin:8px 0 18px;border-bottom:1px solid var(--ar-line);padding-bottom:10px}.ar-tabs>[role=tablist]{width:300px;max-width:100%}
 .ar-section-heading{margin:0 0 12px;flex-wrap:wrap}
 .ar-section-heading p{font-size:12px;color:var(--ar-muted)}
-.ar-card{min-width:0;border:1px solid var(--ar-line);border-radius:var(--dsw-radius-md,12px);background:var(--ar-card);box-shadow:0 2px 6px color-mix(in srgb,var(--ar-text) 3%,transparent)}
+.ar-card{min-width:0;border:1px solid var(--ar-line);border-radius:var(--dsw-radius-md,12px);background:var(--ar-card)}
 .ar-section{padding:16px;margin-bottom:12px}
 .ar-card-heading{margin-bottom:12px;flex-wrap:wrap;min-height:24px}
 .ar-card-heading>h3{display:flex;align-items:center}
 .ar-metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:12px}
-.ar-metric{padding:13px 16px;display:flex;flex-direction:column;gap:5px;position:relative}
-.ar-metric:after{content:'';position:absolute;left:16px;right:16px;bottom:0;height:2px;background:color-mix(in srgb,var(--ar-accent) 18%,transparent)}
-.ar-featured{border-color:color-mix(in srgb,var(--ar-accent) 40%,var(--ar-line));background:linear-gradient(120deg,color-mix(in srgb,var(--ar-accent) 9%,var(--ar-card)),var(--ar-card))}
+.ar-metric{padding:14px 16px;display:flex;flex-direction:column;gap:4px;position:relative}
+
+.ar-featured{border-color:var(--ar-line)}
 .ar-featured .ar-number{color:var(--ar-accent)}
 .ar-root h3.ar-eyebrow{font-size:12px;color:var(--ar-muted);font-weight:400}
-.ar-number{font-size:32px;line-height:1.25;letter-spacing:-1px}
+.ar-number{font-size:26px;line-height:1.3;letter-spacing:-.5px}
 .ar-overview-grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:12px;align-items:stretch;margin-bottom:12px}
 .ar-overview-grid>.ar-section,.ar-overview-side>.ar-section{margin:0}
 .ar-overview-side{display:grid;gap:12px;align-content:start;min-width:0}
-.ar-domain{display:flex;flex-direction:column}
+.ar-domain{display:flex;flex-direction:column}.ar-section-heading p{margin-top:3px}
 .ar-category-chart{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 18px;align-content:space-between;flex:1}
 .ar-root .ar-category-bar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 12px;height:auto;padding:8px 0;border-radius:0;text-align:left;background:transparent;width:100%;font-size:12px;white-space:normal;line-height:1.5}
 .ar-category-bar>span:first-child{color:var(--ar-muted)}
 .ar-category-bar strong{color:var(--ar-text)}
-.ar-bar-track{grid-column:1/-1;display:block;height:7px;border-radius:3px;overflow:hidden;background:color-mix(in srgb,var(--ar-accent) 9%,var(--ar-card))}
+.ar-bar-track{grid-column:1/-1;display:block;height:5px;border-radius:3px;overflow:hidden;background:color-mix(in srgb,var(--ar-accent) 9%,var(--ar-card))}
 .ar-bar-track i{display:block;height:100%;border-radius:3px;background:var(--ar-accent)}
 .ar-category-bar:nth-child(even) .ar-bar-track i{opacity:.65}
 .ar-security-overview{display:flex;align-items:center;gap:20px;margin:12px 0}

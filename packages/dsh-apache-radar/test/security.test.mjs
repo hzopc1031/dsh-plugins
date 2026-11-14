@@ -87,7 +87,7 @@ test('security JIRA CVE chips only match title ids against the fetched official 
   assert.equal(known.url, project.advisories.find(a => a.id === known.id).url)
   assert.equal(known.fetchedAt, securityAt)
   // Unknown id is a matcher mutation, not an asserted real unpublished CVE.
-  assert.equal(client.jiraCves('CVE-2099-12345', true, project)[0].label, '官方尚未公布')
+  assert.equal(client.jiraCves('CVE-2099-12345', true, project)[0].label, '已抓取列表中未找到')
   assert.equal(client.jiraCves('CVE-2099-12345', true)[0].status, 'unknown')
   assert.equal(client.jiraCves(jira.fields.summary, false, project).length, 0)
   assert.equal(client.jiraCves('security issue without an id', true, project).length, 0)
@@ -109,6 +109,11 @@ test('overview counts projects, no-pin separately, unsupported sources as incomp
   assert.match(html, /运行版本覆盖 1 \/ 4/)
   assert.match(html, /≥1 受影响 · 来源待核对/)
   assert.doesNotMatch(html, /基金会.*CVE|safe to upgrade/)
+  const kafka = report.projects.find(p => p.project === 'kafka')
+  kafka.advisories = [{ ...kafka.advisories[0], verdict: 'unknown' }]
+  assert.match(staticView(client.SecurityCard, { report }), /部分无法判断/)
+  kafka.source.status = 'stale'
+  assert.match(staticView(client.SecurityCard, { report }), /来源待核对/)
 })
 
 test('weekly new advisories use official date first, persisted first-seen fallback, exact window bounds and no suppressions/OSV inventory', async t => {

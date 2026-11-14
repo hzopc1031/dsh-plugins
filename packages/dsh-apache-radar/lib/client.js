@@ -337,10 +337,12 @@ function Watch({ data, mutate, busy, focusProject }) {
     const releaseStatus = feedDisplay(sources, 'release', releases.length), proposalStatus = feedDisplay(sources, 'proposal', proposals.length), issueStatus = feedDisplay(sources, 'jira', issues.length);
     return react_1.default.createElement(react_1.default.Fragment, null,
         react_1.default.createElement("div", { className: "ar-section-heading" },
-            react_1.default.createElement("h2", null,
-                "\u9879\u76EE\u52A8\u6001 ",
-                react_1.default.createElement("span", { className: "ar-heading-count" }, data.watchList?.length ?? 0)),
-            react_1.default.createElement("span", { className: "ar-muted" }, "\u6700\u8FD1 7 \u5929")),
+            react_1.default.createElement("div", null,
+                react_1.default.createElement("h2", null,
+                    "\u9879\u76EE\u52A8\u6001 ",
+                    react_1.default.createElement("span", { className: "ar-heading-count" }, data.watchList?.length ?? 0)),
+                react_1.default.createElement("p", null, "\u805A\u7126\u5173\u6CE8\u9879\u76EE\u7684\u7248\u672C\u3001\u5B89\u5168\u4E0E\u793E\u533A\u8FDB\u5C55")),
+            react_1.default.createElement("span", { className: "ar-window-label" }, "\u6700\u8FD1 7 \u5929")),
         react_1.default.createElement("div", { className: "ar-watch-toolbar" },
             react_1.default.createElement(dsh_client_ui_primitives_1.SegmentedControl, { id: "ar-project", label: "\u5173\u6CE8\u9879\u76EE", value: project, options: (data.watchList ?? []).map(id => ({ value: id, label: projectName(id) })), onChange: setSelected }),
             react_1.default.createElement("details", { className: "ar-manage", open: !project || undefined },
@@ -543,10 +545,12 @@ function BriefSection({ part }) {
     if (!part.startsWith('### ') || !entries.length)
         return react_1.default.createElement("article", { className: "ar-card ar-section" },
             react_1.default.createElement(dsh_client_ui_primitives_1.MarkdownText, { text: part, labels: labels, omitHtml: true }));
-    return react_1.default.createElement("article", { className: "ar-card ar-section" },
+    return react_1.default.createElement("article", { className: "ar-card ar-section ar-brief-project" },
         react_1.default.createElement("div", { className: "ar-card-heading" },
             react_1.default.createElement("h3", null, projectName(lines[0].replace(/^### /, ''))),
-            react_1.default.createElement(Badge, null, entries.length)),
+            react_1.default.createElement(Badge, null,
+                entries.length,
+                " \u6761")),
         entries.slice(0, 2).map((line, i) => {
             const split = line.indexOf('；[原文](');
             const title = (split < 0 ? line : line.slice(0, split)).replace(/^- \*\*[^*]+\*\* /, '');
@@ -917,10 +921,10 @@ const css = `
 .ar-empty{padding:48px 20px;text-align:center;color:var(--ar-muted)}
 .ar-empty svg{color:var(--ar-accent);margin-bottom:12px}.ar-empty h2,.ar-empty h3{color:var(--ar-text);margin-bottom:8px}.ar-empty p{font-size:13px}
 .ar-empty-inline{font-size:12px;color:var(--ar-muted);padding:10px 0}
-.ar-watch-toolbar{margin-bottom:12px;flex-wrap:wrap;justify-content:flex-start}
+.ar-window-label{font-size:11px;color:var(--ar-muted);padding:4px 10px;border:1px solid var(--ar-line);border-radius:999px;background:var(--ar-card)}.ar-watch-toolbar{margin-bottom:14px;flex-wrap:wrap;justify-content:flex-start}
 .ar-manage{margin-left:auto;max-width:100%}.ar-manage[open]{padding:10px;border:1px solid var(--ar-line);border-radius:8px;background:var(--ar-card)}
 .ar-manage form{margin:8px 0}
-.ar-security-strip{border-top:2px solid color-mix(in srgb,var(--ar-accent) 50%,var(--ar-line))}
+.ar-security-strip{border-color:color-mix(in srgb,var(--ar-accent) 24%,var(--ar-line));background:linear-gradient(125deg,color-mix(in srgb,var(--ar-accent) 5%,var(--ar-card)),var(--ar-card) 65%)}.ar-security-strip .ar-card-heading h3:before{content:"";width:4px;height:15px;border-radius:2px;background:var(--ar-accent);margin-right:8px}
 .ar-pin-form{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:8px 0;font-size:12px}.ar-pin-form>span:has(input){width:190px}
 .ar-security-strip>.ar-source-info{float:right}.ar-root .ar-source-info{display:inline-flex;align-items:center;justify-content:center;width:24px;min-width:24px;height:24px;padding:0;color:var(--ar-muted)}
 .ar-limits{margin:6px 0}.ar-limits p{margin:8px 0}
@@ -945,13 +949,13 @@ const css = `
 .ar-root .ar-type-pill{font-size:12px;gap:6px;height:28px;padding:3px 8px;background:color-mix(in srgb,var(--ar-type) 5%,var(--ar-card));color:var(--ar-text)}
 .ar-type-dot{width:6px;height:6px;display:inline-block;flex:none;border-radius:2px;background:var(--ar-type)}
 .ar-issue-board{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-items:start}
-.ar-issue-group{border:1px solid var(--ar-line);border-radius:8px;min-width:0;padding:9px 12px;background:var(--ar-card)}
+.ar-issue-group{border:1px solid var(--ar-line);border-radius:8px;min-width:0;padding:10px 12px;background:color-mix(in srgb,var(--ar-type) 3%,var(--ar-card))}
 .ar-issue-group>summary{list-style:none;display:flex;align-items:center;gap:7px;color:var(--ar-text);min-height:24px}.ar-issue-group>summary:after{content:'＋';margin-left:auto;color:var(--ar-muted)}.ar-issue-group[open]>summary:after{content:'−'}
 .ar-issue-group.ar-tone-danger{grid-column:1/-1;border-color:color-mix(in srgb,var(--ar-error) 24%,var(--ar-line));background:color-mix(in srgb,var(--ar-error) 2%,var(--ar-card))}
 .ar-issue-group[open]{grid-column:1/-1}.ar-issue-group[open]>.ar-item{display:inline-block;vertical-align:top;width:calc(50% - 8px);margin-right:16px}.ar-issue-group[open]>.ar-item:nth-of-type(even){margin-right:0}
 .ar-root .ar-more{width:100%;font-size:12px;color:var(--ar-muted);margin-top:8px;background:transparent;border:0}
 .ar-source-list{margin-top:12px}.ar-source-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0;font-size:12px;border-bottom:1px solid var(--ar-line)}.ar-source-row>div{min-width:0;overflow-wrap:anywhere}
-.ar-brief{line-height:1.8;max-width:1100px;margin:16px auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.ar-brief>.ar-card{margin:0}.ar-brief>details,.ar-brief-title{grid-column:1/-1}.ar-brief-title{margin:6px 0!important}.ar-brief p,.ar-brief li{font-size:13px}.ar-brief li{margin:6px 0}.ar-brief ul{padding-left:18px}.ar-brief h3{margin-bottom:10px}.ar-brief-more{margin-top:10px;padding-top:8px;border-top:1px solid var(--ar-line)}
+.ar-brief{line-height:1.8;margin:16px 0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:start}.ar-brief>.ar-card{margin:0}.ar-brief>details,.ar-brief-title{grid-column:1/-1}.ar-brief-title{margin:6px 0!important}.ar-brief p,.ar-brief li{font-size:13px}.ar-brief li{margin:6px 0}.ar-brief ul{padding-left:18px}.ar-brief h3{margin-bottom:0}.ar-brief-project{border-top:2px solid color-mix(in srgb,var(--ar-accent) 42%,var(--ar-line));background:linear-gradient(145deg,color-mix(in srgb,var(--ar-accent) 4%,var(--ar-card)),var(--ar-card) 45%)}.ar-brief-project .ar-card-heading{padding-bottom:10px;border-bottom:1px solid var(--ar-line)}.ar-brief-project .ar-item{padding:12px 0}.ar-brief-more{margin-top:10px;padding-top:8px;border-top:1px solid var(--ar-line)}
 .ar-network{margin-top:4px}.ar-network>summary{width:fit-content;margin-left:auto;font-size:12px;padding:3px 0}
 .ar-network-body{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin:8px 0 12px}.ar-network-body>div{min-width:0}.ar-network-body h3:not(:first-child){margin-top:16px}.ar-network-body .ar-card-heading h3{margin-top:0}
 .ar-network-body .ar-actions{justify-content:flex-start;flex-wrap:wrap;margin:10px 0;font-size:12px}
@@ -962,7 +966,7 @@ const css = `
 .ar-directory-form{margin-top:8px;font-size:12px}.ar-root .ar-quiet{padding-left:0;color:var(--ar-muted)}
 .ar-footer{font-size:10px;color:var(--ar-muted);padding-top:12px;margin-top:18px;border-top:1px solid var(--ar-line)}
 @media(hover:hover){.ar-root a:hover{color:var(--ar-accent);text-decoration:underline}.ar-category-bar:hover .ar-bar-track i{opacity:1}.ar-metric:hover{border-color:var(--ar-accent)}}
-@container(max-width:1000px){.ar-shell{padding:20px}.ar-overview-grid{grid-template-columns:1fr}.ar-overview-side{grid-template-columns:1fr 1fr}.ar-category-chart{gap:4px 20px}.ar-metrics{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.ar-metric{padding:12px}.ar-retired{grid-template-columns:1fr 1fr}.ar-number{font-size:28px}}
+@container(max-width:1000px){.ar-brief{grid-template-columns:repeat(2,minmax(0,1fr))}.ar-shell{padding:20px}.ar-overview-grid{grid-template-columns:1fr}.ar-overview-side{grid-template-columns:1fr 1fr}.ar-category-chart{gap:4px 20px}.ar-metrics{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.ar-metric{padding:12px}.ar-retired{grid-template-columns:1fr 1fr}.ar-number{font-size:28px}}
 @container(max-width:600px){.ar-shell{padding:16px 12px}.ar-header h1{font-size:20px}.ar-overline{font-size:9px;letter-spacing:1px}.ar-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.ar-metric{min-height:96px}.ar-metrics .ar-featured{grid-column:1/-1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center}.ar-metrics .ar-featured .ar-number{grid-column:2;grid-row:1/3}.ar-metrics .ar-featured .ar-metric-note{grid-column:1}.ar-overview-side,.ar-two-col,.ar-network-body,.ar-issue-board,.ar-brief{grid-template-columns:minmax(0,1fr)}.ar-category-chart{column-gap:12px}.ar-section{padding:13px}.ar-security-overview{gap:14px}.ar-retired{grid-template-columns:repeat(4,minmax(0,1fr))}.ar-issue-group[open]>.ar-item{display:block;width:100%;margin-right:0}.ar-advisory-body dl{grid-template-columns:1fr;gap:5px}.ar-advisory-body dd+dt{margin-top:6px}.ar-projectbar{gap:8px}.ar-projectbar form{flex-basis:100%}.ar-directory-form>span:has(input){width:100%}.ar-section-heading .ar-actions{flex-wrap:wrap}.ar-item-meta time{margin-left:0}.ar-watch-toolbar>[role=tablist]{max-width:100%}.ar-root .ar-watch-toolbar [role=tab]{min-width:0;padding-inline:10px}.ar-last{flex-basis:100%;margin-left:13px}}
 @container(max-width:400px){.ar-category-chart{grid-template-columns:1fr}.ar-retired{grid-template-columns:1fr 1fr}.ar-header>.ar-badge{display:none}}
 @media(pointer:coarse){.ar-root input,.ar-root .ns-settings input{font-size:16px}}

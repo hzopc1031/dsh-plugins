@@ -45,6 +45,16 @@ export function apply(ctx, config = {}) {
       catch (error) { return { kind: 'error', text: error.message }; }
     },
   }));
+  ctx.effect(() => ctx.tools.register({
+    name: 'douyin_local_comment_summary',
+    description: '仅在用户明确要求时读取指定运行编号的本地评论摘要；摘要会进入当前会话。',
+    parameters: { type: 'object', properties: { runId: { type: 'string' } }, required: ['runId'], additionalProperties: false },
+    output: { schema: { type: 'string' }, render: (_args, value) => [{ type: 'text', text: value }] },
+    async execute(args, exec) {
+      if (!args || Object.keys(args).some(key => key !== 'runId')) throw new Error('不接受额外参数');
+      return runCommentSummary(config, args.runId, undefined, exec?.signal);
+    },
+  }));
   ctx.effect(() => ctx.commands.register({
     name: 'douyin-open', description: '打开本机搜索指数窗口', recordInput: false,
     async handler({ rawInput }) {

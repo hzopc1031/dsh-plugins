@@ -1,7 +1,7 @@
 {
   "name": "dsh-douyin-local",
   "version": "0.1.0",
-  "description": "查看本机抖音工具获取的热榜",
+  "description": "查看本机抖音热榜、搜索指数缓存和评论摘要",
   "type": "module",
   "main": "index.js",
   "exports": {".": "./index.js"},

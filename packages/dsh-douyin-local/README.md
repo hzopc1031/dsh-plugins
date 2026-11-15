@@ -18,19 +18,13 @@
 ## 三步上手
 
 1. **完全退出桌面 DSH。** 关闭所有窗口，并从系统托盘退出。
-2. **安装插件。** 以下地址在此插件合并到仓库 `main` 后才可使用：
+2. **安装插件。** 在终端运行：
 
    ```powershell
    dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#main&path:/packages/dsh-douyin-local"
    ```
 
-   在合并前需要试用开发版，可使用开发分支地址：
-
-   ```powershell
-   dsh plugin --profile desktop add "github:hzopc1031/dsh-plugins#codex-dsh-douyin-20261114&path:/packages/dsh-douyin-local"
-   ```
-
-3. **重新打开 DSH 并配置。** 在插件设置中将 `projectPath` 填为本机 `douyin-index-local` 项目的绝对路径；该项目需要 Python 3.12 虚拟环境和 `requirements-core.txt`。开发版需配套使用该项目的 `codex-local-portability-20261114` 分支。运行 `/douyin-hotlist` 查看结果，也可要求 DSH 查询抖音热榜。
+3. **重新打开 DSH 并配置。** 在插件设置中将 `projectPath` 填为本机 `douyin-index-local` 项目的绝对路径；该项目需要 Python 3.12 虚拟环境和 `requirements-core.txt`。运行 `/douyin-hotlist` 查看结果，也可要求 DSH 查询抖音热榜。
 
 ## 补充说明
 

@@ -60,7 +60,7 @@ async function runLocal(config, args, run, signal) {
       if (JSON.parse(error.stderr)?.error?.code === 'cache_miss')
         throw new Error('没有找到匹配的完整七天缓存，请先在本机桌面工具采集该单个关键词');
       if (JSON.parse(error.stderr)?.error?.code === 'summary_unavailable')
-        throw new Error('评论摘要不可用，请检查运行编号和结果目录权限；Windows 尚未支持');
+        throw new Error('评论摘要不可用，请检查运行编号、结果目录权限和本机依赖');
     } catch (parsed) {
       if (parsed.message?.startsWith('没有找到匹配') || parsed.message?.startsWith('评论摘要不可用')) throw parsed;
     }

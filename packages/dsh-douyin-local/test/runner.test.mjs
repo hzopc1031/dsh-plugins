@@ -68,6 +68,11 @@ test('comment summary only accepts a run id and fixed arguments', async () => {
   });
   assert.match(value, /合成评论/);
   await assert.rejects(runCommentSummary({ projectPath: root }, '../../other'), /运行编号/);
+  await assert.rejects(runCommentSummary({ projectPath: root }, runId, async () => {
+    const error = new Error('private detail');
+    error.stderr = '{"error":{"code":"summary_unavailable"}}';
+    throw error;
+  }), /结果目录权限和本机依赖/);
 });
 test('desktop launch uses a fixed script and only reports process creation', async () => {
   const root = path.resolve('/tmp/example');

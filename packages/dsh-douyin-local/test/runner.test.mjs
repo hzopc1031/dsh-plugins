@@ -31,6 +31,18 @@ test('index cache passes fixed argv and preserves distinction from counts', asyn
   assert.match(text, /不等于实际搜索次数/);
   await assert.rejects(runIndexCache({ projectPath: root }, '测试', '2026-01-07', async () => { const e = new Error('x'); e.stderr = '{"error":{"code":"cache_miss"}}'; throw e; }), /没有找到/);
 });
+test('index cache rejects invalid dates, duplicate days and negative values', async () => {
+  const config = { projectPath: path.resolve('/tmp/example') };
+  const rows = Array.from({ length: 7 }, (_, i) => ({ keyword: '测试', date: `2026-01-0${i + 1}`, search_index: i }));
+  const value = { ok: true, data: { keyword: '测试', start_date: '2026-01-01', end_date: '2026-01-07', fetched_at: '2026-01-08', rows } };
+  const run = async () => ({ stdout: JSON.stringify(value) });
+  await assert.rejects(runIndexCache(config, '测试', '2026-02-30', run), /有效的截止日期/);
+  value.data.rows[1].date = value.data.rows[0].date;
+  await assert.rejects(runIndexCache(config, '测试', '2026-01-07', run), /缓存格式无效/);
+  value.data.rows[1].date = '2026-01-02';
+  value.data.rows[1].search_index = -1;
+  await assert.rejects(runIndexCache(config, '测试', '2026-01-07', run), /缓存格式无效/);
+});
 test('rejects untrusted output and hides subprocess errors', async () => {
   assert.throws(() => renderResult(JSON.stringify({ ...data, data: { ...data.data, items: [{ position: 1, word: 'a\nb', hot_value: 1 }] } })));
   await assert.rejects(runHotlist({ projectPath: path.resolve('/tmp/example') }, async () => { throw new Error('private stderr'); }), error => !error.message.includes('private stderr'));

@@ -88,16 +88,21 @@ export async function runHotlist(config, run = execute, signal) {
 }
 
 export async function runIndexCache(config, keyword, endDate, run = execute, signal) {
-  if (typeof keyword !== 'string' || keyword !== keyword.trim() || !keyword || keyword.length > 100 || /[\r\n\x00-\x1f]/.test(keyword) || !/^\d{4}-\d{2}-\d{2}$/.test(endDate))
+  if (typeof keyword !== 'string' || keyword !== keyword.trim() || !keyword || keyword.length > 100 || /[\r\n\x00-\x1f]/.test(keyword) || typeof endDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(endDate))
     throw new Error('请提供单个关键词和 YYYY-MM-DD 截止日期');
+  const last = new Date(endDate + 'T00:00:00.000Z');
+  if (!Number.isFinite(last.getTime()) || last.toISOString().slice(0, 10) !== endDate || endDate.startsWith('0000-'))
+    throw new Error('请提供有效的截止日期');
+  const days = Array.from({ length: 7 }, (_, i) => new Date(last.getTime() - (6 - i) * 86400000).toISOString().slice(0, 10));
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(days[0]) || days[0].startsWith('0000-')) throw new Error('请提供有效的截止日期');
   const stdout = await runLocal(config, ['index-cache', '--keyword=' + keyword, '--end-date', endDate], run, signal);
   try {
     const value = JSON.parse(stdout);
     const d = value?.data;
-    if (value?.ok !== true || d?.keyword !== keyword || d?.end_date !== endDate || typeof d?.start_date !== 'string' || typeof d?.fetched_at !== 'string' || /[\r\n]/.test(d.fetched_at) || !Array.isArray(d.rows) || d.rows.length !== 7)
+    if (value?.ok !== true || d?.keyword !== keyword || d?.end_date !== endDate || d?.start_date !== days[0] || typeof d?.fetched_at !== 'string' || d.fetched_at.length > 64 || /[\x00-\x1f\x7f]/.test(d.fetched_at) || !Array.isArray(d.rows) || d.rows.length !== 7)
       throw new Error();
-    const lines = d.rows.map(row => {
-      if (row.keyword !== keyword || !/^\d{4}-\d{2}-\d{2}$/.test(row.date) || typeof row.search_index !== 'number' || !Number.isFinite(row.search_index)) throw new Error();
+    const lines = d.rows.map((row, index) => {
+      if (row.keyword !== keyword || row.date !== days[index] || typeof row.search_index !== 'number' || !Number.isFinite(row.search_index) || row.search_index < 0) throw new Error();
       return `${row.date}：${row.search_index}`;
     });
     return `搜索指数（本地缓存）｜${keyword}｜采集时间：${d.fetched_at}\n${lines.join('\n')}\n搜索指数不等于实际搜索次数。`;
